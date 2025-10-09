@@ -64,6 +64,8 @@ model Transaction {
   subcategory      String?
   paymentChannel   String?
   pendingTransactionId String?
+  logoUrl          String?  // Merchant logo (100x100 PNG)
+  categoryIconUrl  String?  // Category icon (100x100 PNG)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
