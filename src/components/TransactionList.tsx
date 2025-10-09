@@ -1,0 +1,46 @@
+import type { Transaction, Account } from '@prisma/client'
+
+type TransactionWithAccount = Transaction & {
+  account?: Account
+}
+
+interface TransactionListProps {
+  transactions: TransactionWithAccount[]
+  showAccount?: boolean
+}
+
+export function TransactionList({ transactions, showAccount = false }: TransactionListProps) {
+  if (transactions.length === 0) {
+    return <p className="text-gray-500">No transactions found.</p>
+  }
+
+  return (
+    <ul className="space-y-2">
+      {transactions.map(t => (
+        <li key={t.id} className="border p-3 rounded">
+          <div className="flex items-start gap-3">
+            {(t.logoUrl || t.categoryIconUrl) && (
+              <img
+                src={t.logoUrl || t.categoryIconUrl || ''}
+                alt=""
+                className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="font-medium">
+                {t.name} — {t.amount.toString()} {t.isoCurrencyCode}
+                {t.pending && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Pending</span>}
+              </div>
+              <div className="text-sm text-gray-600">
+                {t.date.toISOString().slice(0, 10)}
+                {showAccount && t.account && ` · ${t.account.name}`}
+              </div>
+              {t.merchantName && <div className="text-sm">Merchant: {t.merchantName}</div>}
+              {t.category && <div className="text-sm text-gray-500">Category: {t.category}</div>}
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}

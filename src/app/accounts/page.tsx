@@ -16,14 +16,16 @@ export default async function AccountsPage() {
       ) : (
         <ul className="space-y-2">
           {accounts.map(a => (
-            <li key={a.id} className="border p-3 rounded">
-              <div className="font-medium">
-                {a.name} {a.mask ? `• ${a.mask}` : ''}
-              </div>
-              <div className="text-sm text-gray-600">
-                {a.type}
-                {a.subtype ? ` / ${a.subtype}` : ''} · {a.currency}
-              </div>
+            <li key={a.id}>
+              <Link href={`/accounts/${a.id}`} className="block border p-3 rounded hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="font-medium">
+                  {a.name} {a.mask ? `• ${a.mask}` : ''}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {a.type}
+                  {a.subtype ? ` / ${a.subtype}` : ''} · {a.currency}
+                </div>
+              </Link>
             </li>
           ))}
         </ul>
