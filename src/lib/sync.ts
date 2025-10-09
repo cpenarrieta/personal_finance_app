@@ -192,7 +192,7 @@ export async function syncAllItems() {
     // 2) Investments: transactions + holdings + securities
     const accounts = await prisma.account.findMany({ where: { itemId: it.id } })
 
-    // Holdings (current snapshot)
+    // Holdings
     const holdingsResp = await plaid.investmentsHoldingsGet({ access_token: it.accessToken })
 
     // Securities

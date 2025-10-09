@@ -19,16 +19,27 @@ export function InvestmentTransactionList({ transactions, showAccount = false }:
     <ul className="space-y-2">
       {transactions.map(t => (
         <li key={t.id} className="border p-3 rounded">
-          <div className="font-medium">
-            {t.name || t.type} — {t.security?.tickerSymbol || 'N/A'}
+          <div className="flex items-start gap-3">
+            {t.security?.logoUrl && (
+              <img
+                src={t.security.logoUrl}
+                alt={t.security.tickerSymbol || ''}
+                className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="font-medium">
+                {t.name || t.type} — {t.security?.tickerSymbol || 'N/A'}
+              </div>
+              <div className="text-sm text-gray-600">
+                {t.date.toISOString().slice(0, 10)} · Type: {t.type}
+                {showAccount && t.account && ` · ${t.account.name}`}
+              </div>
+              {t.quantity && <div className="text-sm">Quantity: {t.quantity.toString()}</div>}
+              {t.amount && <div className="text-sm">Amount: {t.amount.toString()}</div>}
+              {t.price && <div className="text-sm">Price: {t.price.toString()}</div>}
+            </div>
           </div>
-          <div className="text-sm text-gray-600">
-            {t.date.toISOString().slice(0, 10)} · Type: {t.type}
-            {showAccount && t.account && ` · ${t.account.name}`}
-          </div>
-          {t.quantity && <div className="text-sm">Quantity: {t.quantity.toString()}</div>}
-          {t.amount && <div className="text-sm">Amount: {t.amount.toString()}</div>}
-          {t.price && <div className="text-sm">Price: {t.price.toString()}</div>}
         </li>
       ))}
     </ul>

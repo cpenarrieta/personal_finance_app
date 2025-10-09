@@ -53,6 +53,9 @@ export default async function Page() {
         <Link className="underline hover:text-blue-600" href="/investments/holdings">
           Holdings
         </Link>
+        <Link className="underline hover:text-blue-600" href="/manage-categories">
+          Manage Categories
+        </Link>
       </div>
     </div>
   )

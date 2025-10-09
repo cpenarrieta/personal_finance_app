@@ -60,12 +60,19 @@ model Transaction {
   pending          Boolean
   merchantName     String?
   name             String
-  category         String?
-  subcategory      String?
+  category         String?  // Plaid category
+  subcategory      String?  // Plaid subcategory
   paymentChannel   String?
   pendingTransactionId String?
   logoUrl          String?  // Merchant logo (100x100 PNG)
   categoryIconUrl  String?  // Category icon (100x100 PNG)
+
+  // Custom categories (user-managed)
+  customCategoryId    String?
+  customCategory      CustomCategory? @relation(fields: [customCategoryId], references: [id])
+  customSubcategoryId String?
+  customSubcategory   CustomSubcategory? @relation(fields: [customSubcategoryId], references: [id])
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -79,6 +86,7 @@ model Security {
   tickerSymbol  String?
   type          String?
   isoCurrencyCode String?
+  logoUrl       String?  // Company logo from logo.dev
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   holdings      Holding[]
@@ -120,4 +128,50 @@ model InvestmentTransaction {
   updatedAt        DateTime @updatedAt
 
   @@index([plaidInvestmentTransactionId])
+}
+
+// Custom Categories (user-managed, separate from Plaid categories)
+model CustomCategory {
+  id            String   @id @default(cuid())
+  name          String
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subcategories CustomSubcategory[]
+  transactions  Transaction[]
+  groupItems    CategoryGroupItem[]
+}
+
+model CustomSubcategory {
+  id            String   @id @default(cuid())
+  categoryId    String
+  category      CustomCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name          String
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  transactions  Transaction[]
+}
+
+// Category Groups (for organizing categories into different groupings)
+model CategoryGroup {
+  id            String   @id @default(cuid())
+  name          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items         CategoryGroupItem[]
+}
+
+model CategoryGroupItem {
+  id            String   @id @default(cuid())
+  groupId       String
+  group         CategoryGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  categoryId    String
+  category      CustomCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([groupId, categoryId])
 }
