@@ -1,0 +1,121 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Institution {
+  id          String   @id
+  name        String
+  createdAt   DateTime @default(now())
+  items       Item[]
+}
+
+model Item {
+  id                String   @id @default(cuid())
+  plaidItemId       String   @unique
+  accessToken       String   // encrypted at rest (in local-only dev it's fine; production: KMS)
+  institutionId     String?
+  institution       Institution? @relation(fields: [institutionId], references: [id])
+  status            String?
+  lastTransactionsCursor String? // for /transactions/sync
+  lastInvestmentsCursor  String? // if using investments sync cursors later
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  accounts         Account[]
+}
+
+model Account {
+  id              String   @id @default(cuid())
+  plaidAccountId  String   @unique
+  itemId          String
+  item            Item     @relation(fields: [itemId], references: [id])
+  name            String
+  officialName    String?
+  mask            String?
+  type            String
+  subtype         String?
+  currency        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  transactions    Transaction[]
+  investmentTxns  InvestmentTransaction[]
+  holdings        Holding[]
+}
+
+model Transaction {
+  id               String   @id @default(cuid())
+  plaidTransactionId String  @unique
+  accountId        String
+  account          Account  @relation(fields: [accountId], references: [id])
+  amount           Decimal  @db.Decimal(14, 2)
+  isoCurrencyCode  String?
+  date             DateTime // posted date
+  authorizedDate   DateTime?
+  pending          Boolean
+  merchantName     String?
+  name             String
+  category         String?
+  subcategory      String?
+  paymentChannel   String?
+  pendingTransactionId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([plaidTransactionId])
+}
+
+model Security {
+  id            String   @id @default(cuid())
+  plaidSecurityId String @unique
+  name          String?
+  tickerSymbol  String?
+  type          String?
+  isoCurrencyCode String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  holdings      Holding[]
+  investmentTx  InvestmentTransaction[]
+}
+
+model Holding {
+  id            String   @id @default(cuid())
+  accountId     String
+  account       Account  @relation(fields: [accountId], references: [id])
+  securityId    String
+  security      Security @relation(fields: [securityId], references: [id])
+  quantity      Decimal  @db.Decimal(20, 8)
+  costBasis     Decimal? @db.Decimal(20, 8)
+  institutionPrice Decimal? @db.Decimal(20, 8)
+  institutionPriceAsOf DateTime?
+  isoCurrencyCode String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  // optional: unique(accountId, securityId) for current snapshot rows; or history w/ asOf
+}
+
+model InvestmentTransaction {
+  id               String   @id @default(cuid())
+  plaidInvestmentTransactionId String @unique
+  accountId        String
+  account          Account  @relation(fields: [accountId], references: [id])
+  securityId       String?
+  security         Security? @relation(fields: [securityId], references: [id])
+  type             String    // buy, sell, dividend, fee, etc.
+  amount           Decimal?  @db.Decimal(20, 8)
+  price            Decimal?  @db.Decimal(20, 8)
+  quantity         Decimal?  @db.Decimal(20, 8)
+  fees             Decimal?  @db.Decimal(20, 8)
+  isoCurrencyCode  String?
+  date             DateTime
+  name             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([plaidInvestmentTransactionId])
+}
