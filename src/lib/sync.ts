@@ -54,6 +54,8 @@ export async function syncAllItems() {
             subcategory: t.personal_finance_category?.detailed || null,
             paymentChannel: t.payment_channel || null,
             pendingTransactionId: t.pending_transaction_id || null,
+            logoUrl: t.logo_url || null,
+            categoryIconUrl: t.personal_finance_category_icon_url || null,
           },
           create: {
             plaidTransactionId: t.transaction_id,
@@ -69,6 +71,8 @@ export async function syncAllItems() {
             subcategory: t.personal_finance_category?.detailed || null,
             paymentChannel: t.payment_channel || null,
             pendingTransactionId: t.pending_transaction_id || null,
+            logoUrl: t.logo_url || null,
+            categoryIconUrl: t.personal_finance_category_icon_url || null,
           },
         })
       }
@@ -128,6 +132,8 @@ export async function syncAllItems() {
             subcategory: t.personal_finance_category?.detailed || null,
             paymentChannel: t.payment_channel || null,
             pendingTransactionId: t.pending_transaction_id || null,
+            logoUrl: t.logo_url || null,
+            categoryIconUrl: t.personal_finance_category_icon_url || null,
           },
           create: {
             plaidTransactionId: t.transaction_id,
@@ -143,6 +149,8 @@ export async function syncAllItems() {
             subcategory: t.personal_finance_category?.detailed || null,
             paymentChannel: t.payment_channel || null,
             pendingTransactionId: t.pending_transaction_id || null,
+            logoUrl: t.logo_url || null,
+            categoryIconUrl: t.personal_finance_category_icon_url || null,
           },
         })
       }
@@ -163,6 +171,8 @@ export async function syncAllItems() {
             subcategory: t.personal_finance_category?.detailed || null,
             paymentChannel: t.payment_channel || null,
             pendingTransactionId: t.pending_transaction_id || null,
+            logoUrl: t.logo_url || null,
+            categoryIconUrl: t.personal_finance_category_icon_url || null,
           },
         })
       }
