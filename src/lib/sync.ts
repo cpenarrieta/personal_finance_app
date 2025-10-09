@@ -8,7 +8,73 @@ export async function syncAllItems() {
   const plaid = getPlaidClient()
 
   for (const it of items) {
-    // 1) Banking transactions via /transactions/sync
+    // 1) Banking transactions
+    // First, if no cursor exists, do a historical fetch to get older data
+    if (!it.lastTransactionsCursor) {
+      const historicalStartDate = '2024-01-01'
+      const historicalEndDate = new Date().toISOString().slice(0, 10)
+
+      let offset = 0
+      const totalTransactions: any[] = []
+
+      // Fetch all historical transactions using pagination
+      while (true) {
+        const historicalResp = await plaid.transactionsGet({
+          access_token: it.accessToken,
+          start_date: historicalStartDate,
+          end_date: historicalEndDate,
+          options: {
+            count: 500,
+            offset: offset,
+          },
+        })
+
+        totalTransactions.push(...historicalResp.data.transactions)
+
+        if (totalTransactions.length >= historicalResp.data.total_transactions) {
+          break
+        }
+        offset += 500
+      }
+
+      // Process historical transactions
+      for (const t of totalTransactions) {
+        await prisma.transaction.upsert({
+          where: { plaidTransactionId: t.transaction_id },
+          update: {
+            account: { connect: { plaidAccountId: t.account_id } },
+            amount: new Prisma.Decimal(t.amount),
+            isoCurrencyCode: t.iso_currency_code || null,
+            date: new Date(t.date),
+            authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
+            pending: t.pending,
+            merchantName: t.merchant_name || null,
+            name: t.name,
+            category: t.personal_finance_category?.primary || null,
+            subcategory: t.personal_finance_category?.detailed || null,
+            paymentChannel: t.payment_channel || null,
+            pendingTransactionId: t.pending_transaction_id || null,
+          },
+          create: {
+            plaidTransactionId: t.transaction_id,
+            account: { connect: { plaidAccountId: t.account_id } },
+            amount: new Prisma.Decimal(t.amount),
+            isoCurrencyCode: t.iso_currency_code || null,
+            date: new Date(t.date),
+            authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
+            pending: t.pending,
+            merchantName: t.merchant_name || null,
+            name: t.name,
+            category: t.personal_finance_category?.primary || null,
+            subcategory: t.personal_finance_category?.detailed || null,
+            paymentChannel: t.payment_channel || null,
+            pendingTransactionId: t.pending_transaction_id || null,
+          },
+        })
+      }
+    }
+
+    // Now use /transactions/sync for incremental updates
     let cursor = it.lastTransactionsCursor || undefined
     let hasMore = true
 
@@ -159,8 +225,8 @@ export async function syncAllItems() {
       })
     }
 
-    // Investment transactions - fetch last 365 days
-    const startDate = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString().slice(0, 10)
+    // Investment transactions - fetch from beginning of 2024
+    const startDate = '2024-01-01'
     const endDate = new Date().toISOString().slice(0, 10)
 
     const invTxResp = await plaid.investmentsTransactionsGet({

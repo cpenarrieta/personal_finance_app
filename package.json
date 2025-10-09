@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync": "tsx scripts/sync.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.17.0",
@@ -27,6 +28,7 @@
     "eslint-config-next": "15.5.4",
     "prisma": "^6.17.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }
