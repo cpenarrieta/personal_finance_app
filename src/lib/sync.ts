@@ -215,21 +215,69 @@ export async function syncAllItems() {
       })
     }
 
-    // Replace holdings snapshot: simple approach for local use
-    for (const acct of accounts) {
-      await prisma.holding.deleteMany({ where: { accountId: acct.id } })
+    // Update holdings snapshot
+    // Delete holdings that are no longer present in Plaid response
+    const plaidHoldingKeys = new Set(
+      holdingsResp.data.holdings.map(h => `${h.account_id}_${h.security_id}`)
+    )
+    const existingHoldings = await prisma.holding.findMany({
+      where: { accountId: { in: accounts.map(a => a.id) } },
+      include: { account: true, security: true }
+    })
+
+    for (const existing of existingHoldings) {
+      const key = `${existing.account.plaidAccountId}_${existing.security.plaidSecurityId}`
+      if (!plaidHoldingKeys.has(key)) {
+        await prisma.holding.delete({ where: { id: existing.id } })
+      }
     }
+
+    // Upsert holdings from Plaid, preserving custom prices
     for (const h of holdingsResp.data.holdings) {
       const account = accounts.find(a => a.plaidAccountId === h.account_id)
       if (!account) continue
-      await prisma.holding.create({
-        data: {
+
+      const security = await prisma.security.findUnique({ where: { plaidSecurityId: h.security_id } })
+      if (!security) continue
+
+      // Check if holding already exists with a custom price
+      const existingHolding = await prisma.holding.findFirst({
+        where: {
           accountId: account.id,
-          securityId: (await prisma.security.findUnique({ where: { plaidSecurityId: h.security_id } }))!.id,
+          securityId: security.id
+        }
+      })
+
+      // Determine which price to use
+      let priceToUse = h.institution_price != null ? new Prisma.Decimal(h.institution_price) : null
+      let priceAsOfToUse = h.institution_price_as_of ? new Date(h.institution_price_as_of) : null
+
+      // If existing holding has a non-zero price and Plaid's price is 0 or null, preserve the existing price
+      if (existingHolding?.institutionPrice && existingHolding.institutionPrice.toNumber() > 0) {
+        if (!priceToUse || priceToUse.toNumber() === 0) {
+          priceToUse = existingHolding.institutionPrice
+          priceAsOfToUse = existingHolding.institutionPriceAsOf
+        }
+      }
+
+      await prisma.holding.upsert({
+        where: {
+          id: existingHolding?.id || 'new-holding'
+        },
+        update: {
           quantity: new Prisma.Decimal(h.quantity),
           costBasis: h.cost_basis != null ? new Prisma.Decimal(h.cost_basis) : null,
-          institutionPrice: h.institution_price != null ? new Prisma.Decimal(h.institution_price) : null,
-          institutionPriceAsOf: h.institution_price_as_of ? new Date(h.institution_price_as_of) : null,
+          institutionPrice: priceToUse,
+          institutionPriceAsOf: priceAsOfToUse,
+          isoCurrencyCode: h.iso_currency_code || null,
+        },
+        create: {
+          accountId: account.id,
+          securityId: security.id,
+          quantity: new Prisma.Decimal(h.quantity),
+          costBasis: h.cost_basis != null ? new Prisma.Decimal(h.cost_basis) : null,
+          institutionPrice: priceToUse,
+          institutionPriceAsOf: priceAsOfToUse,
           isoCurrencyCode: h.iso_currency_code || null,
         },
       })
