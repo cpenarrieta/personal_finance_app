@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
+import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
 
 // Serialized types (dates and decimals are strings)
@@ -44,12 +44,6 @@ interface SerializedTransaction {
 interface TransactionAnalyticsProps {
   transactions: SerializedTransaction[]
 }
-
-const COLORS = [
-  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-  '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16',
-  '#06b6d4', '#f43f5e', '#22c55e', '#eab308', '#a855f7'
-]
 
 type DateRange = 'all' | 'last30' | 'last90' | 'thisMonth' | 'lastMonth' | 'custom'
 
@@ -399,112 +393,108 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Breakdown Pie Chart */}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Category Breakdown Bar Chart */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Spending by Category</h3>
+          <h3 className="text-lg font-semibold mb-4">Spending by Category (Top 10)</h3>
           {categoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
+            <>
+              <ResponsiveContainer width="100%" height={Math.max(categoryData.length * 50, 300)}>
+                <BarChart
                   data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => `$${value.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`} />
-              </PieChart>
-            </ResponsiveContainer>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={200}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => `$${value.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`}
+                  />
+                  <Bar dataKey="value" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+
+              {/* Category Summary */}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+                {categoryData.slice(0, 5).map((cat) => (
+                  <div key={cat.name} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {cat.imageUrl && (
+                        <img src={cat.imageUrl} alt="" className="w-5 h-5 rounded flex-shrink-0" />
+                      )}
+                      <span className="text-gray-700 truncate">{cat.name}</span>
+                    </div>
+                    <span className="font-medium text-gray-900 ml-2 flex-shrink-0">
+                      ${cat.value.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <p className="text-gray-500 text-center py-12">No data available</p>
           )}
-
-          {/* Category Legend with Images */}
-          <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
-            {categoryData.map((cat, index) => (
-              <div key={cat.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  {cat.imageUrl && (
-                    <img src={cat.imageUrl} alt="" className="w-5 h-5 rounded" />
-                  )}
-                  <span className="text-gray-700">{cat.name}</span>
-                </div>
-                <span className="font-medium text-gray-900">
-                  ${cat.value.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Subcategory Breakdown Pie Chart */}
+        {/* Subcategory Breakdown Bar Chart */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Spending by Subcategory</h3>
+          <h3 className="text-lg font-semibold mb-4">Spending by Subcategory (Top 10)</h3>
           {subcategoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
+            <>
+              <ResponsiveContainer width="100%" height={Math.max(subcategoryData.length * 50, 300)}>
+                <BarChart
                   data={subcategoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
-                  {subcategoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => `$${value.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`} />
-              </PieChart>
-            </ResponsiveContainer>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={250}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => `$${value.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`}
+                  />
+                  <Bar dataKey="value" fill="#10b981" />
+                </BarChart>
+              </ResponsiveContainer>
+
+              {/* Subcategory Summary */}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+                {subcategoryData.slice(0, 5).map((sub) => (
+                  <div key={sub.name} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
+                    <span className="text-gray-700 truncate flex-1 min-w-0">{sub.name}</span>
+                    <span className="font-medium text-gray-900 ml-2 flex-shrink-0">
+                      ${sub.value.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <p className="text-gray-500 text-center py-12">No data available</p>
           )}
-
-          {/* Subcategory Legend */}
-          <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
-            {subcategoryData.map((sub, index) => (
-              <div key={sub.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-gray-700">{sub.name}</span>
-                </div>
-                <span className="font-medium text-gray-900">
-                  ${sub.value.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
