@@ -1,30 +1,33 @@
-import type { Holding, Security, Account } from '@prisma/client'
+import type { Holding, Security, Account } from "@prisma/client";
 
 type HoldingWithRelations = Holding & {
-  security: Security
-  account?: Account
-}
+  security: Security;
+  account?: Account;
+};
 
 interface HoldingListProps {
-  holdings: HoldingWithRelations[]
-  showAccount?: boolean
+  holdings: HoldingWithRelations[];
+  showAccount?: boolean;
 }
 
-export function HoldingList({ holdings, showAccount = false }: HoldingListProps) {
+export function HoldingList({
+  holdings,
+  showAccount = false,
+}: HoldingListProps) {
   if (holdings.length === 0) {
-    return <p className="text-gray-500">No holdings found.</p>
+    return <p className="text-gray-500">No holdings found.</p>;
   }
 
   // Calculate totals by currency
-  const totalsByCurrency: Record<string, number> = {}
+  const totalsByCurrency: Record<string, number> = {};
 
-  holdings.forEach(h => {
+  holdings.forEach((h) => {
     if (h.institutionPrice && h.isoCurrencyCode) {
-      const value = h.quantity.toNumber() * h.institutionPrice.toNumber()
-      const currency = h.isoCurrencyCode
-      totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + value
+      const value = h.quantity.toNumber() * h.institutionPrice.toNumber();
+      const currency = h.isoCurrencyCode;
+      totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + value;
     }
-  })
+  });
 
   return (
     <div>
@@ -37,10 +40,11 @@ export function HoldingList({ holdings, showAccount = false }: HoldingListProps)
               <div key={currency} className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">{currency}:</span>
                 <span className="font-medium text-lg">
-                  {total.toLocaleString('en-US', {
+                  {total.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })} {currency}
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  {currency}
                 </span>
               </div>
             ))}
@@ -50,36 +54,40 @@ export function HoldingList({ holdings, showAccount = false }: HoldingListProps)
 
       {/* Holdings List */}
       <ul className="space-y-2">
-        {holdings.map(h => (
-        <li key={h.id} className="border p-3 rounded">
-          <div className="flex items-start gap-3">
-            {h.security.logoUrl && (
-              <img
-                src={h.security.logoUrl}
-                alt={h.security.tickerSymbol || ''}
-                className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="font-medium">
-                {h.security.tickerSymbol || h.security.name} — {h.quantity.toString()} shares
-              </div>
-              <div className="text-sm text-gray-600">
-                {showAccount && h.account && `${h.account.name} · `}
-                {h.isoCurrencyCode}
-              </div>
-              {h.costBasis && <div className="text-sm">Cost Basis: {h.costBasis.toString()}</div>}
-              {h.institutionPrice && (
-                <div className="text-sm">
-                  Price: {h.institutionPrice.toString()}
-                  {h.institutionPriceAsOf && ` (as of ${h.institutionPriceAsOf.toISOString().slice(0, 10)})`}
-                </div>
+        {holdings.map((h) => (
+          <li key={h.id} className="border p-3 rounded">
+            <div className="flex items-start gap-3">
+              {h.security.logoUrl && (
+                <img
+                  src={h.security.logoUrl}
+                  alt={h.security.tickerSymbol || ""}
+                  className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
+                />
               )}
+              <div className="flex-1 min-w-0">
+                <div className="font-medium">
+                  {h.security.tickerSymbol || h.security.name} —{" "}
+                  {h.quantity.toString()} shares
+                </div>
+                <div className="text-sm text-gray-600">
+                  {showAccount && h.account && `${h.account.name} · `}
+                  {h.isoCurrencyCode}
+                </div>
+                {h.costBasis && (
+                  <div className="text-sm">
+                    Cost Basis: {h.costBasis.toString()}
+                  </div>
+                )}
+                {h.institutionPrice && (
+                  <div className="text-sm">
+                    Price: {h.institutionPrice.toString()}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </li>
-      ))}
+          </li>
+        ))}
       </ul>
     </div>
-  )
+  );
 }
