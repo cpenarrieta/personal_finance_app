@@ -67,7 +67,10 @@ export function HoldingList({
               <div className="flex-1 min-w-0">
                 <div className="font-medium">
                   {h.security.tickerSymbol || h.security.name} —{" "}
-                  {h.quantity.toString()} shares
+                  {h.quantity.toNumber().toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 6,
+                  })} shares
                 </div>
                 <div className="text-sm text-gray-600">
                   {showAccount && h.account && `${h.account.name} · `}
@@ -75,12 +78,18 @@ export function HoldingList({
                 </div>
                 {h.costBasis && (
                   <div className="text-sm">
-                    Cost Basis: {h.costBasis.toString()}
+                    Cost Basis: {h.costBasis.toNumber().toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </div>
                 )}
                 {h.institutionPrice && (
                   <div className="text-sm">
-                    Price: {h.institutionPrice.toString()}
+                    Price: {h.institutionPrice.toNumber().toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </div>
                 )}
               </div>

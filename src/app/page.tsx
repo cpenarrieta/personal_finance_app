@@ -47,6 +47,9 @@ export default async function Page() {
         <Link className="underline hover:text-blue-600" href="/transactions">
           Banking Transactions
         </Link>
+        <Link className="underline hover:text-blue-600" href="/analytics">
+          Transaction Analytics
+        </Link>
         <Link className="underline hover:text-blue-600" href="/investments/transactions">
           Investment Transactions
         </Link>

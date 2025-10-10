@@ -35,9 +35,18 @@ export function InvestmentTransactionList({ transactions, showAccount = false }:
                 {t.date.toISOString().slice(0, 10)} · Type: {t.type}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
-              {t.quantity && <div className="text-sm">Quantity: {t.quantity.toString()}</div>}
-              {t.amount && <div className="text-sm">Amount: {t.amount.toString()}</div>}
-              {t.price && <div className="text-sm">Price: {t.price.toString()}</div>}
+              {t.quantity && <div className="text-sm">Quantity: {t.quantity.toNumber().toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 6,
+              })}</div>}
+              {t.amount && <div className="text-sm">Amount: {t.amount.toNumber().toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</div>}
+              {t.price && <div className="text-sm">Price: {t.price.toNumber().toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</div>}
             </div>
           </div>
         </li>

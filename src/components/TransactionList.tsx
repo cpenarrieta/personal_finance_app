@@ -28,7 +28,10 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
             )}
             <div className="flex-1 min-w-0">
               <div className="font-medium">
-                {t.name} — {t.amount.toString()} {t.isoCurrencyCode}
+                {t.name} — {t.amount.toNumber().toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })} {t.isoCurrencyCode}
                 {t.pending && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Pending</span>}
               </div>
               <div className="text-sm text-gray-600">
