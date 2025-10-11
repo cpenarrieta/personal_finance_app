@@ -85,9 +85,10 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
     return filteredHoldings.map(h => {
       const quantity = Number(h.quantity)
       const price = Number(h.institutionPrice || 0)
-      const costBasis = Number(h.costBasis || 0)
+      const costBasis = Number(h.costBasis || 0) // Total cost basis (already the total amount spent)
       const marketValue = quantity * price
-      const totalCost = quantity * costBasis
+      const totalCost = costBasis // costBasis is already the total cost
+      const avgCostBasis = quantity > 0 ? costBasis / quantity : 0 // Calculate per-share cost
       const gainLoss = marketValue - totalCost
       const gainLossPercent = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0
 
@@ -95,7 +96,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         ...h,
         calculatedQuantity: quantity,
         calculatedPrice: price,
-        calculatedCostBasis: costBasis,
+        calculatedCostBasis: avgCostBasis, // Store the per-share cost for display
         marketValue,
         totalCost,
         gainLoss,
