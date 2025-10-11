@@ -21,6 +21,10 @@ export default async function AnalyticsPage() {
     updatedAt: t.updatedAt.toISOString(),
     account: t.account ? {
       ...t.account,
+      currentBalance: t.account.currentBalance?.toString() || null,
+      availableBalance: t.account.availableBalance?.toString() || null,
+      creditLimit: t.account.creditLimit?.toString() || null,
+      balanceUpdatedAt: t.account.balanceUpdatedAt?.toISOString() || null,
       createdAt: t.account.createdAt.toISOString(),
       updatedAt: t.account.updatedAt.toISOString(),
     } : null,
