@@ -32,13 +32,21 @@ export default async function Page() {
     orderBy: { name: 'asc' },
   })
 
+  // Fetch holdings for investment value
+  const holdings = await prisma.holding.findMany({
+    include: { security: true },
+  })
+
   // Calculate total balances
   const totalCurrent = accounts.reduce((sum, acc) => {
     return sum + (acc.currentBalance?.toNumber() || 0)
   }, 0)
 
-  const totalAvailable = accounts.reduce((sum, acc) => {
-    return sum + (acc.availableBalance?.toNumber() || 0)
+  // Calculate total investment value from holdings
+  const totalInvestmentValue = holdings.reduce((sum, holding) => {
+    const quantity = holding.quantity.toNumber()
+    const price = holding.institutionPrice?.toNumber() || 0
+    return sum + (quantity * price)
   }, 0)
 
   return (
@@ -61,12 +69,12 @@ export default async function Page() {
               <div className="text-sm opacity-75">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</div>
             </div>
 
-            <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg shadow-lg p-6 text-white">
-              <div className="text-sm opacity-90 mb-1">Total Available Balance</div>
+            <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg shadow-lg p-6 text-white">
+              <div className="text-sm opacity-90 mb-1">Total Investment Value</div>
               <div className="text-4xl font-bold mb-2">
-                ${totalAvailable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${totalInvestmentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <div className="text-sm opacity-75">Ready to spend</div>
+              <div className="text-sm opacity-75">{holdings.length} holding{holdings.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
         )}
