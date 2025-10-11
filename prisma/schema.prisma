@@ -41,6 +41,13 @@ model Account {
   type            String
   subtype         String?
   currency        String?
+
+  // Balance information (updated during sync)
+  currentBalance   Decimal? @db.Decimal(14, 2)
+  availableBalance Decimal? @db.Decimal(14, 2)
+  creditLimit      Decimal? @db.Decimal(14, 2)
+  balanceUpdatedAt DateTime?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   transactions    Transaction[]

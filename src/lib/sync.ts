@@ -101,6 +101,10 @@ export async function syncAllItems() {
             type: a.type,
             subtype: a.subtype || null,
             currency: a.balances.iso_currency_code || null,
+            currentBalance: a.balances.current != null ? new Prisma.Decimal(a.balances.current) : null,
+            availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
+            creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
+            balanceUpdatedAt: new Date(),
           },
           create: {
             plaidAccountId: a.account_id,
@@ -111,6 +115,10 @@ export async function syncAllItems() {
             type: a.type,
             subtype: a.subtype || null,
             currency: a.balances.iso_currency_code || null,
+            currentBalance: a.balances.current != null ? new Prisma.Decimal(a.balances.current) : null,
+            availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
+            creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
+            balanceUpdatedAt: new Date(),
           },
         })
       }
