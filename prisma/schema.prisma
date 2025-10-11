@@ -100,7 +100,7 @@ model Holding {
   securityId    String
   security      Security @relation(fields: [securityId], references: [id])
   quantity      Decimal  @db.Decimal(20, 8)
-  costBasis     Decimal? @db.Decimal(20, 8)
+  costBasis     Decimal? @db.Decimal(20, 8) // original price you paid for the shares
   institutionPrice Decimal? @db.Decimal(20, 8)
   institutionPriceAsOf DateTime?
   isoCurrencyCode String?

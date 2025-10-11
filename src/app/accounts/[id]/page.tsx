@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { TransactionList } from '@/components/TransactionList'
+import { SearchableTransactionList } from '@/components/SearchableTransactionList'
 import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
 import { HoldingList } from '@/components/HoldingList'
 
@@ -39,10 +39,41 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
     })
   } else {
     // Fetch regular banking transactions
-    transactions = await prisma.transaction.findMany({
+    const txs = await prisma.transaction.findMany({
       where: { accountId: account.id },
       orderBy: { date: 'desc' },
+      include: { account: true },
     })
+
+    // Serialize transactions for client component
+    transactions = txs.map(t => ({
+      id: t.id,
+      plaidTransactionId: t.plaidTransactionId,
+      accountId: t.accountId,
+      amount: t.amount.toString(),
+      isoCurrencyCode: t.isoCurrencyCode,
+      date: t.date.toISOString(),
+      authorizedDate: t.authorizedDate?.toISOString() || null,
+      pending: t.pending,
+      merchantName: t.merchantName,
+      name: t.name,
+      category: t.category,
+      subcategory: t.subcategory,
+      paymentChannel: t.paymentChannel,
+      pendingTransactionId: t.pendingTransactionId,
+      logoUrl: t.logoUrl,
+      categoryIconUrl: t.categoryIconUrl,
+      customCategoryId: t.customCategoryId,
+      customSubcategoryId: t.customSubcategoryId,
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+      account: t.account ? {
+        id: t.account.id,
+        name: t.account.name,
+        type: t.account.type,
+        mask: t.account.mask,
+      } : null,
+    }))
   }
 
   return (
@@ -83,7 +114,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         /* Banking Transactions Section */
         <div>
           <h3 className="text-lg font-semibold mb-3">Transactions</h3>
-          <TransactionList transactions={transactions} />
+          <SearchableTransactionList transactions={transactions} />
         </div>
       )}
     </div>
