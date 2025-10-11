@@ -26,6 +26,21 @@ async function doFreshSync() {
 }
 
 export default async function Page() {
+  // Fetch accounts with balance information
+  const accounts = await prisma.account.findMany({
+    include: { item: { include: { institution: true } } },
+    orderBy: { name: 'asc' },
+  })
+
+  // Calculate total balances
+  const totalCurrent = accounts.reduce((sum, acc) => {
+    return sum + (acc.currentBalance?.toNumber() || 0)
+  }, 0)
+
+  const totalAvailable = accounts.reduce((sum, acc) => {
+    return sum + (acc.availableBalance?.toNumber() || 0)
+  }, 0)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto p-6 space-y-8">
@@ -34,6 +49,27 @@ export default async function Page() {
           <h1 className="text-4xl font-bold text-gray-900">Personal Finance Dashboard</h1>
           <p className="text-gray-600">Manage your accounts, track investments, and analyze spending</p>
         </div>
+
+        {/* Account Balances Summary */}
+        {accounts.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 text-white">
+              <div className="text-sm opacity-90 mb-1">Total Current Balance</div>
+              <div className="text-4xl font-bold mb-2">
+                ${totalCurrent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className="text-sm opacity-75">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-lg shadow-lg p-6 text-white">
+              <div className="text-sm opacity-90 mb-1">Total Available Balance</div>
+              <div className="text-4xl font-bold mb-2">
+                ${totalAvailable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className="text-sm opacity-75">Ready to spend</div>
+            </div>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-md border p-6">
@@ -48,6 +84,64 @@ export default async function Page() {
             <FreshSyncButton action={doFreshSync} />
           </div>
         </div>
+
+        {/* Account Balances Detail */}
+        {accounts.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md border overflow-hidden">
+            <div className="px-6 py-4 border-b bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">Account Balances</h2>
+            </div>
+            <div className="divide-y">
+              {accounts
+                .filter((account) => {
+                  const currentBal = account.currentBalance?.toNumber() || 0
+                  const availableBal = account.availableBalance?.toNumber() || 0
+                  return currentBal !== 0 || availableBal !== 0
+                })
+                .map((account) => (
+                <Link
+                  key={account.id}
+                  href={`/accounts/${account.id}`}
+                  className="block px-6 py-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">
+                        {account.name}
+                        {account.mask && <span className="text-gray-500 ml-2">••{account.mask}</span>}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {account.type}{account.subtype ? ` • ${account.subtype}` : ''}
+                      </div>
+                      {account.balanceUpdatedAt && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          Updated {new Date(account.balanceUpdatedAt).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right ml-4">
+                      {account.currentBalance !== null && (
+                        <div className="font-semibold text-gray-900">
+                          ${account.currentBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
+                      {account.availableBalance !== null && account.availableBalance.toNumber() !== account.currentBalance?.toNumber() && (
+                        <div className="text-sm text-gray-600">
+                          Available: ${account.availableBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
+                      {account.creditLimit !== null && (
+                        <div className="text-xs text-gray-500">
+                          Limit: ${account.creditLimit.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Main Navigation Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

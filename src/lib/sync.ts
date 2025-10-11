@@ -15,6 +15,7 @@ export async function syncAllItems() {
       const historicalEndDate = new Date().toISOString().slice(0, 10)
 
       let offset = 0
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const totalTransactions: any[] = []
 
       // Fetch all historical transactions using pagination

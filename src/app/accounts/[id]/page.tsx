@@ -85,14 +85,50 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
       </div>
 
       {/* Account Header */}
-      <div className="mb-6 p-4 border rounded-lg bg-gray-50">
-        <h2 className="text-xl font-semibold">
+      <div className="mb-6 p-6 border rounded-lg bg-white shadow-md">
+        <h2 className="text-2xl font-semibold mb-4">
           {account.name} {account.mask ? `• ${account.mask}` : ''}
         </h2>
-        <div className="text-sm text-gray-600 mt-1">
+        <div className="text-sm text-gray-600 mb-4">
           {account.type}
           {account.subtype ? ` / ${account.subtype}` : ''} · {account.currency}
         </div>
+
+        {/* Balance Information */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          {account.currentBalance !== null && (
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="text-sm text-blue-700 mb-1">Current Balance</div>
+              <div className="text-2xl font-bold text-blue-900">
+                ${account.currentBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+          )}
+
+          {account.availableBalance !== null && (
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <div className="text-sm text-green-700 mb-1">Available Balance</div>
+              <div className="text-2xl font-bold text-green-900">
+                ${account.availableBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+          )}
+
+          {account.creditLimit !== null && (
+            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+              <div className="text-sm text-purple-700 mb-1">Credit Limit</div>
+              <div className="text-2xl font-bold text-purple-900">
+                ${account.creditLimit.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {account.balanceUpdatedAt && (
+          <div className="text-xs text-gray-500 mt-4">
+            Balance last updated: {new Date(account.balanceUpdatedAt).toLocaleString()}
+          </div>
+        )}
       </div>
 
       {/* Display content based on account type */}
