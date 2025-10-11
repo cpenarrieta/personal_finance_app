@@ -28,6 +28,7 @@ export default async function TransactionsPage() {
     categoryIconUrl: t.categoryIconUrl,
     customCategoryId: t.customCategoryId,
     customSubcategoryId: t.customSubcategoryId,
+    notes: t.notes,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
     account: t.account ? {

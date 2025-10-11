@@ -80,6 +80,9 @@ model Transaction {
   customSubcategoryId String?
   customSubcategory   CustomSubcategory? @relation(fields: [customSubcategoryId], references: [id])
 
+  // User notes
+  notes            String?  // User-added notes for the transaction
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

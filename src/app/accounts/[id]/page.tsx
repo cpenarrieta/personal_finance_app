@@ -65,6 +65,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
       categoryIconUrl: t.categoryIconUrl,
       customCategoryId: t.customCategoryId,
       customSubcategoryId: t.customSubcategoryId,
+      notes: t.notes,
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
       account: t.account ? {

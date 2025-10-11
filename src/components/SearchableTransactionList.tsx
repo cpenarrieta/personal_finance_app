@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
+import { EditTransactionModal } from './EditTransactionModal'
+import Link from 'next/link'
 
 interface SerializedTransaction {
   id: string
@@ -22,6 +24,7 @@ interface SerializedTransaction {
   categoryIconUrl: string | null
   customCategoryId: string | null
   customSubcategoryId: string | null
+  notes: string | null
   createdAt: string
   updatedAt: string
   account: {
@@ -43,6 +46,7 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
   const [dateRange, setDateRange] = useState<DateRange>('all')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
+  const [editingTransaction, setEditingTransaction] = useState<SerializedTransaction | null>(null)
 
   // Filter transactions based on search query and date range
   const filteredTransactions = useMemo(() => {
@@ -97,6 +101,7 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
           t.account?.name,
           t.isoCurrencyCode,
           t.amount,
+          t.notes,
         ]
           .filter(Boolean)
           .join(' ')
@@ -275,19 +280,21 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
         ) : (
           <ul className="divide-y divide-gray-200">
             {filteredTransactions.map(t => (
-              <li key={t.id} className="p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-start gap-3">
+              <li key={t.id} className="hover:bg-gray-50 transition-colors">
+                <div className="p-4 flex items-start gap-3">
                   {(t.logoUrl || t.categoryIconUrl) && (
-                    <img
-                      src={t.logoUrl || t.categoryIconUrl || ''}
-                      alt=""
-                      className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5"
-                    />
+                    <Link href={`/transactions/${t.id}`}>
+                      <img
+                        src={t.logoUrl || t.categoryIconUrl || ''}
+                        alt=""
+                        className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
+                      />
+                    </Link>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 flex items-center gap-2">
+                      <Link href={`/transactions/${t.id}`} className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 flex items-center gap-2 hover:text-blue-600">
                           <span className="truncate">{t.name}</span>
                           {t.pending && (
                             <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex-shrink-0">
@@ -313,8 +320,13 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                             {t.subcategory && <span className="text-gray-400">• {t.subcategory}</span>}
                           </div>
                         )}
-                      </div>
-                      <div className="text-right flex-shrink-0">
+                        {t.notes && (
+                          <div className="text-sm text-gray-500 mt-1 italic">
+                            Note: {t.notes}
+                          </div>
+                        )}
+                      </Link>
+                      <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
                         <div
                           className={`text-lg font-semibold ${
                             Number(t.amount) > 0 ? 'text-red-600' : 'text-green-600'
@@ -327,8 +339,18 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                           })}
                         </div>
                         {t.isoCurrencyCode && (
-                          <div className="text-xs text-gray-500 mt-1">{t.isoCurrencyCode}</div>
+                          <div className="text-xs text-gray-500">{t.isoCurrencyCode}</div>
                         )}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setEditingTransaction(t)
+                          }}
+                          className="mt-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        >
+                          Edit
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -338,6 +360,14 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
           </ul>
         )}
       </div>
+
+      {/* Edit Transaction Modal */}
+      {editingTransaction && (
+        <EditTransactionModal
+          transaction={editingTransaction}
+          onClose={() => setEditingTransaction(null)}
+        />
+      )}
     </div>
   )
 }

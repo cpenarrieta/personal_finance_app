@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
+import Link from 'next/link'
 
 // Serialized types (dates and decimals are strings)
 interface SerializedTransaction {
@@ -561,7 +562,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredTransactions.map(transaction => (
-                <tr key={transaction.id} className="hover:bg-gray-50">
+                <tr key={transaction.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/transactions/${transaction.id}`}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {format(new Date(transaction.date), 'MMM dd, yyyy')}
                   </td>
@@ -575,7 +576,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
                         />
                       )}
                       <div>
-                        <div className="font-medium">{transaction.name}</div>
+                        <div className="font-medium hover:text-blue-600">{transaction.name}</div>
                         {transaction.merchantName && (
                           <div className="text-xs text-gray-500">{transaction.merchantName}</div>
                         )}
