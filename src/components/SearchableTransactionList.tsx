@@ -33,6 +33,28 @@ interface SerializedTransaction {
     type: string
     mask: string | null
   } | null
+  customCategory: {
+    id: string
+    name: string
+    imageUrl: string | null
+    createdAt: string
+    updatedAt: string
+  } | null
+  customSubcategory: {
+    id: string
+    categoryId: string
+    name: string
+    imageUrl: string | null
+    createdAt: string
+    updatedAt: string
+    category?: {
+      id: string
+      name: string
+      imageUrl: string | null
+      createdAt: string
+      updatedAt: string
+    }
+  } | null
 }
 
 interface SearchableTransactionListProps {
@@ -47,6 +69,8 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
   const [editingTransaction, setEditingTransaction] = useState<SerializedTransaction | null>(null)
+  const [useCustomCategories, setUseCustomCategories] = useState(true) // Custom categories ON by default
+  const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(false) // Filter for uncategorized transactions
 
   // Filter transactions based on search query and date range
   const filteredTransactions = useMemo(() => {
@@ -87,6 +111,15 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
       )
     }
 
+    // Uncategorized filter
+    if (showOnlyUncategorized) {
+      if (useCustomCategories) {
+        filtered = filtered.filter(t => !t.customCategory)
+      } else {
+        filtered = filtered.filter(t => !t.category)
+      }
+    }
+
     // Search query filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
@@ -96,8 +129,8 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
         const searchableText = [
           t.name,
           t.merchantName,
-          t.category,
-          t.subcategory,
+          useCustomCategories ? t.customCategory?.name : t.category,
+          useCustomCategories ? t.customSubcategory?.name : t.subcategory,
           t.account?.name,
           t.isoCurrencyCode,
           t.amount,
@@ -112,7 +145,7 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
     }
 
     return filtered
-  }, [transactions, searchQuery, dateRange, customStartDate, customEndDate])
+  }, [transactions, searchQuery, dateRange, customStartDate, customEndDate, useCustomCategories, showOnlyUncategorized])
 
   // Calculate totals for filtered transactions
   const totals = useMemo(() => {
@@ -138,6 +171,49 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
 
   return (
     <div className="space-y-4">
+      {/* Category Type Toggle and Filters */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-6">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700">Category Type</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {useCustomCategories ? 'Using your custom categories' : 'Using Plaid categories'}
+              </p>
+            </div>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showOnlyUncategorized}
+                onChange={(e) => setShowOnlyUncategorized(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm font-medium text-gray-700">
+                Show only uncategorized
+              </span>
+            </label>
+          </div>
+          <label className="flex items-center cursor-pointer">
+            <span className={`text-sm font-medium mr-3 ${!useCustomCategories ? 'text-gray-900' : 'text-gray-500'}`}>
+              Plaid
+            </span>
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={useCustomCategories}
+                onChange={(e) => setUseCustomCategories(e.target.checked)}
+                className="sr-only"
+              />
+              <div className={`block w-14 h-8 rounded-full ${useCustomCategories ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+              <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${useCustomCategories ? 'translate-x-6' : ''}`}></div>
+            </div>
+            <span className={`text-sm font-medium ml-3 ${useCustomCategories ? 'text-gray-900' : 'text-gray-500'}`}>
+              Custom
+            </span>
+          </label>
+        </div>
+      </div>
+
       {/* Search and Date Filter */}
       <div className="bg-white p-4 rounded-lg shadow-sm border">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -311,14 +387,26 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                             Merchant: {t.merchantName}
                           </div>
                         )}
-                        {t.category && (
-                          <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                            {t.categoryIconUrl && (
-                              <img src={t.categoryIconUrl} alt="" className="w-4 h-4 rounded" />
-                            )}
-                            <span>Category: {t.category}</span>
-                            {t.subcategory && <span className="text-gray-400">• {t.subcategory}</span>}
-                          </div>
+                        {useCustomCategories ? (
+                          t.customCategory && (
+                            <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                              {t.customCategory.imageUrl && (
+                                <img src={t.customCategory.imageUrl} alt="" className="w-4 h-4 rounded" />
+                              )}
+                              <span>Category: {t.customCategory.name}</span>
+                              {t.customSubcategory && <span className="text-gray-400">• {t.customSubcategory.name}</span>}
+                            </div>
+                          )
+                        ) : (
+                          t.category && (
+                            <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                              {t.categoryIconUrl && (
+                                <img src={t.categoryIconUrl} alt="" className="w-4 h-4 rounded" />
+                              )}
+                              <span>Category: {t.category}</span>
+                              {t.subcategory && <span className="text-gray-400">• {t.subcategory}</span>}
+                            </div>
+                          )
                         )}
                         {t.notes && (
                           <div className="text-sm text-gray-500 mt-1 italic">

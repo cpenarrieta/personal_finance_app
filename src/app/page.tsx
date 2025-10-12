@@ -3,6 +3,8 @@ import { syncAllItems } from '@/lib/sync'
 import { revalidatePath } from 'next/cache'
 import { SyncButton } from '@/components/SyncButton'
 import { FreshSyncButton } from '@/components/FreshSyncButton'
+import { CategorizeButton } from '@/components/CategorizeButton'
+import { RecategorizeButton } from '@/components/RecategorizeButton'
 import { prisma } from '@/lib/prisma'
 
 async function doSync() {
@@ -90,6 +92,8 @@ export default async function Page() {
             </Link>
             <SyncButton action={doSync} />
             <FreshSyncButton action={doFreshSync} />
+            <CategorizeButton />
+            <RecategorizeButton />
           </div>
         </div>
 

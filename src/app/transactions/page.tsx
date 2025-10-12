@@ -5,7 +5,15 @@ import { SearchableTransactionList } from '@/components/SearchableTransactionLis
 export default async function TransactionsPage() {
   const txs = await prisma.transaction.findMany({
     orderBy: { date: 'desc' },
-    include: { account: true },
+    include: {
+      account: true,
+      customCategory: true,
+      customSubcategory: {
+        include: {
+          category: true,
+        },
+      },
+    },
   })
 
   // Serialize transactions for client component
@@ -36,6 +44,28 @@ export default async function TransactionsPage() {
       name: t.account.name,
       type: t.account.type,
       mask: t.account.mask,
+    } : null,
+    customCategory: t.customCategory ? {
+      id: t.customCategory.id,
+      name: t.customCategory.name,
+      imageUrl: t.customCategory.imageUrl,
+      createdAt: t.customCategory.createdAt.toISOString(),
+      updatedAt: t.customCategory.updatedAt.toISOString(),
+    } : null,
+    customSubcategory: t.customSubcategory ? {
+      id: t.customSubcategory.id,
+      categoryId: t.customSubcategory.categoryId,
+      name: t.customSubcategory.name,
+      imageUrl: t.customSubcategory.imageUrl,
+      createdAt: t.customSubcategory.createdAt.toISOString(),
+      updatedAt: t.customSubcategory.updatedAt.toISOString(),
+      category: t.customSubcategory.category ? {
+        id: t.customSubcategory.category.id,
+        name: t.customSubcategory.category.name,
+        imageUrl: t.customSubcategory.category.imageUrl,
+        createdAt: t.customSubcategory.category.createdAt.toISOString(),
+        updatedAt: t.customSubcategory.category.updatedAt.toISOString(),
+      } : undefined,
     } : null,
   }))
 

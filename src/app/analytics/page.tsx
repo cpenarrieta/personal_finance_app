@@ -3,11 +3,17 @@ import Link from 'next/link'
 import { TransactionAnalytics } from '@/components/TransactionAnalytics'
 
 export default async function AnalyticsPage() {
-  // Fetch all transactions with their Plaid categories
+  // Fetch all transactions with their Plaid categories and custom categories
   const transactions = await prisma.transaction.findMany({
     orderBy: { date: 'desc' },
     include: {
       account: true,
+      customCategory: true,
+      customSubcategory: {
+        include: {
+          category: true,
+        },
+      },
     },
   })
 
@@ -27,6 +33,21 @@ export default async function AnalyticsPage() {
       balanceUpdatedAt: t.account.balanceUpdatedAt?.toISOString() || null,
       createdAt: t.account.createdAt.toISOString(),
       updatedAt: t.account.updatedAt.toISOString(),
+    } : null,
+    customCategory: t.customCategory ? {
+      ...t.customCategory,
+      createdAt: t.customCategory.createdAt.toISOString(),
+      updatedAt: t.customCategory.updatedAt.toISOString(),
+    } : null,
+    customSubcategory: t.customSubcategory ? {
+      ...t.customSubcategory,
+      createdAt: t.customSubcategory.createdAt.toISOString(),
+      updatedAt: t.customSubcategory.updatedAt.toISOString(),
+      category: t.customSubcategory.category ? {
+        ...t.customSubcategory.category,
+        createdAt: t.customSubcategory.category.createdAt.toISOString(),
+        updatedAt: t.customSubcategory.category.updatedAt.toISOString(),
+      } : undefined,
     } : null,
   }))
 
