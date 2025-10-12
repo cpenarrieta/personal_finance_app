@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
 import { EditTransactionModal } from './EditTransactionModal'
 import Link from 'next/link'
@@ -71,6 +71,14 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
   const [editingTransaction, setEditingTransaction] = useState<SerializedTransaction | null>(null)
   const [useCustomCategories, setUseCustomCategories] = useState(true) // Custom categories ON by default
   const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(false) // Filter for uncategorized transactions
+
+  // Bulk update state
+  const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set())
+  const [showBulkUpdate, setShowBulkUpdate] = useState(false)
+  const [bulkCategoryId, setBulkCategoryId] = useState('')
+  const [bulkSubcategoryId, setBulkSubcategoryId] = useState('')
+  const [categories, setCategories] = useState<{ id: string; name: string; subcategories: { id: string; name: string }[] }[]>([])
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false)
 
   // Filter transactions based on search query and date range
   const filteredTransactions = useMemo(() => {
@@ -147,6 +155,22 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
     return filtered
   }, [transactions, searchQuery, dateRange, customStartDate, customEndDate, useCustomCategories, showOnlyUncategorized])
 
+  // Fetch custom categories for bulk update
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch('/api/custom-categories')
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error)
+      }
+    }
+    fetchCategories()
+  }, [])
+
   // Calculate totals for filtered transactions
   const totals = useMemo(() => {
     const expenses = filteredTransactions
@@ -168,6 +192,65 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
       count: filteredTransactions.length,
     }
   }, [filteredTransactions])
+
+  // Toggle transaction selection
+  const toggleTransaction = (id: string) => {
+    const newSelected = new Set(selectedTransactions)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedTransactions(newSelected)
+  }
+
+  // Select all filtered transactions
+  const selectAll = () => {
+    setSelectedTransactions(new Set(filteredTransactions.map(t => t.id)))
+  }
+
+  // Deselect all
+  const deselectAll = () => {
+    setSelectedTransactions(new Set())
+  }
+
+  // Handle bulk update
+  const handleBulkUpdate = async () => {
+    if (selectedTransactions.size === 0 || !bulkCategoryId) {
+      return
+    }
+
+    setIsBulkUpdating(true)
+    try {
+      const response = await fetch('/api/transactions/bulk-update', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transactionIds: Array.from(selectedTransactions),
+          customCategoryId: bulkCategoryId,
+          customSubcategoryId: bulkSubcategoryId || null,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to bulk update transactions')
+      }
+
+      // Refresh the page to show updated data
+      window.location.reload()
+    } catch (error) {
+      console.error('Error bulk updating transactions:', error)
+      alert('Failed to update transactions. Please try again.')
+    } finally {
+      setIsBulkUpdating(false)
+    }
+  }
+
+  // Get subcategories for selected bulk category
+  const selectedBulkCategory = categories.find(c => c.id === bulkCategoryId)
+  const availableBulkSubcategories = selectedBulkCategory?.subcategories || []
 
   return (
     <div className="space-y-4">
@@ -309,10 +392,101 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
           </div>
         </div>
 
-        <div className="mt-3 text-sm text-gray-600">
-          Showing {filteredTransactions.length} of {transactions.length} transactions
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Showing {filteredTransactions.length} of {transactions.length} transactions
+          </div>
+          {filteredTransactions.length > 0 && (
+            <button
+              onClick={() => setShowBulkUpdate(!showBulkUpdate)}
+              className="text-sm px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+            >
+              {showBulkUpdate ? 'Hide Bulk Update' : 'Bulk Update'}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Bulk Update Panel */}
+      {showBulkUpdate && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-purple-900">Bulk Update Categories</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={selectAll}
+                className="text-sm px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+              >
+                Select All ({filteredTransactions.length})
+              </button>
+              <button
+                onClick={deselectAll}
+                className="text-sm px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                Deselect All
+              </button>
+            </div>
+          </div>
+
+          {selectedTransactions.size > 0 && (
+            <div className="bg-white rounded-lg p-4 mb-4">
+              <p className="text-sm text-gray-700 mb-3">
+                Selected {selectedTransactions.size} transaction{selectedTransactions.size !== 1 ? 's' : ''}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Custom Category
+                  </label>
+                  <select
+                    value={bulkCategoryId}
+                    onChange={(e) => {
+                      setBulkCategoryId(e.target.value)
+                      setBulkSubcategoryId('')
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">Select category...</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Custom Subcategory
+                  </label>
+                  <select
+                    value={bulkSubcategoryId}
+                    onChange={(e) => setBulkSubcategoryId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    disabled={!bulkCategoryId}
+                  >
+                    <option value="">None</option>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {availableBulkSubcategories.map((sub: any) => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  onClick={handleBulkUpdate}
+                  disabled={!bulkCategoryId || isBulkUpdating}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
+                >
+                  {isBulkUpdating ? 'Updating...' : `Update ${selectedTransactions.size} Transaction${selectedTransactions.size !== 1 ? 's' : ''}`}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -358,19 +532,28 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
             {filteredTransactions.map(t => (
               <li key={t.id} className="hover:bg-gray-50 transition-colors">
                 <div className="p-4 flex items-start gap-3">
+                  {showBulkUpdate && (
+                    <input
+                      type="checkbox"
+                      checked={selectedTransactions.has(t.id)}
+                      onChange={() => toggleTransaction(t.id)}
+                      className="mt-1 w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
                   {(t.logoUrl || t.categoryIconUrl) && (
                     <img
                       src={t.logoUrl || t.categoryIconUrl || ''}
                       alt=""
                       className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
-                      onClick={() => setEditingTransaction(t)}
+                      onClick={() => !showBulkUpdate && setEditingTransaction(t)}
                     />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
                       <div
                         className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => setEditingTransaction(t)}
+                        onClick={() => !showBulkUpdate && setEditingTransaction(t)}
                       >
                         <div className="font-medium text-gray-900 flex items-center gap-2">
                           <span className="truncate">{t.name}</span>
