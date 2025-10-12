@@ -55,8 +55,6 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
 
   // Form state
   const [name, setName] = useState(transaction.name)
-  const [plaidCategory, setPlaidCategory] = useState(transaction.category || '')
-  const [plaidSubcategory, setPlaidSubcategory] = useState(transaction.subcategory || '')
   const [customCategoryId, setCustomCategoryId] = useState(transaction.customCategoryId || '')
   const [customSubcategoryId, setCustomSubcategoryId] = useState(transaction.customSubcategoryId || '')
   const [notes, setNotes] = useState(transaction.notes || '')
@@ -107,8 +105,6 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
         },
         body: JSON.stringify({
           name,
-          category: plaidCategory || null,
-          subcategory: plaidSubcategory || null,
           customCategoryId: customCategoryId || null,
           customSubcategoryId: customSubcategoryId || null,
           notes: notes || null,
@@ -160,35 +156,6 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Transaction name"
               />
-            </div>
-
-            {/* Plaid Category */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Plaid Category
-                </label>
-                <input
-                  type="text"
-                  value={plaidCategory}
-                  onChange={(e) => setPlaidCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="E.g., FOOD_AND_DRINK"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Plaid Subcategory
-                </label>
-                <input
-                  type="text"
-                  value={plaidSubcategory}
-                  onChange={(e) => setPlaidSubcategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="E.g., RESTAURANTS"
-                />
-              </div>
             </div>
 
             {/* Custom Categories */}
