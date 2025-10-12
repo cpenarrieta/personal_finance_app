@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
 import Link from 'next/link'
@@ -79,35 +79,48 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
   const [dateRange, setDateRange] = useState<DateRange>('last30')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all')
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set())
+  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<Set<string>>(new Set())
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'category'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showExpensesOnly, setShowExpensesOnly] = useState(true)
-  const [useCustomCategories, setUseCustomCategories] = useState(true) // Custom categories ON by default
+  const [categories, setCategories] = useState<{ id: string; name: string; subcategories: { id: string; name: string }[] }[]>([])
 
-  // Get unique categories and subcategories from transactions
-  const { uniqueCategories, uniqueSubcategories } = useMemo(() => {
-    const categories = new Set<string>()
-    const subcategories = new Set<string>()
-
-    transactions.forEach(t => {
-      if (useCustomCategories) {
-        // Use custom categories
-        if (t.customCategory) categories.add(t.customCategory.name)
-        if (t.customSubcategory) subcategories.add(t.customSubcategory.name)
-      } else {
-        // Use Plaid categories
-        if (t.category) categories.add(t.category)
-        if (t.subcategory) subcategories.add(t.subcategory)
+  // Fetch custom categories
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch('/api/custom-categories')
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error)
       }
-    })
-
-    return {
-      uniqueCategories: Array.from(categories).sort(),
-      uniqueSubcategories: Array.from(subcategories).sort(),
     }
-  }, [transactions, useCustomCategories])
+    fetchCategories()
+  }, [])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCategoryDropdown(false)
+      }
+    }
+
+    if (showCategoryDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [showCategoryDropdown])
+
+  // No longer needed - we're using the categories from the API
 
   // Filter transactions
   const filteredTransactions = useMemo(() => {
@@ -153,22 +166,20 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
       filtered = filtered.filter(t => Number(t.amount) > 0)
     }
 
-    // Category filter
-    if (selectedCategory !== 'all') {
-      if (useCustomCategories) {
-        filtered = filtered.filter(t => t.customCategory?.name === selectedCategory)
-      } else {
-        filtered = filtered.filter(t => t.category === selectedCategory)
-      }
+    // Category filter (multi-select)
+    if (selectedCategoryIds.size > 0) {
+      filtered = filtered.filter(t => {
+        if (!t.customCategoryId) return false
+        return selectedCategoryIds.has(t.customCategoryId)
+      })
     }
 
-    // Subcategory filter
-    if (selectedSubcategory !== 'all') {
-      if (useCustomCategories) {
-        filtered = filtered.filter(t => t.customSubcategory?.name === selectedSubcategory)
-      } else {
-        filtered = filtered.filter(t => t.subcategory === selectedSubcategory)
-      }
+    // Subcategory filter (multi-select)
+    if (selectedSubcategoryIds.size > 0) {
+      filtered = filtered.filter(t => {
+        if (!t.customSubcategoryId) return false
+        return selectedSubcategoryIds.has(t.customSubcategoryId)
+      })
     }
 
     // Sorting
@@ -182,12 +193,8 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
           comparison = Number(a.amount) - Number(b.amount)
           break
         case 'category':
-          const catA = useCustomCategories 
-            ? (a.customCategory?.name || '') 
-            : (a.category || '')
-          const catB = useCustomCategories 
-            ? (b.customCategory?.name || '') 
-            : (b.category || '')
+          const catA = a.customCategory?.name || ''
+          const catB = b.customCategory?.name || ''
           comparison = catA.localeCompare(catB)
           break
       }
@@ -195,7 +202,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
     })
 
     return filtered
-  }, [transactions, dateRange, customStartDate, customEndDate, selectedCategory, selectedSubcategory, sortBy, sortOrder, showExpensesOnly, useCustomCategories])
+  }, [transactions, dateRange, customStartDate, customEndDate, selectedCategoryIds, selectedSubcategoryIds, sortBy, sortOrder, showExpensesOnly])
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -225,16 +232,8 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
 
     filteredTransactions.forEach(t => {
       const amount = Math.abs(Number(t.amount))
-      let categoryName: string
-      let imageUrl: string | null | undefined
-
-      if (useCustomCategories) {
-        categoryName = t.customCategory?.name || 'Uncategorized'
-        imageUrl = t.customCategory?.imageUrl
-      } else {
-        categoryName = t.category || 'Uncategorized'
-        imageUrl = t.categoryIconUrl
-      }
+      const categoryName = t.customCategory?.name || 'Uncategorized'
+      const imageUrl = t.customCategory?.imageUrl
 
       if (categoryMap.has(categoryName)) {
         categoryMap.get(categoryName)!.value += amount
@@ -246,7 +245,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
     return Array.from(categoryMap.values())
       .sort((a, b) => b.value - a.value)
       .slice(0, 10) // Top 10 categories
-  }, [filteredTransactions, useCustomCategories])
+  }, [filteredTransactions])
 
   // Subcategory breakdown data
   const subcategoryData = useMemo(() => {
@@ -254,16 +253,8 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
 
     filteredTransactions.forEach(t => {
       const amount = Math.abs(Number(t.amount))
-      let subcategoryName: string
-      let imageUrl: string | null | undefined
-
-      if (useCustomCategories) {
-        subcategoryName = t.customSubcategory?.name || 'No Subcategory'
-        imageUrl = t.customSubcategory?.imageUrl
-      } else {
-        subcategoryName = t.subcategory || 'No Subcategory'
-        imageUrl = undefined
-      }
+      const subcategoryName = t.customSubcategory?.name || 'No Subcategory'
+      const imageUrl = t.customSubcategory?.imageUrl
 
       if (subcategoryMap.has(subcategoryName)) {
         subcategoryMap.get(subcategoryName)!.value += amount
@@ -275,7 +266,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
     return Array.from(subcategoryMap.values())
       .sort((a, b) => b.value - a.value)
       .slice(0, 10) // Top 10 subcategories
-  }, [filteredTransactions, useCustomCategories])
+  }, [filteredTransactions])
 
   // Monthly trend data
   const monthlyData = useMemo(() => {
@@ -310,56 +301,64 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
     }
   }
 
+  // Toggle category selection
+  const toggleCategory = (categoryId: string) => {
+    const newSelected = new Set(selectedCategoryIds)
+    if (newSelected.has(categoryId)) {
+      newSelected.delete(categoryId)
+      // Also remove all subcategories of this category
+      const category = categories.find(c => c.id === categoryId)
+      if (category) {
+        const newSelectedSubs = new Set(selectedSubcategoryIds)
+        category.subcategories.forEach(sub => newSelectedSubs.delete(sub.id))
+        setSelectedSubcategoryIds(newSelectedSubs)
+      }
+    } else {
+      newSelected.add(categoryId)
+    }
+    setSelectedCategoryIds(newSelected)
+  }
+
+  // Toggle subcategory selection
+  const toggleSubcategory = (subcategoryId: string, categoryId: string) => {
+    const newSelected = new Set(selectedSubcategoryIds)
+    if (newSelected.has(subcategoryId)) {
+      newSelected.delete(subcategoryId)
+    } else {
+      newSelected.add(subcategoryId)
+      // Also select the parent category if not selected
+      if (!selectedCategoryIds.has(categoryId)) {
+        setSelectedCategoryIds(new Set(selectedCategoryIds).add(categoryId))
+      }
+    }
+    setSelectedSubcategoryIds(newSelected)
+  }
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setDateRange('last30')
+    setCustomStartDate('')
+    setCustomEndDate('')
+    setSelectedCategoryIds(new Set())
+    setSelectedSubcategoryIds(new Set())
+    setShowExpensesOnly(true)
+  }
+
+  // Check if any filters are active
+  const hasActiveFilters = dateRange !== 'last30' || selectedCategoryIds.size > 0 ||
+    selectedSubcategoryIds.size > 0 || !showExpensesOnly
+
   return (
     <div className="space-y-6">
-      {/* Category Type Toggle */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium text-gray-700">Category Type</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {useCustomCategories ? 'Using your custom categories' : 'Using Plaid categories'}
-            </p>
-          </div>
-          <label className="flex items-center cursor-pointer">
-            <span className={`text-sm font-medium mr-3 ${!useCustomCategories ? 'text-gray-900' : 'text-gray-500'}`}>
-              Plaid
-            </span>
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={useCustomCategories}
-                onChange={(e) => {
-                  setUseCustomCategories(e.target.checked)
-                  setSelectedCategory('all')
-                  setSelectedSubcategory('all')
-                }}
-                className="sr-only"
-              />
-              <div className={`block w-14 h-8 rounded-full ${useCustomCategories ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
-              <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${useCustomCategories ? 'translate-x-6' : ''}`}></div>
-            </div>
-            <span className={`text-sm font-medium ml-3 ${useCustomCategories ? 'text-gray-900' : 'text-gray-500'}`}>
-              Custom
-            </span>
-          </label>
-        </div>
-      </div>
-
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Date Range Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date Range
-            </label>
+      <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Date Range */}
+          <div className="flex-shrink-0">
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value as DateRange)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Time</option>
               <option value="last30">Last 30 Days</option>
@@ -373,87 +372,138 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
           {/* Custom Date Range */}
           {dateRange === 'custom' && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date
-                </label>
+              <div className="flex-shrink-0">
                 <input
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Start date"
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date
-                </label>
+              <div className="flex-shrink-0">
                 <input
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="End date"
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </>
           )}
 
-          {/* Category Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {useCustomCategories ? 'Custom Category' : 'Plaid Category'}
-            </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value)
-                setSelectedSubcategory('all')
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          {/* Category/Subcategory Multi-select */}
+          <div className="flex-shrink-0 relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              className="px-3 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-2"
             >
-              <option value="all">All Categories</option>
-              {uniqueCategories.map(cat => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+              <span className="text-gray-700">Select Categories...</span>
+              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showCategoryDropdown && (
+              <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
+                <div className="p-2">
+                  {categories.map((category) => (
+                    <div key={category.id} className="mb-2">
+                      <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategoryIds.has(category.id)}
+                          onChange={() => toggleCategory(category.id)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-900">{category.name}</span>
+                      </label>
+                      {category.subcategories.length > 0 && selectedCategoryIds.has(category.id) && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {category.subcategories.map((sub) => (
+                            <label key={sub.id} className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedSubcategoryIds.has(sub.id)}
+                                onChange={() => toggleSubcategory(sub.id, category.id)}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">{sub.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Subcategory Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {useCustomCategories ? 'Custom Subcategory' : 'Plaid Subcategory'}
-            </label>
-            <select
-              value={selectedSubcategory}
-              onChange={(e) => setSelectedSubcategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Subcategories</option>
-              {uniqueSubcategories.map(sub => (
-                <option key={sub} value={sub}>
-                  {sub}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Expenses Only Toggle */}
+          <label className="flex items-center cursor-pointer flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={showExpensesOnly}
+              onChange={(e) => setShowExpensesOnly(e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm text-gray-700">Expenses Only</span>
+          </label>
 
-          {/* Show Expenses Only Toggle */}
-          <div className="flex items-center">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showExpensesOnly}
-                onChange={(e) => setShowExpensesOnly(e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Expenses Only
-              </span>
-            </label>
-          </div>
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearAllFilters}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
+
+        {/* Selected Filter Chips */}
+        {(selectedCategoryIds.size > 0 || selectedSubcategoryIds.size > 0) && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {Array.from(selectedCategoryIds).map(catId => {
+              const category = categories.find(c => c.id === catId)
+              if (!category) return null
+              return (
+                <span key={catId} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  {category.name}
+                  <button
+                    onClick={() => toggleCategory(catId)}
+                    className="hover:bg-blue-200 rounded-full p-0.5"
+                  >
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )
+            })}
+            {Array.from(selectedSubcategoryIds).map(subId => {
+              const category = categories.find(c => c.subcategories.some(s => s.id === subId))
+              const subcategory = category?.subcategories.find(s => s.id === subId)
+              if (!subcategory || !category) return null
+              return (
+                <span key={subId} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                  {subcategory.name}
+                  <button
+                    onClick={() => toggleSubcategory(subId, category.id)}
+                    className="hover:bg-indigo-200 rounded-full p-0.5"
+                  >
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Summary Statistics */}
@@ -496,7 +546,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
         {/* Category Breakdown Bar Chart */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4">
-            Spending by {useCustomCategories ? 'Custom' : 'Plaid'} Category (Top 10)
+            Spending by Category (Top 10)
           </h3>
           {categoryData.length > 0 ? (
             <>
@@ -552,7 +602,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
         {/* Subcategory Breakdown Bar Chart */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold mb-4">
-            Spending by {useCustomCategories ? 'Custom' : 'Plaid'} Subcategory (Top 10)
+            Spending by Subcategory (Top 10)
           </h3>
           {subcategoryData.length > 0 ? (
             <>
@@ -692,40 +742,20 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center gap-2">
-                      {useCustomCategories ? (
-                        <>
-                          {transaction.customCategory?.imageUrl && (
-                            <img
-                              src={transaction.customCategory.imageUrl}
-                              alt=""
-                              className="w-5 h-5 rounded"
-                            />
-                          )}
-                          <span className="text-gray-900">
-                            {transaction.customCategory?.name || 'Uncategorized'}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          {transaction.categoryIconUrl && (
-                            <img
-                              src={transaction.categoryIconUrl}
-                              alt=""
-                              className="w-5 h-5 rounded"
-                            />
-                          )}
-                          <span className="text-gray-900">
-                            {transaction.category || 'Uncategorized'}
-                          </span>
-                        </>
+                      {transaction.customCategory?.imageUrl && (
+                        <img
+                          src={transaction.customCategory.imageUrl}
+                          alt=""
+                          className="w-5 h-5 rounded"
+                        />
                       )}
+                      <span className="text-gray-900">
+                        {transaction.customCategory?.name || 'Uncategorized'}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {useCustomCategories 
-                      ? (transaction.customSubcategory?.name || '-')
-                      : (transaction.subcategory || '-')
-                    }
+                    {transaction.customSubcategory?.name || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {transaction.account?.name}
