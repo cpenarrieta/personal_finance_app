@@ -1,14 +1,17 @@
-import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { format } from 'date-fns'
-import { TransactionDetailView } from '@/components/TransactionDetailView'
-import { headers } from 'next/headers'
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { TransactionDetailView } from "@/components/TransactionDetailView";
+import { headers } from "next/headers";
 
-export default async function TransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const headersList = await headers()
-  const referer = headersList.get('referer') || ''
+export default async function TransactionDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const headersList = await headers();
+  const referer = headersList.get("referer") || "";
 
   const transaction = await prisma.transaction.findUnique({
     where: { id },
@@ -17,10 +20,10 @@ export default async function TransactionDetailPage({ params }: { params: Promis
       customCategory: true,
       customSubcategory: true,
     },
-  })
+  });
 
   if (!transaction) {
-    notFound()
+    notFound();
   }
 
   // Serialize transaction for client component
@@ -46,26 +49,34 @@ export default async function TransactionDetailPage({ params }: { params: Promis
     notes: transaction.notes,
     createdAt: transaction.createdAt.toISOString(),
     updatedAt: transaction.updatedAt.toISOString(),
-    account: transaction.account ? {
-      id: transaction.account.id,
-      name: transaction.account.name,
-      type: transaction.account.type,
-      mask: transaction.account.mask,
-    } : null,
-    customCategory: transaction.customCategory ? {
-      id: transaction.customCategory.id,
-      name: transaction.customCategory.name,
-    } : null,
-    customSubcategory: transaction.customSubcategory ? {
-      id: transaction.customSubcategory.id,
-      name: transaction.customSubcategory.name,
-    } : null,
-  }
+    account: transaction.account
+      ? {
+          id: transaction.account.id,
+          name: transaction.account.name,
+          type: transaction.account.type,
+          mask: transaction.account.mask,
+        }
+      : null,
+    customCategory: transaction.customCategory
+      ? {
+          id: transaction.customCategory.id,
+          name: transaction.customCategory.name,
+        }
+      : null,
+    customSubcategory: transaction.customSubcategory
+      ? {
+          id: transaction.customSubcategory.id,
+          name: transaction.customSubcategory.name,
+        }
+      : null,
+  };
 
   // Determine which page to go back to based on referrer
-  const isFromAnalytics = referer.includes('/analytics')
-  const backUrl = isFromAnalytics ? '/analytics' : '/transactions'
-  const backText = isFromAnalytics ? '← Back to Analytics' : '← Back to Transactions'
+  const isFromAnalytics = referer.includes("/analytics");
+  const backUrl = isFromAnalytics ? "/analytics" : "/transactions";
+  const backText = isFromAnalytics
+    ? "← Back to Analytics"
+    : "← Back to Transactions";
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -77,5 +88,5 @@ export default async function TransactionDetailPage({ params }: { params: Promis
 
       <TransactionDetailView transaction={serializedTransaction} />
     </div>
-  )
+  );
 }
