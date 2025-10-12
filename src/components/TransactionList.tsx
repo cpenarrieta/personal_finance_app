@@ -20,9 +20,9 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
       {transactions.map(t => (
         <li key={t.id} className="border p-3 rounded">
           <div className="flex items-start gap-3">
-            {(t.logoUrl || t.categoryIconUrl) && (
+            {t.logoUrl && (
               <img
-                src={t.logoUrl || t.categoryIconUrl || ''}
+                src={t.logoUrl}
                 alt=""
                 className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
               />
@@ -40,7 +40,6 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
               {t.merchantName && <div className="text-sm">Merchant: {t.merchantName}</div>}
-              {t.category && <div className="text-sm text-gray-500">Category: {t.category}</div>}
             </div>
           </div>
         </li>

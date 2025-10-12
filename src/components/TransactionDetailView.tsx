@@ -60,9 +60,9 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
         {/* Header with Logo/Icon */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
           <div className="flex items-start gap-4">
-            {(transaction.logoUrl || transaction.categoryIconUrl) && (
+            {transaction.logoUrl && (
               <img
-                src={transaction.logoUrl || transaction.categoryIconUrl || ''}
+                src={transaction.logoUrl}
                 alt=""
                 className="w-16 h-16 rounded-lg object-cover bg-white flex-shrink-0"
               />
@@ -142,24 +142,9 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
 
             {/* Category Information */}
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Plaid Category</label>
-                <div className="flex items-center gap-2">
-                  {transaction.categoryIconUrl && (
-                    <img src={transaction.categoryIconUrl} alt="" className="w-5 h-5 rounded" />
-                  )}
-                  <div className="text-gray-900">
-                    {transaction.category || 'Not categorized'}
-                  </div>
-                </div>
-                {transaction.subcategory && (
-                  <div className="text-sm text-gray-500 ml-7">{transaction.subcategory}</div>
-                )}
-              </div>
-
               {(transaction.customCategory || transaction.customSubcategory) && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Custom Category</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Category</label>
                   <div className="text-gray-900">
                     {transaction.customCategory?.name || 'None'}
                   </div>

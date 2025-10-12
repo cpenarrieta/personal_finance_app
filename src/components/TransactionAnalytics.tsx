@@ -725,9 +725,9 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-2">
-                      {(transaction.logoUrl || transaction.categoryIconUrl) && (
+                      {transaction.logoUrl && (
                         <img
-                          src={transaction.logoUrl || transaction.categoryIconUrl || ''}
+                          src={transaction.logoUrl}
                           alt=""
                           className="w-6 h-6 rounded object-cover flex-shrink-0"
                         />

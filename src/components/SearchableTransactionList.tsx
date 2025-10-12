@@ -806,9 +806,9 @@ export function SearchableTransactionList({
                       onClick={(e) => e.stopPropagation()}
                     />
                   )}
-                  {(t.logoUrl || t.categoryIconUrl) && (
+                  {t.logoUrl && (
                     <img
-                      src={t.logoUrl || t.categoryIconUrl || ""}
+                      src={t.logoUrl}
                       alt=""
                       className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
                       onClick={() =>
