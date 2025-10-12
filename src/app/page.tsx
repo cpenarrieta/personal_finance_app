@@ -6,6 +6,7 @@ import { FreshSyncButton } from '@/components/FreshSyncButton'
 import { CategorizeButton } from '@/components/CategorizeButton'
 import { RecategorizeButton } from '@/components/RecategorizeButton'
 import { prisma } from '@/lib/prisma'
+import { format } from 'date-fns'
 
 async function doSync() {
   'use server'
@@ -127,7 +128,7 @@ export default async function Page() {
                       </div>
                       {account.balanceUpdatedAt && (
                         <div className="text-xs text-gray-400 mt-1">
-                          Updated {new Date(account.balanceUpdatedAt).toLocaleString()}
+                          Updated {format(new Date(account.balanceUpdatedAt), 'MMM d yyyy h:mm a')}
                         </div>
                       )}
                     </div>

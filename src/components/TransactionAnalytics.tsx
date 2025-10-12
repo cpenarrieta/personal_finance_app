@@ -671,7 +671,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
               {filteredTransactions.map(transaction => (
                 <tr key={transaction.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/transactions/${transaction.id}`}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {format(new Date(transaction.date), 'MMM dd, yyyy')}
+                    {format(new Date(transaction.date), 'MMM d yyyy')}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-2">

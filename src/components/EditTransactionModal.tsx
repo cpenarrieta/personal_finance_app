@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { format } from 'date-fns'
 
 interface SerializedTransaction {
   id: string
@@ -258,7 +259,7 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
                 <div className="text-gray-600">Account:</div>
                 <div className="font-medium">{transaction.account?.name}</div>
                 <div className="text-gray-600">Date:</div>
-                <div className="font-medium">{new Date(transaction.date).toLocaleDateString()}</div>
+                <div className="font-medium">{format(new Date(transaction.date), 'MMM d yyyy')}</div>
                 {transaction.merchantName && (
                   <>
                     <div className="text-gray-600">Merchant:</div>

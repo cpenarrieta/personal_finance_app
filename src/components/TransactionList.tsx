@@ -1,4 +1,5 @@
 import type { Transaction, Account } from '@prisma/client'
+import { format } from 'date-fns'
 
 type TransactionWithAccount = Transaction & {
   account?: Account
@@ -35,7 +36,7 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
                 {t.pending && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Pending</span>}
               </div>
               <div className="text-sm text-gray-600">
-                {t.date.toISOString().slice(0, 10)}
+                {format(t.date, 'MMM d yyyy')}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
               {t.merchantName && <div className="text-sm">Merchant: {t.merchantName}</div>}

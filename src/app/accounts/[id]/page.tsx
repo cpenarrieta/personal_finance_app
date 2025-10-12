@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { SearchableTransactionList } from '@/components/SearchableTransactionList'
 import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
 import { HoldingList } from '@/components/HoldingList'
+import { format } from 'date-fns'
 
 export default async function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -127,7 +128,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
 
         {account.balanceUpdatedAt && (
           <div className="text-xs text-gray-500 mt-4">
-            Balance last updated: {new Date(account.balanceUpdatedAt).toLocaleString()}
+            Balance last updated: {format(new Date(account.balanceUpdatedAt), 'MMM d yyyy h:mm a')}
           </div>
         )}
       </div>

@@ -112,7 +112,7 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Transaction Date</label>
                 <div className="text-lg font-semibold text-gray-900">
-                  {format(new Date(transaction.date), 'MMMM dd, yyyy')}
+                  {format(new Date(transaction.date), 'MMM d yyyy')}
                 </div>
                 <div className="text-sm text-gray-500">
                   {format(new Date(transaction.date), 'EEEE')} at {format(new Date(transaction.date), 'h:mm a')}
@@ -123,7 +123,7 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Authorized Date</label>
                   <div className="text-gray-900">
-                    {format(new Date(transaction.authorizedDate), 'MMMM dd, yyyy')}
+                    {format(new Date(transaction.authorizedDate), 'MMM d yyyy')}
                   </div>
                 </div>
               )}
@@ -200,11 +200,11 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
               </div>
               <div>
                 <span className="text-gray-600">Created:</span>
-                <div className="text-gray-900 mt-1">{format(new Date(transaction.createdAt), 'MMM dd, yyyy h:mm a')}</div>
+                <div className="text-gray-900 mt-1">{format(new Date(transaction.createdAt), 'MMM d yyyy h:mm a')}</div>
               </div>
               <div>
                 <span className="text-gray-600">Last Updated:</span>
-                <div className="text-gray-900 mt-1">{format(new Date(transaction.updatedAt), 'MMM dd, yyyy h:mm a')}</div>
+                <div className="text-gray-900 mt-1">{format(new Date(transaction.updatedAt), 'MMM d yyyy h:mm a')}</div>
               </div>
               {transaction.pendingTransactionId && (
                 <div>

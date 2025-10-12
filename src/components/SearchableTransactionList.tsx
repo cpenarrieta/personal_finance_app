@@ -564,7 +564,7 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                           )}
                         </div>
                         <div className="text-sm text-gray-600 mt-1">
-                          {format(new Date(t.date), 'MMM dd, yyyy')}
+                          {format(new Date(t.date), 'MMM d yyyy')}
                           {t.account && ` • ${t.account.name}`}
                         </div>
                         {t.merchantName && (

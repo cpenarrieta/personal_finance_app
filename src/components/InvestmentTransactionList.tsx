@@ -1,4 +1,5 @@
 import type { InvestmentTransaction, Security, Account } from '@prisma/client'
+import { format } from 'date-fns'
 
 type InvestmentTransactionWithRelations = InvestmentTransaction & {
   security?: Security | null
@@ -32,7 +33,7 @@ export function InvestmentTransactionList({ transactions, showAccount = false }:
                 {t.name || t.type} — {t.security?.tickerSymbol || 'N/A'}
               </div>
               <div className="text-sm text-gray-600">
-                {t.date.toISOString().slice(0, 10)} · Type: {t.type}
+                {format(t.date, 'MMM d yyyy')} · Type: {t.type}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
               {t.quantity && <div className="text-sm">Quantity: {t.quantity.toNumber().toLocaleString("en-US", {
