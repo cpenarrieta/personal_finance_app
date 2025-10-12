@@ -359,18 +359,20 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
               <li key={t.id} className="hover:bg-gray-50 transition-colors">
                 <div className="p-4 flex items-start gap-3">
                   {(t.logoUrl || t.categoryIconUrl) && (
-                    <Link href={`/transactions/${t.id}`}>
-                      <img
-                        src={t.logoUrl || t.categoryIconUrl || ''}
-                        alt=""
-                        className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
-                      />
-                    </Link>
+                    <img
+                      src={t.logoUrl || t.categoryIconUrl || ''}
+                      alt=""
+                      className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
+                      onClick={() => setEditingTransaction(t)}
+                    />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
-                      <Link href={`/transactions/${t.id}`} className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 flex items-center gap-2 hover:text-blue-600">
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => setEditingTransaction(t)}
+                      >
+                        <div className="font-medium text-gray-900 flex items-center gap-2">
                           <span className="truncate">{t.name}</span>
                           {t.pending && (
                             <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex-shrink-0">
@@ -413,7 +415,7 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                             Note: {t.notes}
                           </div>
                         )}
-                      </Link>
+                      </div>
                       <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
                         <div
                           className={`text-lg font-semibold ${
@@ -429,16 +431,13 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                         {t.isoCurrencyCode && (
                           <div className="text-xs text-gray-500">{t.isoCurrencyCode}</div>
                         )}
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setEditingTransaction(t)
-                          }}
-                          className="mt-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                        <Link
+                          href={`/transactions/${t.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
                         >
-                          Edit
-                        </button>
+                          Details
+                        </Link>
                       </div>
                     </div>
                   </div>

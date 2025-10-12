@@ -76,6 +76,20 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
     fetchCategories()
   }, [])
 
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscapeKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscapeKey)
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey)
+    }
+  }, [onClose])
+
   // Get subcategories for selected custom category
   const selectedCategory = categories.find(c => c.id === customCategoryId)
   const availableSubcategories = selectedCategory?.subcategories || []
