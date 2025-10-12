@@ -1,133 +1,190 @@
-'use client'
+"use client";
 
-import { useState, useMemo, useEffect } from 'react'
-import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
-import { EditTransactionModal } from './EditTransactionModal'
-import Link from 'next/link'
+import { useState, useMemo, useEffect, useRef } from "react";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  isWithinInterval,
+} from "date-fns";
+import { EditTransactionModal } from "./EditTransactionModal";
+import Link from "next/link";
 
 interface SerializedTransaction {
-  id: string
-  plaidTransactionId: string
-  accountId: string
-  amount: string
-  isoCurrencyCode: string | null
-  date: string
-  authorizedDate: string | null
-  pending: boolean
-  merchantName: string | null
-  name: string
-  category: string | null
-  subcategory: string | null
-  paymentChannel: string | null
-  pendingTransactionId: string | null
-  logoUrl: string | null
-  categoryIconUrl: string | null
-  customCategoryId: string | null
-  customSubcategoryId: string | null
-  notes: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  plaidTransactionId: string;
+  accountId: string;
+  amount: string;
+  isoCurrencyCode: string | null;
+  date: string;
+  authorizedDate: string | null;
+  pending: boolean;
+  merchantName: string | null;
+  name: string;
+  category: string | null;
+  subcategory: string | null;
+  paymentChannel: string | null;
+  pendingTransactionId: string | null;
+  logoUrl: string | null;
+  categoryIconUrl: string | null;
+  customCategoryId: string | null;
+  customSubcategoryId: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
   account: {
-    id: string
-    name: string
-    type: string
-    mask: string | null
-  } | null
+    id: string;
+    name: string;
+    type: string;
+    mask: string | null;
+  } | null;
   customCategory: {
-    id: string
-    name: string
-    imageUrl: string | null
-    createdAt: string
-    updatedAt: string
-  } | null
+    id: string;
+    name: string;
+    imageUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
   customSubcategory: {
-    id: string
-    categoryId: string
-    name: string
-    imageUrl: string | null
-    createdAt: string
-    updatedAt: string
+    id: string;
+    categoryId: string;
+    name: string;
+    imageUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
     category?: {
-      id: string
-      name: string
-      imageUrl: string | null
-      createdAt: string
-      updatedAt: string
-    }
-  } | null
+      id: string;
+      name: string;
+      imageUrl: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+  } | null;
 }
 
 interface SearchableTransactionListProps {
-  transactions: SerializedTransaction[]
+  transactions: SerializedTransaction[];
 }
 
-type DateRange = 'all' | 'last30' | 'last90' | 'thisMonth' | 'lastMonth' | 'custom'
+type DateRange =
+  | "all"
+  | "last30"
+  | "last90"
+  | "thisMonth"
+  | "lastMonth"
+  | "custom";
 
-export function SearchableTransactionList({ transactions }: SearchableTransactionListProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [dateRange, setDateRange] = useState<DateRange>('all')
-  const [customStartDate, setCustomStartDate] = useState('')
-  const [customEndDate, setCustomEndDate] = useState('')
-  const [editingTransaction, setEditingTransaction] = useState<SerializedTransaction | null>(null)
-  const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(false) // Filter for uncategorized transactions
+export function SearchableTransactionList({
+  transactions,
+}: SearchableTransactionListProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>("all");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [editingTransaction, setEditingTransaction] =
+    useState<SerializedTransaction | null>(null);
+  const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(false); // Filter for uncategorized transactions
+
+  // Category/Subcategory filter state
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<
+    Set<string>
+  >(new Set());
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Bulk update state
-  const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set())
-  const [showBulkUpdate, setShowBulkUpdate] = useState(false)
-  const [bulkCategoryId, setBulkCategoryId] = useState('')
-  const [bulkSubcategoryId, setBulkSubcategoryId] = useState('')
-  const [categories, setCategories] = useState<{ id: string; name: string; subcategories: { id: string; name: string }[] }[]>([])
-  const [isBulkUpdating, setIsBulkUpdating] = useState(false)
+  const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(
+    new Set()
+  );
+  const [showBulkUpdate, setShowBulkUpdate] = useState(false);
+  const [bulkCategoryId, setBulkCategoryId] = useState("");
+  const [bulkSubcategoryId, setBulkSubcategoryId] = useState("");
+  const [categories, setCategories] = useState<
+    {
+      id: string;
+      name: string;
+      subcategories: { id: string; name: string }[];
+    }[]
+  >([]);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   // Filter transactions based on search query and date range
   const filteredTransactions = useMemo(() => {
-    let filtered = transactions
+    let filtered = transactions;
 
     // Calculate date range
-    const now = new Date()
-    let range: { start: Date; end: Date } | null = null
+    const now = new Date();
+    let range: { start: Date; end: Date } | null = null;
 
     switch (dateRange) {
-      case 'last30':
-        range = { start: subMonths(now, 1), end: now }
-        break
-      case 'last90':
-        range = { start: subMonths(now, 3), end: now }
-        break
-      case 'thisMonth':
-        range = { start: startOfMonth(now), end: endOfMonth(now) }
-        break
-      case 'lastMonth':
-        const lastMonth = subMonths(now, 1)
-        range = { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) }
-        break
-      case 'custom':
+      case "last30":
+        range = { start: subMonths(now, 1), end: now };
+        break;
+      case "last90":
+        range = { start: subMonths(now, 3), end: now };
+        break;
+      case "thisMonth":
+        range = { start: startOfMonth(now), end: endOfMonth(now) };
+        break;
+      case "lastMonth":
+        const lastMonth = subMonths(now, 1);
+        range = { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
+        break;
+      case "custom":
         if (customStartDate && customEndDate) {
-          range = { start: new Date(customStartDate), end: new Date(customEndDate) }
+          range = {
+            start: new Date(customStartDate),
+            end: new Date(customEndDate),
+          };
         }
-        break
-      case 'all':
+        break;
+      case "all":
       default:
-        range = null
+        range = null;
     }
 
     // Date range filter
     if (range) {
-      filtered = filtered.filter(t =>
-        isWithinInterval(new Date(t.date), { start: range.start, end: range.end })
-      )
+      filtered = filtered.filter((t) =>
+        isWithinInterval(new Date(t.date), {
+          start: range.start,
+          end: range.end,
+        })
+      );
     }
 
     // Uncategorized filter
     if (showOnlyUncategorized) {
-      filtered = filtered.filter(t => !t.customCategory || !t.customSubcategory)
+      filtered = filtered.filter(
+        (t) => !t.customCategory || !t.customSubcategory
+      );
+    }
+
+    // Category filter
+    if (selectedCategoryIds.size > 0) {
+      filtered = filtered.filter((t) => {
+        if (!t.customCategoryId) return false;
+        return selectedCategoryIds.has(t.customCategoryId);
+      });
+    }
+
+    // Subcategory filter
+    if (selectedSubcategoryIds.size > 0) {
+      filtered = filtered.filter((t) => {
+        if (!t.customSubcategoryId) return false;
+        return selectedSubcategoryIds.has(t.customSubcategoryId);
+      });
     }
 
     // Search query filter
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
 
-      filtered = filtered.filter(t => {
+      filtered = filtered.filter((t) => {
         // Search in multiple fields
         const searchableText = [
           t.name,
@@ -140,197 +197,225 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
           t.notes,
         ]
           .filter(Boolean)
-          .join(' ')
-          .toLowerCase()
+          .join(" ")
+          .toLowerCase();
 
-        return searchableText.includes(query)
-      })
+        return searchableText.includes(query);
+      });
     }
 
-    return filtered
-  }, [transactions, searchQuery, dateRange, customStartDate, customEndDate, showOnlyUncategorized])
+    return filtered;
+  }, [
+    transactions,
+    searchQuery,
+    dateRange,
+    customStartDate,
+    customEndDate,
+    showOnlyUncategorized,
+    selectedCategoryIds,
+    selectedSubcategoryIds,
+  ]);
 
   // Fetch custom categories for bulk update
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const response = await fetch('/api/custom-categories')
+        const response = await fetch("/api/custom-categories");
         if (response.ok) {
-          const data = await response.json()
-          setCategories(data)
+          const data = await response.json();
+          setCategories(data);
         }
       } catch (error) {
-        console.error('Failed to fetch categories:', error)
+        console.error("Failed to fetch categories:", error);
       }
     }
-    fetchCategories()
-  }, [])
+    fetchCategories();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowCategoryDropdown(false);
+      }
+    }
+
+    if (showCategoryDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showCategoryDropdown]);
 
   // Calculate totals for filtered transactions
   const totals = useMemo(() => {
     const expenses = filteredTransactions
-      .filter(t => Number(t.amount) > 0)
-      .reduce((sum, t) => sum + Number(t.amount), 0)
+      .filter((t) => Number(t.amount) > 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const income = Math.abs(
       filteredTransactions
-        .filter(t => Number(t.amount) < 0)
+        .filter((t) => Number(t.amount) < 0)
         .reduce((sum, t) => sum + Number(t.amount), 0)
-    )
+    );
 
-    const netBalance = income - expenses
+    const netBalance = income - expenses;
 
     return {
       expenses,
       income,
       netBalance,
       count: filteredTransactions.length,
-    }
-  }, [filteredTransactions])
+    };
+  }, [filteredTransactions]);
 
   // Toggle transaction selection
   const toggleTransaction = (id: string) => {
-    const newSelected = new Set(selectedTransactions)
+    const newSelected = new Set(selectedTransactions);
     if (newSelected.has(id)) {
-      newSelected.delete(id)
+      newSelected.delete(id);
     } else {
-      newSelected.add(id)
+      newSelected.add(id);
     }
-    setSelectedTransactions(newSelected)
-  }
+    setSelectedTransactions(newSelected);
+  };
 
   // Select all filtered transactions
   const selectAll = () => {
-    setSelectedTransactions(new Set(filteredTransactions.map(t => t.id)))
-  }
+    setSelectedTransactions(new Set(filteredTransactions.map((t) => t.id)));
+  };
 
   // Deselect all
   const deselectAll = () => {
-    setSelectedTransactions(new Set())
-  }
+    setSelectedTransactions(new Set());
+  };
 
   // Handle bulk update
   const handleBulkUpdate = async () => {
     if (selectedTransactions.size === 0 || !bulkCategoryId) {
-      return
+      return;
     }
 
-    setIsBulkUpdating(true)
+    setIsBulkUpdating(true);
     try {
-      const response = await fetch('/api/transactions/bulk-update', {
-        method: 'PATCH',
+      const response = await fetch("/api/transactions/bulk-update", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           transactionIds: Array.from(selectedTransactions),
           customCategoryId: bulkCategoryId,
           customSubcategoryId: bulkSubcategoryId || null,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to bulk update transactions')
+        throw new Error("Failed to bulk update transactions");
       }
 
       // Refresh the page to show updated data
-      window.location.reload()
+      window.location.reload();
     } catch (error) {
-      console.error('Error bulk updating transactions:', error)
-      alert('Failed to update transactions. Please try again.')
+      console.error("Error bulk updating transactions:", error);
+      alert("Failed to update transactions. Please try again.");
     } finally {
-      setIsBulkUpdating(false)
+      setIsBulkUpdating(false);
     }
-  }
+  };
 
   // Get subcategories for selected bulk category
-  const selectedBulkCategory = categories.find(c => c.id === bulkCategoryId)
-  const availableBulkSubcategories = selectedBulkCategory?.subcategories || []
+  const selectedBulkCategory = categories.find((c) => c.id === bulkCategoryId);
+  const availableBulkSubcategories = selectedBulkCategory?.subcategories || [];
+
+  // Toggle category selection
+  const toggleCategory = (categoryId: string) => {
+    const newSelected = new Set(selectedCategoryIds);
+    if (newSelected.has(categoryId)) {
+      newSelected.delete(categoryId);
+      // Also remove all subcategories of this category
+      const category = categories.find((c) => c.id === categoryId);
+      if (category) {
+        const newSelectedSubs = new Set(selectedSubcategoryIds);
+        category.subcategories.forEach((sub) => newSelectedSubs.delete(sub.id));
+        setSelectedSubcategoryIds(newSelectedSubs);
+      }
+    } else {
+      newSelected.add(categoryId);
+    }
+    setSelectedCategoryIds(newSelected);
+  };
+
+  // Toggle subcategory selection
+  const toggleSubcategory = (subcategoryId: string, categoryId: string) => {
+    const newSelected = new Set(selectedSubcategoryIds);
+    if (newSelected.has(subcategoryId)) {
+      newSelected.delete(subcategoryId);
+    } else {
+      newSelected.add(subcategoryId);
+      // Also select the parent category if not selected
+      if (!selectedCategoryIds.has(categoryId)) {
+        setSelectedCategoryIds(new Set(selectedCategoryIds).add(categoryId));
+      }
+    }
+    setSelectedSubcategoryIds(newSelected);
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setDateRange("all");
+    setCustomStartDate("");
+    setCustomEndDate("");
+    setShowOnlyUncategorized(false);
+    setSelectedCategoryIds(new Set());
+    setSelectedSubcategoryIds(new Set());
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    searchQuery ||
+    dateRange !== "all" ||
+    showOnlyUncategorized ||
+    selectedCategoryIds.size > 0 ||
+    selectedSubcategoryIds.size > 0;
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
+      {/* Search Bar - Full Width at Top */}
       <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex items-center gap-6">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showOnlyUncategorized}
-              onChange={(e) => setShowOnlyUncategorized(e.target.checked)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search transactions (name, merchant, category, account, amount...)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <svg
+            className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
-            <span className="ml-2 text-sm font-medium text-gray-700">
-              Show only uncategorized
-            </span>
-          </label>
-        </div>
-      </div>
-
-      {/* Search and Date Filter */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Date Filter */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Date Range Selector */}
-            <div className={dateRange === 'custom' ? 'md:col-span-1' : 'md:col-span-3'}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date Range
-              </label>
-              <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value as DateRange)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Time</option>
-                <option value="last30">Last 30 Days</option>
-                <option value="last90">Last 90 Days</option>
-                <option value="thisMonth">This Month</option>
-                <option value="lastMonth">Last Month</option>
-                <option value="custom">Custom Range</option>
-              </select>
-            </div>
-
-            {/* Custom Date Range */}
-            {dateRange === 'custom' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Search Box */}
-          <div>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search transactions (name, merchant, category, account, amount...)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+          </svg>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+            >
               <svg
-                className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -339,38 +424,273 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Filters Section */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Date Range */}
+          <div className="flex-shrink-0">
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value as DateRange)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Time</option>
+              <option value="last30">Last 30 Days</option>
+              <option value="last90">Last 90 Days</option>
+              <option value="thisMonth">This Month</option>
+              <option value="lastMonth">Last Month</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+
+          {/* Custom Date Range */}
+          {dateRange === "custom" && (
+            <>
+              <div className="flex-shrink-0">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  placeholder="Start date"
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="flex-shrink-0">
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  placeholder="End date"
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Category/Subcategory Multi-select */}
+          <div className="flex-shrink-0 relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              className="px-3 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-2"
+            >
+              <span className="text-gray-700">Select Categories...</span>
+              <svg
+                className="h-4 w-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showCategoryDropdown && (
+              <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
+                <div className="p-2">
+                  {categories.map((category) => (
+                    <div key={category.id} className="mb-2">
+                      <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategoryIds.has(category.id)}
+                          onChange={() => toggleCategory(category.id)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-900">
+                          {category.name}
+                        </span>
+                      </label>
+                      {category.subcategories.length > 0 &&
+                        selectedCategoryIds.has(category.id) && (
+                          <div className="ml-6 mt-1 space-y-1">
+                            {category.subcategories.map((sub) => (
+                              <label
+                                key={sub.id}
+                                className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedSubcategoryIds.has(sub.id)}
+                                  onChange={() =>
+                                    toggleSubcategory(sub.id, category.id)
+                                  }
+                                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">
+                                  {sub.name}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Uncategorized Checkbox */}
+          <label className="flex items-center cursor-pointer flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={showOnlyUncategorized}
+              onChange={(e) => setShowOnlyUncategorized(e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm text-gray-700">Uncategorized</span>
+          </label>
+
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearAllFilters}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+
+        {/* Selected Filter Chips */}
+        {(selectedCategoryIds.size > 0 || selectedSubcategoryIds.size > 0) && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {Array.from(selectedCategoryIds).map((catId) => {
+              const category = categories.find((c) => c.id === catId);
+              if (!category) return null;
+              return (
+                <span
+                  key={catId}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                 >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              )}
-            </div>
+                  {category.name}
+                  <button
+                    onClick={() => toggleCategory(catId)}
+                    className="hover:bg-blue-200 rounded-full p-0.5"
+                  >
+                    <svg
+                      className="h-3 w-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </span>
+              );
+            })}
+            {Array.from(selectedSubcategoryIds).map((subId) => {
+              const category = categories.find((c) =>
+                c.subcategories.some((s) => s.id === subId)
+              );
+              const subcategory = category?.subcategories.find(
+                (s) => s.id === subId
+              );
+              if (!subcategory || !category) return null;
+              return (
+                <span
+                  key={subId}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm"
+                >
+                  {subcategory.name}
+                  <button
+                    onClick={() => toggleSubcategory(subId, category.id)}
+                    className="hover:bg-indigo-200 rounded-full p-0.5"
+                  >
+                    <svg
+                      className="h-3 w-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="text-sm text-gray-600 mb-1">Total Income</div>
+          <div className="text-2xl font-bold text-green-600">
+            +$
+            {totals.income.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between">
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="text-sm text-gray-600 mb-1">Total Expenses</div>
+          <div className="text-2xl font-bold text-red-600">
+            -$
+            {totals.expenses.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="text-sm text-gray-600 mb-1">Net Balance</div>
+          <div
+            className={`text-2xl font-bold ${
+              totals.netBalance >= 0 ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {totals.netBalance >= 0 ? "+" : ""}$
+            {totals.netBalance.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Action Bar */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            Showing {filteredTransactions.length} of {transactions.length} transactions
+            Showing {filteredTransactions.length} of {transactions.length}{" "}
+            transactions
           </div>
           {filteredTransactions.length > 0 && (
             <button
               onClick={() => setShowBulkUpdate(!showBulkUpdate)}
-              className="text-sm px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
             >
-              {showBulkUpdate ? 'Hide Bulk Update' : 'Bulk Update'}
+              {showBulkUpdate ? "Hide Bulk Update" : "Bulk Update"}
             </button>
           )}
         </div>
@@ -380,7 +700,9 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
       {showBulkUpdate && (
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-purple-900">Bulk Update Categories</h3>
+            <h3 className="text-lg font-semibold text-purple-900">
+              Bulk Update Categories
+            </h3>
             <div className="flex gap-2">
               <button
                 onClick={selectAll}
@@ -400,7 +722,8 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
           {selectedTransactions.size > 0 && (
             <div className="bg-white rounded-lg p-4 mb-4">
               <p className="text-sm text-gray-700 mb-3">
-                Selected {selectedTransactions.size} transaction{selectedTransactions.size !== 1 ? 's' : ''}
+                Selected {selectedTransactions.size} transaction
+                {selectedTransactions.size !== 1 ? "s" : ""}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
@@ -410,8 +733,8 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                   <select
                     value={bulkCategoryId}
                     onChange={(e) => {
-                      setBulkCategoryId(e.target.value)
-                      setBulkSubcategoryId('')
+                      setBulkCategoryId(e.target.value);
+                      setBulkSubcategoryId("");
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   >
@@ -449,7 +772,11 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                   disabled={!bulkCategoryId || isBulkUpdating}
                   className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
                 >
-                  {isBulkUpdating ? 'Updating...' : `Update ${selectedTransactions.size} Transaction${selectedTransactions.size !== 1 ? 's' : ''}`}
+                  {isBulkUpdating
+                    ? "Updating..."
+                    : `Update ${selectedTransactions.size} Transaction${
+                        selectedTransactions.size !== 1 ? "s" : ""
+                      }`}
                 </button>
               </div>
             </div>
@@ -457,48 +784,17 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Total Income</div>
-          <div className="text-2xl font-bold text-green-600">
-            +${totals.income.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Total Expenses</div>
-          <div className="text-2xl font-bold text-red-600">
-            -${totals.expenses.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Net Balance</div>
-          <div className={`text-2xl font-bold ${totals.netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {totals.netBalance >= 0 ? '+' : ''}${totals.netBalance.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </div>
-        </div>
-      </div>
-
       {/* Transaction List */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
-            {searchQuery ? 'No transactions found matching your search.' : 'No transactions found.'}
+            {searchQuery
+              ? "No transactions found matching your search."
+              : "No transactions found."}
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
-            {filteredTransactions.map(t => (
+            {filteredTransactions.map((t) => (
               <li key={t.id} className="hover:bg-gray-50 transition-colors">
                 <div className="p-4 flex items-start gap-3">
                   {showBulkUpdate && (
@@ -512,17 +808,21 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                   )}
                   {(t.logoUrl || t.categoryIconUrl) && (
                     <img
-                      src={t.logoUrl || t.categoryIconUrl || ''}
+                      src={t.logoUrl || t.categoryIconUrl || ""}
                       alt=""
                       className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
-                      onClick={() => !showBulkUpdate && setEditingTransaction(t)}
+                      onClick={() =>
+                        !showBulkUpdate && setEditingTransaction(t)
+                      }
                     />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
                       <div
                         className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => !showBulkUpdate && setEditingTransaction(t)}
+                        onClick={() =>
+                          !showBulkUpdate && setEditingTransaction(t)
+                        }
                       >
                         <div className="font-medium text-gray-900 flex items-center gap-2">
                           <span className="truncate">{t.name}</span>
@@ -533,7 +833,7 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                           )}
                         </div>
                         <div className="text-sm text-gray-600 mt-1">
-                          {format(new Date(t.date), 'MMM d yyyy')}
+                          {format(new Date(t.date), "MMM d yyyy")}
                           {t.account && ` • ${t.account.name}`}
                         </div>
                         {t.merchantName && (
@@ -544,7 +844,11 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                         {t.customCategory && (
                           <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
                             <span>Category: {t.customCategory.name}</span>
-                            {t.customSubcategory && <span className="text-gray-400">• {t.customSubcategory.name}</span>}
+                            {t.customSubcategory && (
+                              <span className="text-gray-400">
+                                • {t.customSubcategory.name}
+                              </span>
+                            )}
                           </div>
                         )}
                         {t.notes && (
@@ -556,17 +860,21 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
                       <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
                         <div
                           className={`text-lg font-semibold ${
-                            Number(t.amount) > 0 ? 'text-red-600' : 'text-green-600'
+                            Number(t.amount) > 0
+                              ? "text-red-600"
+                              : "text-green-600"
                           }`}
                         >
-                          {Number(t.amount) > 0 ? '-' : '+'}$
-                          {Math.abs(Number(t.amount)).toLocaleString('en-US', {
+                          {Number(t.amount) > 0 ? "-" : "+"}$
+                          {Math.abs(Number(t.amount)).toLocaleString("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
                         </div>
                         {t.isoCurrencyCode && (
-                          <div className="text-xs text-gray-500">{t.isoCurrencyCode}</div>
+                          <div className="text-xs text-gray-500">
+                            {t.isoCurrencyCode}
+                          </div>
                         )}
                         <Link
                           href={`/transactions/${t.id}`}
@@ -593,5 +901,5 @@ export function SearchableTransactionList({ transactions }: SearchableTransactio
         />
       )}
     </div>
-  )
+  );
 }
