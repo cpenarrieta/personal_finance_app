@@ -3,9 +3,12 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { format } from 'date-fns'
 import { TransactionDetailView } from '@/components/TransactionDetailView'
+import { headers } from 'next/headers'
 
 export default async function TransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const headersList = await headers()
+  const referer = headersList.get('referer') || ''
 
   const transaction = await prisma.transaction.findUnique({
     where: { id },
@@ -59,11 +62,16 @@ export default async function TransactionDetailPage({ params }: { params: Promis
     } : null,
   }
 
+  // Determine which page to go back to based on referrer
+  const isFromAnalytics = referer.includes('/analytics')
+  const backUrl = isFromAnalytics ? '/analytics' : '/transactions'
+  const backText = isFromAnalytics ? '← Back to Analytics' : '← Back to Transactions'
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
-        <Link href="/transactions" className="text-blue-600 hover:underline">
-          ← Back to Transactions
+        <Link href={backUrl} className="text-blue-600 hover:underline">
+          {backText}
         </Link>
       </div>
 
