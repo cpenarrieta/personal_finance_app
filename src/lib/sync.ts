@@ -96,7 +96,7 @@ export async function syncAllItems() {
           where: { plaidAccountId: a.account_id },
           update: {
             itemId: it.id,
-            name: a.name ?? a.official_name ?? 'Account',
+            // Don't update name - preserve user's custom account names
             officialName: a.official_name || null,
             mask: a.mask || null,
             type: a.type,
