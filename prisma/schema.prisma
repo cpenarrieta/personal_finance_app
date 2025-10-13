@@ -12,6 +12,8 @@ generator client {
 model Institution {
   id          String   @id
   name        String
+  shortName   String?  // Short name for the institution
+  logoUrl     String?  // Institution logo
   createdAt   DateTime @default(now())
   items       Item[]
 }
