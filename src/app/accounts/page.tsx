@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -25,11 +26,14 @@ export default async function AccountsPage() {
   const accountsByInstitution = accounts.reduce((acc, account) => {
     const institutionName = account.item?.institution?.name || 'Unknown Institution'
     if (!acc[institutionName]) {
-      acc[institutionName] = []
+      acc[institutionName] = {
+        accounts: [],
+        logoUrl: account.item?.institution?.logoUrl || null
+      }
     }
-    acc[institutionName].push(account)
+    acc[institutionName].accounts.push(account)
     return acc
-  }, {} as Record<string, typeof accounts>)
+  }, {} as Record<string, { accounts: typeof accounts, logoUrl: string | null }>)
 
   const institutionNames = Object.keys(accountsByInstitution).sort()
 
@@ -47,11 +51,22 @@ export default async function AccountsPage() {
         <div className="space-y-6">
           {institutionNames.map(institutionName => (
             <div key={institutionName} className="space-y-2">
-              <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-                {institutionName}
-              </h3>
+              <div className="flex items-center gap-3 border-b pb-2">
+                {accountsByInstitution[institutionName].logoUrl && (
+                  <Image 
+                    src={accountsByInstitution[institutionName].logoUrl} 
+                    alt={`${institutionName} logo`}
+                    width={32}
+                    height={32}
+                    className="rounded object-contain"
+                  />
+                )}
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {institutionName}
+                </h3>
+              </div>
               <ul className="space-y-2 pl-2">
-                {accountsByInstitution[institutionName].map(a => (
+                {accountsByInstitution[institutionName].accounts.map(a => (
                   <li key={a.id}>
                     <Link href={`/accounts/${a.id}`} className="block border p-3 rounded hover:bg-gray-50 transition-colors cursor-pointer">
                       <div className="font-medium">
