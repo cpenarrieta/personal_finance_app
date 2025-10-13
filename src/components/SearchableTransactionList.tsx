@@ -9,6 +9,7 @@ import {
   isWithinInterval,
 } from "date-fns";
 import { EditTransactionModal } from "./EditTransactionModal";
+import { getCategoryImage } from "@/lib/categoryImages";
 import Link from "next/link";
 
 interface SerializedTransaction {
@@ -936,9 +937,9 @@ export function SearchableTransactionList({
                       onClick={(e) => e.stopPropagation()}
                     />
                   )}
-                  {t.logoUrl && (
+                  {(t.logoUrl || (t.customCategory && getCategoryImage(t.customCategory.name, t.customCategory.imageUrl))) && (
                     <img
-                      src={t.logoUrl}
+                      src={t.logoUrl || getCategoryImage(t.customCategory!.name, t.customCategory!.imageUrl)!}
                       alt=""
                       className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
                       onClick={() =>

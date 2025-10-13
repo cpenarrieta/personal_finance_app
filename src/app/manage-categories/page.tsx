@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { DeleteButton } from '@/components/DeleteButton'
+import { getCategoryImage } from '@/lib/categoryImages'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -143,8 +144,12 @@ export default async function ManageCategoriesPage() {
             {categories.map((cat) => (
               <div key={cat.id} className="border rounded p-3">
                 <div className="flex items-start gap-2">
-                  {cat.imageUrl && (
-                    <img src={cat.imageUrl} alt="" className="w-8 h-8 rounded" />
+                  {getCategoryImage(cat.name, cat.imageUrl) && (
+                    <img
+                      src={getCategoryImage(cat.name, cat.imageUrl)!}
+                      alt=""
+                      className="w-8 h-8 rounded object-cover"
+                    />
                   )}
                   <div className="flex-1">
                     <div className="font-medium">{cat.name}</div>
@@ -167,8 +172,12 @@ export default async function ManageCategoriesPage() {
                   <div className="mt-2 ml-4 space-y-1">
                     {cat.subcategories.map((sub) => (
                       <div key={sub.id} className="flex items-center gap-2 text-sm">
-                        {sub.imageUrl && (
-                          <img src={sub.imageUrl} alt="" className="w-6 h-6 rounded" />
+                        {getCategoryImage(sub.name, sub.imageUrl) && (
+                          <img
+                            src={getCategoryImage(sub.name, sub.imageUrl)!}
+                            alt=""
+                            className="w-6 h-6 rounded object-cover"
+                          />
                         )}
                         <span className="flex-1">{sub.name}</span>
                         <DeleteButton
@@ -254,11 +263,11 @@ export default async function ManageCategoriesPage() {
                 <div className="space-y-1 mb-2">
                   {group.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-2 text-sm">
-                      {item.category.imageUrl && (
+                      {getCategoryImage(item.category.name, item.category.imageUrl) && (
                         <img
-                          src={item.category.imageUrl}
+                          src={getCategoryImage(item.category.name, item.category.imageUrl)!}
                           alt=""
-                          className="w-6 h-6 rounded"
+                          className="w-6 h-6 rounded object-cover"
                         />
                       )}
                       <span className="flex-1">{item.category.name}</span>
