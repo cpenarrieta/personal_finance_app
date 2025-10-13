@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { InvestmentTransactionList } from "@/components/InvestmentTransactionList";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Investment Transactions',
+};
 
 export default async function InvTxPage() {
   const txs = await prisma.investmentTransaction.findMany({

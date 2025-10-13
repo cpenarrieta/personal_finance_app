@@ -3,6 +3,26 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TransactionDetailView } from "@/components/TransactionDetailView";
 import { headers } from "next/headers";
+import type { Metadata } from 'next';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const transaction = await prisma.transaction.findUnique({
+    where: { id },
+  });
+
+  if (!transaction) {
+    return { title: 'Transaction Not Found' };
+  }
+
+  return {
+    title: `${transaction.merchantName || transaction.name}`,
+  };
+}
 
 export default async function TransactionDetailPage({
   params,

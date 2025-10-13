@@ -1,14 +1,13 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { TransactionAnalytics } from '@/components/TransactionAnalytics'
+import { ChartsView } from '@/components/ChartsView'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Transaction Analytics',
+  title: 'Financial Charts',
 }
 
-export default async function AnalyticsPage() {
-  // Fetch all transactions with their Plaid categories and custom categories
+export default async function ChartsPage() {
   const transactions = await prisma.transaction.findMany({
     orderBy: { date: 'desc' },
     include: {
@@ -25,7 +24,7 @@ export default async function AnalyticsPage() {
   // Serialize transactions to make them compatible with client components
   const serializedTransactions = transactions.map(t => ({
     ...t,
-    amount: t.amount.toString(), // Convert Decimal to string
+    amount: t.amount.toString(),
     date: t.date.toISOString(),
     authorizedDate: t.authorizedDate?.toISOString() || null,
     createdAt: t.createdAt.toISOString(),
@@ -65,11 +64,11 @@ export default async function AnalyticsPage() {
       </div>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Transaction Analytics</h1>
-        <p className="text-gray-600 mt-1">Analyze your spending patterns by Plaid category and time</p>
+        <h1 className="text-3xl font-bold text-gray-900">Financial Charts</h1>
+        <p className="text-gray-600 mt-1">Visualize your spending and income patterns</p>
       </div>
 
-      <TransactionAnalytics transactions={serializedTransactions} />
+      <ChartsView transactions={serializedTransactions} />
     </div>
   )
 }

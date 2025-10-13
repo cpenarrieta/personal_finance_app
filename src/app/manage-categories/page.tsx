@@ -1,6 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
+import { DeleteButton } from '@/components/DeleteButton'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Manage Categories',
+}
 
 // Server Actions
 async function createCategory(formData: FormData) {
@@ -63,7 +69,7 @@ async function addCategoryToGroup(formData: FormData) {
     await prisma.categoryGroupItem.create({
       data: { groupId, categoryId },
     })
-  } catch (error) {
+  } catch {
     // Ignore duplicate errors
   }
   revalidatePath('/manage-categories')
@@ -144,15 +150,12 @@ export default async function ManageCategoriesPage() {
                       </div>
                     )}
                   </div>
-                  <form action={deleteCategory}>
-                    <input type="hidden" name="id" value={cat.id} />
-                    <button
-                      type="submit"
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </form>
+                  <DeleteButton
+                    id={cat.id}
+                    action={deleteCategory}
+                    confirmMessage={`Are you sure you want to delete the category "${cat.name}"?${cat.subcategories.length > 0 ? ` This will also delete ${cat.subcategories.length} subcategory(ies).` : ''}`}
+                    buttonText="Delete"
+                  />
                 </div>
 
                 {/* Subcategories */}
@@ -164,15 +167,13 @@ export default async function ManageCategoriesPage() {
                           <img src={sub.imageUrl} alt="" className="w-6 h-6 rounded" />
                         )}
                         <span className="flex-1">{sub.name}</span>
-                        <form action={deleteSubcategory}>
-                          <input type="hidden" name="id" value={sub.id} />
-                          <button
-                            type="submit"
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            ×
-                          </button>
-                        </form>
+                        <DeleteButton
+                          id={sub.id}
+                          action={deleteSubcategory}
+                          confirmMessage={`Are you sure you want to delete the subcategory "${sub.name}"?`}
+                          buttonText="×"
+                          className="text-red-600 hover:text-red-800"
+                        />
                       </div>
                     ))}
                   </div>
@@ -237,15 +238,12 @@ export default async function ManageCategoriesPage() {
               <div key={group.id} className="border rounded p-3">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium">{group.name}</h3>
-                  <form action={deleteGroup}>
-                    <input type="hidden" name="id" value={group.id} />
-                    <button
-                      type="submit"
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Delete Group
-                    </button>
-                  </form>
+                  <DeleteButton
+                    id={group.id}
+                    action={deleteGroup}
+                    confirmMessage={`Are you sure you want to delete the group "${group.name}"?${group.items.length > 0 ? ` This will remove ${group.items.length} category(ies) from this group.` : ''}`}
+                    buttonText="Delete Group"
+                  />
                 </div>
 
                 {/* Categories in Group */}

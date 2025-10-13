@@ -6,6 +6,11 @@ import { revalidatePath } from 'next/cache'
 import { SyncPricesButton } from '@/components/SyncPricesButton'
 import { SyncHoldingsLogosButton } from '@/components/SyncHoldingsLogosButton'
 import { HoldingsPortfolio } from '@/components/HoldingsPortfolio'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Investment Holdings',
+}
 
 async function doSyncPrices() {
   'use server'

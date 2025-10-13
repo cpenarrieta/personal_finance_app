@@ -81,14 +81,16 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
   const [customEndDate, setCustomEndDate] = useState('')
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set())
   const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<Set<string>>(new Set())
+  const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(new Set())
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'category'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [showExpensesOnly, setShowExpensesOnly] = useState(true)
+  const [showIncome, setShowIncome] = useState(false)
+  const [showExpenses, setShowExpenses] = useState(true)
   const [categories, setCategories] = useState<{ id: string; name: string; subcategories: { id: string; name: string }[] }[]>([])
 
-  // Fetch custom categories
+  // Fetch custom categories and set default exclusions
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -96,6 +98,12 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
         if (response.ok) {
           const data = await response.json()
           setCategories(data)
+
+          // Find and exclude "🔁 Transfers" by default
+          const transfersCategory = data.find((cat: any) => cat.name === '🔁 Transfers')
+          if (transfersCategory) {
+            setExcludedCategoryIds(new Set([transfersCategory.id]))
+          }
         }
       } catch (error) {
         console.error('Failed to fetch categories:', error)
@@ -161,12 +169,28 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
       )
     }
 
-    // Expenses only filter
-    if (showExpensesOnly) {
+    // Income/Expense filter
+    if (!showIncome && !showExpenses) {
+      // If neither is selected, show nothing
+      return []
+    } else if (showIncome && !showExpenses) {
+      // Show only income (negative amounts)
+      filtered = filtered.filter(t => Number(t.amount) < 0)
+    } else if (!showIncome && showExpenses) {
+      // Show only expenses (positive amounts)
       filtered = filtered.filter(t => Number(t.amount) > 0)
     }
+    // If both are selected, show both (no filter needed)
 
-    // Category filter (multi-select)
+    // Exclude categories filter
+    if (excludedCategoryIds.size > 0) {
+      filtered = filtered.filter(t => {
+        if (!t.customCategoryId) return true // Keep uncategorized
+        return !excludedCategoryIds.has(t.customCategoryId)
+      })
+    }
+
+    // Category filter (include)
     if (selectedCategoryIds.size > 0) {
       filtered = filtered.filter(t => {
         if (!t.customCategoryId) return false
@@ -174,7 +198,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
       })
     }
 
-    // Subcategory filter (multi-select)
+    // Subcategory filter
     if (selectedSubcategoryIds.size > 0) {
       filtered = filtered.filter(t => {
         if (!t.customSubcategoryId) return false
@@ -202,7 +226,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
     })
 
     return filtered
-  }, [transactions, dateRange, customStartDate, customEndDate, selectedCategoryIds, selectedSubcategoryIds, sortBy, sortOrder, showExpensesOnly])
+  }, [transactions, dateRange, customStartDate, customEndDate, selectedCategoryIds, selectedSubcategoryIds, excludedCategoryIds, showIncome, showExpenses, sortBy, sortOrder])
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -334,6 +358,17 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
     setSelectedSubcategoryIds(newSelected)
   }
 
+  // Toggle excluded category
+  const toggleExcludedCategory = (categoryId: string) => {
+    const newExcluded = new Set(excludedCategoryIds)
+    if (newExcluded.has(categoryId)) {
+      newExcluded.delete(categoryId)
+    } else {
+      newExcluded.add(categoryId)
+    }
+    setExcludedCategoryIds(newExcluded)
+  }
+
   // Clear all filters
   const clearAllFilters = () => {
     setDateRange('last30')
@@ -341,12 +376,24 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
     setCustomEndDate('')
     setSelectedCategoryIds(new Set())
     setSelectedSubcategoryIds(new Set())
-    setShowExpensesOnly(true)
+    // Reset to default exclusions
+    const transfersCategory = categories.find(c => c.name === '🔁 Transfers')
+    if (transfersCategory) {
+      setExcludedCategoryIds(new Set([transfersCategory.id]))
+    } else {
+      setExcludedCategoryIds(new Set())
+    }
+    setShowIncome(false)
+    setShowExpenses(true)
   }
 
-  // Check if any filters are active
+  // Check if any filters are active (excluding default transfers exclusion)
+  const defaultExcludedCategory = categories.find(c => c.name === '🔁 Transfers')
+  const hasNonDefaultExclusions = excludedCategoryIds.size > 0 &&
+    (excludedCategoryIds.size > 1 || !defaultExcludedCategory || !excludedCategoryIds.has(defaultExcludedCategory.id))
+
   const hasActiveFilters = dateRange !== 'last30' || selectedCategoryIds.size > 0 ||
-    selectedSubcategoryIds.size > 0 || !showExpensesOnly
+    selectedSubcategoryIds.size > 0 || showIncome || !showExpenses || hasNonDefaultExclusions
 
   return (
     <div className="space-y-6">
@@ -407,50 +454,79 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
 
             {/* Dropdown Menu */}
             {showCategoryDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
-                <div className="p-2">
-                  {categories.map((category) => (
-                    <div key={category.id} className="mb-2">
-                      <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+              <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
+                <div className="p-3">
+                  <div className="mb-3 pb-3 border-b border-gray-200">
+                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Include Categories</h4>
+                    {categories.map((category) => (
+                      <div key={category.id} className="mb-2">
+                        <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategoryIds.has(category.id)}
+                            onChange={() => toggleCategory(category.id)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-sm font-medium text-gray-900">{category.name}</span>
+                        </label>
+                        {category.subcategories.length > 0 && selectedCategoryIds.has(category.id) && (
+                          <div className="ml-6 mt-1 space-y-1">
+                            {category.subcategories.map((sub) => (
+                              <label key={sub.id} className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedSubcategoryIds.has(sub.id)}
+                                  onChange={() => toggleSubcategory(sub.id, category.id)}
+                                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">{sub.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Exclude Categories</h4>
+                    {categories.map((category) => (
+                      <label key={category.id} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={selectedCategoryIds.has(category.id)}
-                          onChange={() => toggleCategory(category.id)}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          checked={excludedCategoryIds.has(category.id)}
+                          onChange={() => toggleExcludedCategory(category.id)}
+                          className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
                         />
-                        <span className="ml-2 text-sm font-medium text-gray-900">{category.name}</span>
+                        <span className="ml-2 text-sm text-gray-900">{category.name}</span>
                       </label>
-                      {category.subcategories.length > 0 && selectedCategoryIds.has(category.id) && (
-                        <div className="ml-6 mt-1 space-y-1">
-                          {category.subcategories.map((sub) => (
-                            <label key={sub.id} className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={selectedSubcategoryIds.has(sub.id)}
-                                onChange={() => toggleSubcategory(sub.id, category.id)}
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                              />
-                              <span className="ml-2 text-sm text-gray-700">{sub.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Expenses Only Toggle */}
+          {/* Income Toggle */}
           <label className="flex items-center cursor-pointer flex-shrink-0">
             <input
               type="checkbox"
-              checked={showExpensesOnly}
-              onChange={(e) => setShowExpensesOnly(e.target.checked)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              checked={showIncome}
+              onChange={(e) => setShowIncome(e.target.checked)}
+              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
             />
-            <span className="ml-2 text-sm text-gray-700">Expenses Only</span>
+            <span className="ml-2 text-sm text-gray-700">Income</span>
+          </label>
+
+          {/* Expenses Toggle */}
+          <label className="flex items-center cursor-pointer flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={showExpenses}
+              onChange={(e) => setShowExpenses(e.target.checked)}
+              className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+            />
+            <span className="ml-2 text-sm text-gray-700">Expenses</span>
           </label>
 
           {/* Clear Filters */}
@@ -465,14 +541,14 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
         </div>
 
         {/* Selected Filter Chips */}
-        {(selectedCategoryIds.size > 0 || selectedSubcategoryIds.size > 0) && (
+        {(selectedCategoryIds.size > 0 || selectedSubcategoryIds.size > 0 || excludedCategoryIds.size > 0) && (
           <div className="mt-3 flex flex-wrap gap-2">
             {Array.from(selectedCategoryIds).map(catId => {
               const category = categories.find(c => c.id === catId)
               if (!category) return null
               return (
                 <span key={catId} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                  {category.name}
+                  ✓ {category.name}
                   <button
                     onClick={() => toggleCategory(catId)}
                     className="hover:bg-blue-200 rounded-full p-0.5"
@@ -490,10 +566,27 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
               if (!subcategory || !category) return null
               return (
                 <span key={subId} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
-                  {subcategory.name}
+                  ✓ {subcategory.name}
                   <button
                     onClick={() => toggleSubcategory(subId, category.id)}
                     className="hover:bg-indigo-200 rounded-full p-0.5"
+                  >
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              )
+            })}
+            {Array.from(excludedCategoryIds).map(catId => {
+              const category = categories.find(c => c.id === catId)
+              if (!category) return null
+              return (
+                <span key={`excluded-${catId}`} className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                  ✕ {category.name}
+                  <button
+                    onClick={() => toggleExcludedCategory(catId)}
+                    className="hover:bg-red-200 rounded-full p-0.5"
                   >
                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

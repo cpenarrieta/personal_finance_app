@@ -5,6 +5,22 @@ import { SearchableTransactionList } from '@/components/SearchableTransactionLis
 import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
 import { HoldingList } from '@/components/HoldingList'
 import { format } from 'date-fns'
+import type { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const account = await prisma.account.findUnique({
+    where: { id },
+  })
+  
+  if (!account) {
+    return { title: 'Account Not Found' }
+  }
+  
+  return {
+    title: `${account.name}${account.mask ? ` • ${account.mask}` : ''}`,
+  }
+}
 
 export default async function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

@@ -7,6 +7,11 @@ import { CategorizeButton } from '@/components/CategorizeButton'
 import { RecategorizeButton } from '@/components/RecategorizeButton'
 import { prisma } from '@/lib/prisma'
 import { format } from 'date-fns'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Personal Finance Dashboard',
+}
 
 async function doSync() {
   'use server'
@@ -176,6 +181,10 @@ export default async function Page() {
               <Link href="/analytics" className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
                 <div className="font-medium text-gray-900">Analytics</div>
                 <div className="text-sm text-gray-600">Spending insights & charts</div>
+              </Link>
+              <Link href="/charts" className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">
+                <div className="font-medium text-gray-900">Charts</div>
+                <div className="text-sm text-gray-600">Visualize your spending and income patterns</div>
               </Link>
             </div>
           </div>
