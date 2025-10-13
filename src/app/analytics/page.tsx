@@ -5,6 +5,10 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Transaction Analytics',
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 export default async function AnalyticsPage() {

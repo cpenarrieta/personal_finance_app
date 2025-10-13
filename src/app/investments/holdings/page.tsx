@@ -10,6 +10,10 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Investment Holdings',
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 async function doSyncPrices() {

@@ -6,6 +6,10 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Manage Categories',
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 // Server Actions

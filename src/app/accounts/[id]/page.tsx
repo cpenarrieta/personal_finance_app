@@ -14,11 +14,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   })
   
   if (!account) {
-    return { title: 'Account Not Found' }
+    return {
+      title: 'Account Not Found',
+      robots: {
+        index: false,
+        follow: false,
+      },
+    }
   }
   
   return {
     title: `${account.name}${account.mask ? ` • ${account.mask}` : ''}`,
+    robots: {
+      index: false,
+      follow: false,
+    },
   }
 }
 

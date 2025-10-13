@@ -16,11 +16,21 @@ export async function generateMetadata({
   });
 
   if (!transaction) {
-    return { title: 'Transaction Not Found' };
+    return {
+      title: 'Transaction Not Found',
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
   }
 
   return {
     title: `${transaction.merchantName || transaction.name}`,
+    robots: {
+      index: false,
+      follow: false,
+    },
   };
 }
 
