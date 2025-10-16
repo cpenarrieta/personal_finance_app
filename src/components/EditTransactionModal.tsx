@@ -1,107 +1,114 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { format } from "date-fns";
 
 interface SerializedTransaction {
-  id: string
-  plaidTransactionId: string
-  accountId: string
-  amount: string
-  isoCurrencyCode: string | null
-  date: string
-  authorizedDate: string | null
-  pending: boolean
-  merchantName: string | null
-  name: string
-  category: string | null
-  subcategory: string | null
-  paymentChannel: string | null
-  pendingTransactionId: string | null
-  logoUrl: string | null
-  categoryIconUrl: string | null
-  customCategoryId: string | null
-  customSubcategoryId: string | null
-  notes: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  plaidTransactionId: string;
+  accountId: string;
+  amount: string;
+  isoCurrencyCode: string | null;
+  date: string;
+  authorizedDate: string | null;
+  pending: boolean;
+  merchantName: string | null;
+  name: string;
+  category: string | null;
+  subcategory: string | null;
+  paymentChannel: string | null;
+  pendingTransactionId: string | null;
+  logoUrl: string | null;
+  categoryIconUrl: string | null;
+  customCategoryId: string | null;
+  customSubcategoryId: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
   account: {
-    id: string
-    name: string
-    type: string
-    mask: string | null
-  } | null
+    id: string;
+    name: string;
+    type: string;
+    mask: string | null;
+  } | null;
 }
 
 interface EditTransactionModalProps {
-  transaction: SerializedTransaction
-  onClose: () => void
+  transaction: SerializedTransaction;
+  onClose: () => void;
 }
 
 interface CustomCategory {
-  id: string
-  name: string
+  id: string;
+  name: string;
   subcategories: {
-    id: string
-    name: string
-  }[]
+    id: string;
+    name: string;
+  }[];
 }
 
-export function EditTransactionModal({ transaction, onClose }: EditTransactionModalProps) {
-  const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [categories, setCategories] = useState<CustomCategory[]>([])
+export function EditTransactionModal({
+  transaction,
+  onClose,
+}: EditTransactionModalProps) {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<CustomCategory[]>([]);
 
   // Form state
-  const [name, setName] = useState(transaction.name)
-  const [customCategoryId, setCustomCategoryId] = useState(transaction.customCategoryId || '')
-  const [customSubcategoryId, setCustomSubcategoryId] = useState(transaction.customSubcategoryId || '')
-  const [notes, setNotes] = useState(transaction.notes || '')
+  const [name, setName] = useState(transaction.name);
+  const [customCategoryId, setCustomCategoryId] = useState(
+    transaction.customCategoryId || ""
+  );
+  const [customSubcategoryId, setCustomSubcategoryId] = useState(
+    transaction.customSubcategoryId || ""
+  );
+  const [notes, setNotes] = useState(transaction.notes || "");
 
   // Fetch custom categories
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const response = await fetch('/api/custom-categories')
+        const response = await fetch("/api/custom-categories");
         if (response.ok) {
-          const data = await response.json()
-          setCategories(data)
+          const data = await response.json();
+          setCategories(data);
         }
       } catch (error) {
-        console.error('Failed to fetch categories:', error)
+        console.error("Failed to fetch categories:", error);
       }
     }
-    fetchCategories()
-  }, [])
+    fetchCategories();
+  }, []);
 
   // Handle escape key to close modal
   useEffect(() => {
     const handleEscapeKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
+      if (e.key === "Escape") {
+        onClose();
       }
-    }
+    };
 
-    document.addEventListener('keydown', handleEscapeKey)
+    document.addEventListener("keydown", handleEscapeKey);
     return () => {
-      document.removeEventListener('keydown', handleEscapeKey)
-    }
-  }, [onClose])
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [onClose]);
 
   // Get subcategories for selected custom category
-  const selectedCategory = categories.find(c => c.id === customCategoryId)
-  const availableSubcategories = selectedCategory?.subcategories || []
+  const selectedCategory = categories.find((c) => c.id === customCategoryId);
+  const availableSubcategories = selectedCategory?.subcategories || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(`/api/transactions/${transaction.id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name,
@@ -109,36 +116,48 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
           customSubcategoryId: customSubcategoryId || null,
           notes: notes || null,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update transaction')
+        throw new Error("Failed to update transaction");
       }
 
       // Refresh the page to show updated data
-      router.refresh()
-      onClose()
+      router.refresh();
+      onClose();
     } catch (error) {
-      console.error('Error updating transaction:', error)
-      alert('Failed to update transaction. Please try again.')
+      console.error("Error updating transaction:", error);
+      alert("Failed to update transaction. Please try again.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Edit Transaction</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Edit Transaction
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
               type="button"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -167,8 +186,8 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
                 <select
                   value={customCategoryId}
                   onChange={(e) => {
-                    setCustomCategoryId(e.target.value)
-                    setCustomSubcategoryId('') // Reset subcategory when category changes
+                    setCustomCategoryId(e.target.value);
+                    setCustomSubcategoryId(""); // Reset subcategory when category changes
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -217,22 +236,34 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
 
             {/* Transaction Details (Read-only) */}
             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Transaction Details</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">
+                Transaction Details
+              </h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="text-gray-600">Transaction ID:</div>
-                <div className="font-medium font-mono text-xs">{transaction.id}</div>
+                <div className="font-medium font-mono text-xs">
+                  {transaction.id}
+                </div>
                 <div className="text-gray-600">Amount:</div>
                 <div className="font-medium">
-                  ${Math.abs(Number(transaction.amount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  $
+                  {Math.abs(Number(transaction.amount)).toLocaleString(
+                    "en-US",
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                  )}
                 </div>
                 <div className="text-gray-600">Account:</div>
                 <div className="font-medium">{transaction.account?.name}</div>
                 <div className="text-gray-600">Date:</div>
-                <div className="font-medium">{format(new Date(transaction.date), 'MMM d yyyy, h:mm a')}</div>
+                <div className="font-medium">
+                  {format(new Date(transaction.date), "MMM d yyyy, h:mm a")}
+                </div>
                 {transaction.merchantName && (
                   <>
                     <div className="text-gray-600">Merchant:</div>
-                    <div className="font-medium">{transaction.merchantName}</div>
+                    <div className="font-medium">
+                      {transaction.merchantName}
+                    </div>
                   </>
                 )}
               </div>
@@ -253,12 +284,12 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
                 disabled={isSubmitting}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400"
               >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  )
+  );
 }
