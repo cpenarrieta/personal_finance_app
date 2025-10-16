@@ -2,70 +2,18 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import {
-  format,
   startOfMonth,
   endOfMonth,
   subMonths,
   isWithinInterval,
 } from "date-fns";
 import { EditTransactionModal } from "./EditTransactionModal";
-import { getCategoryImage } from "@/lib/categoryImages";
-import Link from "next/link";
-
-interface SerializedTransaction {
-  id: string;
-  plaidTransactionId: string;
-  accountId: string;
-  amount: string;
-  isoCurrencyCode: string | null;
-  date: string;
-  authorizedDate: string | null;
-  pending: boolean;
-  merchantName: string | null;
-  name: string;
-  category: string | null;
-  subcategory: string | null;
-  paymentChannel: string | null;
-  pendingTransactionId: string | null;
-  logoUrl: string | null;
-  categoryIconUrl: string | null;
-  customCategoryId: string | null;
-  customSubcategoryId: string | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-  account: {
-    id: string;
-    name: string;
-    type: string;
-    mask: string | null;
-  } | null;
-  customCategory: {
-    id: string;
-    name: string;
-    imageUrl: string | null;
-    createdAt: string;
-    updatedAt: string;
-  } | null;
-  customSubcategory: {
-    id: string;
-    categoryId: string;
-    name: string;
-    imageUrl: string | null;
-    createdAt: string;
-    updatedAt: string;
-    category?: {
-      id: string;
-      name: string;
-      imageUrl: string | null;
-      createdAt: string;
-      updatedAt: string;
-    };
-  } | null;
-}
+import { TransactionItem } from "./TransactionItem";
+import type { SerializedTransaction } from "@/types/transaction";
 
 interface SearchableTransactionListProps {
   transactions: SerializedTransaction[];
+  showAccount?: boolean; // Whether to show account name in transaction items
 }
 
 type DateRange =
@@ -78,6 +26,7 @@ type DateRange =
 
 export function SearchableTransactionList({
   transactions,
+  showAccount = true,
 }: SearchableTransactionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>("all");
@@ -926,99 +875,15 @@ export function SearchableTransactionList({
         ) : (
           <ul className="divide-y divide-gray-200">
             {filteredTransactions.map((t) => (
-              <li key={t.id} className="hover:bg-gray-50 transition-colors">
-                <div className="p-4 flex items-start gap-3">
-                  {showBulkUpdate && (
-                    <input
-                      type="checkbox"
-                      checked={selectedTransactions.has(t.id)}
-                      onChange={() => toggleTransaction(t.id)}
-                      className="mt-1 w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
-                  {(t.logoUrl || (t.customCategory && getCategoryImage(t.customCategory.name, t.customCategory.imageUrl))) && (
-                    <img
-                      src={t.logoUrl || getCategoryImage(t.customCategory!.name, t.customCategory!.imageUrl)!}
-                      alt=""
-                      className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
-                      onClick={() =>
-                        !showBulkUpdate && setEditingTransaction(t)
-                      }
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div
-                        className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() =>
-                          !showBulkUpdate && setEditingTransaction(t)
-                        }
-                      >
-                        <div className="font-medium text-gray-900 flex items-center gap-2">
-                          <span className="truncate">{t.name}</span>
-                          {t.pending && (
-                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex-shrink-0">
-                              Pending
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {format(new Date(t.date), "MMM d yyyy")}
-                          {t.account && ` • ${t.account.name}`}
-                        </div>
-                        {t.merchantName && (
-                          <div className="text-sm text-gray-500 mt-1">
-                            Merchant: {t.merchantName}
-                          </div>
-                        )}
-                        {t.customCategory && (
-                          <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                            <span>Category: {t.customCategory.name}</span>
-                            {t.customSubcategory && (
-                              <span className="text-gray-400">
-                                • {t.customSubcategory.name}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {t.notes && (
-                          <div className="text-sm text-gray-500 mt-1 italic">
-                            Note: {t.notes}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                        <div
-                          className={`text-lg font-semibold ${
-                            Number(t.amount) > 0
-                              ? "text-red-600"
-                              : "text-green-600"
-                          }`}
-                        >
-                          {Number(t.amount) > 0 ? "-" : "+"}$
-                          {Math.abs(Number(t.amount)).toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </div>
-                        {t.isoCurrencyCode && (
-                          <div className="text-xs text-gray-500">
-                            {t.isoCurrencyCode}
-                          </div>
-                        )}
-                        <Link
-                          href={`/transactions/${t.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
-                        >
-                          Details
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
+              <TransactionItem
+                key={t.id}
+                transaction={t}
+                showBulkUpdate={showBulkUpdate}
+                isSelected={selectedTransactions.has(t.id)}
+                onToggleSelect={toggleTransaction}
+                onEdit={setEditingTransaction}
+                showAccount={showAccount}
+              />
             ))}
           </ul>
         )}
