@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useFormStatus } from 'react-dom'
 
 function SubmitButton() {
@@ -23,9 +24,48 @@ function SubmitButton() {
 }
 
 export function FreshSyncButton({ action }: { action: () => Promise<void> }) {
+  const [showConfirmation, setShowConfirmation] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setShowConfirmation(true)
+  }
+
+  const handleConfirm = () => {
+    setShowConfirmation(false)
+    action()
+  }
+
   return (
-    <form action={action}>
-      <SubmitButton />
-    </form>
+    <>
+      <form id="fresh-sync-form" onSubmit={handleSubmit}>
+        <SubmitButton />
+      </form>
+
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold mb-2 text-gray-900">Confirm Sync from Scratch</h3>
+            <p className="text-gray-600 mb-6">
+              This will re-sync all your data from scratch. This operation may take a few minutes. Are you sure you want to continue?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowConfirmation(false)}
+                className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

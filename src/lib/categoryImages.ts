@@ -17,6 +17,7 @@ const CATEGORY_IMAGE_MAP: Record<string, string> = {
   'utilities': '/images/categories/utilities.png',
   'home upkeep': '/images/categories/Home_Upkeep.png',
   'savings': '/images/categories/Savings.png',
+  'groceries': '/images/categories/groceries_category.png',
 }
 
 /**
