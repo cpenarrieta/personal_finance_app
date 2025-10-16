@@ -219,6 +219,8 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Transaction Details</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="text-gray-600">Transaction ID:</div>
+                <div className="font-medium font-mono text-xs">{transaction.id}</div>
                 <div className="text-gray-600">Amount:</div>
                 <div className="font-medium">
                   ${Math.abs(Number(transaction.amount)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -226,7 +228,7 @@ export function EditTransactionModal({ transaction, onClose }: EditTransactionMo
                 <div className="text-gray-600">Account:</div>
                 <div className="font-medium">{transaction.account?.name}</div>
                 <div className="text-gray-600">Date:</div>
-                <div className="font-medium">{format(new Date(transaction.date), 'MMM d yyyy')}</div>
+                <div className="font-medium">{format(new Date(transaction.date), 'MMM d yyyy, h:mm a')}</div>
                 {transaction.merchantName && (
                   <>
                     <div className="text-gray-600">Merchant:</div>

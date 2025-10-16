@@ -22,14 +22,14 @@ async function createCategory(formData: FormData) {
   await prisma.customCategory.create({
     data: { name, imageUrl: imageUrl || null },
   })
-  revalidatePath('/manage-categories')
+  revalidatePath('/settings/manage-categories')
 }
 
 async function deleteCategory(formData: FormData) {
   'use server'
   const id = formData.get('id') as string
   await prisma.customCategory.delete({ where: { id } })
-  revalidatePath('/manage-categories')
+  revalidatePath('/settings/manage-categories')
 }
 
 async function createSubcategory(formData: FormData) {
@@ -41,28 +41,28 @@ async function createSubcategory(formData: FormData) {
   await prisma.customSubcategory.create({
     data: { categoryId, name, imageUrl: imageUrl || null },
   })
-  revalidatePath('/manage-categories')
+  revalidatePath('/settings/manage-categories')
 }
 
 async function deleteSubcategory(formData: FormData) {
   'use server'
   const id = formData.get('id') as string
   await prisma.customSubcategory.delete({ where: { id } })
-  revalidatePath('/manage-categories')
+  revalidatePath('/settings/manage-categories')
 }
 
 async function createGroup(formData: FormData) {
   'use server'
   const name = formData.get('name') as string
   await prisma.categoryGroup.create({ data: { name } })
-  revalidatePath('/manage-categories')
+  revalidatePath('/settings/manage-categories')
 }
 
 async function deleteGroup(formData: FormData) {
   'use server'
   const id = formData.get('id') as string
   await prisma.categoryGroup.delete({ where: { id } })
-  revalidatePath('/manage-categories')
+  revalidatePath('/settings/manage-categories')
 }
 
 async function addCategoryToGroup(formData: FormData) {
@@ -77,14 +77,14 @@ async function addCategoryToGroup(formData: FormData) {
   } catch {
     // Ignore duplicate errors
   }
-  revalidatePath('/manage-categories')
+  revalidatePath('/settings/manage-categories')
 }
 
 async function removeCategoryFromGroup(formData: FormData) {
   'use server'
   const id = formData.get('id') as string
   await prisma.categoryGroupItem.delete({ where: { id } })
-  revalidatePath('/manage-categories')
+  revalidatePath('/settings/manage-categories')
 }
 
 export default async function ManageCategoriesPage() {

@@ -18,6 +18,8 @@ const CATEGORY_IMAGE_MAP: Record<string, string> = {
   'home upkeep': '/images/categories/Home_Upkeep.png',
   'savings': '/images/categories/Savings.png',
   'groceries': '/images/categories/groceries_category.png',
+  'vacations': '/images/categories/vacations_category.png',
+  '-software': '/images/categories/software_category.png',
 }
 
 /**
@@ -40,6 +42,8 @@ export function getCategoryImage(categoryName: string, dbImageUrl?: string | nul
 
   // Remove emojis and normalize the category name for lookup (lowercase, trim)
   const normalizedName = removeEmojis(categoryName).toLowerCase().trim()
+
+  console.log('normalizedName', normalizedName)
 
   // Check if we have a local image for this category
   const localImage = CATEGORY_IMAGE_MAP[normalizedName]
