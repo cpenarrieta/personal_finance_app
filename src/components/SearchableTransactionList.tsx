@@ -49,6 +49,10 @@ export function SearchableTransactionList({
   const [showIncome, setShowIncome] = useState(false);
   const [showExpenses, setShowExpenses] = useState(true);
 
+  // Tag filter state
+  const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(new Set());
+  const [tags, setTags] = useState<{ id: string; name: string; color: string }[]>([]);
+
   // Bulk update state
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(
     new Set()
@@ -154,12 +158,22 @@ export function SearchableTransactionList({
       });
     }
 
+    // Tag filter
+    if (selectedTagIds.size > 0) {
+      filtered = filtered.filter((t) => {
+        if (!t.tags || t.tags.length === 0) return false;
+        // Transaction must have at least one of the selected tags
+        return t.tags.some(tag => selectedTagIds.has(tag.id));
+      });
+    }
+
     // Search query filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
 
       filtered = filtered.filter((t) => {
-        // Search in multiple fields
+        // Search in multiple fields including tags
+        const tagNames = t.tags?.map(tag => tag.name).join(" ") || "";
         const searchableText = [
           t.name,
           t.merchantName,
@@ -169,6 +183,7 @@ export function SearchableTransactionList({
           t.isoCurrencyCode,
           t.amount,
           t.notes,
+          tagNames,
         ]
           .filter(Boolean)
           .join(" ")
@@ -191,9 +206,10 @@ export function SearchableTransactionList({
     excludedCategoryIds,
     showIncome,
     showExpenses,
+    selectedTagIds,
   ]);
 
-  // Fetch custom categories and set default exclusions
+  // Fetch custom categories, tags and set default exclusions
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -212,7 +228,21 @@ export function SearchableTransactionList({
         console.error("Failed to fetch categories:", error);
       }
     }
+
+    async function fetchTags() {
+      try {
+        const response = await fetch("/api/tags");
+        if (response.ok) {
+          const data = await response.json();
+          setTags(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tags:", error);
+      }
+    }
+
     fetchCategories();
+    fetchTags();
   }, []);
 
   // Close dropdown when clicking outside
@@ -359,6 +389,17 @@ export function SearchableTransactionList({
     setExcludedCategoryIds(newExcluded);
   };
 
+  // Toggle tag selection
+  const toggleTag = (tagId: string) => {
+    const newSelected = new Set(selectedTagIds);
+    if (newSelected.has(tagId)) {
+      newSelected.delete(tagId);
+    } else {
+      newSelected.add(tagId);
+    }
+    setSelectedTagIds(newSelected);
+  };
+
   // Clear all filters
   const clearAllFilters = () => {
     setSearchQuery("");
@@ -368,6 +409,7 @@ export function SearchableTransactionList({
     setShowOnlyUncategorized(false);
     setSelectedCategoryIds(new Set());
     setSelectedSubcategoryIds(new Set());
+    setSelectedTagIds(new Set());
     // Reset to default exclusions
     const transfersCategory = categories.find((c) => c.name === '🔁 Transfers');
     if (transfersCategory) {
@@ -390,6 +432,7 @@ export function SearchableTransactionList({
     showOnlyUncategorized ||
     selectedCategoryIds.size > 0 ||
     selectedSubcategoryIds.size > 0 ||
+    selectedTagIds.size > 0 ||
     showIncome ||
     !showExpenses ||
     hasNonDefaultExclusions;
@@ -401,7 +444,7 @@ export function SearchableTransactionList({
         <div className="relative">
           <input
             type="text"
-            placeholder="Search transactions (name, merchant, category, account, amount...)"
+            placeholder="Search transactions (name, merchant, category, account, amount, tags...)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -594,6 +637,33 @@ export function SearchableTransactionList({
             <span className="ml-2 text-sm text-gray-700">Expenses</span>
           </label>
 
+          {/* Tag Filter */}
+          {tags.length > 0 && (
+            <div className="flex-shrink-0 flex items-center gap-2">
+              <span className="text-sm text-gray-700">Tags:</span>
+              <div className="flex flex-wrap gap-1">
+                {tags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    onClick={() => toggleTag(tag.id)}
+                    className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${
+                      selectedTagIds.has(tag.id)
+                        ? "text-white ring-2 ring-offset-1"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    style={
+                      selectedTagIds.has(tag.id)
+                        ? { backgroundColor: tag.color }
+                        : undefined
+                    }
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Uncategorized Checkbox */}
           <label className="flex items-center cursor-pointer flex-shrink-0">
             <input
@@ -617,7 +687,7 @@ export function SearchableTransactionList({
         </div>
 
         {/* Selected Filter Chips */}
-        {(selectedCategoryIds.size > 0 || selectedSubcategoryIds.size > 0 || excludedCategoryIds.size > 0) && (
+        {(selectedCategoryIds.size > 0 || selectedSubcategoryIds.size > 0 || excludedCategoryIds.size > 0 || selectedTagIds.size > 0) && (
           <div className="mt-3 flex flex-wrap gap-2">
             {Array.from(selectedCategoryIds).map((catId) => {
               const category = categories.find((c) => c.id === catId);
@@ -696,6 +766,37 @@ export function SearchableTransactionList({
                   <button
                     onClick={() => toggleExcludedCategory(catId)}
                     className="hover:bg-red-200 rounded-full p-0.5"
+                  >
+                    <svg
+                      className="h-3 w-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </span>
+              );
+            })}
+            {Array.from(selectedTagIds).map((tagId) => {
+              const tag = tags.find((t) => t.id === tagId);
+              if (!tag) return null;
+              return (
+                <span
+                  key={`tag-${tagId}`}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm text-white"
+                  style={{ backgroundColor: tag.color }}
+                >
+                  {tag.name}
+                  <button
+                    onClick={() => toggleTag(tagId)}
+                    className="hover:bg-black hover:bg-opacity-20 rounded-full p-0.5"
                   >
                     <svg
                       className="h-3 w-3"
