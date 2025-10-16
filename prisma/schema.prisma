@@ -85,6 +85,9 @@ model Transaction {
   // User notes
   notes            String?  // User-added notes for the transaction
 
+  // Tags
+  tags             TransactionTag[]
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -186,4 +189,27 @@ model CategoryGroupItem {
   createdAt     DateTime @default(now())
 
   @@unique([groupId, categoryId])
+}
+
+// Tags for transactions
+model Tag {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  color         String   // hex color code
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  transactions  TransactionTag[]
+}
+
+// Many-to-many relation between Transaction and Tag
+model TransactionTag {
+  id            String   @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  tagId         String
+  tag           Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@unique([transactionId, tagId])
 }

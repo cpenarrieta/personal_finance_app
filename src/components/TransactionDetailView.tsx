@@ -4,6 +4,12 @@ import { useState } from 'react'
 import { format } from 'date-fns'
 import { EditTransactionModal } from './EditTransactionModal'
 
+interface Tag {
+  id: string
+  name: string
+  color: string
+}
+
 interface SerializedTransaction {
   id: string
   plaidTransactionId: string
@@ -24,6 +30,7 @@ interface SerializedTransaction {
   customCategoryId: string | null
   customSubcategoryId: string | null
   notes: string | null
+  tags: Tag[]
   createdAt: string
   updatedAt: string
   account: {
@@ -168,6 +175,24 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
             <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <label className="block text-sm font-medium text-amber-900 mb-2">Notes</label>
               <div className="text-gray-900 whitespace-pre-wrap">{transaction.notes}</div>
+            </div>
+          )}
+
+          {/* Tags Section */}
+          {transaction.tags && transaction.tags.length > 0 && (
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-600 mb-2">Tags</label>
+              <div className="flex flex-wrap gap-2">
+                {transaction.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                    style={{ backgroundColor: tag.color }}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 

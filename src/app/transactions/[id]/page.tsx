@@ -49,6 +49,11 @@ export default async function TransactionDetailPage({
       account: true,
       customCategory: true,
       customSubcategory: true,
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
     },
   });
 
@@ -77,6 +82,11 @@ export default async function TransactionDetailPage({
     customCategoryId: transaction.customCategoryId,
     customSubcategoryId: transaction.customSubcategoryId,
     notes: transaction.notes,
+    tags: transaction.tags?.map((tt) => ({
+      id: tt.tag.id,
+      name: tt.tag.name,
+      color: tt.tag.color,
+    })) || [],
     createdAt: transaction.createdAt.toISOString(),
     updatedAt: transaction.updatedAt.toISOString(),
     account: transaction.account

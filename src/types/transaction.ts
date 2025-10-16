@@ -1,5 +1,11 @@
 // Shared transaction types and utilities
 
+export interface SerializedTag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface SerializedTransaction {
   id: string;
   plaidTransactionId: string;
@@ -20,6 +26,7 @@ export interface SerializedTransaction {
   customCategoryId: string | null;
   customSubcategoryId: string | null;
   notes: string | null;
+  tags: SerializedTag[];
   createdAt: string;
   updatedAt: string;
   account: {
@@ -77,6 +84,11 @@ export function serializeTransaction(t: any): SerializedTransaction {
     customCategoryId: t.customCategoryId,
     customSubcategoryId: t.customSubcategoryId,
     notes: t.notes,
+    tags: t.tags?.map((tt: any) => ({
+      id: tt.tag.id,
+      name: tt.tag.name,
+      color: tt.tag.color,
+    })) || [],
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
     account: t.account ? {
@@ -120,6 +132,11 @@ export const TRANSACTION_INCLUDE = {
   customSubcategory: {
     include: {
       category: true,
+    },
+  },
+  tags: {
+    include: {
+      tag: true,
     },
   },
 } as const;

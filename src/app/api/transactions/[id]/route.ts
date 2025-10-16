@@ -16,6 +16,7 @@ export async function PATCH(
       customCategoryId,
       customSubcategoryId,
       notes,
+      tagIds,
     } = body
 
     // Build update data object
@@ -41,6 +42,24 @@ export async function PATCH(
         updateData.customSubcategory = { disconnect: true }
       } else {
         updateData.customSubcategory = { connect: { id: customSubcategoryId } }
+      }
+    }
+
+    // Handle tags if provided
+    if (tagIds !== undefined) {
+      // First, delete all existing tag associations
+      await prisma.transactionTag.deleteMany({
+        where: { transactionId: id },
+      })
+
+      // Then create new tag associations
+      if (Array.isArray(tagIds) && tagIds.length > 0) {
+        await prisma.transactionTag.createMany({
+          data: tagIds.map((tagId: string) => ({
+            transactionId: id,
+            tagId,
+          })),
+        })
       }
     }
 

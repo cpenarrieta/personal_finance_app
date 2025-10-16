@@ -4,6 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface SerializedTransaction {
   id: string;
   plaidTransactionId: string;
@@ -24,6 +30,7 @@ interface SerializedTransaction {
   customCategoryId: string | null;
   customSubcategoryId: string | null;
   notes: string | null;
+  tags: Tag[];
   createdAt: string;
   updatedAt: string;
   account: {
@@ -55,6 +62,7 @@ export function EditTransactionModal({
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<CustomCategory[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 
   // Form state
   const [name, setName] = useState(transaction.name);
@@ -65,8 +73,11 @@ export function EditTransactionModal({
     transaction.customSubcategoryId || ""
   );
   const [notes, setNotes] = useState(transaction.notes || "");
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
+    transaction.tags?.map((t) => t.id) || []
+  );
 
-  // Fetch custom categories
+  // Fetch custom categories and tags
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -79,7 +90,21 @@ export function EditTransactionModal({
         console.error("Failed to fetch categories:", error);
       }
     }
+
+    async function fetchTags() {
+      try {
+        const response = await fetch("/api/tags");
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableTags(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tags:", error);
+      }
+    }
+
     fetchCategories();
+    fetchTags();
   }, []);
 
   // Handle escape key to close modal
@@ -100,6 +125,14 @@ export function EditTransactionModal({
   const selectedCategory = categories.find((c) => c.id === customCategoryId);
   const availableSubcategories = selectedCategory?.subcategories || [];
 
+  const toggleTag = (tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -115,6 +148,7 @@ export function EditTransactionModal({
           customCategoryId: customCategoryId || null,
           customSubcategoryId: customSubcategoryId || null,
           notes: notes || null,
+          tagIds: selectedTagIds,
         }),
       });
 
@@ -232,6 +266,58 @@ export function EditTransactionModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Add any notes about this transaction..."
               />
+            </div>
+
+            {/* Tags */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Tags
+                </label>
+                <a
+                  href="/settings/manage-tags"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-700"
+                >
+                  Manage Tags
+                </a>
+              </div>
+              {availableTags.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No tags available.{" "}
+                  <a
+                    href="/settings/manage-tags"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Create tags
+                  </a>
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                        selectedTagIds.includes(tag.id)
+                          ? "text-white ring-2 ring-offset-2"
+                          : "text-gray-700 bg-gray-100 hover:bg-gray-200"
+                      }`}
+                      style={
+                        selectedTagIds.includes(tag.id)
+                          ? { backgroundColor: tag.color }
+                          : undefined
+                      }
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Transaction Details (Read-only) */}
