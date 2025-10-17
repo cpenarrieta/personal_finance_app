@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { updateTransactionSchema } from '@/types/api'
+import { safeParseRequestBody } from '@/types/api'
+import type { Prisma } from '@prisma/client'
 
 export async function PATCH(
   req: NextRequest,
@@ -7,7 +10,19 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const body = await req.json()
+
+    // Validate request body with Zod
+    const parseResult = await safeParseRequestBody(req, updateTransactionSchema)
+
+    if (!parseResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Invalid request data',
+          details: parseResult.error.message,
+        },
+        { status: 400 }
+      )
+    }
 
     const {
       name,
@@ -17,10 +32,10 @@ export async function PATCH(
       customSubcategoryId,
       notes,
       tagIds,
-    } = body
+    } = parseResult.data
 
-    // Build update data object
-    const updateData: any = {}
+    // Build update data object with proper typing
+    const updateData: Prisma.TransactionUpdateInput = {}
 
     if (name !== undefined) updateData.name = name
     if (category !== undefined) updateData.category = category
@@ -29,7 +44,7 @@ export async function PATCH(
 
     // Handle custom category relation
     if (customCategoryId !== undefined) {
-      if (customCategoryId === null || customCategoryId === '') {
+      if (customCategoryId === null) {
         updateData.customCategory = { disconnect: true }
       } else {
         updateData.customCategory = { connect: { id: customCategoryId } }
@@ -38,7 +53,7 @@ export async function PATCH(
 
     // Handle custom subcategory relation
     if (customSubcategoryId !== undefined) {
-      if (customSubcategoryId === null || customSubcategoryId === '') {
+      if (customSubcategoryId === null) {
         updateData.customSubcategory = { disconnect: true }
       } else {
         updateData.customSubcategory = { connect: { id: customSubcategoryId } }
@@ -53,9 +68,9 @@ export async function PATCH(
       })
 
       // Then create new tag associations
-      if (Array.isArray(tagIds) && tagIds.length > 0) {
+      if (tagIds.length > 0) {
         await prisma.transactionTag.createMany({
-          data: tagIds.map((tagId: string) => ({
+          data: tagIds.map((tagId) => ({
             transactionId: id,
             tagId,
           })),

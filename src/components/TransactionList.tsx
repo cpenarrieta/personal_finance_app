@@ -1,9 +1,5 @@
-import type { Transaction, Account } from '@prisma/client'
 import { format } from 'date-fns'
-
-type TransactionWithAccount = Transaction & {
-  account?: Account
-}
+import type { TransactionWithAccount } from '@/types/prisma'
 
 interface TransactionListProps {
   transactions: TransactionWithAccount[]

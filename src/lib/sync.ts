@@ -3,14 +3,60 @@ import { getPlaidClient } from './plaid'
 import { prisma } from './prisma'
 import { Prisma } from '@prisma/client'
 
+interface SyncStats {
+  accountsUpdated: number
+  transactionsAdded: number
+  transactionsModified: number
+  transactionsRemoved: number
+  securitiesAdded: number
+  holdingsAdded: number
+  holdingsUpdated: number
+  holdingsRemoved: number
+  investmentTransactionsAdded: number
+}
+
 export async function syncAllItems() {
   const items = await prisma.item.findMany()
   const plaid = getPlaidClient()
 
+  const totalStats: SyncStats = {
+    accountsUpdated: 0,
+    transactionsAdded: 0,
+    transactionsModified: 0,
+    transactionsRemoved: 0,
+    securitiesAdded: 0,
+    holdingsAdded: 0,
+    holdingsUpdated: 0,
+    holdingsRemoved: 0,
+    investmentTransactionsAdded: 0,
+  }
+
+  console.log(`\n🔄 Starting sync for ${items.length} item(s)...\n`)
+
   for (const it of items) {
+    const itemStats: SyncStats = {
+      accountsUpdated: 0,
+      transactionsAdded: 0,
+      transactionsModified: 0,
+      transactionsRemoved: 0,
+      securitiesAdded: 0,
+      holdingsAdded: 0,
+      holdingsUpdated: 0,
+      holdingsRemoved: 0,
+      investmentTransactionsAdded: 0,
+    }
+
+    const itemInfo = await prisma.item.findUnique({
+      where: { id: it.id },
+      include: { institution: true }
+    })
+    const institutionName = itemInfo?.institution?.name || 'Unknown Institution'
+    console.log(`\n📦 Processing: ${institutionName}`)
+    console.log('─'.repeat(60))
     // 1) Banking transactions
     // First, if no cursor exists, do a historical fetch to get older data
     if (!it.lastTransactionsCursor) {
+      console.log('  📅 Fetching historical transactions...')
       const historicalStartDate = '2024-01-01'
       const historicalEndDate = new Date().toISOString().slice(0, 10)
 
@@ -38,8 +84,15 @@ export async function syncAllItems() {
         offset += 500
       }
 
+      console.log(`  ✓ Found ${totalTransactions.length} historical transaction(s)`)
+
       // Process historical transactions
       for (const t of totalTransactions) {
+        const existing = await prisma.transaction.findUnique({
+          where: { plaidTransactionId: t.transaction_id }
+        })
+        const isNew = !existing
+
         await prisma.transaction.upsert({
           where: { plaidTransactionId: t.transaction_id },
           update: {
@@ -76,10 +129,17 @@ export async function syncAllItems() {
             categoryIconUrl: t.personal_finance_category_icon_url || null,
           },
         })
+
+        if (isNew) {
+          itemStats.transactionsAdded++
+          console.log(`    ➕ ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
+        }
       }
+      console.log(`  ✓ Processed ${itemStats.transactionsAdded} new transaction(s)`)
     }
 
     // Now use /transactions/sync for incremental updates
+    console.log('  🔄 Syncing incremental updates...')
     let cursor = it.lastTransactionsCursor || undefined
     let hasMore = true
 
@@ -92,6 +152,7 @@ export async function syncAllItems() {
 
       // Upsert accounts (in case of new/changed)
       for (const a of resp.data.accounts) {
+        itemStats.accountsUpdated++
         await prisma.account.upsert({
           where: { plaidAccountId: a.account_id },
           update: {
@@ -126,6 +187,7 @@ export async function syncAllItems() {
 
       // Added transactions
       for (const t of resp.data.added) {
+        itemStats.transactionsAdded++
         await prisma.transaction.upsert({
           where: { plaidTransactionId: t.transaction_id },
           update: {
@@ -162,10 +224,12 @@ export async function syncAllItems() {
             categoryIconUrl: t.personal_finance_category_icon_url || null,
           },
         })
+        console.log(`    ➕ ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
       }
 
       // Modified transactions (e.g., pending -> posted)
       for (const t of resp.data.modified) {
+        itemStats.transactionsModified++
         await prisma.transaction.update({
           where: { plaidTransactionId: t.transaction_id },
           data: {
@@ -184,12 +248,15 @@ export async function syncAllItems() {
             categoryIconUrl: t.personal_finance_category_icon_url || null,
           },
         })
+        console.log(`    📝 ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
       }
 
       // Removed transactions
       const removedIds = resp.data.removed.map(r => r.transaction_id)
       if (removedIds.length) {
+        itemStats.transactionsRemoved += removedIds.length
         await prisma.transaction.deleteMany({ where: { plaidTransactionId: { in: removedIds } } })
+        console.log(`    🗑️  Removed ${removedIds.length} transaction(s)`)
       }
 
       cursor = resp.data.next_cursor
@@ -199,6 +266,7 @@ export async function syncAllItems() {
     await prisma.item.update({ where: { id: it.id }, data: { lastTransactionsCursor: cursor } })
 
     // 2) Investments: transactions + holdings + securities
+    console.log('  📊 Syncing investments...')
     const accounts = await prisma.account.findMany({ where: { itemId: it.id } })
 
     // Holdings
@@ -206,6 +274,11 @@ export async function syncAllItems() {
 
     // Securities
     for (const s of holdingsResp.data.securities) {
+      const existing = await prisma.security.findUnique({
+        where: { plaidSecurityId: s.security_id }
+      })
+      const isNew = !existing
+
       await prisma.security.upsert({
         where: { plaidSecurityId: s.security_id },
         update: {
@@ -222,6 +295,11 @@ export async function syncAllItems() {
           isoCurrencyCode: s.iso_currency_code || null,
         },
       })
+
+      if (isNew) {
+        itemStats.securitiesAdded++
+        console.log(`    🔐 ${s.ticker_symbol || s.name || 'Security'} added`)
+      }
     }
 
     // Update holdings snapshot
@@ -237,7 +315,9 @@ export async function syncAllItems() {
     for (const existing of existingHoldings) {
       const key = `${existing.account.plaidAccountId}_${existing.security.plaidSecurityId}`
       if (!plaidHoldingKeys.has(key)) {
+        itemStats.holdingsRemoved++
         await prisma.holding.delete({ where: { id: existing.id } })
+        console.log(`    🗑️  ${existing.security.tickerSymbol || existing.security.name || 'Holding'} removed`)
       }
     }
 
@@ -269,6 +349,8 @@ export async function syncAllItems() {
         }
       }
 
+      const isNewHolding = !existingHolding
+
       await prisma.holding.upsert({
         where: {
           id: existingHolding?.id || 'new-holding'
@@ -290,6 +372,13 @@ export async function syncAllItems() {
           isoCurrencyCode: h.iso_currency_code || null,
         },
       })
+
+      if (isNewHolding) {
+        itemStats.holdingsAdded++
+        console.log(`    📈 ${security.tickerSymbol || security.name || 'Holding'} | Qty: ${h.quantity}`)
+      } else {
+        itemStats.holdingsUpdated++
+      }
     }
 
     // Investment transactions - fetch from beginning of 2024
@@ -309,6 +398,11 @@ export async function syncAllItems() {
       const securityId = t.security_id
         ? (await prisma.security.findUnique({ where: { plaidSecurityId: t.security_id } }))?.id
         : null
+
+      const existing = await prisma.investmentTransaction.findUnique({
+        where: { plaidInvestmentTransactionId: t.investment_transaction_id }
+      })
+      const isNew = !existing
 
       await prisma.investmentTransaction.upsert({
         where: { plaidInvestmentTransactionId: t.investment_transaction_id },
@@ -338,6 +432,49 @@ export async function syncAllItems() {
           name: t.name || null,
         },
       })
+
+      if (isNew) {
+        itemStats.investmentTransactionsAdded++
+        console.log(`    💰 ${t.date} | ${t.type} | ${t.name || 'Investment Transaction'}`)
+      }
     }
+
+    // Update total stats
+    totalStats.accountsUpdated += itemStats.accountsUpdated
+    totalStats.transactionsAdded += itemStats.transactionsAdded
+    totalStats.transactionsModified += itemStats.transactionsModified
+    totalStats.transactionsRemoved += itemStats.transactionsRemoved
+    totalStats.securitiesAdded += itemStats.securitiesAdded
+    totalStats.holdingsAdded += itemStats.holdingsAdded
+    totalStats.holdingsUpdated += itemStats.holdingsUpdated
+    totalStats.holdingsRemoved += itemStats.holdingsRemoved
+    totalStats.investmentTransactionsAdded += itemStats.investmentTransactionsAdded
+
+    // Print item summary
+    console.log('\n  ✅ Summary for ' + institutionName + ':')
+    console.log(`     • Accounts updated: ${itemStats.accountsUpdated}`)
+    console.log(`     • Transactions added: ${itemStats.transactionsAdded}`)
+    console.log(`     • Transactions modified: ${itemStats.transactionsModified}`)
+    console.log(`     • Transactions removed: ${itemStats.transactionsRemoved}`)
+    console.log(`     • Securities added: ${itemStats.securitiesAdded}`)
+    console.log(`     • Holdings added: ${itemStats.holdingsAdded}`)
+    console.log(`     • Holdings updated: ${itemStats.holdingsUpdated}`)
+    console.log(`     • Holdings removed: ${itemStats.holdingsRemoved}`)
+    console.log(`     • Investment transactions added: ${itemStats.investmentTransactionsAdded}`)
   }
+
+  // Print total summary
+  console.log('\n' + '═'.repeat(60))
+  console.log('📊 SYNC COMPLETE - TOTAL SUMMARY')
+  console.log('═'.repeat(60))
+  console.log(`  Accounts updated: ${totalStats.accountsUpdated}`)
+  console.log(`  Transactions added: ${totalStats.transactionsAdded}`)
+  console.log(`  Transactions modified: ${totalStats.transactionsModified}`)
+  console.log(`  Transactions removed: ${totalStats.transactionsRemoved}`)
+  console.log(`  Securities added: ${totalStats.securitiesAdded}`)
+  console.log(`  Holdings added: ${totalStats.holdingsAdded}`)
+  console.log(`  Holdings updated: ${totalStats.holdingsUpdated}`)
+  console.log(`  Holdings removed: ${totalStats.holdingsRemoved}`)
+  console.log(`  Investment transactions added: ${totalStats.investmentTransactionsAdded}`)
+  console.log('═'.repeat(60) + '\n')
 }

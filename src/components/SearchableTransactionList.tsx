@@ -24,12 +24,17 @@ type DateRange =
   | "lastMonth"
   | "custom";
 
+type SortOption = "createdAt" | "date" | "amount" | "name" | "merchant";
+type SortDirection = "asc" | "desc";
+
 export function SearchableTransactionList({
   transactions,
   showAccount = true,
 }: SearchableTransactionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("createdAt");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [editingTransaction, setEditingTransaction] =
@@ -193,7 +198,32 @@ export function SearchableTransactionList({
       });
     }
 
-    return filtered;
+    // Sort filtered transactions
+    const sorted = [...filtered].sort((a, b) => {
+      let compareValue = 0;
+
+      switch (sortBy) {
+        case "createdAt":
+          compareValue = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case "date":
+          compareValue = new Date(a.date).getTime() - new Date(b.date).getTime();
+          break;
+        case "amount":
+          compareValue = Number(a.amount) - Number(b.amount);
+          break;
+        case "name":
+          compareValue = a.name.localeCompare(b.name);
+          break;
+        case "merchant":
+          compareValue = (a.merchantName || "").localeCompare(b.merchantName || "");
+          break;
+      }
+
+      return sortDirection === "asc" ? compareValue : -compareValue;
+    });
+
+    return sorted;
   }, [
     transactions,
     searchQuery,
@@ -207,6 +237,8 @@ export function SearchableTransactionList({
     showIncome,
     showExpenses,
     selectedTagIds,
+    sortBy,
+    sortDirection,
   ]);
 
   // Fetch custom categories, tags and set default exclusions
@@ -219,7 +251,7 @@ export function SearchableTransactionList({
           setCategories(data);
 
           // Find and exclude "🔁 Transfers" by default
-          const transfersCategory = data.find((cat: any) => cat.name === '🔁 Transfers');
+          const transfersCategory = data.find((cat: { id: string; name: string }) => cat.name === '🔁 Transfers');
           if (transfersCategory) {
             setExcludedCategoryIds(new Set([transfersCategory.id]));
           }
@@ -410,6 +442,8 @@ export function SearchableTransactionList({
     setSelectedCategoryIds(new Set());
     setSelectedSubcategoryIds(new Set());
     setSelectedTagIds(new Set());
+    setSortBy("createdAt");
+    setSortDirection("desc");
     // Reset to default exclusions
     const transfersCategory = categories.find((c) => c.name === '🔁 Transfers');
     if (transfersCategory) {
@@ -674,6 +708,37 @@ export function SearchableTransactionList({
             />
             <span className="ml-2 text-sm text-gray-700">Uncategorized</span>
           </label>
+
+          {/* Order By Dropdown */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-sm text-gray-700">Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="createdAt">Creation Date</option>
+              <option value="date">Transaction Date</option>
+              <option value="amount">Amount</option>
+              <option value="name">Name</option>
+              <option value="merchant">Merchant</option>
+            </select>
+            <button
+              onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
+              className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              title={sortDirection === "asc" ? "Ascending" : "Descending"}
+            >
+              {sortDirection === "asc" ? (
+                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           {/* Clear Filters */}
           {hasActiveFilters && (

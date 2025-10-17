@@ -3,57 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-
-interface Tag {
-  id: string;
-  name: string;
-  color: string;
-}
-
-interface SerializedTransaction {
-  id: string;
-  plaidTransactionId: string;
-  accountId: string;
-  amount: string;
-  isoCurrencyCode: string | null;
-  date: string;
-  authorizedDate: string | null;
-  pending: boolean;
-  merchantName: string | null;
-  name: string;
-  category: string | null;
-  subcategory: string | null;
-  paymentChannel: string | null;
-  pendingTransactionId: string | null;
-  logoUrl: string | null;
-  categoryIconUrl: string | null;
-  customCategoryId: string | null;
-  customSubcategoryId: string | null;
-  notes: string | null;
-  tags: Tag[];
-  createdAt: string;
-  updatedAt: string;
-  account: {
-    id: string;
-    name: string;
-    type: string;
-    mask: string | null;
-  } | null;
-}
-
-interface EditTransactionModalProps {
-  transaction: SerializedTransaction;
-  onClose: () => void;
-}
-
-interface CustomCategory {
-  id: string;
-  name: string;
-  subcategories: {
-    id: string;
-    name: string;
-  }[];
-}
+import type { EditTransactionModalProps, CustomCategoryWithSubcategories, SerializedTag } from "@/types";
 
 export function EditTransactionModal({
   transaction,
@@ -61,8 +11,8 @@ export function EditTransactionModal({
 }: EditTransactionModalProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [categories, setCategories] = useState<CustomCategory[]>([]);
-  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [categories, setCategories] = useState<CustomCategoryWithSubcategories[]>([]);
+  const [availableTags, setAvailableTags] = useState<SerializedTag[]>([]);
 
   // Form state
   const [name, setName] = useState(transaction.name);

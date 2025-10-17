@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getPlaidClient } from '@/lib/plaid'
 import { Products, CountryCode } from 'plaid'
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   const plaid = getPlaidClient()
   const resp = await plaid.linkTokenCreate({
     user: { client_user_id: 'local-user' },

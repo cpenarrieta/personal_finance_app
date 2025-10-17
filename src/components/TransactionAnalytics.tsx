@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
-import Link from 'next/link'
 
 // Serialized types (dates and decimals are strings)
 interface SerializedTransaction {
@@ -100,7 +99,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
           setCategories(data)
 
           // Find and exclude "🔁 Transfers" by default
-          const transfersCategory = data.find((cat: any) => cat.name === '🔁 Transfers')
+          const transfersCategory = data.find((cat: { id: string; name: string }) => cat.name === '🔁 Transfers')
           if (transfersCategory) {
             setExcludedCategoryIds(new Set([transfersCategory.id]))
           }

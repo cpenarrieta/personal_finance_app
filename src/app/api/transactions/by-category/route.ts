@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,8 +15,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Build the where clause
-    const whereClause: any = {
+    // Build the where clause with proper typing
+    const whereClause: Prisma.TransactionWhereInput = {
       customCategoryId: categoryId,
     }
 

@@ -1,24 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { bulkUpdateTransactionsSchema, safeParseRequestBody } from '@/types/api'
 
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { transactionIds, customCategoryId, customSubcategoryId } = body
+    // Validate request body with Zod
+    const parseResult = await safeParseRequestBody(request, bulkUpdateTransactionsSchema)
 
-    if (!transactionIds || !Array.isArray(transactionIds) || transactionIds.length === 0) {
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Transaction IDs are required' },
+        {
+          error: 'Invalid request data',
+          details: parseResult.error.message,
+        },
         { status: 400 }
       )
     }
 
-    if (!customCategoryId) {
-      return NextResponse.json(
-        { error: 'Custom category ID is required' },
-        { status: 400 }
-      )
-    }
+    const { transactionIds, customCategoryId, customSubcategoryId, tagIds } = parseResult.data
 
     // Update all transactions with the new category/subcategory
     await prisma.transaction.updateMany({
@@ -28,10 +27,36 @@ export async function PATCH(request: NextRequest) {
         },
       },
       data: {
-        customCategoryId,
-        customSubcategoryId: customSubcategoryId || null,
+        customCategoryId: customCategoryId ?? undefined,
+        customSubcategoryId: customSubcategoryId ?? undefined,
       },
     })
+
+    // Handle tags if provided
+    if (tagIds !== undefined) {
+      // First, delete all existing tag associations for these transactions
+      await prisma.transactionTag.deleteMany({
+        where: {
+          transactionId: {
+            in: transactionIds,
+          },
+        },
+      })
+
+      // Then create new tag associations
+      if (tagIds.length > 0) {
+        const tagData = transactionIds.flatMap((transactionId) =>
+          tagIds.map((tagId) => ({
+            transactionId,
+            tagId,
+          }))
+        )
+
+        await prisma.transactionTag.createMany({
+          data: tagData,
+        })
+      }
+    }
 
     return NextResponse.json({
       success: true,

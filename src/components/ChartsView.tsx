@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts'
-import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO, startOfYear, eachMonthOfInterval } from 'date-fns'
+import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO, eachMonthOfInterval } from 'date-fns'
 
 interface SerializedTransaction {
   id: string
@@ -100,7 +100,7 @@ export function ChartsView({ transactions }: ChartsViewProps) {
           setCategories(data)
 
           // Find and exclude "🔁 Transfers" by default
-          const transfersCategory = data.find((cat: any) => cat.name === '🔁 Transfers')
+          const transfersCategory = data.find((cat: { id: string; name: string }) => cat.name === '🔁 Transfers')
           if (transfersCategory) {
             setExcludedCategoryIds(new Set([transfersCategory.id]))
           }

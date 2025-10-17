@@ -7,6 +7,7 @@ import { HoldingList } from '@/components/HoldingList'
 import { TRANSACTION_INCLUDE, serializeTransaction } from '@/types/transaction'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
+import type { InvestmentTransactionWithRelations, HoldingWithRelations, SerializedTransaction } from '@/types'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -48,9 +49,9 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   const isInvestmentAccount = account.type === 'investment' || account.subtype?.includes('brokerage')
 
   // Fetch transactions or investment data based on account type
-  let transactions: any[] = []
-  let investmentTransactions: any[] = []
-  let holdings: any[] = []
+  let transactions: SerializedTransaction[] = []
+  let investmentTransactions: InvestmentTransactionWithRelations[] = []
+  let holdings: HoldingWithRelations[] = []
 
   if (isInvestmentAccount) {
     // Fetch investment transactions
