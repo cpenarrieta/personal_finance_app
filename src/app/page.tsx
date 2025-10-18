@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { SyncButton } from "@/components/SyncButton";
 import { FreshSyncButton } from "@/components/FreshSyncButton";
 import { CategorizeButton } from "@/components/CategorizeButton";
-import { RecategorizeButton } from "@/components/RecategorizeButton";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import type { Metadata } from "next";
@@ -125,7 +124,6 @@ export default async function Page() {
             <SyncButton action={doSync} />
             <FreshSyncButton action={doFreshSync} />
             <CategorizeButton />
-            <RecategorizeButton />
           </div>
         </div>
 

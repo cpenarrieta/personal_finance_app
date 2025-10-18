@@ -10,7 +10,8 @@
     "sync": "tsx scripts/sync.ts",
     "sync:fresh": "tsx scripts/sync-from-scratch.ts",
     "categorize": "tsx scripts/auto-categorize.ts",
-    "categorize:gpt": "tsx scripts/auto-categorize-gpt.ts"
+    "categorize:gpt": "tsx scripts/auto-categorize-gpt.ts",
+    "recategorize:all": "tsx scripts/recategorize-all.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.17.0",
