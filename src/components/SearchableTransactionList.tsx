@@ -33,7 +33,7 @@ export function SearchableTransactionList({
 }: SearchableTransactionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>("all");
-  const [sortBy, setSortBy] = useState<SortOption>("createdAt");
+  const [sortBy, setSortBy] = useState<SortOption>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
@@ -442,7 +442,7 @@ export function SearchableTransactionList({
     setSelectedCategoryIds(new Set());
     setSelectedSubcategoryIds(new Set());
     setSelectedTagIds(new Set());
-    setSortBy("createdAt");
+    setSortBy("date");
     setSortDirection("desc");
     // Reset to default exclusions
     const transfersCategory = categories.find((c) => c.name === '🔁 Transfers');

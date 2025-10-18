@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default async function TransactionsPage() {
   const txs = await prisma.transaction.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { date: 'desc' },
     include: TRANSACTION_INCLUDE,
   })
 
