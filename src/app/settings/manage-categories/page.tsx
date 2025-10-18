@@ -51,266 +51,175 @@ async function deleteSubcategory(formData: FormData) {
   revalidatePath('/settings/manage-categories')
 }
 
-async function createGroup(formData: FormData) {
-  'use server'
-  const name = formData.get('name') as string
-  await prisma.categoryGroup.create({ data: { name } })
-  revalidatePath('/settings/manage-categories')
-}
-
-async function deleteGroup(formData: FormData) {
-  'use server'
-  const id = formData.get('id') as string
-  await prisma.categoryGroup.delete({ where: { id } })
-  revalidatePath('/settings/manage-categories')
-}
-
-async function addCategoryToGroup(formData: FormData) {
-  'use server'
-  const groupId = formData.get('groupId') as string
-  const categoryId = formData.get('categoryId') as string
-
-  try {
-    await prisma.categoryGroupItem.create({
-      data: { groupId, categoryId },
-    })
-  } catch {
-    // Ignore duplicate errors
-  }
-  revalidatePath('/settings/manage-categories')
-}
-
-async function removeCategoryFromGroup(formData: FormData) {
-  'use server'
-  const id = formData.get('id') as string
-  await prisma.categoryGroupItem.delete({ where: { id } })
-  revalidatePath('/settings/manage-categories')
-}
-
 export default async function ManageCategoriesPage() {
   const categories = await prisma.customCategory.findMany({
     include: { subcategories: true },
-  })
-
-  const groups = await prisma.categoryGroup.findMany({
-    include: {
-      items: {
-        include: { category: true },
-      },
-    },
+    orderBy: { name: 'asc' },
   })
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-4">
-        <Link href="/" className="text-blue-600 hover:underline">
-          ← Back to Home
-        </Link>
-      </div>
-
-      <h1 className="text-2xl font-semibold mb-6">Manage Custom Categories</h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Categories Section */}
-        <div className="border rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-4">Categories</h2>
-
-          {/* Add Category Form */}
-          <form action={createCategory} className="mb-4 p-3 bg-gray-50 rounded">
-            <h3 className="font-medium mb-2">Add New Category</h3>
-            <input
-              type="text"
-              name="name"
-              placeholder="Category name"
-              required
-              className="w-full px-3 py-2 border rounded mb-2"
-            />
-            <input
-              type="text"
-              name="imageUrl"
-              placeholder="Image URL (optional)"
-              className="w-full px-3 py-2 border rounded mb-2"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium">
+              ← Back to Home
+            </Link>
+            <Link
+              href="/settings/category-groups"
+              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
             >
-              Add Category
-            </button>
-          </form>
-
-          {/* Categories List */}
-          <div className="space-y-2">
-            {categories.map((cat) => (
-              <div key={cat.id} className="border rounded p-3">
-                <div className="flex items-start gap-2">
-                  {getCategoryImage(cat.name, cat.imageUrl) && (
-                    <img
-                      src={getCategoryImage(cat.name, cat.imageUrl)!}
-                      alt=""
-                      className="w-8 h-8 rounded object-cover"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <div className="font-medium">{cat.name}</div>
-                    {cat.subcategories.length > 0 && (
-                      <div className="text-sm text-gray-600">
-                        {cat.subcategories.length} subcategories
-                      </div>
-                    )}
-                  </div>
-                  <DeleteButton
-                    id={cat.id}
-                    action={deleteCategory}
-                    confirmMessage={`Are you sure you want to delete the category "${cat.name}"?${cat.subcategories.length > 0 ? ` This will also delete ${cat.subcategories.length} subcategory(ies).` : ''}`}
-                    buttonText="Delete"
-                  />
-                </div>
-
-                {/* Subcategories */}
-                {cat.subcategories.length > 0 && (
-                  <div className="mt-2 ml-4 space-y-1">
-                    {cat.subcategories.map((sub) => (
-                      <div key={sub.id} className="flex items-center gap-2 text-sm">
-                        {getCategoryImage(sub.name, sub.imageUrl) && (
-                          <img
-                            src={getCategoryImage(sub.name, sub.imageUrl)!}
-                            alt=""
-                            className="w-6 h-6 rounded object-cover"
-                          />
-                        )}
-                        <span className="flex-1">{sub.name}</span>
-                        <DeleteButton
-                          id={sub.id}
-                          action={deleteSubcategory}
-                          confirmMessage={`Are you sure you want to delete the subcategory "${sub.name}"?`}
-                          buttonText="×"
-                          className="text-red-600 hover:text-red-800"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Add Subcategory Form */}
-                <form action={createSubcategory} className="mt-2 ml-4">
-                  <input type="hidden" name="categoryId" value={cat.id} />
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Add subcategory"
-                      className="flex-1 px-2 py-1 border rounded text-sm"
-                    />
-                    <input
-                      type="text"
-                      name="imageUrl"
-                      placeholder="Image URL"
-                      className="w-32 px-2 py-1 border rounded text-sm"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </form>
-              </div>
-            ))}
+              Manage Category Groups
+            </Link>
           </div>
+          <h1 className="text-3xl font-bold text-gray-900">Manage Categories</h1>
+          <p className="text-gray-600 mt-1">Create and organize your custom categories and subcategories</p>
         </div>
 
-        {/* Category Groups Section */}
-        <div className="border rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-4">Category Groups</h2>
-
-          {/* Add Group Form */}
-          <form action={createGroup} className="mb-4 p-3 bg-gray-50 rounded">
-            <h3 className="font-medium mb-2">Create New Group</h3>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                name="name"
-                placeholder="Group name"
-                required
-                className="flex-1 px-3 py-2 border rounded"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Create
-              </button>
+        {/* Add Category Form */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Add New Category</h2>
+          <form action={createCategory} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Category Name *
+                </label>
+                <input
+                  id="category-name"
+                  type="text"
+                  name="name"
+                  placeholder="e.g., Income, Food, Transportation"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label htmlFor="category-image" className="block text-sm font-medium text-gray-700 mb-1">
+                  Image URL (optional)
+                </label>
+                <input
+                  id="category-image"
+                  type="text"
+                  name="imageUrl"
+                  placeholder="https://example.com/icon.png"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              + Add Category
+            </button>
           </form>
+        </div>
 
-          {/* Groups List */}
-          <div className="space-y-4">
-            {groups.map((group) => (
-              <div key={group.id} className="border rounded p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium">{group.name}</h3>
-                  <DeleteButton
-                    id={group.id}
-                    action={deleteGroup}
-                    confirmMessage={`Are you sure you want to delete the group "${group.name}"?${group.items.length > 0 ? ` This will remove ${group.items.length} category(ies) from this group.` : ''}`}
-                    buttonText="Delete Group"
-                  />
-                </div>
+        {/* Categories List */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">Your Categories ({categories.length})</h2>
 
-                {/* Categories in Group */}
-                <div className="space-y-1 mb-2">
-                  {group.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2 text-sm">
-                      {getCategoryImage(item.category.name, item.category.imageUrl) && (
-                        <img
-                          src={getCategoryImage(item.category.name, item.category.imageUrl)!}
-                          alt=""
-                          className="w-6 h-6 rounded object-cover"
-                        />
+          {categories.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+              <p className="text-gray-500">No categories yet. Create your first category above!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {categories.map((cat) => (
+                <div key={cat.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  {/* Category Header */}
+                  <div className="p-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                      {getCategoryImage(cat.name, cat.imageUrl) && (
+                        <div className="flex-shrink-0">
+                          <img
+                            src={getCategoryImage(cat.name, cat.imageUrl)!}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover border border-gray-200"
+                          />
+                        </div>
                       )}
-                      <span className="flex-1">{item.category.name}</span>
-                      <form action={removeCategoryFromGroup}>
-                        <input type="hidden" name="id" value={item.id} />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg text-gray-900">{cat.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {cat.subcategories.length === 0
+                            ? 'No subcategories'
+                            : `${cat.subcategories.length} subcategory${cat.subcategories.length > 1 ? 'ies' : ''}`}
+                        </p>
+                      </div>
+                      <DeleteButton
+                        id={cat.id}
+                        action={deleteCategory}
+                        confirmMessage={`Are you sure you want to delete "${cat.name}"?${cat.subcategories.length > 0 ? ` This will also delete ${cat.subcategories.length} subcategory(ies).` : ''}`}
+                        buttonText="Delete Category"
+                        className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Subcategories */}
+                  <div className="p-4">
+                    {cat.subcategories.length > 0 && (
+                      <div className="mb-4 space-y-2">
+                        {cat.subcategories.map((sub) => (
+                          <div
+                            key={sub.id}
+                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                          >
+                            {getCategoryImage(sub.name, sub.imageUrl) && (
+                              <img
+                                src={getCategoryImage(sub.name, sub.imageUrl)!}
+                                alt=""
+                                className="w-8 h-8 rounded object-cover border border-gray-200"
+                              />
+                            )}
+                            <span className="flex-1 text-gray-900 font-medium">{sub.name}</span>
+                            <DeleteButton
+                              id={sub.id}
+                              action={deleteSubcategory}
+                              confirmMessage={`Are you sure you want to delete "${sub.name}"?`}
+                              buttonText="Remove"
+                              className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add Subcategory Form */}
+                    <form action={createSubcategory} className="border-t border-gray-200 pt-4">
+                      <input type="hidden" name="categoryId" value={cat.id} />
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Add Subcategory
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          name="name"
+                          placeholder="Subcategory name"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        />
+                        <input
+                          type="text"
+                          name="imageUrl"
+                          placeholder="Image URL (optional)"
+                          className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        />
                         <button
                           type="submit"
-                          className="text-red-600 hover:text-red-800"
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium shadow-sm"
                         >
-                          ×
+                          + Add
                         </button>
-                      </form>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Add Category to Group */}
-                <form action={addCategoryToGroup}>
-                  <input type="hidden" name="groupId" value={group.id} />
-                  <div className="flex gap-2">
-                    <select
-                      name="categoryId"
-                      className="flex-1 px-2 py-1 border rounded text-sm"
-                      required
-                    >
-                      <option value="">Select category...</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="submit"
-                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                    >
-                      Add
-                    </button>
+                      </div>
+                    </form>
                   </div>
-                </form>
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
