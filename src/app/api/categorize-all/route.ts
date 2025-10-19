@@ -91,7 +91,7 @@ Return ONLY the JSON array, no other text.`;
       response_format: { type: "json_object" },
     });
 
-    const content = response.choices[0].message.content;
+    const content = response.choices[0]?.message.content;
     if (!content) throw new Error("No response from OpenAI");
 
     const parsed = JSON.parse(content);

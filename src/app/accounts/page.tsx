@@ -49,24 +49,28 @@ export default async function AccountsPage() {
         <p className="text-gray-500">No accounts found. Connect your bank and run sync.</p>
       ) : (
         <div className="space-y-6">
-          {institutionNames.map(institutionName => (
-            <div key={institutionName} className="space-y-2">
-              <div className="flex items-center gap-3 border-b pb-2">
-                {accountsByInstitution[institutionName].logoUrl && (
-                  <Image 
-                    src={accountsByInstitution[institutionName].logoUrl} 
-                    alt={`${institutionName} logo`}
-                    width={32}
-                    height={32}
-                    className="rounded object-contain"
-                  />
-                )}
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {institutionName}
-                </h3>
-              </div>
-              <ul className="space-y-2 pl-2">
-                {accountsByInstitution[institutionName].accounts.map(a => (
+          {institutionNames.map(institutionName => {
+            const institution = accountsByInstitution[institutionName];
+            if (!institution) return null;
+
+            return (
+              <div key={institutionName} className="space-y-2">
+                <div className="flex items-center gap-3 border-b pb-2">
+                  {institution.logoUrl && (
+                    <Image
+                      src={institution.logoUrl}
+                      alt={`${institutionName} logo`}
+                      width={32}
+                      height={32}
+                      className="rounded object-contain"
+                    />
+                  )}
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {institutionName}
+                  </h3>
+                </div>
+                <ul className="space-y-2 pl-2">
+                  {institution.accounts.map(a => (
                   <li key={a.id}>
                     <Link href={`/accounts/${a.id}`} className="block border p-3 rounded hover:bg-gray-50 transition-colors cursor-pointer">
                       <div className="font-medium">
@@ -89,10 +93,11 @@ export default async function AccountsPage() {
                       )}
                     </Link>
                   </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -162,7 +162,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
       switch (sortBy) {
         case 'ticker':
-          comparison = (a.security.tickerSymbol || '').localeCompare(b.security.tickerSymbol || '')
+          comparison = (a.security?.tickerSymbol || '').localeCompare(b.security?.tickerSymbol || '')
           break
         case 'value':
           comparison = a.marketValue - b.marketValue

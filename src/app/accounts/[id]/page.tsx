@@ -57,14 +57,14 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
     // Fetch investment transactions
     investmentTransactions = await prisma.investmentTransaction.findMany({
       where: { accountId: account.id },
-      include: { security: true },
+      include: { security: true, account: true },
       orderBy: { date: 'desc' },
     })
 
     // Fetch holdings
     holdings = await prisma.holding.findMany({
       where: { accountId: account.id },
-      include: { security: true },
+      include: { security: true, account: true },
     })
   } else {
     // Fetch regular banking transactions

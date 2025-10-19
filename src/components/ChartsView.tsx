@@ -126,6 +126,8 @@ export function ChartsView({ transactions }: ChartsViewProps) {
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
+
+    return undefined;
   }, [showCategoryDropdown])
 
   // Determine if filters should be disabled for current tab
@@ -845,7 +847,7 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                        label={({ name, percent }: { name?: unknown; percent?: number }) => `${name}: ${((percent ?? 0) * 100).toFixed(1)}%`}
                         outerRadius={100}
                         fill="#8884d8"
                         dataKey="value"
@@ -898,12 +900,12 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                        label={({ name, percent }: { name?: unknown; percent?: number }) => `${name}: ${((percent ?? 0) * 100).toFixed(1)}%`}
                         outerRadius={120}
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {categoryData.map((entry, index) => (
+                        {categoryData.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
