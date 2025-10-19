@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TransactionDetailView } from "@/components/TransactionDetailView";
 import { headers } from "next/headers";
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
 export async function generateMetadata({
   params,
@@ -17,7 +17,7 @@ export async function generateMetadata({
 
   if (!transaction) {
     return {
-      title: 'Transaction Not Found',
+      title: "Transaction Not Found",
       robots: {
         index: false,
         follow: false,
@@ -26,7 +26,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${transaction.merchantName || transaction.name}`,
+    title: `Transaction | ${transaction.name}`,
     robots: {
       index: false,
       follow: false,
@@ -65,7 +65,7 @@ export default async function TransactionDetailPage({
           customSubcategory: true,
         },
         orderBy: {
-          createdAt: 'asc',
+          createdAt: "asc",
         },
       },
     },
@@ -96,11 +96,12 @@ export default async function TransactionDetailPage({
     customCategoryId: transaction.customCategoryId,
     customSubcategoryId: transaction.customSubcategoryId,
     notes: transaction.notes,
-    tags: transaction.tags?.map((tt) => ({
-      id: tt.tag.id,
-      name: tt.tag.name,
-      color: tt.tag.color,
-    })) || [],
+    tags:
+      transaction.tags?.map((tt) => ({
+        id: tt.tag.id,
+        name: tt.tag.name,
+        color: tt.tag.color,
+      })) || [],
     // Split transaction fields
     isSplit: transaction.isSplit,
     parentTransactionId: transaction.parentTransactionId,
@@ -148,24 +149,25 @@ export default async function TransactionDetailPage({
             : null,
         }
       : null,
-    childTransactions: transaction.childTransactions?.map((child) => ({
-      id: child.id,
-      name: child.name,
-      amount: child.amount.toString(),
-      date: child.date.toISOString(),
-      customCategory: child.customCategory
-        ? {
-            id: child.customCategory.id,
-            name: child.customCategory.name,
-          }
-        : null,
-      customSubcategory: child.customSubcategory
-        ? {
-            id: child.customSubcategory.id,
-            name: child.customSubcategory.name,
-          }
-        : null,
-    })) || [],
+    childTransactions:
+      transaction.childTransactions?.map((child) => ({
+        id: child.id,
+        name: child.name,
+        amount: child.amount.toString(),
+        date: child.date.toISOString(),
+        customCategory: child.customCategory
+          ? {
+              id: child.customCategory.id,
+              name: child.customCategory.name,
+            }
+          : null,
+        customSubcategory: child.customSubcategory
+          ? {
+              id: child.customSubcategory.id,
+              name: child.customSubcategory.name,
+            }
+          : null,
+      })) || [],
   };
 
   // Determine which page to go back to based on referrer

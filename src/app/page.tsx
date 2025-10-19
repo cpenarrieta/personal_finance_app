@@ -318,6 +318,17 @@ export default async function Page() {
                 </div>
               </Link>
               <Link
+                href="/settings/manage-tags"
+                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+              >
+                <div className="font-medium text-gray-900">
+                  Manage Tags
+                </div>
+                <div className="text-sm text-gray-600">
+                  Organize transactions with custom tags
+                </div>
+              </Link>
+              <Link
                 href="/settings/move-transactions"
                 className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
               >
