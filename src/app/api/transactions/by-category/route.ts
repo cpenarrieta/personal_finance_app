@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     // Build the where clause with proper typing
     const whereClause: Prisma.TransactionWhereInput = {
       customCategoryId: categoryId,
+      isSplit: false, // Filter out parent transactions that have been split
     }
 
     // If subcategoryId is provided, filter by it (can be null for "no subcategory")

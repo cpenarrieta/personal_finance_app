@@ -88,10 +88,19 @@ model Transaction {
   // Tags
   tags             TransactionTag[]
 
+  // Split transaction support
+  isSplit              Boolean  @default(false) // True if this transaction has been split (hidden from normal views)
+  parentTransactionId  String?  // If this is a split child, points to the immediate parent
+  parentTransaction    Transaction? @relation("TransactionSplits", fields: [parentTransactionId], references: [id], onDelete: Cascade)
+  childTransactions    Transaction[] @relation("TransactionSplits")
+  originalTransactionId String? // For all children, points to the original transaction that was split
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@index([plaidTransactionId])
+  @@index([parentTransactionId])
+  @@index([originalTransactionId])
 }
 
 model Security {

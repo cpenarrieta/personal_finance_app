@@ -39,6 +39,10 @@ export function serializeTransaction(t: TransactionWithRelations): SerializedTra
       name: tt.tag.name,
       color: tt.tag.color,
     })),
+    // Split transaction fields
+    isSplit: t.isSplit,
+    parentTransactionId: t.parentTransactionId,
+    originalTransactionId: t.originalTransactionId,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
     account: t.account

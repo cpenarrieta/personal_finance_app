@@ -13,6 +13,9 @@ export const metadata: Metadata = {
 
 export default async function ChartsPage() {
   const transactions = await prisma.transaction.findMany({
+    where: {
+      isSplit: false, // Filter out parent transactions that have been split
+    },
     orderBy: { date: 'desc' },
     include: {
       account: true,

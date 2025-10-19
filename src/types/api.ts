@@ -107,6 +107,10 @@ export const serializedTransactionSchema = z.object({
   customSubcategoryId: z.string().nullable(),
   notes: z.string().nullable(),
   tags: z.array(serializedTagSchema),
+  // Split transaction fields
+  isSplit: z.boolean(),
+  parentTransactionId: z.string().nullable(),
+  originalTransactionId: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   account: serializedAccountSchema.nullable(),

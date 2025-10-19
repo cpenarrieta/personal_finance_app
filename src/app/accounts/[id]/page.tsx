@@ -69,7 +69,10 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   } else {
     // Fetch regular banking transactions
     const txs = await prisma.transaction.findMany({
-      where: { accountId: account.id },
+      where: {
+        accountId: account.id,
+        isSplit: false, // Filter out parent transactions that have been split
+      },
       orderBy: { date: 'desc' },
       include: TRANSACTION_INCLUDE,
     })

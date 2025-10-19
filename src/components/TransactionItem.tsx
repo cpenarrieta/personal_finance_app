@@ -65,6 +65,11 @@ export function TransactionItem({
                     Pending
                   </span>
                 )}
+                {t.parentTransactionId && (
+                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0" title="This transaction is part of a split">
+                    Split
+                  </span>
+                )}
               </div>
 
               {/* Date and Account */}

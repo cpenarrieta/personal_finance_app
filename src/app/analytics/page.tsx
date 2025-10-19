@@ -14,6 +14,9 @@ export const metadata: Metadata = {
 export default async function AnalyticsPage() {
   // Fetch all transactions with their Plaid categories and custom categories
   const transactions = await prisma.transaction.findMany({
+    where: {
+      isSplit: false, // Filter out parent transactions that have been split
+    },
     orderBy: { date: 'desc' },
     include: {
       account: true,

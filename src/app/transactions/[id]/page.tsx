@@ -54,6 +54,20 @@ export default async function TransactionDetailPage({
           tag: true,
         },
       },
+      parentTransaction: {
+        include: {
+          customCategory: true,
+        },
+      },
+      childTransactions: {
+        include: {
+          customCategory: true,
+          customSubcategory: true,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      },
     },
   });
 
@@ -87,6 +101,10 @@ export default async function TransactionDetailPage({
       name: tt.tag.name,
       color: tt.tag.color,
     })) || [],
+    // Split transaction fields
+    isSplit: transaction.isSplit,
+    parentTransactionId: transaction.parentTransactionId,
+    originalTransactionId: transaction.originalTransactionId,
     createdAt: transaction.createdAt.toISOString(),
     updatedAt: transaction.updatedAt.toISOString(),
     account: transaction.account
@@ -101,14 +119,53 @@ export default async function TransactionDetailPage({
       ? {
           id: transaction.customCategory.id,
           name: transaction.customCategory.name,
+          imageUrl: transaction.customCategory.imageUrl,
+          createdAt: transaction.customCategory.createdAt.toISOString(),
+          updatedAt: transaction.customCategory.updatedAt.toISOString(),
         }
       : null,
     customSubcategory: transaction.customSubcategory
       ? {
           id: transaction.customSubcategory.id,
           name: transaction.customSubcategory.name,
+          imageUrl: transaction.customSubcategory.imageUrl,
+          categoryId: transaction.customSubcategory.categoryId,
+          createdAt: transaction.customSubcategory.createdAt.toISOString(),
+          updatedAt: transaction.customSubcategory.updatedAt.toISOString(),
         }
       : null,
+    parentTransaction: transaction.parentTransaction
+      ? {
+          id: transaction.parentTransaction.id,
+          name: transaction.parentTransaction.name,
+          amount: transaction.parentTransaction.amount.toString(),
+          date: transaction.parentTransaction.date.toISOString(),
+          customCategory: transaction.parentTransaction.customCategory
+            ? {
+                id: transaction.parentTransaction.customCategory.id,
+                name: transaction.parentTransaction.customCategory.name,
+              }
+            : null,
+        }
+      : null,
+    childTransactions: transaction.childTransactions?.map((child) => ({
+      id: child.id,
+      name: child.name,
+      amount: child.amount.toString(),
+      date: child.date.toISOString(),
+      customCategory: child.customCategory
+        ? {
+            id: child.customCategory.id,
+            name: child.customCategory.name,
+          }
+        : null,
+      customSubcategory: child.customSubcategory
+        ? {
+            id: child.customSubcategory.id,
+            name: child.customSubcategory.name,
+          }
+        : null,
+    })) || [],
   };
 
   // Determine which page to go back to based on referrer
