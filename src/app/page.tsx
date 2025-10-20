@@ -346,11 +346,7 @@ export default async function Page() {
         </div>
 
         {/* Footer Info */}
-        <div className="text-center text-sm text-gray-500">
-          <p>
-            Connected to Plaid • Securely managing your financial data locally
-          </p>
-        </div>
+        <div className="text-center text-sm text-gray-500"></div>
       </div>
     </div>
   );
