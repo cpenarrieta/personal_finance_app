@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default async function AccountsPage() {
-  const accounts = await prisma.account.findMany({ 
+  const accounts = await prisma.plaidAccount.findMany({ 
     include: { 
       item: { 
         include: { 

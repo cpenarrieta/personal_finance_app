@@ -29,10 +29,10 @@ model Item {
   lastInvestmentsCursor  String? // if using investments sync cursors later
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  accounts         Account[]
+  accounts         PlaidAccount[]
 }
 
-model Account {
+model PlaidAccount {
   id              String   @id @default(cuid())
   plaidAccountId  String   @unique
   itemId          String
@@ -61,7 +61,7 @@ model Transaction {
   id               String   @id @default(cuid())
   plaidTransactionId String  @unique
   accountId        String
-  account          Account  @relation(fields: [accountId], references: [id])
+  account          PlaidAccount  @relation(fields: [accountId], references: [id])
   amount           Decimal  @db.Decimal(14, 2)
   isoCurrencyCode  String?
   date             DateTime // posted date
@@ -120,7 +120,7 @@ model Security {
 model Holding {
   id            String   @id @default(cuid())
   accountId     String
-  account       Account  @relation(fields: [accountId], references: [id])
+  account       PlaidAccount  @relation(fields: [accountId], references: [id])
   securityId    String
   security      Security @relation(fields: [securityId], references: [id])
   quantity      Decimal  @db.Decimal(20, 8)
@@ -137,7 +137,7 @@ model InvestmentTransaction {
   id               String   @id @default(cuid())
   plaidInvestmentTransactionId String @unique
   accountId        String
-  account          Account  @relation(fields: [accountId], references: [id])
+  account          PlaidAccount  @relation(fields: [accountId], references: [id])
   securityId       String?
   security         Security? @relation(fields: [securityId], references: [id])
   type             String    // buy, sell, dividend, fee, etc.
@@ -221,4 +221,64 @@ model TransactionTag {
   createdAt     DateTime @default(now())
 
   @@unique([transactionId, tagId])
+}
+
+// Better Auth models for authentication
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId             String   // OAuth provider's user ID (e.g., "107543347720814772769" from Google)
+  providerId            String   // Provider name (e.g., "google", "github")
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?  @db.Text // For Google/Apple OAuth
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?  // OAuth scopes granted
+  password              String?  // For email/password (not used in our case)
+  expiresAt             DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
 }

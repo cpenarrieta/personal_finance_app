@@ -1,9 +1,4 @@
-import type { Holding, Security, Account } from "@prisma/client";
-
-type HoldingWithRelations = Holding & {
-  security: Security;
-  account?: Account;
-};
+import type { HoldingWithRelations } from "@/types";
 
 interface HoldingListProps {
   holdings: HoldingWithRelations[];

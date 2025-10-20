@@ -1,10 +1,5 @@
-import type { InvestmentTransaction, Security, Account } from '@prisma/client'
+import type { InvestmentTransactionWithRelations } from '@/types'
 import { format } from 'date-fns'
-
-type InvestmentTransactionWithRelations = InvestmentTransaction & {
-  security?: Security | null
-  account?: Account
-}
 
 interface InvestmentTransactionListProps {
   transactions: InvestmentTransactionWithRelations[]

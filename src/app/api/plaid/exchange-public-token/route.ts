@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   // Accounts
   const accts = await plaid.accountsGet({ access_token: accessToken })
   for (const a of accts.data.accounts) {
-    await prisma.account.upsert({
+    await prisma.plaidAccount.upsert({
       where: { plaidAccountId: a.account_id },
       update: {
         itemId: dbItem.id,

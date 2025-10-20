@@ -43,16 +43,22 @@ export const serializedTagSchema = z.object({
 export type SerializedTag = z.infer<typeof serializedTagSchema>
 
 /**
- * Schema for serialized account (nested in transactions)
+ * Schema for serialized Plaid account (nested in transactions)
  */
-export const serializedAccountSchema = z.object({
+export const serializedPlaidAccountSchema = z.object({
   id: z.string(),
   name: z.string(),
   type: z.string(),
   mask: z.string().nullable(),
 })
 
-export type SerializedAccount = z.infer<typeof serializedAccountSchema>
+export type SerializedPlaidAccount = z.infer<typeof serializedPlaidAccountSchema>
+
+// Legacy alias for backward compatibility
+/** @deprecated Use serializedPlaidAccountSchema instead */
+export const serializedAccountSchema = serializedPlaidAccountSchema
+/** @deprecated Use SerializedPlaidAccount instead */
+export type SerializedAccount = SerializedPlaidAccount
 
 /**
  * Schema for serialized custom category (nested)
@@ -251,13 +257,13 @@ export const tagWithCountSchema = z.object({
 export type TagWithCount = z.infer<typeof tagWithCountSchema>
 
 // ============================================================================
-// ACCOUNT API SCHEMAS
+// PLAID ACCOUNT API SCHEMAS
 // ============================================================================
 
 /**
- * Schema for serialized account (full details)
+ * Schema for serialized Plaid account (full details)
  */
-export const serializedAccountFullSchema = z.object({
+export const serializedPlaidAccountFullSchema = z.object({
   id: z.string(),
   plaidAccountId: z.string(),
   itemId: z.string(),
@@ -275,7 +281,13 @@ export const serializedAccountFullSchema = z.object({
   updatedAt: z.string(),
 })
 
-export type SerializedAccountFull = z.infer<typeof serializedAccountFullSchema>
+export type SerializedPlaidAccountFull = z.infer<typeof serializedPlaidAccountFullSchema>
+
+// Legacy aliases for backward compatibility
+/** @deprecated Use serializedPlaidAccountFullSchema instead */
+export const serializedAccountFullSchema = serializedPlaidAccountFullSchema
+/** @deprecated Use SerializedPlaidAccountFull instead */
+export type SerializedAccountFull = SerializedPlaidAccountFull
 
 // ============================================================================
 // PLAID API SCHEMAS

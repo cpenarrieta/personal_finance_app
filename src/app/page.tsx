@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { SyncButton } from "@/components/SyncButton";
 import { FreshSyncButton } from "@/components/FreshSyncButton";
 import { CategorizeButton } from "@/components/CategorizeButton";
+import { LogoutButton } from "@/components/LogoutButton";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import type { Metadata } from "next";
@@ -38,7 +39,7 @@ async function doFreshSync() {
 
 export default async function Page() {
   // Fetch accounts with balance information
-  const accounts = await prisma.account.findMany({
+  const accounts = await prisma.plaidAccount.findMany({
     include: { item: { include: { institution: true } } },
     orderBy: { name: "asc" },
   });
@@ -321,9 +322,7 @@ export default async function Page() {
                 href="/settings/manage-tags"
                 className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
               >
-                <div className="font-medium text-gray-900">
-                  Manage Tags
-                </div>
+                <div className="font-medium text-gray-900">Manage Tags</div>
                 <div className="text-sm text-gray-600">
                   Organize transactions with custom tags
                 </div>
@@ -339,6 +338,9 @@ export default async function Page() {
                   Move transactions between categories
                 </div>
               </Link>
+              <div className="pt-3 mt-3 border-t border-gray-200">
+                <LogoutButton variant="destructive" className="w-full" />
+              </div>
             </div>
           </div>
         </div>

@@ -51,13 +51,14 @@ export type TransactionWithAccount = Prisma.TransactionGetPayload<
 >
 
 // ============================================================================
-// ACCOUNT TYPES
+// PLAID ACCOUNT TYPES (Bank/Financial Accounts)
 // ============================================================================
 
 /**
- * Account with item and institution relations
+ * PlaidAccount with item and institution relations
+ * Use this for bank account queries with full institution details
  */
-export const accountWithRelations = Prisma.validator<Prisma.AccountDefaultArgs>()({
+export const plaidAccountWithRelations = Prisma.validator<Prisma.PlaidAccountDefaultArgs>()({
   include: {
     item: {
       include: {
@@ -67,12 +68,13 @@ export const accountWithRelations = Prisma.validator<Prisma.AccountDefaultArgs>(
   },
 })
 
-export type AccountWithRelations = Prisma.AccountGetPayload<typeof accountWithRelations>
+export type PlaidAccountWithRelations = Prisma.PlaidAccountGetPayload<typeof plaidAccountWithRelations>
 
 /**
- * Account with transaction count
+ * PlaidAccount with transaction count
+ * Use this to show how many transactions are associated with each account
  */
-export const accountWithTransactionCount = Prisma.validator<Prisma.AccountDefaultArgs>()({
+export const plaidAccountWithTransactionCount = Prisma.validator<Prisma.PlaidAccountDefaultArgs>()({
   include: {
     _count: {
       select: {
@@ -82,9 +84,19 @@ export const accountWithTransactionCount = Prisma.validator<Prisma.AccountDefaul
   },
 })
 
-export type AccountWithTransactionCount = Prisma.AccountGetPayload<
-  typeof accountWithTransactionCount
+export type PlaidAccountWithTransactionCount = Prisma.PlaidAccountGetPayload<
+  typeof plaidAccountWithTransactionCount
 >
+
+// Legacy aliases for backward compatibility (deprecated - use PlaidAccount types)
+/** @deprecated Use plaidAccountWithRelations instead */
+export const accountWithRelations = plaidAccountWithRelations
+/** @deprecated Use PlaidAccountWithRelations instead */
+export type AccountWithRelations = PlaidAccountWithRelations
+/** @deprecated Use plaidAccountWithTransactionCount instead */
+export const accountWithTransactionCount = plaidAccountWithTransactionCount
+/** @deprecated Use PlaidAccountWithTransactionCount instead */
+export type AccountWithTransactionCount = PlaidAccountWithTransactionCount
 
 // ============================================================================
 // ITEM TYPES
@@ -164,11 +176,12 @@ export type TagWithCount = Prisma.TagGetPayload<typeof tagWithCount>
 // ============================================================================
 
 /**
- * Holding with account and security
+ * Holding with Plaid account and security
+ * Use this for investment holdings with full account details
  */
 export const holdingWithRelations = Prisma.validator<Prisma.HoldingDefaultArgs>()({
   include: {
-    account: true,
+    account: true, // This is a PlaidAccount
     security: true,
   },
 })
@@ -180,11 +193,12 @@ export type HoldingWithRelations = Prisma.HoldingGetPayload<typeof holdingWithRe
 // ============================================================================
 
 /**
- * Investment transaction with account and security
+ * Investment transaction with Plaid account and security
+ * Use this for investment transactions with full account and security details
  */
 export const investmentTransactionWithRelations = Prisma.validator<Prisma.InvestmentTransactionDefaultArgs>()({
   include: {
-    account: true,
+    account: true, // This is a PlaidAccount
     security: true,
   },
 })
@@ -264,7 +278,8 @@ export function extractTags(transaction: TransactionWithRelations): TransactionT
  */
 export const PrismaIncludes = {
   transaction: transactionWithRelations.include,
-  account: accountWithRelations.include,
+  plaidAccount: plaidAccountWithRelations.include,
+  account: plaidAccountWithRelations.include, // Legacy alias (deprecated)
   item: itemWithRelations.include,
   customCategory: customCategoryWithSubcategories.include,
   holding: holdingWithRelations.include,

@@ -153,7 +153,7 @@ export async function syncAllItems() {
       // Upsert accounts (in case of new/changed)
       for (const a of resp.data.accounts) {
         itemStats.accountsUpdated++
-        await prisma.account.upsert({
+        await prisma.plaidAccount.upsert({
           where: { plaidAccountId: a.account_id },
           update: {
             itemId: it.id,
@@ -267,7 +267,7 @@ export async function syncAllItems() {
 
     // 2) Investments: transactions + holdings + securities
     console.log('  📊 Syncing investments...')
-    const accounts = await prisma.account.findMany({ where: { itemId: it.id } })
+    const accounts = await prisma.plaidAccount.findMany({ where: { itemId: it.id } })
 
     // Holdings
     const holdingsResp = await plaid.investmentsHoldingsGet({ access_token: it.accessToken })

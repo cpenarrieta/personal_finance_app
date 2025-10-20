@@ -108,7 +108,7 @@ This file contains type-safe extractors for Prisma models with their relations.
 
 - `TransactionWithRelations` - Transaction with all common relations
 - `TransactionWithAccount` - Transaction with account only
-- `AccountWithRelations` - Account with item and institution
+- `PlaidAccountWithRelations` - Plaid bank account with item and institution
 - `CustomCategoryWithSubcategories` - Category with subcategories
 - `HoldingWithRelations` - Holding with account and security
 - `PrismaIncludes` - Reusable include patterns
@@ -116,10 +116,10 @@ This file contains type-safe extractors for Prisma models with their relations.
 **Example:**
 
 ```typescript
-import { PrismaIncludes, type AccountWithRelations } from '@/types'
+import { PrismaIncludes, type PlaidAccountWithRelations } from '@/types'
 
-const accounts: AccountWithRelations[] = await prisma.account.findMany({
-  include: PrismaIncludes.account,
+const accounts: PlaidAccountWithRelations[] = await prisma.plaidAccount.findMany({
+  include: PrismaIncludes.plaidAccount,
 })
 ```
 
@@ -191,9 +191,9 @@ Helper functions for working with transactions.
 ### 1. Server vs. Client Types
 
 - **Server (API routes, Server Components):** Use Prisma types
-  - `TransactionWithRelations`, `AccountWithRelations`
+  - `TransactionWithRelations`, `PlaidAccountWithRelations`
 - **Client (Client Components):** Use serialized types
-  - `SerializedTransaction`, `SerializedAccount`
+  - `SerializedTransaction`, `SerializedPlaidAccount`
 
 ### 2. Always Validate API Input
 
