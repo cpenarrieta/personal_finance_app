@@ -21,7 +21,7 @@ A personal finance application built with Next.js 15 (App Router) that integrate
 
 ### Running the App
 ```bash
-npm run dev          # Start development server with Turbopack (http://localhost:3000)
+npm run dev          # Never run this command, I will always have this running locally in a separate tab
 npm run build        # Build for production with Turbopack
 npm start            # Start production server
 npm run lint         # Run ESLint
@@ -37,14 +37,11 @@ npx prisma studio               # Open Prisma Studio database GUI
 ### Financial Data Sync Scripts
 ```bash
 npm run sync                    # Incremental sync (uses cursors to fetch only new data)
-npm run sync:fresh              # Full sync from scratch (deletes all data and re-syncs)
 ```
 
 ### Transaction Categorization
 ```bash
-npm run categorize              # Auto-categorize using rule-based matching, never run this command
-npm run categorize:gpt          # AI-powered categorization using OpenAI, never run this command
-npm run recategorize:all        # Re-categorize all transactions, never run this command
+npm run categorize:gpt          # AI-powered categorization using OpenAI, NEVER run this command
 ```
 
 ## Environment Setup
