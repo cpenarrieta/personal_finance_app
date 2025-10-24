@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { syncAllItems } from "@/lib/sync";
+import { syncAllItems, syncTransactionsOnly, syncInvestmentsOnly } from "@/lib/sync";
 import { revalidatePath } from "next/cache";
 import { SyncButton } from "@/components/SyncButton";
+import { SyncTransactionsButton } from "@/components/SyncTransactionsButton";
+import { SyncInvestmentsButton } from "@/components/SyncInvestmentsButton";
 import { FreshSyncButton } from "@/components/FreshSyncButton";
 import { CategorizeButton } from "@/components/CategorizeButton";
 import { LogoutButton } from "@/components/LogoutButton";
@@ -20,6 +22,18 @@ export const metadata: Metadata = {
 async function doSync() {
   "use server";
   await syncAllItems();
+  revalidatePath("/", "layout");
+}
+
+async function doSyncTransactions() {
+  "use server";
+  await syncTransactionsOnly();
+  revalidatePath("/", "layout");
+}
+
+async function doSyncInvestments() {
+  "use server";
+  await syncInvestmentsOnly();
   revalidatePath("/", "layout");
 }
 
@@ -123,6 +137,8 @@ export default async function Page() {
               </button>
             </Link>
             <SyncButton action={doSync} />
+            <SyncTransactionsButton action={doSyncTransactions} />
+            <SyncInvestmentsButton action={doSyncInvestments} />
             <FreshSyncButton action={doFreshSync} />
             <CategorizeButton />
           </div>

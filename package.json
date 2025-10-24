@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "sync": "tsx scripts/sync.ts",
+    "sync:transactions": "tsx scripts/sync-transactions.ts",
+    "sync:investments": "tsx scripts/sync-investments.ts",
     "sync:fresh": "tsx scripts/sync-from-scratch.ts",
     "categorize": "tsx scripts/auto-categorize.ts",
     "categorize:gpt": "tsx scripts/auto-categorize-gpt.ts",
