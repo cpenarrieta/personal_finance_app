@@ -1,7 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { SearchableTransactionList } from '@/components/SearchableTransactionList'
-import { TRANSACTION_INCLUDE, serializeTransaction } from '@/types/transaction'
+import { serializeTransaction } from '@/types/transaction'
+import { PrismaIncludes, type CustomCategoryWithSubcategories } from '@/types/prisma'
+import type { Tag, CustomSubcategory } from '@prisma/client'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -20,7 +22,7 @@ export default async function TransactionsPage() {
         isSplit: false, // Filter out parent transactions that have been split
       },
       orderBy: { date: 'desc' },
-      include: TRANSACTION_INCLUDE,
+      include: PrismaIncludes.transaction,
     }),
     prisma.customCategory.findMany({
       include: {
@@ -39,18 +41,18 @@ export default async function TransactionsPage() {
   const serializedTransactions = txs.map(serializeTransaction)
   
   // Serialize categories and tags (convert dates to strings if needed)
-  const serializedCategories = categories.map(cat => ({
+  const serializedCategories = categories.map((cat: CustomCategoryWithSubcategories) => ({
     ...cat,
     createdAt: cat.createdAt.toISOString(),
     updatedAt: cat.updatedAt.toISOString(),
-    subcategories: cat.subcategories.map(sub => ({
+    subcategories: cat.subcategories.map((sub: CustomSubcategory) => ({
       ...sub,
       createdAt: sub.createdAt.toISOString(),
       updatedAt: sub.updatedAt.toISOString(),
     })),
   }))
   
-  const serializedTags = tags.map(tag => ({
+  const serializedTags = tags.map((tag: Tag) => ({
     ...tag,
     createdAt: tag.createdAt.toISOString(),
     updatedAt: tag.updatedAt.toISOString(),

@@ -4,8 +4,10 @@ import { notFound } from 'next/navigation'
 import { SearchableTransactionList } from '@/components/SearchableTransactionList'
 import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
 import { HoldingList } from '@/components/HoldingList'
-import { TRANSACTION_INCLUDE, serializeTransaction } from '@/types/transaction'
+import { serializeTransaction } from '@/types/transaction'
+import { PrismaIncludes, type CustomCategoryWithSubcategories } from '@/types/prisma'
 import { format } from 'date-fns'
+import type { Tag, CustomSubcategory } from '@prisma/client'
 import type { Metadata } from 'next'
 import type { InvestmentTransactionWithRelations, HoldingWithRelations, SerializedTransaction } from '@/types'
 
@@ -74,7 +76,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         isSplit: false, // Filter out parent transactions that have been split
       },
       orderBy: { date: 'desc' },
-      include: TRANSACTION_INCLUDE,
+      include: PrismaIncludes.transaction,
     })
 
     // Serialize transactions for client component
@@ -97,18 +99,18 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   ])
 
   // Serialize categories and tags
-  const serializedCategories = categories.map(cat => ({
+  const serializedCategories = categories.map((cat: CustomCategoryWithSubcategories) => ({
     ...cat,
     createdAt: cat.createdAt.toISOString(),
     updatedAt: cat.updatedAt.toISOString(),
-    subcategories: cat.subcategories.map(sub => ({
+    subcategories: cat.subcategories.map((sub: CustomSubcategory) => ({
       ...sub,
       createdAt: sub.createdAt.toISOString(),
       updatedAt: sub.updatedAt.toISOString(),
     })),
   }))
   
-  const serializedTags = tags.map(tag => ({
+  const serializedTags = tags.map((tag: Tag) => ({
     ...tag,
     createdAt: tag.createdAt.toISOString(),
     updatedAt: tag.updatedAt.toISOString(),
