@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO, eachMonthOfInterval } from 'date-fns'
 
@@ -702,7 +703,7 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                   <div className="flex items-center gap-2">
                                     {sub.imageUrl && (
-                                      <img src={sub.imageUrl} alt="" className="w-5 h-5 rounded" />
+                                      <Image src={sub.imageUrl} alt={sub.name} width={20} height={20} className="w-5 h-5 rounded" />
                                     )}
                                     {sub.name}
                                   </div>
@@ -929,7 +930,7 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                               style={{ backgroundColor: COLORS[index % COLORS.length] }}
                             />
                             {cat.imageUrl && (
-                              <img src={cat.imageUrl} alt="" className="w-5 h-5 rounded flex-shrink-0" />
+                              <Image src={cat.imageUrl} alt={cat.name} width={20} height={20} className="w-5 h-5 rounded flex-shrink-0" />
                             )}
                             <span className="text-sm text-gray-700 truncate">{cat.name}</span>
                           </div>

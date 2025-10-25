@@ -1,4 +1,5 @@
 import type { InvestmentTransactionWithRelations } from '@/types'
+import Image from 'next/image'
 import { format } from 'date-fns'
 
 interface InvestmentTransactionListProps {
@@ -17,9 +18,11 @@ export function InvestmentTransactionList({ transactions, showAccount = false }:
         <li key={t.id} className="border p-3 rounded">
           <div className="flex items-start gap-3">
             {t.security?.logoUrl && (
-              <img
+              <Image
                 src={t.security.logoUrl}
                 alt={t.security.tickerSymbol || ''}
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
               />
             )}

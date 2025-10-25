@@ -1,4 +1,5 @@
 import type { HoldingWithRelations } from "@/types";
+import Image from "next/image";
 
 interface HoldingListProps {
   holdings: HoldingWithRelations[];
@@ -53,9 +54,11 @@ export function HoldingList({
           <li key={h.id} className="border p-3 rounded">
             <div className="flex items-start gap-3">
               {h.security.logoUrl && (
-                <img
+                <Image
                   src={h.security.logoUrl}
                   alt={h.security.tickerSymbol || ""}
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
                 />
               )}

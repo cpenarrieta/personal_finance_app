@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import Image from 'next/image'
 import { revalidatePath } from 'next/cache'
 import { DeleteButton } from '@/components/DeleteButton'
 import { getCategoryImage } from '@/lib/categoryImages'
@@ -134,9 +135,11 @@ export default async function ManageCategoriesPage() {
                     <div className="flex items-center gap-3">
                       {getCategoryImage(cat.name, cat.imageUrl) && (
                         <div className="flex-shrink-0">
-                          <img
+                          <Image
                             src={getCategoryImage(cat.name, cat.imageUrl)!}
-                            alt=""
+                            alt={cat.name}
+                            width={40}
+                            height={40}
                             className="w-10 h-10 rounded-lg object-cover border border-gray-200"
                           />
                         </div>
@@ -169,9 +172,11 @@ export default async function ManageCategoriesPage() {
                             className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                           >
                             {getCategoryImage(sub.name, sub.imageUrl) && (
-                              <img
+                              <Image
                                 src={getCategoryImage(sub.name, sub.imageUrl)!}
-                                alt=""
+                                alt={sub.name}
+                                width={32}
+                                height={32}
                                 className="w-8 h-8 rounded object-cover border border-gray-200"
                               />
                             )}

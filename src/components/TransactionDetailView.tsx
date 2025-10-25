@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import Link from 'next/link'
+import Image from 'next/image'
 import { EditTransactionModal } from './EditTransactionModal'
 import { SplitTransactionModal } from './SplitTransactionModal'
 import type { SerializedTransaction as BaseSerializedTransaction } from '@/types/transaction'
@@ -92,9 +93,11 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
           <div className="flex items-start gap-4">
             {transaction.logoUrl && (
-              <img
+              <Image
                 src={transaction.logoUrl}
                 alt=""
+                width={64}
+                height={64}
                 className="w-16 h-16 rounded-lg object-cover bg-white flex-shrink-0"
               />
             )}

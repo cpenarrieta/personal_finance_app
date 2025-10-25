@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import Image from 'next/image'
 import type { TransactionWithAccount } from '@/types/prisma'
 
 interface TransactionListProps {
@@ -17,9 +18,11 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
         <li key={t.id} className="border p-3 rounded">
           <div className="flex items-start gap-3">
             {t.logoUrl && (
-              <img
+              <Image
                 src={t.logoUrl}
                 alt=""
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
               />
             )}

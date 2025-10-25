@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import Image from 'next/image'
 import { revalidatePath } from 'next/cache'
 import { DeleteButton } from '@/components/DeleteButton'
 import { getCategoryImage } from '@/lib/categoryImages'
@@ -156,9 +157,11 @@ export default async function CategoryGroupsPage() {
                             className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                           >
                             {getCategoryImage(item.category.name, item.category.imageUrl) && (
-                              <img
+                              <Image
                                 src={getCategoryImage(item.category.name, item.category.imageUrl)!}
-                                alt=""
+                                alt={item.category.name}
+                                width={32}
+                                height={32}
                                 className="w-8 h-8 rounded object-cover border border-gray-200"
                               />
                             )}

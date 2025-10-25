@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
 
@@ -125,6 +126,8 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
+    
+    return undefined
   }, [showCategoryDropdown])
 
   // No longer needed - we're using the categories from the API
@@ -672,7 +675,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
                   <div key={cat.name} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {cat.imageUrl && (
-                        <img src={cat.imageUrl} alt="" className="w-5 h-5 rounded flex-shrink-0" />
+                        <Image src={cat.imageUrl} alt={cat.name} width={20} height={20} className="w-5 h-5 rounded flex-shrink-0" />
                       )}
                       <span className="text-gray-700 truncate">{cat.name}</span>
                     </div>
@@ -728,7 +731,7 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
                   <div key={sub.name} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {sub.imageUrl && (
-                        <img src={sub.imageUrl} alt="" className="w-5 h-5 rounded flex-shrink-0" />
+                        <Image src={sub.imageUrl} alt={sub.name} width={20} height={20} className="w-5 h-5 rounded flex-shrink-0" />
                       )}
                       <span className="text-gray-700 truncate">{sub.name}</span>
                     </div>
@@ -818,9 +821,11 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-2">
                       {transaction.logoUrl && (
-                        <img
+                        <Image
                           src={transaction.logoUrl}
                           alt=""
+                          width={24}
+                          height={24}
                           className="w-6 h-6 rounded object-cover flex-shrink-0"
                         />
                       )}
@@ -835,9 +840,11 @@ export function TransactionAnalytics({ transactions }: TransactionAnalyticsProps
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center gap-2">
                       {transaction.customCategory?.imageUrl && (
-                        <img
+                        <Image
                           src={transaction.customCategory.imageUrl}
                           alt=""
+                          width={20}
+                          height={20}
                           className="w-5 h-5 rounded"
                         />
                       )}

@@ -294,6 +294,8 @@ export function SearchableTransactionList({
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
+    
+    return undefined;
   }, [showCategoryDropdown]);
 
   // Calculate totals for filtered transactions

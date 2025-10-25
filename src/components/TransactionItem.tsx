@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import Link from "next/link";
+import Image from "next/image";
 import { getCategoryImage } from "@/lib/categoryImages";
 import type { SerializedTransaction } from "@/types/transaction";
 
@@ -42,9 +43,11 @@ export function TransactionItem({
 
         {/* Merchant/Category Image */}
         {displayImage && (
-          <img
+          <Image
             src={displayImage}
             alt=""
+            width={40}
+            height={40}
             className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
             onClick={() => !showBulkUpdate && onEdit?.(t)}
           />

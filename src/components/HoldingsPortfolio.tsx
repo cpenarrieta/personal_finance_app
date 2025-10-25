@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface SerializedHolding {
@@ -380,12 +381,12 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${percent.toFixed(1)}%`}
+                  label={({ name, percent }) => `${name}: ${(percent as number).toFixed(1)}%`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {allocationData.map((entry, index) => (
+                  {allocationData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -476,19 +477,21 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                 <tr key={holding.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      {holding.security.logoUrl && (
-                        <img
+                      {holding.security?.logoUrl && (
+                        <Image
                           src={holding.security.logoUrl}
-                          alt={holding.security.tickerSymbol || ''}
+                          alt={holding.security?.tickerSymbol || ''}
+                          width={32}
+                          height={32}
                           className="w-8 h-8 rounded object-cover flex-shrink-0"
                         />
                       )}
                       <div>
                         <div className="font-medium text-gray-900">
-                          {holding.security.tickerSymbol || 'N/A'}
+                          {holding.security?.tickerSymbol || 'N/A'}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {holding.security.name}
+                          {holding.security?.name}
                         </div>
                       </div>
                     </div>
@@ -517,7 +520,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                   </td>
                   {groupBy === 'none' && (
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {holding.account.name}
+                      {holding.account?.name}
                     </td>
                   )}
                 </tr>
