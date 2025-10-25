@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LoginButtons } from "@/components/LoginButtons";
 
 export default async function LoginPage({
@@ -22,12 +23,12 @@ export default async function LoginPage({
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-4 pt-6">
           {error === "unauthorized" && (
-            <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm text-center">
-              <p className="font-semibold">Access Denied</p>
-              <p className="mt-1">
+            <Alert variant="destructive" className="w-full">
+              <AlertTitle>Access Denied</AlertTitle>
+              <AlertDescription>
                 Your email is not authorized to access this application.
-              </p>
-            </div>
+              </AlertDescription>
+            </Alert>
           )}
           <LoginButtons />
           <p className="text-sm text-muted-foreground text-center mt-4">

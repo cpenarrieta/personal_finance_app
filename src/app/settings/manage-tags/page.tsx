@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { DeleteButton } from '@/components/DeleteButton'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -77,22 +79,22 @@ export default async function ManageTagsPage() {
         <form action={createTag} className="mb-6 p-4 bg-gray-50 rounded-lg">
           <h2 className="text-lg font-semibold mb-3">Add New Tag</h2>
           <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="tag-name">
                 Tag Name
-              </label>
-              <input
+              </Label>
+              <Input
+                id="tag-name"
                 type="text"
                 name="name"
                 placeholder="Enter tag name"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <Label>
                 Tag Color
-              </label>
+              </Label>
               <div className="grid grid-cols-10 gap-2 mb-2">
                 {colorPalette.map((color) => (
                   <label
@@ -162,11 +164,11 @@ export default async function ManageTagsPage() {
                   {/* Edit Form (Inline) */}
                   <form action={updateTag} className="flex items-center gap-2">
                     <input type="hidden" name="id" value={tag.id} />
-                    <input
+                    <Input
                       type="text"
                       name="name"
                       defaultValue={tag.name}
-                      className="px-2 py-1 border border-gray-300 rounded text-sm w-32"
+                      className="w-32 h-8 text-sm"
                       placeholder="Tag name"
                     />
                     <input

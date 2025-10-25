@@ -9,6 +9,10 @@ import {
 } from "date-fns";
 import { EditTransactionModal } from "./EditTransactionModal";
 import { TransactionItem } from "./TransactionItem";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import type { SerializedTransaction } from "@/types/transaction";
 
 interface SearchableTransactionListProps {
@@ -478,12 +482,12 @@ export function SearchableTransactionList({
       {/* Search Bar - Full Width at Top */}
       <div className="bg-white p-4 rounded-lg shadow-sm border">
         <div className="relative">
-          <input
+          <Input
             type="text"
             placeholder="Search transactions (name, merchant, category, account, amount, tags...)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="pl-10"
           />
           <svg
             className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
@@ -526,39 +530,38 @@ export function SearchableTransactionList({
         <div className="flex flex-wrap items-center gap-4">
           {/* Date Range */}
           <div className="flex-shrink-0">
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as DateRange)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Time</option>
-              <option value="last30">Last 30 Days</option>
-              <option value="last90">Last 90 Days</option>
-              <option value="thisMonth">This Month</option>
-              <option value="lastMonth">Last Month</option>
-              <option value="custom">Custom Range</option>
-            </select>
+            <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRange)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select date range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="last30">Last 30 Days</SelectItem>
+                <SelectItem value="last90">Last 90 Days</SelectItem>
+                <SelectItem value="thisMonth">This Month</SelectItem>
+                <SelectItem value="lastMonth">Last Month</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Custom Date Range */}
           {dateRange === "custom" && (
             <>
               <div className="flex-shrink-0">
-                <input
+                <Input
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
                   placeholder="Start date"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div className="flex-shrink-0">
-                <input
+                <Input
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
                   placeholder="End date"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </>
@@ -714,17 +717,18 @@ export function SearchableTransactionList({
           {/* Order By Dropdown */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-sm text-gray-700">Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            >
-              <option value="createdAt">Creation Date</option>
-              <option value="date">Transaction Date</option>
-              <option value="amount">Amount</option>
-              <option value="name">Name</option>
-              <option value="merchant">Merchant</option>
-            </select>
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt">Creation Date</SelectItem>
+                <SelectItem value="date">Transaction Date</SelectItem>
+                <SelectItem value="amount">Amount</SelectItem>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="merchant">Merchant</SelectItem>
+              </SelectContent>
+            </Select>
             <button
               onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
               className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -760,9 +764,10 @@ export function SearchableTransactionList({
               const category = categories.find((c) => c.id === catId);
               if (!category) return null;
               return (
-                <span
+                <Badge
                   key={catId}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  variant="secondary"
+                  className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-100"
                 >
                   ✓ {category.name}
                   <button
@@ -783,7 +788,7 @@ export function SearchableTransactionList({
                       />
                     </svg>
                   </button>
-                </span>
+                </Badge>
               );
             })}
             {Array.from(selectedSubcategoryIds).map((subId) => {
@@ -795,9 +800,10 @@ export function SearchableTransactionList({
               );
               if (!subcategory || !category) return null;
               return (
-                <span
+                <Badge
                   key={subId}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm"
+                  variant="secondary"
+                  className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 hover:bg-indigo-100"
                 >
                   ✓ {subcategory.name}
                   <button
@@ -818,16 +824,17 @@ export function SearchableTransactionList({
                       />
                     </svg>
                   </button>
-                </span>
+                </Badge>
               );
             })}
             {Array.from(excludedCategoryIds).map((catId) => {
               const category = categories.find((c) => c.id === catId);
               if (!category) return null;
               return (
-                <span
+                <Badge
                   key={`excluded-${catId}`}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm"
+                  variant="secondary"
+                  className="inline-flex items-center gap-1 bg-red-100 text-red-800 hover:bg-red-100"
                 >
                   ✕ {category.name}
                   <button
@@ -848,16 +855,16 @@ export function SearchableTransactionList({
                       />
                     </svg>
                   </button>
-                </span>
+                </Badge>
               );
             })}
             {Array.from(selectedTagIds).map((tagId) => {
               const tag = tags.find((t) => t.id === tagId);
               if (!tag) return null;
               return (
-                <span
+                <Badge
                   key={`tag-${tagId}`}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm text-white"
+                  className="inline-flex items-center gap-1 text-white"
                   style={{ backgroundColor: tag.color }}
                 >
                   {tag.name}
@@ -879,7 +886,7 @@ export function SearchableTransactionList({
                       />
                     </svg>
                   </button>
-                </span>
+                </Badge>
               );
             })}
           </div>
@@ -974,45 +981,52 @@ export function SearchableTransactionList({
                 {selectedTransactions.size !== 1 ? "s" : ""}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <Label htmlFor="bulk-category">
                     Custom Category
-                  </label>
-                  <select
+                  </Label>
+                  <Select
                     value={bulkCategoryId}
-                    onChange={(e) => {
-                      setBulkCategoryId(e.target.value);
+                    onValueChange={(value) => {
+                      setBulkCategoryId(value);
                       setBulkSubcategoryId("");
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   >
-                    <option value="">Select category...</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger id="bulk-category">
+                      <SelectValue placeholder="Select category..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <Label htmlFor="bulk-subcategory">
                     Custom Subcategory
-                  </label>
-                  <select
+                  </Label>
+                  <Select
                     value={bulkSubcategoryId}
-                    onChange={(e) => setBulkSubcategoryId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    onValueChange={setBulkSubcategoryId}
                     disabled={!bulkCategoryId}
                   >
-                    <option value="">None</option>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {availableBulkSubcategories.map((sub: any) => (
-                      <option key={sub.id} value={sub.id}>
-                        {sub.name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger id="bulk-subcategory">
+                      <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {availableBulkSubcategories.map((sub: any) => (
+                        <SelectItem key={sub.id} value={sub.id}>
+                          {sub.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <button

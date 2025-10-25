@@ -4,6 +4,8 @@ import Image from 'next/image'
 import { revalidatePath } from 'next/cache'
 import { DeleteButton } from '@/components/DeleteButton'
 import { getCategoryImage } from '@/lib/categoryImages'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -83,29 +85,27 @@ export default async function ManageCategoriesPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Add New Category</h2>
           <form action={createCategory} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <Label htmlFor="category-name">
                   Category Name *
-                </label>
-                <input
+                </Label>
+                <Input
                   id="category-name"
                   type="text"
                   name="name"
                   placeholder="e.g., Income, Food, Transportation"
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-              <div>
-                <label htmlFor="category-image" className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <Label htmlFor="category-image">
                   Image URL (optional)
-                </label>
-                <input
+                </Label>
+                <Input
                   id="category-image"
                   type="text"
                   name="imageUrl"
                   placeholder="https://example.com/icon.png"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -194,23 +194,23 @@ export default async function ManageCategoriesPage() {
                     )}
 
                     {/* Add Subcategory Form */}
-                    <form action={createSubcategory} className="border-t border-gray-200 pt-4">
+                    <form action={createSubcategory} className="border-t border-gray-200 pt-4 space-y-2">
                       <input type="hidden" name="categoryId" value={cat.id} />
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Label>
                         Add Subcategory
-                      </label>
+                      </Label>
                       <div className="flex gap-2">
-                        <input
+                        <Input
                           type="text"
                           name="name"
                           placeholder="Subcategory name"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          className="flex-1"
                         />
-                        <input
+                        <Input
                           type="text"
                           name="imageUrl"
                           placeholder="Image URL (optional)"
-                          className="w-48 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          className="w-48"
                         />
                         <button
                           type="submit"

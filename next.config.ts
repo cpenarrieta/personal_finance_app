@@ -1,7 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'plaid-merchant-logos.plaid.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+    // Disable optimization for local images to avoid 400 errors
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

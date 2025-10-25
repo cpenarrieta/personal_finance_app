@@ -11,6 +11,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { CATEGORY_GROUPS, getCategoryGroup, getCategorySortOrder } from "@/config/category-groups";
 
 export function EditTransactionModal({
@@ -165,26 +168,27 @@ export function EditTransactionModal({
 
         <form onSubmit={handleSubmit} className="space-y-6">
             {/* Transaction Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="transaction-name">
                 Transaction Name
-              </label>
-              <input
+              </Label>
+              <Input
+                id="transaction-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Transaction name"
               />
             </div>
 
             {/* Custom Categories */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <Label htmlFor="custom-category">
                   Custom Category
-                </label>
+                </Label>
                 <select
+                  id="custom-category"
                   value={customCategoryId}
                   onChange={(e) => {
                     setCustomCategoryId(e.target.value);
@@ -205,11 +209,12 @@ export function EditTransactionModal({
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <Label htmlFor="custom-subcategory">
                   Custom Subcategory
-                </label>
+                </Label>
                 <select
+                  id="custom-subcategory"
                   value={customSubcategoryId}
                   onChange={(e) => setCustomSubcategoryId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -226,15 +231,15 @@ export function EditTransactionModal({
             </div>
 
             {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="notes">
                 Notes
-              </label>
-              <textarea
+              </Label>
+              <Textarea
+                id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Add any notes about this transaction..."
               />
             </div>
@@ -242,9 +247,9 @@ export function EditTransactionModal({
             {/* Tags */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <Label>
                   Tags
-                </label>
+                </Label>
                 <a
                   href="/settings/manage-tags"
                   target="_blank"

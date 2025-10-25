@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
 import { getCategoryImage } from "@/lib/categoryImages";
+import { Badge } from "@/components/ui/badge";
 import type { SerializedTransaction } from "@/types/transaction";
 
 interface TransactionItemProps {
@@ -64,14 +65,14 @@ export function TransactionItem({
               <div className="font-medium text-gray-900 flex items-center gap-2">
                 <span className="truncate">{t.name}</span>
                 {t.pending && (
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded flex-shrink-0">
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 flex-shrink-0">
                     Pending
-                  </span>
+                  </Badge>
                 )}
                 {t.parentTransactionId && (
-                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded flex-shrink-0" title="This transaction is part of a split">
+                  <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-100 flex-shrink-0" title="This transaction is part of a split">
                     Split
-                  </span>
+                  </Badge>
                 )}
               </div>
 
@@ -111,13 +112,13 @@ export function TransactionItem({
               {t.tags && t.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {t.tags.map((tag) => (
-                    <span
+                    <Badge
                       key={tag.id}
-                      className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                      className="text-white"
                       style={{ backgroundColor: tag.color }}
                     >
                       {tag.name}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               )}
