@@ -159,6 +159,7 @@ export function EditTransactionModal({
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
                 placeholder="Add any notes about this transaction..."
+                autoFocus
               />
             </div>
 
