@@ -1,9 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { SearchableTransactionList } from '@/components/SearchableTransactionList'
+import { TransactionsPageClient } from '@/components/TransactionsPageClient'
 import { serializeTransaction } from '@/types/transaction'
 import { PrismaIncludes, type CustomCategoryWithSubcategories } from '@/types/prisma'
-import type { Tag, CustomSubcategory } from '@prisma/client'
+import type { Tag, CustomSubcategory, PlaidAccount } from '@prisma/client'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default async function TransactionsPage() {
   // Fetch all data in parallel on the server
-  const [txs, categories, tags] = await Promise.all([
+  const [txs, categories, tags, accounts] = await Promise.all([
     prisma.transaction.findMany({
       where: {
         isSplit: false, // Filter out parent transactions that have been split
@@ -35,11 +35,14 @@ export default async function TransactionsPage() {
     prisma.tag.findMany({
       orderBy: { name: 'asc' },
     }),
+    prisma.plaidAccount.findMany({
+      orderBy: { name: 'asc' },
+    }),
   ])
 
   // Serialize transactions for client component
   const serializedTransactions = txs.map(serializeTransaction)
-  
+
   // Serialize categories and tags (convert dates to strings if needed)
   const serializedCategories = categories.map((cat: CustomCategoryWithSubcategories) => ({
     ...cat,
@@ -51,11 +54,22 @@ export default async function TransactionsPage() {
       updatedAt: sub.updatedAt.toISOString(),
     })),
   }))
-  
+
   const serializedTags = tags.map((tag: Tag) => ({
     ...tag,
     createdAt: tag.createdAt.toISOString(),
     updatedAt: tag.updatedAt.toISOString(),
+  }))
+
+  // Serialize accounts for client component
+  const serializedAccounts = accounts.map((account: PlaidAccount) => ({
+    id: account.id,
+    name: account.name,
+    officialName: account.officialName,
+    mask: account.mask,
+    type: account.type,
+    subtype: account.subtype,
+    currency: account.currency,
   }))
 
   return (
@@ -66,15 +80,11 @@ export default async function TransactionsPage() {
         </Link>
       </div>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Banking Transactions</h1>
-        <p className="text-gray-600 mt-1">View and search all your banking transactions</p>
-      </div>
-
-      <SearchableTransactionList 
-        transactions={serializedTransactions} 
+      <TransactionsPageClient
+        transactions={serializedTransactions}
         categories={serializedCategories}
         tags={serializedTags}
+        accounts={serializedAccounts}
       />
     </div>
   )

@@ -131,6 +131,29 @@ export type SerializedTransaction = z.infer<typeof serializedTransactionSchema>
 // ============================================================================
 
 /**
+ * Schema for creating a manual transaction
+ */
+export const createTransactionSchema = z.object({
+  accountId: z.string(),
+  name: z.string().min(1),
+  amount: z.number(),
+  date: z.string(), // ISO date string
+  pending: z.boolean(),
+  merchantName: z.string().nullable().optional(),
+  isoCurrencyCode: z.string().nullable().optional(),
+  authorizedDate: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  subcategory: z.string().nullable().optional(),
+  paymentChannel: z.string().nullable().optional(),
+  customCategoryId: z.string().nullable().optional(),
+  customSubcategoryId: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  tagIds: z.array(z.string()).optional(),
+})
+
+export type CreateTransactionPayload = z.infer<typeof createTransactionSchema>
+
+/**
  * Schema for updating a transaction
  */
 export const updateTransactionSchema = z.object({
