@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { getCategoryImage } from "@/lib/categoryImages";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import type { SerializedTransaction } from "@/types/transaction";
 
 interface TransactionItemProps {
@@ -33,12 +35,11 @@ export function TransactionItem({
       <div className="p-4 flex items-start gap-3">
         {/* Bulk select checkbox */}
         {showBulkUpdate && (
-          <input
-            type="checkbox"
+          <Checkbox
             checked={isSelected}
-            onChange={() => onToggleSelect?.(t.id)}
-            className="mt-1 w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-            onClick={(e) => e.stopPropagation()}
+            onCheckedChange={() => onToggleSelect?.(t.id)}
+            className="mt-1"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
           />
         )}
 
@@ -144,13 +145,15 @@ export function TransactionItem({
                   {t.isoCurrencyCode}
                 </div>
               )}
-              <Link
-                href={`/transactions/${t.id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="mt-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
+              <Button
+                asChild
+                size="sm"
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
               >
-                Details
-              </Link>
+                <Link href={`/transactions/${t.id}`}>
+                  Details
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

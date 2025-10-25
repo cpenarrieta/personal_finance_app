@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CategorySelect } from "@/components/ui/category-select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export function EditTransactionModal({
   transaction,
@@ -190,11 +192,10 @@ export function EditTransactionModal({
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => (
-                    <button
+                    <Badge
                       key={tag.id}
-                      type="button"
-                      onClick={() => toggleTag(tag.id)}
-                      className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                      variant={selectedTagIds.includes(tag.id) ? "default" : "secondary"}
+                      className={`cursor-pointer transition-all ${
                         selectedTagIds.includes(tag.id)
                           ? "text-white ring-2 ring-offset-2"
                           : "text-gray-700 bg-gray-100 hover:bg-gray-200"
@@ -204,9 +205,10 @@ export function EditTransactionModal({
                           ? { backgroundColor: tag.color }
                           : undefined
                       }
+                      onClick={() => toggleTag(tag.id)}
                     >
                       {tag.name}
-                    </button>
+                    </Badge>
                   ))}
                 </div>
               )}
@@ -253,21 +255,20 @@ export function EditTransactionModal({
 
           {/* Action Buttons */}
           <DialogFooter className="pt-4 border-t">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
               disabled={isSubmitting}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400"
             >
               {isSubmitting ? "Saving..." : "Save Changes"}
-            </button>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import type { SerializedTransaction, CustomCategoryWithSubcategories, SerializedTag, SearchableTransactionListProps } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { SerializedTransaction, CustomCategoryWithSubcategories, SearchableTransactionListProps } from "@/types";
 
 type DateRange =
   | "all"
@@ -464,9 +466,11 @@ export function SearchableTransactionList({
             />
           </svg>
           {searchQuery && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-2 h-7 w-7 p-0"
             >
               <svg
                 className="h-5 w-5"
@@ -481,7 +485,7 @@ export function SearchableTransactionList({
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -530,13 +534,13 @@ export function SearchableTransactionList({
 
           {/* Category/Subcategory Multi-select */}
           <div className="flex-shrink-0 relative" ref={dropdownRef}>
-            <button
+            <Button
+              variant="outline"
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              className="px-3 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-2"
             >
-              <span className="text-gray-700">Select Categories...</span>
+              <span>Select Categories...</span>
               <svg
-                className="h-4 w-4 text-gray-400"
+                className="h-4 w-4 ml-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -548,7 +552,7 @@ export function SearchableTransactionList({
                   d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </button>
+            </Button>
 
             {/* Dropdown Menu */}
             {showCategoryDropdown && (
@@ -643,10 +647,10 @@ export function SearchableTransactionList({
               <span className="text-sm text-gray-700">Tags:</span>
               <div className="flex flex-wrap gap-1">
                 {tags.map((tag) => (
-                  <button
+                  <Badge
                     key={tag.id}
-                    onClick={() => toggleTag(tag.id)}
-                    className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${
+                    variant={selectedTagIds.has(tag.id) ? "default" : "secondary"}
+                    className={`cursor-pointer transition-all ${
                       selectedTagIds.has(tag.id)
                         ? "text-white ring-2 ring-offset-1"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -656,23 +660,22 @@ export function SearchableTransactionList({
                         ? { backgroundColor: tag.color }
                         : undefined
                     }
+                    onClick={() => toggleTag(tag.id)}
                   >
                     {tag.name}
-                  </button>
+                  </Badge>
                 ))}
               </div>
             </div>
           )}
 
           {/* Uncategorized Checkbox */}
-          <label className="flex items-center cursor-pointer flex-shrink-0">
-            <input
-              type="checkbox"
+          <label className="flex items-center cursor-pointer flex-shrink-0 gap-2">
+            <Checkbox
               checked={showOnlyUncategorized}
-              onChange={(e) => setShowOnlyUncategorized(e.target.checked)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              onCheckedChange={(checked) => setShowOnlyUncategorized(checked === true)}
             />
-            <span className="ml-2 text-sm text-gray-700">Uncategorized</span>
+            <span className="text-sm text-gray-700">Uncategorized</span>
           </label>
 
           {/* Order By Dropdown */}
@@ -690,31 +693,33 @@ export function SearchableTransactionList({
                 <SelectItem value="merchant">Merchant</SelectItem>
               </SelectContent>
             </Select>
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
-              className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               title={sortDirection === "asc" ? "Ascending" : "Descending"}
             >
               {sortDirection === "asc" ? (
-                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
                 </svg>
               )}
-            </button>
+            </Button>
           </div>
 
           {/* Clear Filters */}
           {hasActiveFilters && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={clearAllFilters}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0"
             >
               Clear Filters
-            </button>
+            </Button>
           )}
         </div>
 
@@ -731,9 +736,11 @@ export function SearchableTransactionList({
                   className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-100"
                 >
                   ✓ {category.name}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => toggleCategory(catId)}
-                    className="hover:bg-blue-200 rounded-full p-0.5"
+                    className="h-auto p-0.5 hover:bg-blue-200"
                   >
                     <svg
                       className="h-3 w-3"
@@ -748,7 +755,7 @@ export function SearchableTransactionList({
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                  </button>
+                  </Button>
                 </Badge>
               );
             })}
@@ -767,9 +774,11 @@ export function SearchableTransactionList({
                   className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 hover:bg-indigo-100"
                 >
                   ✓ {subcategory.name}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => toggleSubcategory(subId, category.id)}
-                    className="hover:bg-indigo-200 rounded-full p-0.5"
+                    className="h-auto p-0.5 hover:bg-indigo-200"
                   >
                     <svg
                       className="h-3 w-3"
@@ -784,7 +793,7 @@ export function SearchableTransactionList({
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                  </button>
+                  </Button>
                 </Badge>
               );
             })}
@@ -798,9 +807,11 @@ export function SearchableTransactionList({
                   className="inline-flex items-center gap-1 bg-red-100 text-red-800 hover:bg-red-100"
                 >
                   ✕ {category.name}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => toggleExcludedCategory(catId)}
-                    className="hover:bg-red-200 rounded-full p-0.5"
+                    className="h-auto p-0.5 hover:bg-red-200"
                   >
                     <svg
                       className="h-3 w-3"
@@ -815,7 +826,7 @@ export function SearchableTransactionList({
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                  </button>
+                  </Button>
                 </Badge>
               );
             })}
@@ -829,9 +840,11 @@ export function SearchableTransactionList({
                   style={{ backgroundColor: tag.color }}
                 >
                   {tag.name}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => toggleTag(tagId)}
-                    className="hover:bg-black hover:bg-opacity-20 rounded-full p-0.5"
+                    className="h-auto p-0.5 hover:bg-black hover:bg-opacity-20"
                   >
                     <svg
                       className="h-3 w-3"
@@ -846,7 +859,7 @@ export function SearchableTransactionList({
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                  </button>
+                  </Button>
                 </Badge>
               );
             })}
@@ -902,12 +915,12 @@ export function SearchableTransactionList({
             transactions
           </div>
           {filteredTransactions.length > 0 && (
-            <button
+            <Button
               onClick={() => setShowBulkUpdate(!showBulkUpdate)}
-              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
+              className="bg-purple-600 hover:bg-purple-700"
             >
               {showBulkUpdate ? "Hide Bulk Update" : "Bulk Update"}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -920,18 +933,20 @@ export function SearchableTransactionList({
               Bulk Update Categories
             </h3>
             <div className="flex gap-2">
-              <button
+              <Button
+                size="sm"
                 onClick={selectAll}
-                className="text-sm px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+                className="bg-purple-600 hover:bg-purple-700"
               >
                 Select All ({filteredTransactions.length})
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
                 onClick={deselectAll}
-                className="text-sm px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
+                variant="secondary"
               >
                 Deselect All
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -990,17 +1005,17 @@ export function SearchableTransactionList({
                   </Select>
                 </div>
 
-                <button
+                <Button
                   onClick={handleBulkUpdate}
                   disabled={!bulkCategoryId || isBulkUpdating}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
+                  className="bg-purple-600 hover:bg-purple-700"
                 >
                   {isBulkUpdating
                     ? "Updating..."
                     : `Update ${selectedTransactions.size} Transaction${
                         selectedTransactions.size !== 1 ? "s" : ""
                       }`}
-                </button>
+                </Button>
               </div>
             </div>
           )}

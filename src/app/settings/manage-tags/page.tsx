@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { DeleteButton } from '@/components/DeleteButton'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -125,12 +126,12 @@ export default async function ManageTagsPage() {
                 />
               </div>
             </div>
-            <button
+            <Button
               type="submit"
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="w-full"
             >
               Add Tag
-            </button>
+            </Button>
           </div>
         </form>
 
@@ -177,12 +178,13 @@ export default async function ManageTagsPage() {
                       defaultValue={tag.color}
                       className="h-8 w-12 rounded border border-gray-300 cursor-pointer"
                     />
-                    <button
+                    <Button
                       type="submit"
-                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
                     >
                       Update
-                    </button>
+                    </Button>
                   </form>
 
                   {/* Delete Button */}

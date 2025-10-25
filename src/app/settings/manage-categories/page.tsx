@@ -6,6 +6,7 @@ import { DeleteButton } from '@/components/DeleteButton'
 import { getCategoryImage } from '@/lib/categoryImages'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -109,12 +110,11 @@ export default async function ManageCategoriesPage() {
                 />
               </div>
             </div>
-            <button
+            <Button
               type="submit"
-              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
               + Add Category
-            </button>
+            </Button>
           </form>
         </div>
 
@@ -212,12 +212,13 @@ export default async function ManageCategoriesPage() {
                           placeholder="Image URL (optional)"
                           className="w-48"
                         />
-                        <button
+                        <Button
                           type="submit"
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium shadow-sm"
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
                         >
                           + Add
-                        </button>
+                        </Button>
                       </div>
                     </form>
                   </div>

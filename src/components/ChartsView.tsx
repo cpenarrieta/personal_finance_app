@@ -4,6 +4,14 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO, eachMonthOfInterval } from 'date-fns'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface SerializedTransaction {
   id: string
@@ -418,41 +426,43 @@ export function ChartsView({ transactions }: ChartsViewProps) {
         <div className={`flex flex-wrap items-center gap-4 ${filtersDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
           {/* Date Range */}
           <div className="flex-shrink-0">
-            <select
+            <Select
               value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as DateRange)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onValueChange={(value) => setDateRange(value as DateRange)}
               disabled={filtersDisabled}
             >
-              <option value="all">All Time</option>
-              <option value="last30">Last 30 Days</option>
-              <option value="last90">Last 90 Days</option>
-              <option value="thisMonth">This Month</option>
-              <option value="lastMonth">Last Month</option>
-              <option value="custom">Custom Range</option>
-            </select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select date range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="last30">Last 30 Days</SelectItem>
+                <SelectItem value="last90">Last 90 Days</SelectItem>
+                <SelectItem value="thisMonth">This Month</SelectItem>
+                <SelectItem value="lastMonth">Last Month</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Custom Date Range */}
           {dateRange === 'custom' && (
             <>
               <div className="flex-shrink-0">
-                <input
+                <Input
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
                   placeholder="Start date"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={filtersDisabled}
                 />
               </div>
               <div className="flex-shrink-0">
-                <input
+                <Input
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
                   placeholder="End date"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={filtersDisabled}
                 />
               </div>
@@ -461,16 +471,16 @@ export function ChartsView({ transactions }: ChartsViewProps) {
 
           {/* Category/Subcategory Multi-select */}
           <div className="flex-shrink-0 relative" ref={dropdownRef}>
-            <button
+            <Button
+              variant="outline"
               onClick={() => !filtersDisabled && setShowCategoryDropdown(!showCategoryDropdown)}
-              className="px-3 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-2"
               disabled={filtersDisabled}
             >
-              <span className="text-gray-700">Categories...</span>
-              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span>Categories...</span>
+              <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-            </button>
+            </Button>
 
             {/* Dropdown Menu */}
             {showCategoryDropdown && !filtersDisabled && (
@@ -481,11 +491,9 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                     {categories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedCategoryIds.has(category.id)}
-                            onChange={() => toggleCategory(category.id)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            onCheckedChange={() => toggleCategory(category.id)}
                           />
                           <span className="ml-2 text-sm font-medium text-gray-900">{category.name}</span>
                         </label>
@@ -493,11 +501,9 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                           <div className="ml-6 mt-1 space-y-1">
                             {category.subcategories.map((sub) => (
                               <label key={sub.id} className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer">
-                                <input
-                                  type="checkbox"
+                                <Checkbox
                                   checked={selectedSubcategoryIds.has(sub.id)}
-                                  onChange={() => toggleSubcategory(sub.id, category.id)}
-                                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                  onCheckedChange={() => toggleSubcategory(sub.id, category.id)}
                                 />
                                 <span className="ml-2 text-sm text-gray-700">{sub.name}</span>
                               </label>
@@ -512,11 +518,9 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                     <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Exclude Categories</h4>
                     {categories.map((category) => (
                       <label key={category.id} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={excludedCategoryIds.has(category.id)}
-                          onChange={() => toggleExcludedCategory(category.id)}
-                          className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                          onCheckedChange={() => toggleExcludedCategory(category.id)}
                         />
                         <span className="ml-2 text-sm text-gray-900">{category.name}</span>
                       </label>
@@ -528,37 +532,36 @@ export function ChartsView({ transactions }: ChartsViewProps) {
           </div>
 
           {/* Income Toggle */}
-          <label className="flex items-center cursor-pointer flex-shrink-0">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Switch
+              id="income-toggle"
               checked={showIncome}
-              onChange={(e) => setShowIncome(e.target.checked)}
-              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              onCheckedChange={setShowIncome}
               disabled={filtersDisabled}
             />
-            <span className="ml-2 text-sm text-gray-700">Income</span>
-          </label>
+            <Label htmlFor="income-toggle" className="cursor-pointer">Income</Label>
+          </div>
 
           {/* Expenses Toggle */}
-          <label className="flex items-center cursor-pointer flex-shrink-0">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Switch
+              id="expenses-toggle"
               checked={showExpenses}
-              onChange={(e) => setShowExpenses(e.target.checked)}
-              className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+              onCheckedChange={setShowExpenses}
               disabled={filtersDisabled}
             />
-            <span className="ml-2 text-sm text-gray-700">Expenses</span>
-          </label>
+            <Label htmlFor="expenses-toggle" className="cursor-pointer">Expenses</Label>
+          </div>
 
           {/* Clear Filters */}
           {hasActiveFilters && !filtersDisabled && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={clearAllFilters}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0"
             >
               Clear Filters
-            </button>
+            </Button>
           )}
         </div>
 
@@ -569,17 +572,19 @@ export function ChartsView({ transactions }: ChartsViewProps) {
               const category = categories.find(c => c.id === catId)
               if (!category) return null
               return (
-                <span key={catId} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                <Badge key={catId} variant="secondary" className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-100">
                   ✓ {category.name}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => toggleCategory(catId)}
-                    className="hover:bg-blue-200 rounded-full p-0.5"
+                    className="h-auto p-0.5 hover:bg-blue-200"
                   >
                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                  </button>
-                </span>
+                  </Button>
+                </Badge>
               )
             })}
             {Array.from(selectedSubcategoryIds).map(subId => {
@@ -587,34 +592,38 @@ export function ChartsView({ transactions }: ChartsViewProps) {
               const subcategory = category?.subcategories.find(s => s.id === subId)
               if (!subcategory || !category) return null
               return (
-                <span key={subId} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                <Badge key={subId} variant="secondary" className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 hover:bg-indigo-100">
                   ✓ {subcategory.name}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => toggleSubcategory(subId, category.id)}
-                    className="hover:bg-indigo-200 rounded-full p-0.5"
+                    className="h-auto p-0.5 hover:bg-indigo-200"
                   >
                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                  </button>
-                </span>
+                  </Button>
+                </Badge>
               )
             })}
             {Array.from(excludedCategoryIds).map(catId => {
               const category = categories.find(c => c.id === catId)
               if (!category) return null
               return (
-                <span key={`excluded-${catId}`} className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                <Badge key={`excluded-${catId}`} variant="secondary" className="inline-flex items-center gap-1 bg-red-100 text-red-800 hover:bg-red-100">
                   ✕ {category.name}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => toggleExcludedCategory(catId)}
-                    className="hover:bg-red-200 rounded-full p-0.5"
+                    className="h-auto p-0.5 hover:bg-red-200"
                   >
                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                  </button>
-                </span>
+                  </Button>
+                </Badge>
               )
             })}
           </div>
@@ -626,10 +635,11 @@ export function ChartsView({ transactions }: ChartsViewProps) {
         <div className="border-b border-gray-200">
           <nav className="flex overflow-x-auto">
             {tabs.map((tab) => (
-              <button
+              <Button
                 key={tab.id}
+                variant="ghost"
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-shrink-0 px-6 py-4 rounded-none border-b-2 ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600 bg-blue-50'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -637,7 +647,7 @@ export function ChartsView({ transactions }: ChartsViewProps) {
               >
                 <span className="mr-2">{tab.icon}</span>
                 {tab.name}
-              </button>
+              </Button>
             ))}
           </nav>
         </div>
@@ -677,54 +687,54 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                   <div className="mt-6">
                     <h4 className="text-md font-medium mb-3">Detailed Breakdown</h4>
                     <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-left">
                               Subcategory
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            </TableHead>
+                            <TableHead className="text-left">
                               Category
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            </TableHead>
+                            <TableHead className="text-right">
                               Amount
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            </TableHead>
+                            <TableHead className="text-right">
                               Percentage
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {subcategoryData.map((sub, index) => {
                             const total = subcategoryData.reduce((sum, s) => sum + s.value, 0)
                             const percentage = (sub.value / total) * 100
                             return (
-                              <tr key={index}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              <TableRow key={index}>
+                                <TableCell className="font-medium">
                                   <div className="flex items-center gap-2">
                                     {sub.imageUrl && (
                                       <Image src={sub.imageUrl} alt={sub.name} width={20} height={20} className="w-5 h-5 rounded" />
                                     )}
                                     {sub.name}
                                   </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                </TableCell>
+                                <TableCell>
                                   {sub.categoryName}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                </TableCell>
+                                <TableCell className="text-right">
                                   ${sub.value.toLocaleString("en-US", {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2,
                                   })}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                                </TableCell>
+                                <TableCell className="text-right text-muted-foreground">
                                   {percentage.toFixed(1)}%
-                                </td>
-                              </tr>
+                                </TableCell>
+                              </TableRow>
                             )
                           })}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
                 </>
@@ -757,53 +767,53 @@ export function ChartsView({ transactions }: ChartsViewProps) {
                   <div className="mt-6">
                     <h4 className="text-md font-medium mb-3">Monthly Summary</h4>
                     <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-left">
                               Month
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            </TableHead>
+                            <TableHead className="text-right">
                               Income
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            </TableHead>
+                            <TableHead className="text-right">
                               Expenses
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            </TableHead>
+                            <TableHead className="text-right">
                               Net
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {monthlyComparisonData.map((month, index) => (
-                            <tr key={index}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">
                                 {month.month}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 text-right">
+                              </TableCell>
+                              <TableCell className="text-right text-green-600">
                                 ${month.income.toLocaleString("en-US", {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 })}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 text-right">
+                              </TableCell>
+                              <TableCell className="text-right text-red-600">
                                 ${month.expenses.toLocaleString("en-US", {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 })}
-                              </td>
-                              <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${
+                              </TableCell>
+                              <TableCell className={`text-right font-medium ${
                                 month.net >= 0 ? 'text-green-600' : 'text-red-600'
                               }`}>
                                 {month.net >= 0 ? '+' : ''}${month.net.toLocaleString("en-US", {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 })}
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
                 </>
