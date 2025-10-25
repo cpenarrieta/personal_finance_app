@@ -22,17 +22,23 @@ export interface TransactionItemProps {
 
 export interface TransactionDetailViewProps {
   transaction: SerializedTransaction
+  categories: CustomCategoryWithSubcategories[]
+  tags: SerializedTag[]
 }
 
 export interface EditTransactionModalProps {
   transaction: SerializedTransaction
   onClose: () => void
   onSuccess?: () => void
+  categories: CustomCategoryWithSubcategories[]
+  tags: SerializedTag[]
 }
 
 export interface SearchableTransactionListProps {
-  initialTransactions: SerializedTransaction[]
+  transactions: SerializedTransaction[]
   showAccount?: boolean
+  categories: CustomCategoryWithSubcategories[]
+  tags: SerializedTag[]
 }
 
 // ============================================================================

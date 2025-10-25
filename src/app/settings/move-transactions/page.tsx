@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { TransactionItem } from "@/components/TransactionItem";
+import { CategorySelect } from "@/components/ui/category-select";
 import type { SerializedTransaction } from "@/types/transaction";
 
 interface CustomCategory {
@@ -208,22 +209,17 @@ export default function MoveTransactionsPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               From Category
             </label>
-            <select
+            <CategorySelect
               value={fromCategoryId}
-              onChange={(e) => {
-                setFromCategoryId(e.target.value);
+              onChange={(value) => {
+                setFromCategoryId(value);
                 setFromSubcategoryId("");
                 setShowTransactions(false);
               }}
+              categories={categories}
+              placeholder="Select a category..."
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select a category...</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {fromCategoryId && fromCategory && fromCategory.subcategories.length > 0 && (
@@ -273,21 +269,16 @@ export default function MoveTransactionsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   To Category
                 </label>
-                <select
+                <CategorySelect
                   value={toCategoryId}
-                  onChange={(e) => {
-                    setToCategoryId(e.target.value);
+                  onChange={(value) => {
+                    setToCategoryId(value);
                     setToSubcategoryId("");
                   }}
+                  categories={categories}
+                  placeholder="Select a category..."
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select a category...</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {toCategoryId && toCategory && toCategory.subcategories.length > 0 && (

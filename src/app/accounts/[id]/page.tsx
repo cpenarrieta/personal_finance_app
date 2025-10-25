@@ -81,6 +81,39 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
     transactions = txs.map(serializeTransaction)
   }
 
+  // Fetch categories and tags (needed for transaction editing)
+  const [categories, tags] = await Promise.all([
+    prisma.customCategory.findMany({
+      include: {
+        subcategories: {
+          orderBy: { name: 'asc' },
+        },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.tag.findMany({
+      orderBy: { name: 'asc' },
+    }),
+  ])
+
+  // Serialize categories and tags
+  const serializedCategories = categories.map(cat => ({
+    ...cat,
+    createdAt: cat.createdAt.toISOString(),
+    updatedAt: cat.updatedAt.toISOString(),
+    subcategories: cat.subcategories.map(sub => ({
+      ...sub,
+      createdAt: sub.createdAt.toISOString(),
+      updatedAt: sub.updatedAt.toISOString(),
+    })),
+  }))
+  
+  const serializedTags = tags.map(tag => ({
+    ...tag,
+    createdAt: tag.createdAt.toISOString(),
+    updatedAt: tag.updatedAt.toISOString(),
+  }))
+
   return (
     <div className="p-6">
       <div className="mb-4">
@@ -155,7 +188,12 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         /* Banking Transactions Section */
         <div>
           <h3 className="text-lg font-semibold mb-3">Transactions</h3>
-          <SearchableTransactionList transactions={transactions} showAccount={false} />
+          <SearchableTransactionList 
+            transactions={transactions} 
+            showAccount={false}
+            categories={serializedCategories}
+            tags={serializedTags}
+          />
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { SerializedTransaction } from "@/types/transaction";
 import {
@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { CategorySelect } from "@/components/ui/category-select";
 
 interface SplitItem {
   amount: string;
@@ -36,14 +37,15 @@ interface Subcategory {
 interface SplitTransactionModalProps {
   transaction: SerializedTransaction;
   onClose: () => void;
+  categories: Category[];
 }
 
 export function SplitTransactionModal({
   transaction,
   onClose,
+  categories,
 }: SplitTransactionModalProps) {
   const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [splits, setSplits] = useState<SplitItem[]>([
     {
       amount: "",
@@ -64,22 +66,6 @@ export function SplitTransactionModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const originalAmount = Number(transaction.amount);
-
-  // Fetch categories
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const response = await fetch("/api/custom-categories");
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch categories:", err);
-      }
-    }
-    fetchCategories();
-  }, []);
 
   const addSplit = () => {
     setSplits([
@@ -298,20 +284,15 @@ export function SplitTransactionModal({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Category
                     </label>
-                    <select
+                    <CategorySelect
                       value={split.customCategoryId || ""}
-                      onChange={(e) =>
-                        updateSplit(index, "customCategoryId", e.target.value || null)
+                      onChange={(value) =>
+                        updateSplit(index, "customCategoryId", value || null)
                       }
+                      categories={categories}
+                      placeholder="No Category"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">No Category</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
 
                   {/* Subcategory */}

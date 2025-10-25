@@ -75,6 +75,39 @@ export default async function TransactionDetailPage({
     notFound();
   }
 
+  // Fetch categories and tags (needed for transaction editing)
+  const [categories, tags] = await Promise.all([
+    prisma.customCategory.findMany({
+      include: {
+        subcategories: {
+          orderBy: { name: 'asc' },
+        },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.tag.findMany({
+      orderBy: { name: 'asc' },
+    }),
+  ])
+
+  // Serialize categories and tags
+  const serializedCategories = categories.map(cat => ({
+    ...cat,
+    createdAt: cat.createdAt.toISOString(),
+    updatedAt: cat.updatedAt.toISOString(),
+    subcategories: cat.subcategories.map(sub => ({
+      ...sub,
+      createdAt: sub.createdAt.toISOString(),
+      updatedAt: sub.updatedAt.toISOString(),
+    })),
+  }))
+  
+  const serializedTags = tags.map(tag => ({
+    ...tag,
+    createdAt: tag.createdAt.toISOString(),
+    updatedAt: tag.updatedAt.toISOString(),
+  }))
+
   // Serialize transaction for client component
   const serializedTransaction = {
     id: transaction.id,
@@ -185,7 +218,11 @@ export default async function TransactionDetailPage({
         </Link>
       </div>
 
-      <TransactionDetailView transaction={serializedTransaction} />
+      <TransactionDetailView 
+        transaction={serializedTransaction}
+        categories={serializedCategories}
+        tags={serializedTags}
+      />
     </div>
   );
 }

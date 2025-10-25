@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { EditTransactionModal } from './EditTransactionModal'
 import { SplitTransactionModal } from './SplitTransactionModal'
 import type { SerializedTransaction as BaseSerializedTransaction } from '@/types/transaction'
+import type { CustomCategoryWithSubcategories, SerializedTag } from '@/types'
 
 interface Tag {
   id: string
@@ -75,9 +76,11 @@ interface SerializedTransaction {
 
 interface TransactionDetailViewProps {
   transaction: SerializedTransaction
+  categories: CustomCategoryWithSubcategories[]
+  tags: SerializedTag[]
 }
 
-export function TransactionDetailView({ transaction }: TransactionDetailViewProps) {
+export function TransactionDetailView({ transaction, categories, tags }: TransactionDetailViewProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isSplitting, setIsSplitting] = useState(false)
 
@@ -336,6 +339,8 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
         <EditTransactionModal
           transaction={transaction as BaseSerializedTransaction}
           onClose={() => setIsEditing(false)}
+          categories={categories}
+          tags={tags}
         />
       )}
 
@@ -344,6 +349,7 @@ export function TransactionDetailView({ transaction }: TransactionDetailViewProp
         <SplitTransactionModal
           transaction={transaction as BaseSerializedTransaction}
           onClose={() => setIsSplitting(false)}
+          categories={categories}
         />
       )}
     </div>

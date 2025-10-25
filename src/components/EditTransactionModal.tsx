@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import type { EditTransactionModalProps, CustomCategoryWithSubcategories, SerializedTag } from "@/types";
+import type { EditTransactionModalProps } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -14,16 +14,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CATEGORY_GROUPS, getCategoryGroup, getCategorySortOrder } from "@/config/category-groups";
+import { CategorySelect } from "@/components/ui/category-select";
 
 export function EditTransactionModal({
   transaction,
   onClose,
+  categories,
+  tags,
 }: EditTransactionModalProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [categories, setCategories] = useState<CustomCategoryWithSubcategories[]>([]);
-  const [availableTags, setAvailableTags] = useState<SerializedTag[]>([]);
 
   // Form state
   const [name, setName] = useState(transaction.name);
@@ -38,84 +38,10 @@ export function EditTransactionModal({
     transaction.tags?.map((t) => t.id) || []
   );
 
-  // Fetch custom categories and tags
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const response = await fetch("/api/custom-categories");
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
-    }
-
-    async function fetchTags() {
-      try {
-        const response = await fetch("/api/tags");
-        if (response.ok) {
-          const data = await response.json();
-          setAvailableTags(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch tags:", error);
-      }
-    }
-
-    fetchCategories();
-    fetchTags();
-  }, []);
-
 
   // Get subcategories for selected custom category
   const selectedCategory = categories.find((c) => c.id === customCategoryId);
   const availableSubcategories = selectedCategory?.subcategories || [];
-
-  // Group and sort categories
-  const groupedCategories = useMemo(() => {
-    const groups = CATEGORY_GROUPS.map(group => {
-      // Filter categories that belong to this group and sort by config order
-      const groupCategories = categories
-        .filter(cat => getCategoryGroup(cat.name) === group.type)
-        .sort((a, b) => {
-          const orderA = getCategorySortOrder(a.name);
-          const orderB = getCategorySortOrder(b.name);
-          return orderA - orderB;
-        });
-
-      return {
-        type: group.type,
-        categories: groupCategories,
-      };
-    }).filter(group => group.categories.length > 0); // Only show groups with categories
-
-    // Find uncategorized categories (not in any group config)
-    const categorizedIds = new Set(
-      groups.flatMap(g => g.categories.map(c => c.id))
-    );
-    const uncategorized = categories.filter(cat => !categorizedIds.has(cat.id));
-
-    // Add uncategorized categories to the Expenses group at the bottom (alphabetically sorted)
-    if (uncategorized.length > 0) {
-      const expensesGroup = groups.find(g => g.type === 'Expenses');
-      if (expensesGroup) {
-        // Add uncategorized items to end of expenses, sorted alphabetically
-        expensesGroup.categories.push(
-          ...uncategorized.sort((a, b) => a.name.localeCompare(b.name))
-        );
-      } else {
-        // If no expenses group exists, create one with just the uncategorized items
-        groups.push({
-          type: 'Expenses',
-          categories: uncategorized.sort((a, b) => a.name.localeCompare(b.name)),
-        });
-      }
-    }
-
-    return groups;
-  }, [categories]);
 
   const toggleTag = (tagId: string) => {
     setSelectedTagIds((prev) =>
@@ -187,26 +113,16 @@ export function EditTransactionModal({
                 <Label htmlFor="custom-category">
                   Custom Category
                 </Label>
-                <select
+                <CategorySelect
                   id="custom-category"
                   value={customCategoryId}
-                  onChange={(e) => {
-                    setCustomCategoryId(e.target.value);
+                  onChange={(value) => {
+                    setCustomCategoryId(value);
                     setCustomSubcategoryId(""); // Reset subcategory when category changes
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">None</option>
-                  {groupedCategories.map((group) => (
-                    <optgroup key={group.type} label={group.type}>
-                      {group.categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+                  categories={categories}
+                  placeholder="None"
+                />
               </div>
 
               <div className="space-y-2">
@@ -259,7 +175,7 @@ export function EditTransactionModal({
                   Manage Tags
                 </a>
               </div>
-              {availableTags.length === 0 ? (
+              {tags.length === 0 ? (
                 <p className="text-sm text-gray-500">
                   No tags available.{" "}
                   <a
@@ -273,7 +189,7 @@ export function EditTransactionModal({
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {availableTags.map((tag) => (
+                  {tags.map((tag) => (
                     <button
                       key={tag.id}
                       type="button"

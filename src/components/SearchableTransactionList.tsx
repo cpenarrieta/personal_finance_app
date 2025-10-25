@@ -13,12 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import type { SerializedTransaction } from "@/types/transaction";
-
-interface SearchableTransactionListProps {
-  transactions: SerializedTransaction[];
-  showAccount?: boolean; // Whether to show account name in transaction items
-}
+import type { SerializedTransaction, CustomCategoryWithSubcategories, SerializedTag, SearchableTransactionListProps } from "@/types";
 
 type DateRange =
   | "all"
@@ -34,6 +29,8 @@ type SortDirection = "asc" | "desc";
 export function SearchableTransactionList({
   transactions,
   showAccount = true,
+  categories,
+  tags,
 }: SearchableTransactionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>("all");
@@ -60,7 +57,6 @@ export function SearchableTransactionList({
 
   // Tag filter state
   const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(new Set());
-  const [tags, setTags] = useState<{ id: string; name: string; color: string }[]>([]);
 
   // Bulk update state
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(
@@ -69,13 +65,6 @@ export function SearchableTransactionList({
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
   const [bulkCategoryId, setBulkCategoryId] = useState("");
   const [bulkSubcategoryId, setBulkSubcategoryId] = useState("");
-  const [categories, setCategories] = useState<
-    {
-      id: string;
-      name: string;
-      subcategories: { id: string; name: string }[];
-    }[]
-  >([]);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   // Filter transactions based on search query and date range
@@ -245,41 +234,13 @@ export function SearchableTransactionList({
     sortDirection,
   ]);
 
-  // Fetch custom categories, tags and set default exclusions
+  // Set default exclusions (exclude Transfers by default)
   useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const response = await fetch("/api/custom-categories");
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-
-          // Find and exclude "🔁 Transfers" by default
-          const transfersCategory = data.find((cat: { id: string; name: string }) => cat.name === '🔁 Transfers');
-          if (transfersCategory) {
-            setExcludedCategoryIds(new Set([transfersCategory.id]));
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
+    const transfersCategory = categories.find((cat: CustomCategoryWithSubcategories) => cat.name === '🔁 Transfers');
+    if (transfersCategory) {
+      setExcludedCategoryIds(new Set([transfersCategory.id]));
     }
-
-    async function fetchTags() {
-      try {
-        const response = await fetch("/api/tags");
-        if (response.ok) {
-          const data = await response.json();
-          setTags(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch tags:", error);
-      }
-    }
-
-    fetchCategories();
-    fetchTags();
-  }, []);
+  }, [categories]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -1076,6 +1037,8 @@ export function SearchableTransactionList({
         <EditTransactionModal
           transaction={editingTransaction}
           onClose={() => setEditingTransaction(null)}
+          categories={categories}
+          tags={tags}
         />
       )}
     </div>
