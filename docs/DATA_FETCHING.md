@@ -16,12 +16,13 @@ This app uses **Next.js 15 Server Components** for data fetching, following a "f
 ```typescript
 // app/some-page/page.tsx
 import { prisma } from '@/lib/prisma'
+import { PrismaIncludes } from '@/types/prisma'
 
 export default async function SomePage() {
   // Fetch all data in parallel on the server
   const [transactions, categories, tags] = await Promise.all([
     prisma.transaction.findMany({
-      include: TRANSACTION_INCLUDE,
+      include: PrismaIncludes.transaction,
       orderBy: { date: 'desc' },
     }),
     prisma.customCategory.findMany({

@@ -291,21 +291,26 @@ To change the entire app theme, modify these CSS variables or use tools like [tw
 
 #### Migration Status
 
-**Completed:**
-- ✅ Forms (Input, Textarea, Label) in EditTransactionModal, manage-categories, manage-tags
-- ✅ Select dropdowns in SearchableTransactionList (date range, sort by, bulk update)
-- ✅ Badges in TransactionItem and filter chips
-- ✅ Alert in login page
+**Completed (Major Components):**
+- ✅ **ChartsView.tsx** - All filters (Select, Input, Button, Checkbox, Switch), Tables, Tab buttons, Badge filter chips
+- ✅ **SearchableTransactionList.tsx** - All filters, selects, buttons, badges, bulk update panel
+- ✅ **EditTransactionModal.tsx** - Forms (Input, Textarea, Label), Buttons, Badge for tags
+- ✅ **TransactionItem.tsx** - Checkbox for bulk select, Button for details link
+- ✅ **manage-categories/page.tsx** - Button components for add/update actions
+- ✅ **manage-tags/page.tsx** - Button components for add/update actions
+- ✅ **login/page.tsx** - Alert component for error messages
 
-**Pending (for future design overhaul):**
-- ⏳ Tabs in ChartsView
-- ⏳ Tables in analytics
-- ⏳ Popover for category dropdowns
-- ⏳ Switch for income/expense toggles
-- ⏳ RadioGroup for color picker
+**Remaining to Migrate (Optional - for consistency):**
+- ⏳ **SplitTransactionModal.tsx** - Buttons, Input fields, Textarea, Alert, Select (11 instances)
+- ⏳ **TransactionDetailView.tsx** - Buttons for "Split" and "Edit" actions (2 instances)
+- ⏳ **DeleteButton.tsx** - Native button element (1 instance)
+- ⏳ **move-transactions/page.tsx** - Buttons and Select dropdowns (5+ instances)
+- ⏳ **category-groups/page.tsx** - Input, Button, Select components (6+ instances)
 
-**Exceptions (intentionally kept as native HTML):**
-- Category/subcategory selects with `<optgroup>` (shadcn Select doesn't support optgroups)
+**Exceptions (Intentionally Kept as Native HTML):**
+- ✅ Category/subcategory selects with `<optgroup>` (shadcn Select doesn't support optgroups) - EditTransactionModal.tsx line 132-145
+- ✅ Native `<input type="color">` for color picker (no shadcn alternative) - manage-tags/page.tsx
+- ✅ Hidden `<input type="hidden">` in server action forms (standard practice)
 
 #### When Building New Features
 
