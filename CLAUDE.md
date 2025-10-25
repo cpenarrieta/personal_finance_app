@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Quick Reference
+
+📖 **Detailed Documentation:**
+- [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, props pattern, serialization
+- [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
+- [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup, testing
+
 ## Project Overview
 
 A personal finance application built with Next.js 15 (App Router) that integrates with Plaid API to sync financial data (transactions, accounts, investments). Features include transaction categorization (including AI-powered categorization with OpenAI), investment portfolio tracking, custom tags, split transactions, and analytics visualization.
@@ -17,357 +24,325 @@ A personal finance application built with Next.js 15 (App Router) that integrate
 - **UI**: React 19, Tailwind CSS 4, shadcn/ui components, Recharts for visualization
 - **Stock Data**: Alpha Vantage API for pricing
 
-## Development Commands
+## Critical Development Rules
 
-### Running the App
-```bash
-npm run dev          # Never run this command, I will always have this running locally in a separate tab
-npm run build        # Build for production with Turbopack
-npm start            # Start production server
-npm run lint         # Run ESLint
+### 1. Data Fetching Pattern ⭐️ MOST IMPORTANT
+
+**ALWAYS fetch reference data (categories, tags) in Server Components and pass as props.**
+
+```typescript
+// ✅ DO: Server Component fetches data
+export default async function Page() {
+  const [transactions, categories, tags] = await Promise.all([
+    prisma.transaction.findMany(...),
+    prisma.customCategory.findMany({ include: { subcategories: true } }),
+    prisma.tag.findMany(),
+  ])
+
+  return <ClientComponent categories={categories} tags={tags} />
+}
+
+// ❌ DON'T: Client components fetching reference data
+'use client'
+export function ClientComponent() {
+  const [categories, setCategories] = useState([])
+  useEffect(() => {
+    fetch('/api/custom-categories').then(...)  // ❌ NO!
+  }, [])
+}
 ```
 
-### Database Operations
-```bash
-npx prisma migrate dev          # Create and apply migrations
-npx prisma generate             # Generate Prisma Client after schema changes
-npx prisma studio               # Open Prisma Studio database GUI
+**Components that require categories/tags as props:**
+- `SearchableTransactionList`
+- `EditTransactionModal`
+- `SplitTransactionModal`
+- `TransactionDetailView`
+
+👉 See [DATA_FETCHING.md](docs/DATA_FETCHING.md) for complete patterns
+
+### 2. UI Components ⭐️ ALWAYS USE shadcn/ui
+
+**Never create custom form inputs, selects, badges, or alerts. Use shadcn/ui components.**
+
+```typescript
+// ✅ DO: Use shadcn components
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+
+<div className="space-y-2">
+  <Label htmlFor="email">Email</Label>
+  <Input id="email" type="email" />
+</div>
+
+// ❌ DON'T: Use native HTML
+<input type="text" className="..." />
+<span className="badge">Status</span>
 ```
 
-### Financial Data Sync Scripts
-```bash
-npm run sync                    # Incremental sync (uses cursors to fetch only new data)
-```
+**Available shadcn/ui components:**
+Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Switch, Tabs, Table, Popover, Separator, RadioGroup, ScrollArea
 
-### Transaction Categorization
-```bash
-npm run categorize:gpt          # AI-powered categorization using OpenAI, NEVER run this command
-```
+**Exception:** Native `<select>` with `<optgroup>` is allowed (shadcn doesn't support optgroups yet)
 
-## Environment Setup
+**When building new features:**
+1. Check if shadcn component exists before creating custom UI
+2. Install if missing: `npx shadcn@latest add [component-name]`
+3. Keep styling minimal - design overhaul is planned
+4. Always pair Label with form inputs for accessibility
 
-Copy `.env.example` to `.env` and configure:
+### 3. Component Patterns
 
-**Required:**
-- `DATABASE_URL`: PostgreSQL connection string
-- `BETTER_AUTH_SECRET`: Random secret for auth
-- `BETTER_AUTH_URL`: App URL (e.g., http://localhost:3000)
-- `ALLOWED_EMAIL`: Single email address allowed to access the app (email-gated access)
-- OAuth credentials (Google and/or GitHub)
-- Plaid API credentials (`PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`)
+- **Server Components by default** - Use `'use client'` only when needed
+- **Client components**: Forms, interactive elements, Plaid Link, modals
+- **All UI components** in `src/components/ui/` (shadcn/ui)
+- **Use cn() utility** from `src/lib/utils.ts` for conditional Tailwind classes
 
-**Optional:**
-- `OPENAI_API_KEY`: For AI-powered transaction categorization
-- `ALPHA_VANTAGE_API_KEY`: For stock price updates
+### 4. Type Safety
 
-## Architecture
+- Strict TypeScript mode enabled
+- Use `@/*` path alias for imports
+- Serialize Prisma data before passing to client components (convert Dates to ISO strings)
+- Use `Prisma.Decimal` for monetary amounts
 
-### Data Flow
+## Common Tasks
 
-1. **Plaid Integration** (`src/lib/plaid.ts`, `src/lib/sync.ts`):
-   - Items (bank connections) → Accounts → Transactions/Holdings
-   - Uses Plaid's `/transactions/sync` endpoint for incremental banking transaction updates
-   - First sync fetches historical data from 2024-01-01
-   - Investment data: Holdings snapshot + Investment transactions from 2024-01-01
-   - Sync preserves user customizations (account names, custom prices)
+### Adding a New Page with Reference Data
 
-2. **Authentication** (`src/lib/auth.ts`, `src/middleware.ts`):
-   - Better Auth handles OAuth (Google/GitHub)
-   - Email-gated: Only `ALLOWED_EMAIL` can access (enforced in `src/lib/auth-helpers.ts`)
-   - Middleware redirects unauthenticated users to `/login`
-   - Protected routes: All except `/login` and `/api/auth/*`
+1. ✅ Fetch categories/tags in Server Component (page.tsx)
+2. ✅ Serialize data (convert Dates to ISO strings)
+3. ✅ Pass as props to Client Components
+4. ✅ Update TypeScript interfaces in `types/components.ts`
+5. ❌ Never fetch categories/tags in client components with useEffect
 
-3. **Database Schema** (`prisma/schema.prisma`):
-   - **Plaid entities**: Institution → Item → PlaidAccount → Transaction
-   - **Investment entities**: Security, Holding, InvestmentTransaction
-   - **Custom categorization**: CustomCategory ↔ CustomSubcategory ← Transaction
-   - **Organization**: CategoryGroup (for grouping categories), Tag (many-to-many with transactions)
-   - **Split transactions**: Parent-child relationship with `isSplit`, `parentTransactionId`, `originalTransactionId`
-   - **Auth models**: User, Session, Account, Verification (Better Auth)
+### Creating a Form
 
-4. **Transaction Categorization**:
-   - Plaid provides base categories (`category`, `subcategory` fields)
-   - Users can override with custom categories (`customCategoryId`, `customSubcategoryId`)
-   - Rule-based auto-categorization: `scripts/auto-categorize.ts`
-   - AI-powered categorization: `scripts/auto-categorize-gpt.ts` (batches of 20, uses GPT-4o-mini, considers notes/merchant/Plaid categories)
+1. ✅ Use shadcn Input, Label, Select, Textarea components
+2. ✅ Wrap in `<div className="space-y-2">` for spacing
+3. ✅ Pair Label with input using `htmlFor` and `id`
+4. ✅ Use Select for dropdowns (except optgroups)
 
-### Key Features
+### Displaying Status/Tags
 
-- **Split Transactions**: A transaction can be split into multiple child transactions with different categories. Parent is marked `isSplit: true` and hidden from normal views. Children reference `parentTransactionId` and `originalTransactionId`.
-- **Investment Tracking**: Holdings show current quantity, cost basis, institution price. Investment transactions track buys/sells/dividends.
-- **Custom Account Names**: Sync preserves user-renamed accounts (doesn't overwrite `name` field).
-- **Custom Prices**: Sync preserves manually-set holding prices if Plaid returns 0 or null.
-- **Tags**: Many-to-many relationship for flexible transaction labeling.
+1. ✅ Use Badge component for all status indicators
+2. ✅ Use variants: `default`, `secondary`, `destructive`, `outline`
+3. ✅ For custom colors: `<Badge style={{ backgroundColor: color }}>`
 
-### Project Structure
+## Project Structure
 
 ```
 src/
-├── app/                          # Next.js App Router pages
-│   ├── api/                      # API routes
-│   │   ├── auth/[...all]/        # Better Auth catch-all
-│   │   ├── plaid/                # Plaid integration (create link token, sync, exchange token)
-│   │   ├── transactions/         # CRUD, bulk update, split
-│   │   ├── categorize/           # Single transaction categorization
-│   │   ├── categorize-all/       # Bulk categorization
-│   │   ├── tags/                 # Tag management
-│   │   └── custom-categories/    # Category CRUD
-│   ├── accounts/                 # Account list and detail pages
-│   ├── transactions/             # Transaction list and detail pages
-│   ├── investments/              # Holdings and investment transactions
-│   ├── analytics/                # Analytics dashboard
-│   ├── charts/                   # Data visualization
-│   ├── settings/                 # Category/tag management, move transactions
-│   └── login/                    # Login page
-├── components/                   # React components (UI, forms, lists)
-├── lib/                          # Utilities and core logic
-│   ├── auth.ts                   # Better Auth configuration
-│   ├── auth-helpers.ts           # Email gating logic
-│   ├── plaid.ts                  # Plaid client initialization
-│   ├── sync.ts                   # Core sync logic
-│   ├── syncPrices.ts             # Stock price updates via Alpha Vantage
-│   ├── prisma.ts                 # Prisma client singleton
-│   └── utils.ts                  # Utility functions (cn, etc.)
-├── types/                        # TypeScript type definitions
-└── middleware.ts                 # Auth middleware
-scripts/                          # Standalone scripts (sync, categorization)
-prisma/                           # Prisma schema and migrations
+├── app/                    # Next.js App Router pages
+│   ├── api/                # API routes
+│   ├── transactions/       # Transaction pages
+│   ├── accounts/           # Account pages
+│   ├── investments/        # Investment pages
+│   └── settings/           # Settings pages
+├── components/             # React components
+│   ├── ui/                 # shadcn/ui components
+│   └── ...                 # Feature components
+├── lib/                    # Utilities
+│   ├── auth.ts             # Better Auth config
+│   ├── plaid.ts            # Plaid client
+│   ├── sync.ts             # Sync logic
+│   └── prisma.ts           # Prisma client
+└── types/                  # TypeScript types
 ```
 
-## Important Patterns
+## UI Components Strategy
 
-### API Routes
-- All API routes use Next.js App Router conventions (route.ts files)
-- Use `prisma` from `src/lib/prisma.ts` (singleton pattern)
-- Auth checking: Import from `src/lib/auth-helpers.ts`, use `requireAuth()` helper
-- Return `NextResponse.json()` for JSON responses
+### shadcn/ui Component Usage
 
-### Type Safety
-- Strict TypeScript config with all strict flags enabled
-- Use `@/*` path alias for imports (configured in tsconfig.json)
-- Prisma types: Import from `@prisma/client` or use types from `src/types/prisma.ts`
-- Use `Prisma.Decimal` for monetary amounts (not `number`)
+**Always use shadcn/ui components** for all UI elements. This app has migrated to shadcn/ui for consistent theming and design.
 
-### Sync Behavior
-- Incremental sync uses cursors (`lastTransactionsCursor`, `lastInvestmentsCursor`)
-- Historical data fetched on first sync (when no cursor exists)
-- Account balances updated on every sync
-- Holdings are snapshot-based (deleted if no longer in Plaid response)
-- Sync preserves: user-renamed accounts, custom holding prices (when Plaid returns 0)
+#### Available Components
 
-### Component Patterns
-- Server Components by default (use `'use client'` only when needed)
-- Client components: Forms, interactive elements, Plaid Link, modals
-- shadcn/ui components in `src/components/ui/`
-- Use `cn()` utility from `src/lib/utils.ts` for conditional Tailwind classes
+All shadcn/ui components are in `src/components/ui/`:
+- `Input` - Text inputs, date inputs, number inputs
+- `Select` - Dropdowns with SelectTrigger, SelectContent, SelectItem
+- `Label` - Form labels (always pair with inputs)
+- `Textarea` - Multi-line text inputs
+- `Button` - Already in use throughout the app
+- `Badge` - Status indicators, tags, filter chips
+- `Alert` - Error messages, warnings, info boxes
+- `Card` - Container components (already in use)
+- `Dialog` - Modals and dialogs (already in use)
+- `Checkbox` - Boolean inputs
+- `Switch` - Toggle switches
+- `Tabs` - Tabbed navigation
+- `Table` - Data tables
+- `Popover` - Dropdown menus and popovers
+- `Separator` - Visual dividers
+- `RadioGroup` - Radio button groups
+- `ScrollArea` - Scrollable areas
 
-## Data Fetching Strategy
+#### Component Usage Rules
 
-### Overview
-This app uses **Next.js 15 Server Components** for data fetching, following a "fetch once, pass down" pattern. Data is fetched on the server using Prisma and passed as props through the component tree.
-
-### Key Principles
-
-1. **Server-Side Fetching**: Fetch data in Server Components (page.tsx files) using Prisma
-2. **No Client-Side API Calls**: Avoid fetching categories, tags, or other static/reference data from client components
-3. **Props Over Context**: Pass data through props instead of using React Context
-4. **Parallel Fetching**: Use `Promise.all()` to fetch multiple datasets in parallel
-
-### Implementation Pattern
-
-#### Server Component (Page)
+**Forms:**
 ```typescript
-// app/some-page/page.tsx
-import { prisma } from '@/lib/prisma'
+// ✅ DO: Use shadcn/ui components with Label
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
-export default async function SomePage() {
-  // Fetch all data in parallel on the server
-  const [transactions, categories, tags] = await Promise.all([
-    prisma.transaction.findMany({
-      include: TRANSACTION_INCLUDE,
-      orderBy: { date: 'desc' },
-    }),
-    prisma.customCategory.findMany({
-      include: {
-        subcategories: {
-          orderBy: { name: 'asc' },
-        },
-      },
-      orderBy: { name: 'asc' },
-    }),
-    prisma.tag.findMany({
-      orderBy: { name: 'asc' },
-    }),
-  ])
+<div className="space-y-2">
+  <Label htmlFor="email">Email</Label>
+  <Input id="email" type="email" placeholder="Enter email" />
+</div>
 
-  // Serialize data (convert Dates to ISO strings)
-  const serializedTransactions = transactions.map(serializeTransaction)
-  const serializedCategories = categories.map(cat => ({
-    ...cat,
-    createdAt: cat.createdAt.toISOString(),
-    updatedAt: cat.updatedAt.toISOString(),
-    subcategories: cat.subcategories.map(sub => ({
-      ...sub,
-      createdAt: sub.createdAt.toISOString(),
-      updatedAt: sub.updatedAt.toISOString(),
-    })),
-  }))
-  const serializedTags = tags.map(tag => ({
-    ...tag,
-    createdAt: tag.createdAt.toISOString(),
-    updatedAt: tag.updatedAt.toISOString(),
-  }))
-
-  return (
-    <div>
-      <ClientComponent 
-        transactions={serializedTransactions}
-        categories={serializedCategories}
-        tags={serializedTags}
-      />
-    </div>
-  )
-}
+// ❌ DON'T: Use native HTML inputs
+<input type="text" className="..." />
 ```
 
-#### Client Component
+**Select Dropdowns:**
 ```typescript
-// components/ClientComponent.tsx
-'use client'
+// ✅ DO: Use shadcn Select component
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-import type { CustomCategoryWithSubcategories, SerializedTag } from '@/types'
+<Select value={value} onValueChange={setValue}>
+  <SelectTrigger>
+    <SelectValue placeholder="Select option" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="option1">Option 1</SelectItem>
+    <SelectItem value="option2">Option 2</SelectItem>
+  </SelectContent>
+</Select>
 
-interface ClientComponentProps {
-  transactions: SerializedTransaction[]
-  categories: CustomCategoryWithSubcategories[]
-  tags: SerializedTag[]
-}
+// ❌ DON'T: Use native select (except for optgroups - shadcn doesn't support them yet)
+<select className="...">
+  <option>Option 1</option>
+</select>
 
-export function ClientComponent({ transactions, categories, tags }: ClientComponentProps) {
-  // Use the data directly, no fetching needed
-  return (
-    <div>
-      <EditTransactionModal 
-        categories={categories}
-        tags={tags}
-        // ... other props
-      />
-    </div>
-  )
-}
+// ⚠️ EXCEPTION: Native select is OK for optgroups
+<select>
+  <optgroup label="Group 1">
+    <option>Option 1</option>
+  </optgroup>
+</select>
 ```
 
-### Common Reference Data
-
-The following data should be fetched server-side and passed as props:
-
-- **Categories**: `prisma.customCategory.findMany()` with subcategories included
-- **Tags**: `prisma.tag.findMany()`
-- **Accounts**: `prisma.plaidAccount.findMany()` when needed for dropdowns
-
-### Pages Using This Pattern
-
-✅ **Implemented:**
-- `/transactions` - Fetches transactions, categories, tags
-- `/accounts/[id]` - Fetches transactions, categories, tags for a specific account
-- `/transactions/[id]` - Fetches single transaction, categories, tags
-
-### Components Receiving Reference Data
-
-The following components **require** categories/tags as props (do NOT fetch internally):
-
-- `SearchableTransactionList` - needs categories and tags
-- `EditTransactionModal` - needs categories and tags
-- `SplitTransactionModal` - needs categories
-- `TransactionDetailView` - needs categories and tags (passes to modals)
-
-### Benefits of This Approach
-
-1. **Performance**: Data fetched once on the server, not on every modal open
-2. **Caching**: Next.js automatically caches server component data
-3. **No Loading States**: Client components render immediately with data
-4. **Type Safety**: Full TypeScript support with serialized types
-5. **Reduced API Calls**: No `/api/custom-categories` or `/api/tags` calls from client
-
-### When to Use Client-Side Fetching
-
-**Only use client-side API calls for:**
-- User actions that modify data (POST, PATCH, DELETE)
-- Real-time data that needs to refresh
-- Conditional data loading based on user interaction
-
-**Never use client-side fetching for:**
-- Categories (static reference data)
-- Tags (static reference data)  
-- Initial page data (use server components)
-
-### Type Definitions
-
-All component prop interfaces should include categories/tags when needed:
-
+**Status Indicators:**
 ```typescript
-// types/components.ts
-export interface EditTransactionModalProps {
-  transaction: SerializedTransaction
-  onClose: () => void
-  categories: CustomCategoryWithSubcategories[]
-  tags: SerializedTag[]
-}
+// ✅ DO: Use Badge component
+import { Badge } from "@/components/ui/badge"
 
-export interface SearchableTransactionListProps {
-  transactions: SerializedTransaction[]
-  categories: CustomCategoryWithSubcategories[]
-  tags: SerializedTag[]
-  showAccount?: boolean
-}
+<Badge variant="secondary">Pending</Badge>
+<Badge variant="destructive">Error</Badge>
+<Badge className="bg-custom-color">Custom</Badge>
+
+// ❌ DON'T: Use custom spans
+<span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Pending</span>
 ```
 
-### Serialization Guidelines
-
-Always serialize Prisma data before passing to client components:
-
+**Alerts and Messages:**
 ```typescript
-// ❌ Don't do this (Date objects can't be serialized)
-<ClientComponent data={prismaData} />
+// ✅ DO: Use Alert component
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
-// ✅ Do this (serialize dates to strings)
-const serialized = prismaData.map(item => ({
-  ...item,
-  createdAt: item.createdAt.toISOString(),
-  updatedAt: item.updatedAt.toISOString(),
-}))
-<ClientComponent data={serialized} />
+<Alert variant="destructive">
+  <AlertTitle>Error</AlertTitle>
+  <AlertDescription>Something went wrong</AlertDescription>
+</Alert>
+
+// ❌ DON'T: Use custom divs
+<div className="bg-red-50 border border-red-200 p-4">Error message</div>
 ```
 
-### Migration Checklist
+#### Styling Guidelines
 
-When adding a new page or component that needs reference data:
+1. **Keep components unopinionated**: Avoid adding too many custom styles. The app will undergo a design overhaul in the future.
 
-1. ✅ Fetch categories/tags in the Server Component (page.tsx)
-2. ✅ Serialize the data (convert Dates to ISO strings)
-3. ✅ Pass as props to Client Components
-4. ✅ Update TypeScript interfaces in `types/components.ts`
-5. ✅ Remove any `useEffect` fetching from client components
-6. ✅ Remove `/api/custom-categories` and `/api/tags` calls
+2. **Use Tailwind for customization**: Apply Tailwind classes via `className` prop
+   ```typescript
+   <Input className="w-full" />
+   <Badge className="bg-blue-100 text-blue-800">Custom</Badge>
+   ```
 
-## Testing & Debugging
+3. **Dynamic styles with inline styles**: For user-defined colors (tags, etc.)
+   ```typescript
+   <Badge style={{ backgroundColor: tag.color }} className="text-white">
+     {tag.name}
+   </Badge>
+   ```
 
-- Use Prisma Studio to inspect database: `npx prisma studio`
-- Check Plaid webhook logs and transaction sync cursor values in Item table
-- For sync issues: Run `npm run sync:fresh` to clear and re-sync all data
-- View detailed sync logs in terminal output (shows per-item and total statistics)
+4. **Use cn() utility for conditional classes**:
+   ```typescript
+   import { cn } from "@/lib/utils"
 
-## Authentication & Security
+   <Button className={cn("px-4 py-2", isActive && "bg-blue-600")} />
+   ```
 
-- Single-user app: Only `ALLOWED_EMAIL` can access (configured in .env)
-- Email validation happens in `src/lib/auth-helpers.ts` during auth callbacks
-- Session-based auth with cookies (`better-auth.session_token`)
-- All pages except `/login` and `/api/auth/*` require authentication
+#### Theme Customization
 
-## AI Categorization Details
+The app uses CSS variables for theming (defined in `globals.css`). All shadcn components respect these variables:
 
-- Uses OpenAI GPT-4o-mini with JSON response format
-- Processes transactions in batches of 20 (to avoid token limits)
-- Considers: transaction name, merchant, amount (income vs expense), Plaid categories, user notes
-- Only assigns categories with >50% confidence
-- Preserves existing user categorizations unless re-run with `recategorize:all`
+```css
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  /* ... more variables */
+}
+```
+
+To change the entire app theme, modify these CSS variables or use tools like [tweakcn.com](https://tweakcn.com/).
+
+#### Migration Status
+
+**Completed:**
+- ✅ Forms (Input, Textarea, Label) in EditTransactionModal, manage-categories, manage-tags
+- ✅ Select dropdowns in SearchableTransactionList (date range, sort by, bulk update)
+- ✅ Badges in TransactionItem and filter chips
+- ✅ Alert in login page
+
+**Pending (for future design overhaul):**
+- ⏳ Tabs in ChartsView
+- ⏳ Tables in analytics
+- ⏳ Popover for category dropdowns
+- ⏳ Switch for income/expense toggles
+- ⏳ RadioGroup for color picker
+
+**Exceptions (intentionally kept as native HTML):**
+- Category/subcategory selects with `<optgroup>` (shadcn Select doesn't support optgroups)
+
+#### When Building New Features
+
+1. **Always check if a shadcn component exists** before creating custom UI
+2. **Install missing components**: `npx shadcn@latest add [component-name]`
+3. **Follow the patterns** in existing migrated components (see EditTransactionModal, SearchableTransactionList)
+4. **Pair Labels with inputs** for accessibility
+5. **Keep styling minimal** - major design changes are planned
+
+## Quick Commands
+
+```bash
+# Development
+npm run dev              # Start dev server (never run - always running locally)
+npm run build            # Build for production
+
+# Database
+npx prisma migrate dev   # Create migrations
+npx prisma generate      # Generate Prisma Client
+npx prisma studio        # Open database GUI
+
+# Plaid Sync
+npm run sync             # Sync financial data
+```
+
+👉 See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for complete setup and commands
+
+## Authentication
+
+- Single-user app: Only `ALLOWED_EMAIL` can access
+- Better Auth with OAuth (Google/GitHub)
+- Email validation in `src/lib/auth-helpers.ts`
+- All pages require auth except `/login` and `/api/auth/*`
+
+## Important Notes
+
+- **Never run** `npm run dev` (always running locally)
+- **Never run** `npm run categorize:gpt` (AI categorization)
+- **Sync preserves** user customizations (renamed accounts, custom prices)
+- **TypeScript strict mode** enabled - full type safety required
