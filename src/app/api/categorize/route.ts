@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
+import {
+  CustomCategoryWithSubcategories,
+  TransactionWithRelations,
+} from "@/types";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -131,14 +135,14 @@ Return ONLY the JSON array, no other text.`;
 export async function POST() {
   try {
     // Fetch all custom categories with subcategories
-    const categories = await prisma.customCategory.findMany({
+    const categories = (await prisma.customCategory.findMany({
       include: {
         subcategories: true,
       },
-    });
+    })) as CustomCategoryWithSubcategories[];
 
     // Fetch transactions that don't have a custom category
-    const transactions = await prisma.transaction.findMany({
+    const transactions = (await prisma.transaction.findMany({
       where: {
         customCategoryId: null,
       },
@@ -151,7 +155,7 @@ export async function POST() {
         notes: true,
         amount: true,
       },
-    });
+    })) as TransactionWithRelations[];
 
     if (transactions.length === 0) {
       return NextResponse.json({

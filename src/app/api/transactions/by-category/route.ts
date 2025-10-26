@@ -1,32 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import type { Prisma } from '@prisma/client'
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
+import { TransactionWithRelations } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams
-    const categoryId = searchParams.get('categoryId')
-    const subcategoryId = searchParams.get('subcategoryId')
+    const searchParams = request.nextUrl.searchParams;
+    const categoryId = searchParams.get("categoryId");
+    const subcategoryId = searchParams.get("subcategoryId");
 
     if (!categoryId) {
       return NextResponse.json(
-        { error: 'Category ID is required' },
+        { error: "Category ID is required" },
         { status: 400 }
-      )
+      );
     }
 
     // Build the where clause with proper typing
     const whereClause: Prisma.TransactionWhereInput = {
       customCategoryId: categoryId,
       isSplit: false, // Filter out parent transactions that have been split
-    }
+    };
 
     // If subcategoryId is provided, filter by it (can be null for "no subcategory")
     if (subcategoryId !== null && subcategoryId !== undefined) {
-      whereClause.customSubcategoryId = subcategoryId === 'null' ? null : subcategoryId
+      whereClause.customSubcategoryId =
+        subcategoryId === "null" ? null : subcategoryId;
     }
 
-    const transactions = await prisma.transaction.findMany({
+    const transactions = (await prisma.transaction.findMany({
       where: whereClause,
       include: {
         account: {
@@ -39,9 +41,9 @@ export async function GET(request: NextRequest) {
         customSubcategory: true,
       },
       orderBy: {
-        date: 'desc',
+        date: "desc",
       },
-    })
+    })) as TransactionWithRelations[];
 
     // Serialize the transactions (convert Decimal to string)
     const serializedTransactions = transactions.map((t) => ({
@@ -55,14 +57,14 @@ export async function GET(request: NextRequest) {
             creditLimit: null,
           }
         : null,
-    }))
+    }));
 
-    return NextResponse.json(serializedTransactions)
+    return NextResponse.json(serializedTransactions);
   } catch (error) {
-    console.error('Error fetching transactions by category:', error)
+    console.error("Error fetching transactions by category:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch transactions' },
+      { error: "Failed to fetch transactions" },
       { status: 500 }
-    )
+    );
   }
 }

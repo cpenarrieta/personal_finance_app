@@ -12,7 +12,8 @@ import {
 import { PrismaIncludes } from '@/types/prisma'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
-import type { InvestmentTransactionWithRelations, HoldingWithRelations, SerializedTransaction } from '@/types'
+import type { InvestmentTransactionWithRelations, HoldingWithRelations, SerializedTransaction, CustomCategoryWithSubcategories } from '@/types'
+import { Tag } from '@prisma/client'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -95,10 +96,10 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         },
       },
       orderBy: { name: 'asc' },
-    }),
+    }) as CustomCategoryWithSubcategories[],
     prisma.tag.findMany({
       orderBy: { name: 'asc' },
-    }),
+    }) as Tag[],
   ])
 
   // Serialize categories and tags

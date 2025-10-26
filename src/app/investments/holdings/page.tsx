@@ -1,40 +1,41 @@
-import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
-import { syncStockPrices } from '@/lib/syncPrices'
-import { syncHoldingsLogos } from '@/lib/syncHoldingsLogos'
-import { revalidatePath } from 'next/cache'
-import { SyncPricesButton } from '@/components/SyncPricesButton'
-import { SyncHoldingsLogosButton } from '@/components/SyncHoldingsLogosButton'
-import { HoldingsPortfolio } from '@/components/HoldingsPortfolio'
-import type { Metadata } from 'next'
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { syncStockPrices } from "@/lib/syncPrices";
+import { syncHoldingsLogos } from "@/lib/syncHoldingsLogos";
+import { revalidatePath } from "next/cache";
+import { SyncPricesButton } from "@/components/SyncPricesButton";
+import { SyncHoldingsLogosButton } from "@/components/SyncHoldingsLogosButton";
+import { HoldingsPortfolio } from "@/components/HoldingsPortfolio";
+import type { Metadata } from "next";
+import { HoldingWithRelations } from "@/types";
 
 export const metadata: Metadata = {
-  title: 'Investment Holdings',
+  title: "Investment Holdings",
   robots: {
     index: false,
     follow: false,
   },
-}
+};
 
 async function doSyncPrices() {
-  'use server'
-  await syncStockPrices()
-  revalidatePath('/investments/holdings')
+  "use server";
+  await syncStockPrices();
+  revalidatePath("/investments/holdings");
 }
 
 async function doSyncHoldingsLogos() {
-  'use server'
-  await syncHoldingsLogos()
-  revalidatePath('/investments/holdings')
+  "use server";
+  await syncHoldingsLogos();
+  revalidatePath("/investments/holdings");
 }
 
 export default async function HoldingsPage() {
-  const holdings = await prisma.holding.findMany({
+  const holdings = (await prisma.holding.findMany({
     include: { account: true, security: true },
-  })
+  })) as HoldingWithRelations[];
 
   // Serialize holdings for client component
-  const serializedHoldings = holdings.map(h => ({
+  const serializedHoldings = holdings.map((h) => ({
     id: h.id,
     accountId: h.accountId,
     securityId: h.securityId,
@@ -59,7 +60,7 @@ export default async function HoldingsPage() {
       isoCurrencyCode: h.security.isoCurrencyCode,
       logoUrl: h.security.logoUrl,
     },
-  }))
+  }));
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -74,11 +75,15 @@ export default async function HoldingsPage() {
       </div>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Investment Holdings</h1>
-        <p className="text-gray-600 mt-1">Track your portfolio performance and allocation</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Investment Holdings
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Track your portfolio performance and allocation
+        </p>
       </div>
 
       <HoldingsPortfolio holdings={serializedHoldings} />
     </div>
-  )
+  );
 }
