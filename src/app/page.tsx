@@ -78,7 +78,9 @@ export default async function Page() {
   const totalInvestmentValue = holdings.reduce(
     (sum: number, holding: Holding) => {
       const quantity = parseFloat(holding.quantity);
-      const price = holding.institutionPrice ? parseFloat(holding.institutionPrice) : 0;
+      const price = holding.institutionPrice
+        ? parseFloat(holding.institutionPrice)
+        : 0;
       return sum + quantity * price;
     },
     0
@@ -164,9 +166,12 @@ export default async function Page() {
             <div className="divide-y">
               {accounts
                 .filter((account: PlaidAccount) => {
-                  const currentBal = account.currentBalance?.toNumber() || 0;
-                  const availableBal =
-                    account.availableBalance?.toNumber() || 0;
+                  const currentBal = account.currentBalance
+                    ? parseFloat(account.currentBalance)
+                    : 0;
+                  const availableBal = account.availableBalance
+                    ? parseFloat(account.availableBalance)
+                    : 0;
                   return currentBal !== 0 || availableBal !== 0;
                 })
                 .map((account: PlaidAccount) => (
@@ -204,37 +209,41 @@ export default async function Page() {
                           <div className="font-semibold text-gray-900">
                             $
                             {account.currentBalance
-                              .toNumber()
-                              .toLocaleString("en-US", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
+                              ? parseFloat(
+                                  account.currentBalance
+                                ).toLocaleString("en-US", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })
+                              : 0}
                           </div>
                         )}
                         {account.availableBalance !== null &&
-                          account.availableBalance.toNumber() !==
-                            account.currentBalance?.toNumber() && (
+                          parseFloat(account.availableBalance || "0") !==
+                            parseFloat(account.currentBalance || "0") && (
                             <div className="text-sm text-gray-600">
                               Available: $
-                              {account.availableBalance
-                                .toNumber()
-                                .toLocaleString("en-US", {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
-                            </div>
-                          )}
-                        {account.creditLimit !== null && (
-                          <div className="text-xs text-gray-500">
-                            Limit: $
-                            {account.creditLimit
-                              .toNumber()
-                              .toLocaleString("en-US", {
+                              {parseFloat(
+                                account.availableBalance
+                              ).toLocaleString("en-US", {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                               })}
-                          </div>
-                        )}
+                            </div>
+                          )}
+                        {account.creditLimit &&
+                          parseFloat(account.creditLimit) > 0 && (
+                            <div className="text-xs text-gray-500">
+                              Limit: $
+                              {parseFloat(account.creditLimit).toLocaleString(
+                                "en-US",
+                                {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }
+                              )}
+                            </div>
+                          )}
                       </div>
                     </div>
                   </Link>
