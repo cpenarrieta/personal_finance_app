@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
   CustomCategoryWithSubcategories,
-  SerializedCustomSubcategory,
+  CustomSubcategory,
   SerializedTransaction,
 } from "@/types";
 import {
@@ -170,7 +170,7 @@ export function SplitTransactionModal({
 
   const getSubcategoriesForCategory = (
     categoryId: string | null
-  ): SerializedCustomSubcategory[] => {
+  ): CustomSubcategory[] => {
     if (!categoryId) return [];
     const category = categories.find((c) => c.id === categoryId);
     return category?.subcategories || [];

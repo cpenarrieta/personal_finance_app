@@ -1,26 +1,29 @@
-import type { InvestmentTransactionWithRelations } from '@/types'
-import Image from 'next/image'
-import { format } from 'date-fns'
+import type { InvestmentTransactionWithRelations } from "@/types";
+import Image from "next/image";
+import { format } from "date-fns";
 
 interface InvestmentTransactionListProps {
-  transactions: InvestmentTransactionWithRelations[]
-  showAccount?: boolean
+  transactions: InvestmentTransactionWithRelations[];
+  showAccount?: boolean;
 }
 
-export function InvestmentTransactionList({ transactions, showAccount = false }: InvestmentTransactionListProps) {
+export function InvestmentTransactionList({
+  transactions,
+  showAccount = false,
+}: InvestmentTransactionListProps) {
   if (transactions.length === 0) {
-    return <p className="text-gray-500">No investment transactions found.</p>
+    return <p className="text-gray-500">No investment transactions found.</p>;
   }
 
   return (
     <ul className="space-y-2">
-      {transactions.map(t => (
+      {transactions.map((t) => (
         <li key={t.id} className="border p-3 rounded">
           <div className="flex items-start gap-3">
             {t.security?.logoUrl && (
               <Image
                 src={t.security.logoUrl}
-                alt={t.security.tickerSymbol || ''}
+                alt={t.security.tickerSymbol || ""}
                 width={32}
                 height={32}
                 className="w-8 h-8 rounded object-cover flex-shrink-0 mt-0.5"
@@ -28,28 +31,43 @@ export function InvestmentTransactionList({ transactions, showAccount = false }:
             )}
             <div className="flex-1 min-w-0">
               <div className="font-medium">
-                {t.name || t.type} — {t.security?.tickerSymbol || 'N/A'}
+                {t.name || t.type} — {t.security?.tickerSymbol || "N/A"}
               </div>
               <div className="text-sm text-gray-600">
-                {format(t.date, 'MMM d yyyy')} · Type: {t.type}
+                {format(t.date, "MMM d yyyy")} · Type: {t.type}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
-              {t.quantity && <div className="text-sm">Quantity: {t.quantity.toNumber().toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 6,
-              })}</div>}
-              {t.amount && <div className="text-sm">Amount: {t.amount.toNumber().toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}</div>}
-              {t.price && <div className="text-sm">Price: {t.price.toNumber().toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}</div>}
+              {t.quantity && (
+                <div className="text-sm">
+                  Quantity:{" "}
+                  {parseInt(t.quantity, 10).toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 6,
+                  })}
+                </div>
+              )}
+              {t.amount && (
+                <div className="text-sm">
+                  Amount:{" "}
+                  {parseFloat(t.amount).toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              )}
+              {t.price && (
+                <div className="text-sm">
+                  Price:{" "}
+                  {parseFloat(t.price).toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </li>
       ))}
     </ul>
-  )
+  );
 }
