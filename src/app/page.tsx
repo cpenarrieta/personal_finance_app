@@ -144,9 +144,9 @@ export default async function Page() {
                 + Connect New Account
               </button>
             </Link>
-            <SyncButton action={doSync} />
             <SyncTransactionsButton action={doSyncTransactions} />
             <SyncInvestmentsButton action={doSyncInvestments} />
+            <SyncButton action={doSync} />
             <FreshSyncButton action={doFreshSync} />
             <CategorizeButton />
           </div>
