@@ -40,7 +40,7 @@ export function InvestmentTransactionList({
               {t.quantity && (
                 <div className="text-sm">
                   Quantity:{" "}
-                  {parseInt(t.quantity, 10).toLocaleString("en-US", {
+                  {t.quantity.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 6,
                   })}
@@ -49,7 +49,7 @@ export function InvestmentTransactionList({
               {t.amount && (
                 <div className="text-sm">
                   Amount:{" "}
-                  {parseFloat(t.amount).toLocaleString("en-US", {
+                  {t.amount.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
@@ -58,7 +58,7 @@ export function InvestmentTransactionList({
               {t.price && (
                 <div className="text-sm">
                   Price:{" "}
-                  {parseFloat(t.price).toLocaleString("en-US", {
+                  {t.price.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}

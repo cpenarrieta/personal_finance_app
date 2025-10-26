@@ -28,7 +28,7 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
             )}
             <div className="flex-1 min-w-0">
               <div className="font-medium">
-                {t.name} — {parseFloat(t.amount).toLocaleString("en-US", {
+                {t.name} — {t.amount.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })} {t.isoCurrencyCode}

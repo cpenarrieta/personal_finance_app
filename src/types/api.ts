@@ -8,7 +8,7 @@
  * - Request payload types
  *
  * NOTE: Response types now use auto-serialized Prisma types from types/prisma.ts
- * No manual serialization schemas needed - Date and Decimal fields are automatically strings
+ * No manual serialization schemas needed - Date fields are strings, Decimal fields are numbers
  */
 
 import { z } from "zod";
@@ -43,7 +43,7 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
 /**
  * Serialized types - these are now just aliases to auto-serialized Prisma types
- * All Date and Decimal fields are automatically converted to strings by the Prisma extension
+ * Date fields -> strings (ISO format), Decimal fields -> numbers
  */
 
 export type SerializedTag = Tag;
@@ -251,7 +251,7 @@ export type ExchangePublicTokenPayload = z.infer<
 export const transactionByCategorySchema = z.object({
   categoryId: z.string().nullable(),
   categoryName: z.string().nullable(),
-  total: z.string(), // Decimal as string
+  total: z.number(), // Decimal as number
   count: z.number(),
 });
 

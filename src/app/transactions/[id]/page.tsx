@@ -77,7 +77,6 @@ export default async function TransactionDetailPage({
   }
 
   // Fetch categories and tags (needed for transaction editing)
-  // No serialization needed - Prisma extension automatically converts Date/Decimal to strings
   const [categories, tags] = await Promise.all([
     prisma.customCategory.findMany({
       include: {

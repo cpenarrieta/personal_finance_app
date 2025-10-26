@@ -102,9 +102,9 @@ export interface AccountCardProps {
     type: string
     subtype?: string | null
     mask?: string | null
-    currentBalance?: string | null
-    availableBalance?: string | null
-    creditLimit?: string | null
+    currentBalance?: number | null
+    availableBalance?: number | null
+    creditLimit?: number | null
     balanceUpdatedAt?: string | null
   }
   onClick?: (accountId: string) => void

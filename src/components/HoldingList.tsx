@@ -19,7 +19,7 @@ export function HoldingList({
 
   holdings.forEach((h) => {
     if (h.institutionPrice && h.isoCurrencyCode) {
-      const value = parseInt(h.quantity) * parseFloat(h.institutionPrice);
+      const value = h.quantity * h.institutionPrice;
       const currency = h.isoCurrencyCode;
       totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + value;
     }
@@ -65,7 +65,7 @@ export function HoldingList({
               <div className="flex-1 min-w-0">
                 <div className="font-medium">
                   {h.security.tickerSymbol || h.security.name} —{" "}
-                  {parseInt(h.quantity, 10).toLocaleString("en-US", {
+                  {h.quantity.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 6,
                   })}{" "}
@@ -78,7 +78,7 @@ export function HoldingList({
                 {h.costBasis && (
                   <div className="text-sm">
                     Cost Basis:{" "}
-                    {parseFloat(h.costBasis).toLocaleString("en-US", {
+                    {h.costBasis.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -87,7 +87,7 @@ export function HoldingList({
                 {h.institutionPrice && (
                   <div className="text-sm">
                     Price:{" "}
-                    {parseFloat(h.institutionPrice).toLocaleString("en-US", {
+                    {h.institutionPrice.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}

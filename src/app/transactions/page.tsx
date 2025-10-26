@@ -1,43 +1,42 @@
-import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
-import { TransactionsPageClient } from '@/components/TransactionsPageClient'
-import { PrismaIncludes } from '@/types/prisma'
-import type { Metadata } from 'next'
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { TransactionsPageClient } from "@/components/TransactionsPageClient";
+import { PrismaIncludes } from "@/types/prisma";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Banking Transactions',
+  title: "Banking Transactions",
   robots: {
     index: false,
     follow: false,
   },
-}
+};
 
 export default async function TransactionsPage() {
   // Fetch all data in parallel on the server
-  // No serialization needed - Prisma extension automatically converts Date/Decimal to strings
   const [transactions, categories, tags, accounts] = await Promise.all([
     prisma.transaction.findMany({
       where: {
         isSplit: false, // Filter out parent transactions that have been split
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: "desc" },
       include: PrismaIncludes.transaction,
     }),
     prisma.customCategory.findMany({
       include: {
         subcategories: {
-          orderBy: { name: 'asc' },
+          orderBy: { name: "asc" },
         },
       },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     }),
     prisma.tag.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     }),
     prisma.plaidAccount.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     }),
-  ])
+  ]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -54,5 +53,5 @@ export default async function TransactionsPage() {
         accounts={accounts}
       />
     </div>
-  )
+  );
 }

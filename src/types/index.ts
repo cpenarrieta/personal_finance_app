@@ -6,11 +6,11 @@
  *
  * IMPORTANT: All types are auto-serialized!
  * - Date fields are ISO strings
- * - Decimal fields are strings
+ * - Decimal fields are numbers
  * No manual serialization needed thanks to the Prisma extension
  */
 
-// Re-export Prisma types (auto-serialized - Date/Decimal fields are strings)
+// Re-export Prisma types (auto-serialized - Date fields are strings, Decimal fields are numbers)
 export {
   // Base model types (auto-serialized)
   type Transaction,

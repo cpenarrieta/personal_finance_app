@@ -6,7 +6,7 @@
  *
  * IMPORTANT: All types exported from this file are auto-serialized:
  * - Date fields are strings (ISO format)
- * - Decimal fields are strings
+ * - Decimal fields are numbers
  * This is handled automatically by the Prisma extension in lib/prisma.ts
  */
 
@@ -63,7 +63,7 @@ export const transactionWithRelations = Prisma.validator<Prisma.TransactionDefau
 
 /**
  * Transaction with all relations - auto-serialized
- * Date and Decimal fields are automatically converted to strings
+ * Date fields -> strings (ISO format), Decimal fields -> numbers
  */
 export type TransactionWithRelations = Serialized<
   Prisma.TransactionGetPayload<typeof transactionWithRelations>

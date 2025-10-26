@@ -43,63 +43,6 @@ export default async function AnalyticsPage() {
     categoriesPromise,
   ]);
 
-  // Serialize transactions to make them compatible with client components
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const serializedTransactions = transactions.map((t: any) => ({
-    ...t,
-    amount: t.amount.toString(), // Convert Decimal to string
-    date: t.date.toISOString(),
-    authorizedDate: t.authorizedDate?.toISOString() || null,
-    createdAt: t.createdAt.toISOString(),
-    updatedAt: t.updatedAt.toISOString(),
-    account: t.account
-      ? {
-          ...t.account,
-          currentBalance: t.account.currentBalance?.toString() || null,
-          availableBalance: t.account.availableBalance?.toString() || null,
-          creditLimit: t.account.creditLimit?.toString() || null,
-          balanceUpdatedAt: t.account.balanceUpdatedAt?.toISOString() || null,
-          createdAt: t.account.createdAt.toISOString(),
-          updatedAt: t.account.updatedAt.toISOString(),
-        }
-      : null,
-    customCategory: t.customCategory
-      ? {
-          ...t.customCategory,
-          createdAt: t.customCategory.createdAt.toISOString(),
-          updatedAt: t.customCategory.updatedAt.toISOString(),
-        }
-      : null,
-    customSubcategory: t.customSubcategory
-      ? {
-          ...t.customSubcategory,
-          createdAt: t.customSubcategory.createdAt.toISOString(),
-          updatedAt: t.customSubcategory.updatedAt.toISOString(),
-          category: t.customSubcategory.category
-            ? {
-                ...t.customSubcategory.category,
-                createdAt: t.customSubcategory.category.createdAt.toISOString(),
-                updatedAt: t.customSubcategory.category.updatedAt.toISOString(),
-              }
-            : undefined,
-        }
-      : null,
-  }));
-
-  // Serialize categories
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const serializedCategories = categories.map((cat: any) => ({
-    ...cat,
-    createdAt: cat.createdAt.toISOString(),
-    updatedAt: cat.updatedAt.toISOString(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    subcategories: cat.subcategories.map((sub: any) => ({
-      ...sub,
-      createdAt: sub.createdAt.toISOString(),
-      updatedAt: sub.updatedAt.toISOString(),
-    })),
-  }));
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
@@ -118,8 +61,8 @@ export default async function AnalyticsPage() {
       </div>
 
       <TransactionAnalytics
-        transactions={serializedTransactions}
-        categories={serializedCategories}
+        transactions={transactions}
+        categories={categories}
       />
     </div>
   );

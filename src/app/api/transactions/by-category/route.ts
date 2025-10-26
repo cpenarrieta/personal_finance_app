@@ -45,21 +45,7 @@ export async function GET(request: NextRequest) {
       },
     })) as TransactionWithRelations[];
 
-    // Serialize the transactions (convert Decimal to string)
-    const serializedTransactions = transactions.map((t) => ({
-      ...t,
-      amount: t.amount.toString(),
-      account: t.account
-        ? {
-            ...t.account,
-            currentBalance: null,
-            availableBalance: null,
-            creditLimit: null,
-          }
-        : null,
-    }));
-
-    return NextResponse.json(serializedTransactions);
+    return NextResponse.json(transactions);
   } catch (error) {
     console.error("Error fetching transactions by category:", error);
     return NextResponse.json(

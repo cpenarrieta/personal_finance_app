@@ -5,7 +5,7 @@
  *
  * This file exports a Prisma client that automatically converts:
  * - Date fields → ISO strings
- * - Decimal fields → strings
+ * - Decimal fields → numbers
  *
  * This eliminates the need for manual serialization when passing data
  * from server components to client components.

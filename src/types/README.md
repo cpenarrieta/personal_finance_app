@@ -17,7 +17,7 @@ src/types/
 
 All Prisma queries automatically return serialized data:
 - **Date fields** → ISO strings
-- **Decimal fields** → strings
+- **Decimal fields** → numbers
 
 This is handled by the Prisma extension in `src/lib/prisma-extension.ts`. No manual serialization needed!
 
@@ -43,7 +43,7 @@ import { PrismaIncludes } from '@/types'
 const transactions = await prisma.transaction.findMany({
   include: PrismaIncludes.transaction,
 })
-// Type: TransactionWithRelations[] (with Date/Decimal as strings)
+// Type: TransactionWithRelations[] (Date -> strings, Decimal -> numbers)
 
 // Pass directly to client components - no serialization needed!
 return <ClientComponent transactions={transactions} />
@@ -52,19 +52,18 @@ return <ClientComponent transactions={transactions} />
 #### 2. Working with Decimal Fields
 
 ```typescript
-// Decimal fields are now strings
+// Decimal fields are now numbers
 const account = await prisma.plaidAccount.findUnique({ where: { id } })
 
-// Convert to number for calculations
-const balance = account.currentBalance
-  ? parseFloat(account.currentBalance)
-  : 0
+// Use directly for calculations - no parsing needed!
+const balance = account.currentBalance ?? 0
 
-// Create/update with Prisma.Decimal
+// Create/update with Prisma.Decimal or number
 await prisma.plaidAccount.update({
   where: { id },
   data: {
     currentBalance: new Prisma.Decimal("1234.56")
+    // Or just: currentBalance: 1234.56
   },
 })
 ```
@@ -78,12 +77,12 @@ import type { TransactionListProps } from '@/types'
 
 export function TransactionList({ transactions }: TransactionListProps) {
   // transactions is fully typed as TransactionWithRelations[]
-  // Date fields are ISO strings, Decimal fields are strings
+  // Date fields are ISO strings, Decimal fields are numbers
   return (
     <div>
       {transactions.map((t) => (
         <div key={t.id}>
-          {t.name} - ${parseFloat(t.amount).toFixed(2)}
+          {t.name} - ${t.amount.toFixed(2)}
           <span>{new Date(t.date).toLocaleDateString()}</span>
         </div>
       ))}
@@ -208,7 +207,7 @@ export function TransactionList({ transactions, showAccount }: TransactionListPr
 Thanks to the Prisma extension, there's no distinction between "server" and "client" types:
 - Use the same types everywhere: `TransactionWithRelations`, `PlaidAccount`, etc.
 - Date fields are always ISO strings
-- Decimal fields are always strings
+- Decimal fields are always numbers
 - No manual serialization needed!
 
 ### 2. Always Validate API Input

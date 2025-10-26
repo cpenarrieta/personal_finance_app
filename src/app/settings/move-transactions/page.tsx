@@ -11,7 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default async function MoveTransactionsPage() {
-  // No serialization needed - Prisma extension automatically converts Date/Decimal to strings
   const categories = await prisma.customCategory.findMany({
     include: {
       subcategories: {

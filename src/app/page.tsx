@@ -69,18 +69,15 @@ export default async function Page() {
   });
 
   // Calculate total balances
-  // Decimal fields are now strings thanks to Prisma extension
   const totalCurrent = accounts.reduce((sum: number, acc: PlaidAccount) => {
-    return sum + (acc.currentBalance ? parseFloat(acc.currentBalance) : 0);
+    return sum + (acc.currentBalance ?? 0);
   }, 0);
 
   // Calculate total investment value from holdings
   const totalInvestmentValue = holdings.reduce(
     (sum: number, holding: Holding) => {
-      const quantity = parseFloat(holding.quantity);
-      const price = holding.institutionPrice
-        ? parseFloat(holding.institutionPrice)
-        : 0;
+      const quantity = holding.quantity;
+      const price = holding.institutionPrice ?? 0;
       return sum + quantity * price;
     },
     0
@@ -166,12 +163,8 @@ export default async function Page() {
             <div className="divide-y">
               {accounts
                 .filter((account: PlaidAccount) => {
-                  const currentBal = account.currentBalance
-                    ? parseFloat(account.currentBalance)
-                    : 0;
-                  const availableBal = account.availableBalance
-                    ? parseFloat(account.availableBalance)
-                    : 0;
+                  const currentBal = account.currentBalance ?? 0;
+                  const availableBal = account.availableBalance ?? 0;
                   return currentBal !== 0 || availableBal !== 0;
                 })
                 .map((account: PlaidAccount) => (
@@ -209,9 +202,7 @@ export default async function Page() {
                           <div className="font-semibold text-gray-900">
                             $
                             {account.currentBalance
-                              ? parseFloat(
-                                  account.currentBalance
-                                ).toLocaleString("en-US", {
+                              ? account.currentBalance.toLocaleString("en-US", {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 })
@@ -219,23 +210,11 @@ export default async function Page() {
                           </div>
                         )}
                         {account.availableBalance !== null &&
-                          parseFloat(account.availableBalance || "0") !==
-                            parseFloat(account.currentBalance || "0") && (
+                          (account.availableBalance ?? 0) !==
+                            (account.currentBalance ?? 0) && (
                             <div className="text-sm text-gray-600">
                               Available: $
-                              {parseFloat(
-                                account.availableBalance
-                              ).toLocaleString("en-US", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                            </div>
-                          )}
-                        {account.creditLimit &&
-                          parseFloat(account.creditLimit) > 0 && (
-                            <div className="text-xs text-gray-500">
-                              Limit: $
-                              {parseFloat(account.creditLimit).toLocaleString(
+                              {account.availableBalance.toLocaleString(
                                 "en-US",
                                 {
                                   minimumFractionDigits: 2,
@@ -244,6 +223,15 @@ export default async function Page() {
                               )}
                             </div>
                           )}
+                        {account.creditLimit && account.creditLimit > 0 && (
+                          <div className="text-xs text-gray-500">
+                            Limit: $
+                            {account.creditLimit.toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </Link>
