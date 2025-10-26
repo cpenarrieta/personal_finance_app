@@ -12,7 +12,7 @@ import {
 import { PrismaIncludes } from '@/types/prisma'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
-import type { InvestmentTransactionWithRelations, HoldingWithRelations, SerializedTransaction, CustomCategoryWithSubcategories } from '@/types'
+import type { InvestmentTransactionWithRelations, HoldingWithRelations, SerializedTransaction, PrismaCustomCategoryWithSubcategories } from '@/types'
 import { Tag } from '@prisma/client'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -96,7 +96,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         },
       },
       orderBy: { name: 'asc' },
-    }) as CustomCategoryWithSubcategories[],
+    }) as PrismaCustomCategoryWithSubcategories[],
     prisma.tag.findMany({
       orderBy: { name: 'asc' },
     }) as Tag[],
