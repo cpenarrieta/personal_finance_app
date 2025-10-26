@@ -87,3 +87,11 @@ export type Serialized<T> = T extends Date
   : T extends object
   ? { [K in keyof T]: Serialized<T[K]> }
   : T
+
+/**
+ * Manually serialize data before passing to Client Components
+ * Use this when the automatic extension doesn't work (e.g., Server -> Client boundary)
+ */
+export function serializeForClient<T>(data: T): Serialized<T> {
+  return convertDatesAndDecimals(data) as Serialized<T>
+}

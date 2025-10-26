@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { serializeForClient } from "@/lib/prisma-extension";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TransactionDetailView } from "@/components/TransactionDetailView";
@@ -107,9 +108,9 @@ export default async function TransactionDetailPage({
       </div>
 
       <TransactionDetailView
-        transaction={transaction}
-        categories={categories}
-        tags={tags}
+        transaction={serializeForClient(transaction)}
+        categories={serializeForClient(categories)}
+        tags={serializeForClient(tags)}
       />
     </div>
   );

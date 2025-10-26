@@ -70,14 +70,15 @@ export default async function Page() {
 
   // Calculate total balances
   const totalCurrent = accounts.reduce((sum: number, acc: PlaidAccount) => {
-    return sum + (acc.currentBalance ?? 0);
+    const balance = acc.currentBalance ? Number(acc.currentBalance) : 0;
+    return sum + balance;
   }, 0);
 
   // Calculate total investment value from holdings
   const totalInvestmentValue = holdings.reduce(
     (sum: number, holding: Holding) => {
-      const quantity = holding.quantity;
-      const price = holding.institutionPrice ?? 0;
+      const quantity = Number(holding.quantity);
+      const price = Number(holding.institutionPrice ?? 0);
       return sum + quantity * price;
     },
     0
@@ -163,8 +164,8 @@ export default async function Page() {
             <div className="divide-y">
               {accounts
                 .filter((account: PlaidAccount) => {
-                  const currentBal = account.currentBalance ?? 0;
-                  const availableBal = account.availableBalance ?? 0;
+                  const currentBal = Number(account.currentBalance ?? 0);
+                  const availableBal = Number(account.availableBalance ?? 0);
                   return currentBal !== 0 || availableBal !== 0;
                 })
                 .map((account: PlaidAccount) => (
@@ -210,8 +211,8 @@ export default async function Page() {
                           </div>
                         )}
                         {account.availableBalance !== null &&
-                          (account.availableBalance ?? 0) !==
-                            (account.currentBalance ?? 0) && (
+                          Number(account.availableBalance ?? 0) !==
+                            Number(account.currentBalance ?? 0) && (
                             <div className="text-sm text-gray-600">
                               Available: $
                               {account.availableBalance.toLocaleString(

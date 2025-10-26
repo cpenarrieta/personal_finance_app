@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { serializeForClient } from "@/lib/prisma-extension";
 import Link from "next/link";
 import { syncStockPrices } from "@/lib/syncPrices";
 import { syncHoldingsLogos } from "@/lib/syncHoldingsLogos";
@@ -35,32 +36,7 @@ export default async function HoldingsPage() {
   })) as HoldingWithRelations[];
 
   // Serialize holdings for client component
-  const serializedHoldings = holdings.map((h) => ({
-    id: h.id,
-    accountId: h.accountId,
-    securityId: h.securityId,
-    quantity: h.quantity.toString(),
-    costBasis: h.costBasis?.toString() || null,
-    institutionPrice: h.institutionPrice?.toString() || null,
-    institutionPriceAsOf: h.institutionPriceAsOf || null,
-    isoCurrencyCode: h.isoCurrencyCode,
-    createdAt: h.createdAt,
-    updatedAt: h.updatedAt,
-    account: {
-      id: h.account.id,
-      name: h.account.name,
-      type: h.account.type,
-      subtype: h.account.subtype,
-    },
-    security: {
-      id: h.security.id,
-      name: h.security.name,
-      tickerSymbol: h.security.tickerSymbol,
-      type: h.security.type,
-      isoCurrencyCode: h.security.isoCurrencyCode,
-      logoUrl: h.security.logoUrl,
-    },
-  }));
+  const serializedHoldings = serializeForClient(holdings);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">

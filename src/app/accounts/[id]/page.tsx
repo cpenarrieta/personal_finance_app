@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { serializeForClient } from "@/lib/prisma-extension";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SearchableTransactionList } from "@/components/SearchableTransactionList";
@@ -182,7 +183,7 @@ export default async function AccountDetailPage({
           {/* Holdings Section */}
           <div>
             <h3 className="text-lg font-semibold mb-3">Holdings</h3>
-            <HoldingList holdings={holdings} />
+            <HoldingList holdings={serializeForClient(holdings)} />
           </div>
 
           {/* Investment Transactions Section */}
@@ -190,7 +191,7 @@ export default async function AccountDetailPage({
             <h3 className="text-lg font-semibold mb-3">
               Investment Transactions
             </h3>
-            <InvestmentTransactionList transactions={investmentTransactions} />
+            <InvestmentTransactionList transactions={serializeForClient(investmentTransactions)} />
           </div>
         </div>
       ) : (
@@ -198,10 +199,10 @@ export default async function AccountDetailPage({
         <div>
           <h3 className="text-lg font-semibold mb-3">Transactions</h3>
           <SearchableTransactionList
-            transactions={transactions}
+            transactions={serializeForClient(transactions)}
             showAccount={false}
-            categories={categories}
-            tags={tags}
+            categories={serializeForClient(categories)}
+            tags={serializeForClient(tags)}
           />
         </div>
       )}

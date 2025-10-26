@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { serializeForClient } from "@/lib/prisma-extension";
 import Link from "next/link";
 import { TransactionsPageClient } from "@/components/TransactionsPageClient";
 import { PrismaIncludes } from "@/types/prisma";
@@ -38,6 +39,14 @@ export default async function TransactionsPage() {
     }),
   ]);
 
+  // Manually serialize data for Client Component boundary
+  const serializedData = {
+    transactions: serializeForClient(transactions),
+    categories: serializeForClient(categories),
+    tags: serializeForClient(tags),
+    accounts: serializeForClient(accounts),
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
@@ -47,10 +56,10 @@ export default async function TransactionsPage() {
       </div>
 
       <TransactionsPageClient
-        transactions={transactions}
-        categories={categories}
-        tags={tags}
-        accounts={accounts}
+        transactions={serializedData.transactions}
+        categories={serializedData.categories}
+        tags={serializedData.tags}
+        accounts={serializedData.accounts}
       />
     </div>
   );

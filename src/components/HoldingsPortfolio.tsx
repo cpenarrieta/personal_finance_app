@@ -8,9 +8,9 @@ interface SerializedHolding {
   id: string
   accountId: string
   securityId: string
-  quantity: string
-  costBasis: string | null
-  institutionPrice: string | null
+  quantity: number
+  costBasis: number | null
+  institutionPrice: number | null
   institutionPriceAsOf: string | null
   isoCurrencyCode: string | null
   createdAt: string

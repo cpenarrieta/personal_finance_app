@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { serializeForClient } from "@/lib/prisma-extension";
 import Link from "next/link";
 import { InvestmentTransactionList } from "@/components/InvestmentTransactionList";
 import type { Metadata } from 'next';
@@ -24,7 +25,7 @@ export default async function InvTxPage() {
         </Link>
       </div>
       <h2 className="text-xl font-semibold mb-4">Investment Transactions</h2>
-      <InvestmentTransactionList transactions={txs} showAccount={true} />
+      <InvestmentTransactionList transactions={serializeForClient(txs)} showAccount={true} />
     </div>
   );
 }

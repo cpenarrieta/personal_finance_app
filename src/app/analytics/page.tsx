@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { serializeForClient } from "@/lib/prisma-extension";
 import Link from "next/link";
 import { TransactionAnalytics } from "@/components/TransactionAnalytics";
 import type { Metadata } from "next";
@@ -61,8 +62,8 @@ export default async function AnalyticsPage() {
       </div>
 
       <TransactionAnalytics
-        transactions={transactions}
-        categories={categories}
+        transactions={serializeForClient(transactions)}
+        categories={serializeForClient(categories)}
       />
     </div>
   );
