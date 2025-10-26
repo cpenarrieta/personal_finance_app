@@ -11,6 +11,18 @@
  */
 
 import { Prisma } from '@prisma/client'
+import type {
+  Transaction as PrismaTransaction,
+  PlaidAccount as PrismaPlaidAccount,
+  Tag as PrismaTag,
+  CustomCategory as PrismaCustomCategory,
+  CustomSubcategory as PrismaCustomSubcategory,
+  Holding as PrismaHolding,
+  Security as PrismaSecurity,
+  InvestmentTransaction as PrismaInvestmentTransaction,
+  Item as PrismaItem,
+  Institution as PrismaInstitution,
+} from '@prisma/client'
 import type { Serialized } from '@/lib/prisma-extension'
 
 // ============================================================================
@@ -277,16 +289,16 @@ export type CategoryGroupWithItems = Serialized<
  * Auto-serialized versions of base Prisma models (without relations)
  * These are the most commonly used types throughout the application
  */
-export type Transaction = Serialized<Prisma.Transaction>
-export type PlaidAccount = Serialized<Prisma.PlaidAccount>
-export type Tag = Serialized<Prisma.Tag>
-export type CustomCategory = Serialized<Prisma.CustomCategory>
-export type CustomSubcategory = Serialized<Prisma.CustomSubcategory>
-export type Holding = Serialized<Prisma.Holding>
-export type Security = Serialized<Prisma.Security>
-export type InvestmentTransaction = Serialized<Prisma.InvestmentTransaction>
-export type Item = Serialized<Prisma.Item>
-export type Institution = Serialized<Prisma.Institution>
+export type Transaction = Serialized<PrismaTransaction>
+export type PlaidAccount = Serialized<PrismaPlaidAccount>
+export type Tag = Serialized<PrismaTag>
+export type CustomCategory = Serialized<PrismaCustomCategory>
+export type CustomSubcategory = Serialized<PrismaCustomSubcategory>
+export type Holding = Serialized<PrismaHolding>
+export type Security = Serialized<PrismaSecurity>
+export type InvestmentTransaction = Serialized<PrismaInvestmentTransaction>
+export type Item = Serialized<PrismaItem>
+export type Institution = Serialized<PrismaInstitution>
 
 /**
  * Extract just the tag data from a TransactionTag join
