@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { SerializedTransaction, CustomCategoryWithSubcategories, SearchableTransactionListProps } from "@/types";
+import type { SerializedTransaction, TransactionWithRelations, CustomCategoryWithSubcategories, SearchableTransactionListProps } from "@/types";
 
 type DateRange =
   | "all"
@@ -41,7 +41,7 @@ export function SearchableTransactionList({
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [editingTransaction, setEditingTransaction] =
-    useState<SerializedTransaction | null>(null);
+    useState<SerializedTransaction | TransactionWithRelations | null>(null);
   const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(false); // Filter for uncategorized transactions
 
   // Category/Subcategory filter state
@@ -173,7 +173,11 @@ export function SearchableTransactionList({
 
       filtered = filtered.filter((t) => {
         // Search in multiple fields including tags
-        const tagNames = t.tags?.map(tag => tag.name).join(" ") || "";
+        const tagNames = t.tags?.map(transactionTag => {
+          // Handle both serialized tags and join table structure
+          const tag = 'tag' in transactionTag ? (transactionTag as { tag: { id: string; name: string; color: string } }).tag : transactionTag;
+          return tag.name;
+        }).join(" ") || "";
         const searchableText = [
           t.name,
           t.merchantName,

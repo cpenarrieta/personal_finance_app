@@ -5,6 +5,7 @@ import { TransactionDetailView } from "@/components/TransactionDetailView";
 import { headers } from "next/headers";
 import {
   serializeCustomCategory,
+  CustomCategoryWithSubcategories,
   serializeTag,
   TransactionWithRelations,
 } from "@/types";
@@ -16,9 +17,9 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const transaction = await prisma.transaction.findUnique({
+  const transaction = (await prisma.transaction.findUnique({
     where: { id },
-  }) as TransactionWithRelations;
+  })) as TransactionWithRelations;
 
   if (!transaction) {
     return {
@@ -48,7 +49,7 @@ export default async function TransactionDetailPage({
   const headersList = await headers();
   const referer = headersList.get("referer") || "";
 
-  const transaction = await prisma.transaction.findUnique({
+  const transaction = (await prisma.transaction.findUnique({
     where: { id },
     include: {
       account: true,
@@ -74,7 +75,7 @@ export default async function TransactionDetailPage({
         },
       },
     },
-  }) as TransactionWithRelations;
+  })) as TransactionWithRelations;
 
   if (!transaction) {
     notFound();
@@ -210,8 +211,12 @@ export default async function TransactionDetailPage({
       </div>
 
       <TransactionDetailView
-        transaction={serializedTransaction}
-        categories={serializedCategories}
+        transaction={
+          serializedTransaction as unknown as TransactionWithRelations
+        }
+        categories={
+          serializedCategories as unknown as CustomCategoryWithSubcategories[]
+        }
         tags={serializedTags}
       />
     </div>

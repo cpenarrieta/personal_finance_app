@@ -5,6 +5,7 @@
  */
 
 import type { SerializedTransaction, SerializedTag, SerializedHolding, SerializedInvestmentTransaction, CustomCategoryWithSubcategories } from './api'
+import type { TransactionWithRelations } from './prisma'
 
 // ============================================================================
 // TRANSACTION COMPONENT TYPES
@@ -27,7 +28,7 @@ export interface TransactionDetailViewProps {
 }
 
 export interface EditTransactionModalProps {
-  transaction: SerializedTransaction
+  transaction: SerializedTransaction | TransactionWithRelations
   onClose: () => void
   onSuccess?: () => void
   categories: CustomCategoryWithSubcategories[]

@@ -7,14 +7,14 @@ import { getCategoryImage } from "@/lib/categoryImages";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import type { SerializedTransaction } from "@/types/transaction";
+import type { TransactionWithRelations, SerializedTransaction } from "@/types";
 
 interface TransactionItemProps {
-  transaction: SerializedTransaction;
+  transaction: TransactionWithRelations | SerializedTransaction;
   showBulkUpdate?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
-  onEdit?: (transaction: SerializedTransaction) => void;
+  onEdit?: (transaction: TransactionWithRelations | SerializedTransaction) => void;
   showAccount?: boolean; // Whether to display account name
 }
 
@@ -112,15 +112,19 @@ export function TransactionItem({
               {/* Tags */}
               {t.tags && t.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {t.tags.map((tag) => (
-                    <Badge
-                      key={tag.id}
-                      className="text-white"
-                      style={{ backgroundColor: tag.color }}
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
+                  {t.tags.map((transactionTag) => {
+                    // Handle both serialized tags and join table structure
+                    const tag = 'tag' in transactionTag ? transactionTag.tag : transactionTag;
+                    return (
+                      <Badge
+                        key={tag.id}
+                        className="text-white"
+                        style={{ backgroundColor: tag.color }}
+                      >
+                        {tag.name}
+                      </Badge>
+                    );
+                  })}
                 </div>
               )}
             </div>
