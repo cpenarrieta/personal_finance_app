@@ -42,10 +42,10 @@ export default async function HoldingsPage() {
     quantity: h.quantity.toString(),
     costBasis: h.costBasis?.toString() || null,
     institutionPrice: h.institutionPrice?.toString() || null,
-    institutionPriceAsOf: h.institutionPriceAsOf?.toISOString() || null,
+    institutionPriceAsOf: h.institutionPriceAsOf || null,
     isoCurrencyCode: h.isoCurrencyCode,
-    createdAt: h.createdAt.toISOString(),
-    updatedAt: h.updatedAt.toISOString(),
+    createdAt: h.createdAt,
+    updatedAt: h.updatedAt,
     account: {
       id: h.account.id,
       name: h.account.name,

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
-import { PrismaTagWithCount } from "@/types";
+import { TagWithCount } from "@/types";
 
 export const metadata: Metadata = {
   title: "Manage Tags",
@@ -56,7 +56,7 @@ export default async function ManageTagsPage() {
       },
     },
     orderBy: { name: "asc" },
-  })) as PrismaTagWithCount[];
+  })) as TagWithCount[];
 
   // Predefined color palette
   const colorPalette = [
