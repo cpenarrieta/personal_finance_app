@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 }
 
 export default async function ChartsPage() {
-  const transactions = await prisma.transaction.findMany({
+  // Fetch all transactions and categories in parallel
+  const transactionsPromise = prisma.transaction.findMany({
     where: {
       isSplit: false, // Filter out parent transactions that have been split
     },
@@ -28,8 +29,20 @@ export default async function ChartsPage() {
     },
   })
 
+  const categoriesPromise = prisma.customCategory.findMany({
+    include: {
+      subcategories: {
+        orderBy: { name: 'asc' },
+      },
+    },
+    orderBy: { name: 'asc' },
+  })
+
+  const [transactions, categories] = await Promise.all([transactionsPromise, categoriesPromise])
+
   // Serialize transactions to make them compatible with client components
-  const serializedTransactions = transactions.map(t => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serializedTransactions = transactions.map((t: any) => ({
     ...t,
     amount: t.amount.toString(),
     date: t.date.toISOString(),
@@ -62,6 +75,20 @@ export default async function ChartsPage() {
     } : null,
   }))
 
+  // Serialize categories
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serializedCategories = categories.map((cat: any) => ({
+    ...cat,
+    createdAt: cat.createdAt.toISOString(),
+    updatedAt: cat.updatedAt.toISOString(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subcategories: cat.subcategories.map((sub: any) => ({
+      ...sub,
+      createdAt: sub.createdAt.toISOString(),
+      updatedAt: sub.updatedAt.toISOString(),
+    })),
+  }))
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
@@ -75,7 +102,7 @@ export default async function ChartsPage() {
         <p className="text-gray-600 mt-1">Visualize your spending and income patterns</p>
       </div>
 
-      <ChartsView transactions={serializedTransactions} />
+      <ChartsView transactions={serializedTransactions} categories={serializedCategories} />
     </div>
   )
 }

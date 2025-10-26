@@ -76,8 +76,25 @@ interface SerializedTransaction {
   } | null
 }
 
+interface CustomCategoryWithSubcategories {
+  id: string
+  name: string
+  imageUrl: string | null
+  createdAt: string
+  updatedAt: string
+  subcategories: {
+    id: string
+    name: string
+    imageUrl: string | null
+    categoryId: string
+    createdAt: string
+    updatedAt: string
+  }[]
+}
+
 interface ChartsViewProps {
   transactions: SerializedTransaction[]
+  categories: CustomCategoryWithSubcategories[]
 }
 
 type DateRange = 'all' | 'last30' | 'last90' | 'thisMonth' | 'lastMonth' | 'custom'
@@ -85,41 +102,23 @@ type ChartTab = 'subcategories' | 'monthly-comparison' | 'spending-trends' | 'in
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16']
 
-export function ChartsView({ transactions }: ChartsViewProps) {
+export function ChartsView({ transactions, categories }: ChartsViewProps) {
   const [activeTab, setActiveTab] = useState<ChartTab>('subcategories')
   const [dateRange, setDateRange] = useState<DateRange>('last30')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set())
   const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<Set<string>>(new Set())
-  const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(new Set())
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
   const [showIncome, setShowIncome] = useState(false)
   const [showExpenses, setShowExpenses] = useState(true)
-  const [categories, setCategories] = useState<{ id: string; name: string; subcategories: { id: string; name: string }[] }[]>([])
-
-  // Fetch custom categories and set default exclusions
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const response = await fetch('/api/custom-categories')
-        if (response.ok) {
-          const data = await response.json()
-          setCategories(data)
-
-          // Find and exclude "🔁 Transfers" by default
-          const transfersCategory = data.find((cat: { id: string; name: string }) => cat.name === '🔁 Transfers')
-          if (transfersCategory) {
-            setExcludedCategoryIds(new Set([transfersCategory.id]))
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch categories:', error)
-      }
-    }
-    fetchCategories()
-  }, [])
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  
+  // Set default exclusions (🔁 Transfers) on mount
+  const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(() => {
+    const transfersCategory = categories.find(cat => cat.name === '🔁 Transfers')
+    return transfersCategory ? new Set([transfersCategory.id]) : new Set()
+  })
 
   // Close dropdown when clicking outside
   useEffect(() => {

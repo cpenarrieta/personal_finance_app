@@ -1,13 +1,13 @@
 /**
  * Transaction-specific utilities and serialization functions
  *
- * This file contains utility functions for working with transactions.
+ * This file contains utility functions for working with transactions and categories.
  * Type definitions have been moved to centralized type files.
  */
 
 import type { TransactionWithRelations } from './prisma'
-import type { SerializedTransaction } from './api'
-import { PrismaIncludes } from './prisma'
+import type { SerializedTransaction, CustomCategoryWithSubcategories } from './api'
+import { PrismaIncludes, type CustomCategoryWithSubcategories as PrismaCustomCategoryWithSubcategories } from './prisma'
 
 /**
  * Serializes a Prisma transaction with relations to a plain object
@@ -85,13 +85,32 @@ export function serializeTransaction(t: TransactionWithRelations): SerializedTra
 }
 
 /**
+ * Serializes a Prisma custom category with subcategories to a plain object
+ * suitable for passing to client components
+ */
+export function serializeCustomCategory(
+  category: PrismaCustomCategoryWithSubcategories
+): CustomCategoryWithSubcategories {
+  return {
+    id: category.id,
+    name: category.name,
+    imageUrl: category.imageUrl,
+    createdAt: category.createdAt.toISOString(),
+    updatedAt: category.updatedAt.toISOString(),
+    subcategories: category.subcategories.map((sub) => ({
+      id: sub.id,
+      name: sub.name,
+      imageUrl: sub.imageUrl,
+      createdAt: sub.createdAt.toISOString(),
+      updatedAt: sub.updatedAt.toISOString(),
+    })),
+  }
+}
+
+/**
  * Standard transaction include clause for Prisma queries
  * Use this to ensure consistent data fetching across the app
  *
  * @deprecated Use PrismaIncludes.transaction from './prisma' instead
  */
 export const TRANSACTION_INCLUDE = PrismaIncludes.transaction
-
-// Re-export types for backwards compatibility
-export type { SerializedTransaction, SerializedTag } from './api'
-export type { TransactionWithRelations } from './prisma'
