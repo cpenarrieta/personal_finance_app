@@ -11,32 +11,31 @@
  * No manual serialization schemas needed - Date and Decimal fields are automatically strings
  */
 
-import { z } from 'zod'
+import { z } from "zod";
 import type {
   Tag,
   PlaidAccount,
-  CustomCategoryWithSubcategories,
   TransactionWithRelations,
   HoldingWithRelations,
   InvestmentTransactionWithRelations,
-} from './prisma'
+} from "./prisma";
 
 // ============================================================================
 // GENERIC API RESPONSE TYPES
 // ============================================================================
 
 export type ApiSuccess<T> = {
-  success: true
-  data: T
-}
+  success: true;
+  data: T;
+};
 
 export type ApiError = {
-  success: false
-  error: string
-  details?: unknown
-}
+  success: false;
+  error: string;
+  details?: unknown;
+};
 
-export type ApiResponse<T> = ApiSuccess<T> | ApiError
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
 // ============================================================================
 // SERIALIZED TYPE ALIASES (Auto-serialized via Prisma Extension)
@@ -47,12 +46,13 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError
  * All Date and Decimal fields are automatically converted to strings by the Prisma extension
  */
 
-export type SerializedTag = Tag
-export type SerializedPlaidAccount = PlaidAccount
-export type SerializedPlaidAccountFull = PlaidAccount
-export type SerializedTransaction = TransactionWithRelations
-export type SerializedHolding = HoldingWithRelations
-export type SerializedInvestmentTransaction = InvestmentTransactionWithRelations
+export type SerializedTag = Tag;
+export type SerializedPlaidAccount = PlaidAccount;
+export type SerializedPlaidAccountFull = PlaidAccount;
+export type SerializedTransaction = TransactionWithRelations;
+export type SerializedHolding = HoldingWithRelations;
+export type SerializedInvestmentTransaction =
+  InvestmentTransactionWithRelations;
 
 // ============================================================================
 // TRANSACTION API SCHEMAS
@@ -77,9 +77,9 @@ export const createTransactionSchema = z.object({
   customSubcategoryId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
-})
+});
 
-export type CreateTransactionPayload = z.infer<typeof createTransactionSchema>
+export type CreateTransactionPayload = z.infer<typeof createTransactionSchema>;
 
 /**
  * Schema for updating a transaction
@@ -92,9 +92,9 @@ export const updateTransactionSchema = z.object({
   customSubcategoryId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
-})
+});
 
-export type UpdateTransactionPayload = z.infer<typeof updateTransactionSchema>
+export type UpdateTransactionPayload = z.infer<typeof updateTransactionSchema>;
 
 /**
  * Schema for bulk updating transactions
@@ -104,9 +104,11 @@ export const bulkUpdateTransactionsSchema = z.object({
   customCategoryId: z.string().nullable().optional(),
   customSubcategoryId: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
-})
+});
 
-export type BulkUpdateTransactionsPayload = z.infer<typeof bulkUpdateTransactionsSchema>
+export type BulkUpdateTransactionsPayload = z.infer<
+  typeof bulkUpdateTransactionsSchema
+>;
 
 // ============================================================================
 // CATEGORY API SCHEMAS
@@ -118,9 +120,11 @@ export type BulkUpdateTransactionsPayload = z.infer<typeof bulkUpdateTransaction
 export const createCustomCategorySchema = z.object({
   name: z.string().min(1).max(100),
   imageUrl: z.string().url().nullable().optional(),
-})
+});
 
-export type CreateCustomCategoryPayload = z.infer<typeof createCustomCategorySchema>
+export type CreateCustomCategoryPayload = z.infer<
+  typeof createCustomCategorySchema
+>;
 
 /**
  * Schema for updating a custom category
@@ -128,9 +132,11 @@ export type CreateCustomCategoryPayload = z.infer<typeof createCustomCategorySch
 export const updateCustomCategorySchema = z.object({
   name: z.string().min(1).max(100).optional(),
   imageUrl: z.string().url().nullable().optional(),
-})
+});
 
-export type UpdateCustomCategoryPayload = z.infer<typeof updateCustomCategorySchema>
+export type UpdateCustomCategoryPayload = z.infer<
+  typeof updateCustomCategorySchema
+>;
 
 /**
  * Schema for creating a custom subcategory
@@ -139,15 +145,17 @@ export const createCustomSubcategorySchema = z.object({
   categoryId: z.string(),
   name: z.string().min(1).max(100),
   imageUrl: z.string().url().nullable().optional(),
-})
+});
 
-export type CreateCustomSubcategoryPayload = z.infer<typeof createCustomSubcategorySchema>
+export type CreateCustomSubcategoryPayload = z.infer<
+  typeof createCustomSubcategorySchema
+>;
 
 /**
  * Custom category with subcategories (API response)
  * Now uses auto-serialized Prisma type - no Zod schema needed
  */
-export type { CustomCategoryWithSubcategories } from './prisma'
+export type { CustomCategoryWithSubcategories } from "./prisma";
 
 // ============================================================================
 // TAG API SCHEMAS
@@ -158,26 +166,29 @@ export type { CustomCategoryWithSubcategories } from './prisma'
  */
 export const createTagSchema = z.object({
   name: z.string().min(1).max(50),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color'),
-})
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color"),
+});
 
-export type CreateTagPayload = z.infer<typeof createTagSchema>
+export type CreateTagPayload = z.infer<typeof createTagSchema>;
 
 /**
  * Schema for updating a tag
  */
 export const updateTagSchema = z.object({
   name: z.string().min(1).max(50).optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color').optional(),
-})
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color")
+    .optional(),
+});
 
-export type UpdateTagPayload = z.infer<typeof updateTagSchema>
+export type UpdateTagPayload = z.infer<typeof updateTagSchema>;
 
 /**
  * Tag with count (API response)
  * Now uses auto-serialized Prisma type - no Zod schema needed
  */
-export type { TagWithCount } from './prisma'
+export type { TagWithCount } from "./prisma";
 
 // ============================================================================
 // PLAID API SCHEMAS
@@ -189,9 +200,11 @@ export type { TagWithCount } from './prisma'
 export const createLinkTokenResponseSchema = z.object({
   link_token: z.string(),
   expiration: z.string(),
-})
+});
 
-export type CreateLinkTokenResponse = z.infer<typeof createLinkTokenResponseSchema>
+export type CreateLinkTokenResponse = z.infer<
+  typeof createLinkTokenResponseSchema
+>;
 
 /**
  * Schema for public token exchange request
@@ -202,9 +215,11 @@ export const exchangePublicTokenSchema = z.object({
     institution_id: z.string(),
     name: z.string(),
   }),
-})
+});
 
-export type ExchangePublicTokenPayload = z.infer<typeof exchangePublicTokenSchema>
+export type ExchangePublicTokenPayload = z.infer<
+  typeof exchangePublicTokenSchema
+>;
 
 // ============================================================================
 // HOLDING API SCHEMAS
@@ -238,9 +253,9 @@ export const transactionByCategorySchema = z.object({
   categoryName: z.string().nullable(),
   total: z.string(), // Decimal as string
   count: z.number(),
-})
+});
 
-export type TransactionByCategory = z.infer<typeof transactionByCategorySchema>
+export type TransactionByCategory = z.infer<typeof transactionByCategorySchema>;
 
 /**
  * Schema for date range query
@@ -248,9 +263,9 @@ export type TransactionByCategory = z.infer<typeof transactionByCategorySchema>
 export const dateRangeQuerySchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-})
+});
 
-export type DateRangeQuery = z.infer<typeof dateRangeQuerySchema>
+export type DateRangeQuery = z.infer<typeof dateRangeQuerySchema>;
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -260,14 +275,17 @@ export type DateRangeQuery = z.infer<typeof dateRangeQuerySchema>
  * Helper to create a success response
  */
 export function createSuccessResponse<T>(data: T): ApiSuccess<T> {
-  return { success: true, data }
+  return { success: true, data };
 }
 
 /**
  * Helper to create an error response
  */
-export function createErrorResponse(error: string, details?: unknown): ApiError {
-  return { success: false, error, details }
+export function createErrorResponse(
+  error: string,
+  details?: unknown
+): ApiError {
+  return { success: false, error, details };
 }
 
 /**
@@ -278,8 +296,8 @@ export async function parseRequestBody<T extends z.ZodType>(
   request: Request,
   schema: T
 ): Promise<z.infer<T>> {
-  const body = await request.json()
-  return schema.parse(body)
+  const body = await request.json();
+  return schema.parse(body);
 }
 
 /**
@@ -290,26 +308,25 @@ export async function safeParseRequestBody<T extends z.ZodType>(
   request: Request,
   schema: T
 ): Promise<
-  | { success: true; data: z.infer<T> }
-  | { success: false; error: z.ZodError }
+  { success: true; data: z.infer<T> } | { success: false; error: z.ZodError }
 > {
   try {
-    const body = await request.json()
-    const result = schema.safeParse(body)
+    const body = await request.json();
+    const result = schema.safeParse(body);
     if (result.success) {
-      return { success: true, data: result.data }
+      return { success: true, data: result.data };
     }
-    return { success: false, error: result.error }
+    return { success: false, error: result.error };
   } catch {
     return {
       success: false,
       error: new z.ZodError([
         {
-          code: 'custom',
+          code: "custom",
           path: [],
-          message: 'Invalid JSON',
+          message: "Invalid JSON",
         },
       ]),
-    }
+    };
   }
 }
