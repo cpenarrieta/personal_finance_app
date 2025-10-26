@@ -1,4 +1,4 @@
-name: Build Next.js Project
+name: Type Check and Build
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  type-check-and-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,11 +27,15 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      # Step 4: Generate Prisma Client (required for Next.js build)
+      # Step 4: Generate Prisma Client (required for type-checking and Next.js build)
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      # Step 5: Run the build command defined in your package.json
+      # Step 5: Run type-checking
+      - name: Type Check
+        run: npm run type-check
+
+      # Step 6: Run the build command defined in your package.json
       - name: Build Project
         run: npm run build
 
