@@ -1,12 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { TransactionsPageClient } from '@/components/TransactionsPageClient'
-import {
-  serializeTransaction,
-  serializeCustomCategory,
-  serializeTag,
-  serializePlaidAccount,
-} from '@/types'
 import { PrismaIncludes } from '@/types/prisma'
 import type { Metadata } from 'next'
 
@@ -20,7 +14,8 @@ export const metadata: Metadata = {
 
 export default async function TransactionsPage() {
   // Fetch all data in parallel on the server
-  const [txs, categories, tags, accounts] = await Promise.all([
+  // No serialization needed - Prisma extension automatically converts Date/Decimal to strings
+  const [transactions, categories, tags, accounts] = await Promise.all([
     prisma.transaction.findMany({
       where: {
         isSplit: false, // Filter out parent transactions that have been split
@@ -44,12 +39,6 @@ export default async function TransactionsPage() {
     }),
   ])
 
-  // Serialize all data for client components
-  const serializedTransactions = txs.map(serializeTransaction)
-  const serializedCategories = categories.map(serializeCustomCategory)
-  const serializedTags = tags.map(serializeTag)
-  const serializedAccounts = accounts.map(serializePlaidAccount)
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
@@ -59,10 +48,10 @@ export default async function TransactionsPage() {
       </div>
 
       <TransactionsPageClient
-        transactions={serializedTransactions}
-        categories={serializedCategories}
-        tags={serializedTags}
-        accounts={serializedAccounts}
+        transactions={transactions}
+        categories={categories}
+        tags={tags}
+        accounts={accounts}
       />
     </div>
   )

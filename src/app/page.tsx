@@ -14,7 +14,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import type { Metadata } from "next";
-import { Holding, PlaidAccount } from "@prisma/client";
+import type { Holding, PlaidAccount } from "@/types";
 
 export const metadata: Metadata = {
   title: "Personal Finance Dashboard",
@@ -69,15 +69,16 @@ export default async function Page() {
   });
 
   // Calculate total balances
+  // Decimal fields are now strings thanks to Prisma extension
   const totalCurrent = accounts.reduce((sum: number, acc: PlaidAccount) => {
-    return sum + (acc.currentBalance?.toNumber() || 0);
+    return sum + (acc.currentBalance ? parseFloat(acc.currentBalance) : 0);
   }, 0);
 
   // Calculate total investment value from holdings
   const totalInvestmentValue = holdings.reduce(
     (sum: number, holding: Holding) => {
-      const quantity = holding.quantity.toNumber();
-      const price = holding.institutionPrice?.toNumber() || 0;
+      const quantity = parseFloat(holding.quantity);
+      const price = holding.institutionPrice ? parseFloat(holding.institutionPrice) : 0;
       return sum + quantity * price;
     },
     0

@@ -2,13 +2,24 @@
  * API request/response types and Zod schemas
  *
  * This file contains:
- * - Zod schemas for runtime validation
+ * - Zod schemas for runtime validation of API requests
  * - TypeScript types inferred from schemas
  * - API response wrappers
  * - Request payload types
+ *
+ * NOTE: Response types now use auto-serialized Prisma types from types/prisma.ts
+ * No manual serialization schemas needed - Date and Decimal fields are automatically strings
  */
 
 import { z } from 'zod'
+import type {
+  Tag,
+  PlaidAccount,
+  CustomCategoryWithSubcategories,
+  TransactionWithRelations,
+  HoldingWithRelations,
+  InvestmentTransactionWithRelations,
+} from './prisma'
 
 // ============================================================================
 // GENERIC API RESPONSE TYPES
@@ -28,103 +39,23 @@ export type ApiError = {
 export type ApiResponse<T> = ApiSuccess<T> | ApiError
 
 // ============================================================================
-// SERIALIZATION SCHEMAS
+// SERIALIZED TYPE ALIASES (Auto-serialized via Prisma Extension)
 // ============================================================================
 
 /**
- * Schema for serialized tag
+ * Serialized types - these are now just aliases to auto-serialized Prisma types
+ * All Date and Decimal fields are automatically converted to strings by the Prisma extension
  */
-export const serializedTagSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  color: z.string(),
-})
 
-export type SerializedTag = z.infer<typeof serializedTagSchema>
+export type SerializedTag = Tag
+export type SerializedPlaidAccount = PlaidAccount
+export type SerializedTransaction = TransactionWithRelations
+export type SerializedHolding = HoldingWithRelations
+export type SerializedInvestmentTransaction = InvestmentTransactionWithRelations
 
-/**
- * Schema for serialized Plaid account (nested in transactions)
- */
-export const serializedPlaidAccountSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  type: z.string(),
-  mask: z.string().nullable(),
-})
-
-export type SerializedPlaidAccount = z.infer<typeof serializedPlaidAccountSchema>
-
-// Legacy alias for backward compatibility
-/** @deprecated Use serializedPlaidAccountSchema instead */
-export const serializedAccountSchema = serializedPlaidAccountSchema
+// Legacy aliases for backward compatibility
 /** @deprecated Use SerializedPlaidAccount instead */
 export type SerializedAccount = SerializedPlaidAccount
-
-/**
- * Schema for serialized custom category (nested)
- */
-export const serializedCustomCategorySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  imageUrl: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-})
-
-export type SerializedCustomCategory = z.infer<typeof serializedCustomCategorySchema>
-
-/**
- * Schema for serialized custom subcategory (nested)
- */
-export const serializedCustomSubcategorySchema = z.object({
-  id: z.string(),
-  categoryId: z.string(),
-  name: z.string(),
-  imageUrl: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  category: serializedCustomCategorySchema.optional(),
-})
-
-export type SerializedCustomSubcategory = z.infer<typeof serializedCustomSubcategorySchema>
-
-/**
- * Schema for serialized transaction
- * This is the main type used for client-side transaction data
- */
-export const serializedTransactionSchema = z.object({
-  id: z.string(),
-  plaidTransactionId: z.string(),
-  accountId: z.string(),
-  amount: z.string(), // Decimal as string for JSON serialization
-  isoCurrencyCode: z.string().nullable(),
-  date: z.string(), // ISO date string
-  authorizedDate: z.string().nullable(),
-  pending: z.boolean(),
-  merchantName: z.string().nullable(),
-  name: z.string(),
-  category: z.string().nullable(),
-  subcategory: z.string().nullable(),
-  paymentChannel: z.string().nullable(),
-  pendingTransactionId: z.string().nullable(),
-  logoUrl: z.string().nullable(),
-  categoryIconUrl: z.string().nullable(),
-  customCategoryId: z.string().nullable(),
-  customSubcategoryId: z.string().nullable(),
-  notes: z.string().nullable(),
-  tags: z.array(serializedTagSchema),
-  // Split transaction fields
-  isSplit: z.boolean(),
-  parentTransactionId: z.string().nullable(),
-  originalTransactionId: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  account: serializedAccountSchema.nullable(),
-  customCategory: serializedCustomCategorySchema.nullable(),
-  customSubcategory: serializedCustomSubcategorySchema.nullable(),
-})
-
-export type SerializedTransaction = z.infer<typeof serializedTransactionSchema>
 
 // ============================================================================
 // TRANSACTION API SCHEMAS
@@ -216,29 +147,10 @@ export const createCustomSubcategorySchema = z.object({
 export type CreateCustomSubcategoryPayload = z.infer<typeof createCustomSubcategorySchema>
 
 /**
- * Schema for custom category with subcategories (API response)
+ * Custom category with subcategories (API response)
+ * Now uses auto-serialized Prisma type - no Zod schema needed
  */
-export const customCategoryWithSubcategoriesSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  imageUrl: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  subcategories: z.array(
-    z.object({
-      id: z.string(),
-      categoryId: z.string(),
-      name: z.string(),
-      imageUrl: z.string().nullable(),
-      createdAt: z.string(),
-      updatedAt: z.string(),
-    })
-  ),
-})
-
-export type CustomCategoryWithSubcategories = z.infer<
-  typeof customCategoryWithSubcategoriesSchema
->
+export type { CustomCategoryWithSubcategories } from './prisma'
 
 // ============================================================================
 // TAG API SCHEMAS
@@ -265,51 +177,22 @@ export const updateTagSchema = z.object({
 export type UpdateTagPayload = z.infer<typeof updateTagSchema>
 
 /**
- * Schema for tag with count
+ * Tag with count (API response)
+ * Now uses auto-serialized Prisma type - no Zod schema needed
  */
-export const tagWithCountSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  color: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  _count: z.object({
-    transactions: z.number(),
-  }),
-})
-
-export type TagWithCount = z.infer<typeof tagWithCountSchema>
+export type { TagWithCount } from './prisma'
 
 // ============================================================================
 // PLAID ACCOUNT API SCHEMAS
 // ============================================================================
 
 /**
- * Schema for serialized Plaid account (full details)
+ * Serialized Plaid account (full details)
+ * Now uses auto-serialized Prisma type - no Zod schema needed
  */
-export const serializedPlaidAccountFullSchema = z.object({
-  id: z.string(),
-  plaidAccountId: z.string(),
-  itemId: z.string(),
-  name: z.string(),
-  officialName: z.string().nullable(),
-  mask: z.string().nullable(),
-  type: z.string(),
-  subtype: z.string().nullable(),
-  currency: z.string().nullable(),
-  currentBalance: z.string().nullable(), // Decimal as string
-  availableBalance: z.string().nullable(), // Decimal as string
-  creditLimit: z.string().nullable(), // Decimal as string
-  balanceUpdatedAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-})
-
-export type SerializedPlaidAccountFull = z.infer<typeof serializedPlaidAccountFullSchema>
+export type SerializedPlaidAccountFull = PlaidAccount
 
 // Legacy aliases for backward compatibility
-/** @deprecated Use serializedPlaidAccountFullSchema instead */
-export const serializedAccountFullSchema = serializedPlaidAccountFullSchema
 /** @deprecated Use SerializedPlaidAccountFull instead */
 export type SerializedAccountFull = SerializedPlaidAccountFull
 
@@ -345,67 +228,20 @@ export type ExchangePublicTokenPayload = z.infer<typeof exchangePublicTokenSchem
 // ============================================================================
 
 /**
- * Schema for serialized holding
+ * Serialized holding (API response)
+ * Now uses auto-serialized Prisma type - no Zod schema needed
  */
-export const serializedHoldingSchema = z.object({
-  id: z.string(),
-  accountId: z.string(),
-  quantity: z.string(), // Decimal as string
-  costBasis: z.string().nullable(), // Decimal as string
-  institutionPrice: z.string().nullable(), // Decimal as string
-  institutionPriceAsOf: z.string().nullable(),
-  isoCurrencyCode: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  security: z.object({
-    id: z.string(),
-    name: z.string().nullable(),
-    tickerSymbol: z.string().nullable(),
-    type: z.string().nullable(),
-    isoCurrencyCode: z.string().nullable(),
-    logoUrl: z.string().nullable(),
-  }),
-})
-
-export type SerializedHolding = z.infer<typeof serializedHoldingSchema>
+// Type already exported above as SerializedHolding = HoldingWithRelations
 
 // ============================================================================
 // INVESTMENT TRANSACTION API SCHEMAS
 // ============================================================================
 
 /**
- * Schema for serialized investment transaction
+ * Serialized investment transaction (API response)
+ * Now uses auto-serialized Prisma type - no Zod schema needed
  */
-export const serializedInvestmentTransactionSchema = z.object({
-  id: z.string(),
-  plaidInvestmentTransactionId: z.string(),
-  accountId: z.string(),
-  securityId: z.string().nullable(),
-  type: z.string(),
-  amount: z.string().nullable(), // Decimal as string
-  price: z.string().nullable(), // Decimal as string
-  quantity: z.string().nullable(), // Decimal as string
-  fees: z.string().nullable(), // Decimal as string
-  isoCurrencyCode: z.string().nullable(),
-  date: z.string(),
-  name: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  account: serializedAccountSchema.nullable(),
-  security: z
-    .object({
-      id: z.string(),
-      name: z.string().nullable(),
-      tickerSymbol: z.string().nullable(),
-      type: z.string().nullable(),
-      logoUrl: z.string().nullable(),
-    })
-    .nullable(),
-})
-
-export type SerializedInvestmentTransaction = z.infer<
-  typeof serializedInvestmentTransactionSchema
->
+// Type already exported above as SerializedInvestmentTransaction = InvestmentTransactionWithRelations
 
 // ============================================================================
 // ANALYTICS API SCHEMAS

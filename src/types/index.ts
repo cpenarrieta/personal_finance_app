@@ -2,18 +2,35 @@
  * Central type exports
  *
  * Import types from this file throughout your application:
- * import { SerializedTransaction, TransactionWithRelations } from '@/types'
+ * import { TransactionWithRelations, Tag, PlaidAccount } from '@/types'
+ *
+ * IMPORTANT: All types are auto-serialized!
+ * - Date fields are ISO strings
+ * - Decimal fields are strings
+ * No manual serialization needed thanks to the Prisma extension
  */
 
-// Re-export Prisma types (for database queries)
+// Re-export Prisma types (auto-serialized - Date/Decimal fields are strings)
 export {
-  // Transaction types
+  // Base model types (auto-serialized)
+  type Transaction,
+  type PlaidAccount,
+  type Tag,
+  type CustomCategory,
+  type CustomSubcategory,
+  type Holding,
+  type Security,
+  type InvestmentTransaction,
+  type Item,
+  type Institution,
+
+  // Transaction types with relations
   transactionWithRelations,
   type TransactionWithRelations,
   transactionWithAccount,
   type TransactionWithAccount,
 
-  // PlaidAccount types
+  // PlaidAccount types with relations
   plaidAccountWithRelations,
   type PlaidAccountWithRelations,
   plaidAccountWithTransactionCount,
@@ -29,15 +46,15 @@ export {
   itemWithRelations,
   type ItemWithRelations,
 
-  // Category types (Prisma version - for database queries)
+  // Category types with relations
   customCategoryWithSubcategories,
-  type CustomCategoryWithSubcategories as PrismaCustomCategoryWithSubcategories,
+  type CustomCategoryWithSubcategories,
   customCategoryWithCount,
   type CustomCategoryWithCount,
 
-  // Tag types (Prisma version - for database queries)
+  // Tag types with relations
   tagWithCount,
-  type TagWithCount as PrismaTagWithCount,
+  type TagWithCount,
 
   // Holding types
   holdingWithRelations,
@@ -68,63 +85,44 @@ export {
   type ApiError,
   type ApiResponse,
 
-  // Serialized types
-  serializedTagSchema,
+  // Serialized type aliases (for backward compatibility)
+  // These are now just aliases to auto-serialized Prisma types
   type SerializedTag,
-  serializedPlaidAccountSchema,
   type SerializedPlaidAccount,
-  serializedAccountSchema, // Legacy alias
   type SerializedAccount, // Legacy alias
-  serializedCustomCategorySchema,
-  type SerializedCustomCategory,
-  serializedCustomSubcategorySchema,
-  type SerializedCustomSubcategory,
-  serializedTransactionSchema,
   type SerializedTransaction,
+  type SerializedPlaidAccountFull,
+  type SerializedAccountFull, // Legacy alias
+  type SerializedHolding,
+  type SerializedInvestmentTransaction,
 
-  // Transaction API schemas
+  // Transaction API request schemas (for validation)
+  createTransactionSchema,
+  type CreateTransactionPayload,
   updateTransactionSchema,
   type UpdateTransactionPayload,
   bulkUpdateTransactionsSchema,
   type BulkUpdateTransactionsPayload,
 
-  // Category API schemas (API version - for serialization)
+  // Category API request schemas (for validation)
   createCustomCategorySchema,
   type CreateCustomCategoryPayload,
   updateCustomCategorySchema,
   type UpdateCustomCategoryPayload,
   createCustomSubcategorySchema,
   type CreateCustomSubcategoryPayload,
-  customCategoryWithSubcategoriesSchema,
-  type CustomCategoryWithSubcategories, // API version (serialized)
 
-  // Tag API schemas (API version - for serialization)
+  // Tag API request schemas (for validation)
   createTagSchema,
   type CreateTagPayload,
   updateTagSchema,
   type UpdateTagPayload,
-  tagWithCountSchema,
-  type TagWithCount, // API version (serialized)
-
-  // PlaidAccount API schemas
-  serializedPlaidAccountFullSchema,
-  type SerializedPlaidAccountFull,
-  serializedAccountFullSchema, // Legacy alias
-  type SerializedAccountFull, // Legacy alias
 
   // Plaid API schemas
   createLinkTokenResponseSchema,
   type CreateLinkTokenResponse,
   exchangePublicTokenSchema,
   type ExchangePublicTokenPayload,
-
-  // Holding API schemas
-  serializedHoldingSchema,
-  type SerializedHolding,
-
-  // Investment transaction API schemas
-  serializedInvestmentTransactionSchema,
-  type SerializedInvestmentTransaction,
 
   // Analytics API schemas
   transactionByCategorySchema,
@@ -142,11 +140,5 @@ export {
 // Re-export component types
 export * from './components'
 
-// Re-export from transaction utilities
-export {
-  serializeTransaction,
-  serializeCustomCategory,
-  serializeTag,
-  serializePlaidAccount,
-  TRANSACTION_INCLUDE,
-} from './transaction'
+// Re-export from transaction utilities (mostly deprecated now)
+export { TRANSACTION_INCLUDE } from './transaction'

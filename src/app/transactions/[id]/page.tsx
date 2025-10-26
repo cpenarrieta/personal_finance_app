@@ -3,12 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TransactionDetailView } from "@/components/TransactionDetailView";
 import { headers } from "next/headers";
-import {
-  serializeCustomCategory,
-  CustomCategoryWithSubcategories,
-  serializeTag,
-  TransactionWithRelations,
-} from "@/types";
+import type { TransactionWithRelations } from "@/types";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -82,6 +77,7 @@ export default async function TransactionDetailPage({
   }
 
   // Fetch categories and tags (needed for transaction editing)
+  // No serialization needed - Prisma extension automatically converts Date/Decimal to strings
   const [categories, tags] = await Promise.all([
     prisma.customCategory.findMany({
       include: {
@@ -95,105 +91,6 @@ export default async function TransactionDetailPage({
       orderBy: { name: "asc" },
     }),
   ]);
-
-  // Serialize categories and tags
-  const serializedCategories = categories.map(serializeCustomCategory);
-  const serializedTags = tags.map(serializeTag);
-
-  // Serialize transaction for client component
-  const serializedTransaction = {
-    id: transaction.id,
-    plaidTransactionId: transaction.plaidTransactionId,
-    accountId: transaction.accountId,
-    amount: transaction.amount.toString(),
-    isoCurrencyCode: transaction.isoCurrencyCode,
-    date: transaction.date.toISOString(),
-    authorizedDate: transaction.authorizedDate?.toISOString() || null,
-    pending: transaction.pending,
-    merchantName: transaction.merchantName,
-    name: transaction.name,
-    category: transaction.category,
-    subcategory: transaction.subcategory,
-    paymentChannel: transaction.paymentChannel,
-    pendingTransactionId: transaction.pendingTransactionId,
-    logoUrl: transaction.logoUrl,
-    categoryIconUrl: transaction.categoryIconUrl,
-    customCategoryId: transaction.customCategoryId,
-    customSubcategoryId: transaction.customSubcategoryId,
-    notes: transaction.notes,
-    tags:
-      transaction.tags?.map((tt) => ({
-        id: tt.tag.id,
-        name: tt.tag.name,
-        color: tt.tag.color,
-      })) || [],
-    // Split transaction fields
-    isSplit: transaction.isSplit,
-    parentTransactionId: transaction.parentTransactionId,
-    originalTransactionId: transaction.originalTransactionId,
-    createdAt: transaction.createdAt.toISOString(),
-    updatedAt: transaction.updatedAt.toISOString(),
-    account: transaction.account
-      ? {
-          id: transaction.account.id,
-          name: transaction.account.name,
-          type: transaction.account.type,
-          mask: transaction.account.mask,
-        }
-      : null,
-    customCategory: transaction.customCategory
-      ? {
-          id: transaction.customCategory.id,
-          name: transaction.customCategory.name,
-          imageUrl: transaction.customCategory.imageUrl,
-          createdAt: transaction.customCategory.createdAt.toISOString(),
-          updatedAt: transaction.customCategory.updatedAt.toISOString(),
-        }
-      : null,
-    customSubcategory: transaction.customSubcategory
-      ? {
-          id: transaction.customSubcategory.id,
-          name: transaction.customSubcategory.name,
-          imageUrl: transaction.customSubcategory.imageUrl,
-          categoryId: transaction.customSubcategory.categoryId,
-          createdAt: transaction.customSubcategory.createdAt.toISOString(),
-          updatedAt: transaction.customSubcategory.updatedAt.toISOString(),
-        }
-      : null,
-    parentTransaction: transaction.parentTransaction
-      ? {
-          id: transaction.parentTransaction.id,
-          name: transaction.parentTransaction.name,
-          amount: transaction.parentTransaction.amount.toString(),
-          date: transaction.parentTransaction.date.toISOString(),
-          customCategory: transaction.parentTransaction.customCategory
-            ? {
-                id: transaction.parentTransaction.customCategory.id,
-                name: transaction.parentTransaction.customCategory.name,
-              }
-            : null,
-        }
-      : null,
-    childTransactions:
-      transaction.childTransactions?.map((child) => ({
-        id: child.id,
-        name: child.name,
-        amount: child.amount.toString(),
-        date: child.date.toISOString(),
-        customCategory: child.customCategory
-          ? {
-              id: child.customCategory.id,
-              name: child.customCategory.name,
-            }
-          : null,
-        customSubcategory: child.customSubcategory
-          ? {
-              id: child.customSubcategory.id,
-              name: child.customSubcategory.name,
-            }
-          : null,
-      })) || [],
-  };
 
   // Determine which page to go back to based on referrer
   const isFromAnalytics = referer.includes("/analytics");
@@ -211,13 +108,9 @@ export default async function TransactionDetailPage({
       </div>
 
       <TransactionDetailView
-        transaction={
-          serializedTransaction as unknown as TransactionWithRelations
-        }
-        categories={
-          serializedCategories as unknown as CustomCategoryWithSubcategories[]
-        }
-        tags={serializedTags}
+        transaction={transaction}
+        categories={categories}
+        tags={tags}
       />
     </div>
   );

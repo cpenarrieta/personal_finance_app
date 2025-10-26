@@ -4,16 +4,10 @@ import { notFound } from 'next/navigation'
 import { SearchableTransactionList } from '@/components/SearchableTransactionList'
 import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
 import { HoldingList } from '@/components/HoldingList'
-import {
-  serializeTransaction,
-  serializeCustomCategory,
-  serializeTag,
-} from '@/types'
 import { PrismaIncludes } from '@/types/prisma'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
-import type { InvestmentTransactionWithRelations, HoldingWithRelations, SerializedTransaction, PrismaCustomCategoryWithSubcategories } from '@/types'
-import { Tag } from '@prisma/client'
+import type { InvestmentTransactionWithRelations, HoldingWithRelations, TransactionWithRelations, CustomCategoryWithSubcategories, Tag } from '@/types'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -55,7 +49,8 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   const isInvestmentAccount = account.type === 'investment' || account.subtype?.includes('brokerage')
 
   // Fetch transactions or investment data based on account type
-  let transactions: SerializedTransaction[] = []
+  // No serialization needed - Prisma extension automatically converts Date/Decimal to strings
+  let transactions: TransactionWithRelations[] = []
   let investmentTransactions: InvestmentTransactionWithRelations[] = []
   let holdings: HoldingWithRelations[] = []
 
@@ -74,7 +69,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
     })
   } else {
     // Fetch regular banking transactions
-    const txs = await prisma.transaction.findMany({
+    transactions = await prisma.transaction.findMany({
       where: {
         accountId: account.id,
         isSplit: false, // Filter out parent transactions that have been split
@@ -82,9 +77,6 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
       orderBy: { date: 'desc' },
       include: PrismaIncludes.transaction,
     })
-
-    // Serialize transactions for client component
-    transactions = txs.map(serializeTransaction)
   }
 
   // Fetch categories and tags (needed for transaction editing)
@@ -96,15 +88,11 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         },
       },
       orderBy: { name: 'asc' },
-    }) as PrismaCustomCategoryWithSubcategories[],
+    }),
     prisma.tag.findMany({
       orderBy: { name: 'asc' },
-    }) as Tag[],
+    }),
   ])
-
-  // Serialize categories and tags
-  const serializedCategories = categories.map(serializeCustomCategory)
-  const serializedTags = tags.map(serializeTag)
 
   return (
     <div className="p-6">
@@ -130,7 +118,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="text-sm text-blue-700 mb-1">Current Balance</div>
               <div className="text-2xl font-bold text-blue-900">
-                ${account.currentBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${parseFloat(account.currentBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           )}
@@ -139,7 +127,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <div className="text-sm text-green-700 mb-1">Available Balance</div>
               <div className="text-2xl font-bold text-green-900">
-                ${account.availableBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${parseFloat(account.availableBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           )}
@@ -148,7 +136,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
               <div className="text-sm text-purple-700 mb-1">Credit Limit</div>
               <div className="text-2xl font-bold text-purple-900">
-                ${account.creditLimit.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${parseFloat(account.creditLimit).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           )}
@@ -180,11 +168,11 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         /* Banking Transactions Section */
         <div>
           <h3 className="text-lg font-semibold mb-3">Transactions</h3>
-          <SearchableTransactionList 
-            transactions={transactions} 
+          <SearchableTransactionList
+            transactions={transactions}
             showAccount={false}
-            categories={serializedCategories}
-            tags={serializedTags}
+            categories={categories}
+            tags={tags}
           />
         </div>
       )}

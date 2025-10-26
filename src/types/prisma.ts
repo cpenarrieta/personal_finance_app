@@ -3,9 +3,15 @@
  *
  * This file contains type-safe extractors for all Prisma models with their relations.
  * Use these types throughout your application for consistency and type safety.
+ *
+ * IMPORTANT: All types exported from this file are auto-serialized:
+ * - Date fields are strings (ISO format)
+ * - Decimal fields are strings
+ * This is handled automatically by the Prisma extension in lib/prisma.ts
  */
 
 import { Prisma } from '@prisma/client'
+import type { Serialized } from '@/lib/prisma-extension'
 
 // ============================================================================
 // TRANSACTION TYPES
@@ -43,12 +49,16 @@ export const transactionWithRelations = Prisma.validator<Prisma.TransactionDefau
   },
 })
 
-export type TransactionWithRelations = Prisma.TransactionGetPayload<
-  typeof transactionWithRelations
+/**
+ * Transaction with all relations - auto-serialized
+ * Date and Decimal fields are automatically converted to strings
+ */
+export type TransactionWithRelations = Serialized<
+  Prisma.TransactionGetPayload<typeof transactionWithRelations>
 >
 
 /**
- * Transaction with account only
+ * Transaction with account only - auto-serialized
  * Use for simpler queries where you only need account info
  */
 export const transactionWithAccount = Prisma.validator<Prisma.TransactionDefaultArgs>()({
@@ -57,8 +67,8 @@ export const transactionWithAccount = Prisma.validator<Prisma.TransactionDefault
   },
 })
 
-export type TransactionWithAccount = Prisma.TransactionGetPayload<
-  typeof transactionWithAccount
+export type TransactionWithAccount = Serialized<
+  Prisma.TransactionGetPayload<typeof transactionWithAccount>
 >
 
 // ============================================================================
@@ -66,7 +76,7 @@ export type TransactionWithAccount = Prisma.TransactionGetPayload<
 // ============================================================================
 
 /**
- * PlaidAccount with item and institution relations
+ * PlaidAccount with item and institution relations - auto-serialized
  * Use this for bank account queries with full institution details
  */
 export const plaidAccountWithRelations = Prisma.validator<Prisma.PlaidAccountDefaultArgs>()({
@@ -79,10 +89,12 @@ export const plaidAccountWithRelations = Prisma.validator<Prisma.PlaidAccountDef
   },
 })
 
-export type PlaidAccountWithRelations = Prisma.PlaidAccountGetPayload<typeof plaidAccountWithRelations>
+export type PlaidAccountWithRelations = Serialized<
+  Prisma.PlaidAccountGetPayload<typeof plaidAccountWithRelations>
+>
 
 /**
- * PlaidAccount with transaction count
+ * PlaidAccount with transaction count - auto-serialized
  * Use this to show how many transactions are associated with each account
  */
 export const plaidAccountWithTransactionCount = Prisma.validator<Prisma.PlaidAccountDefaultArgs>()({
@@ -95,8 +107,8 @@ export const plaidAccountWithTransactionCount = Prisma.validator<Prisma.PlaidAcc
   },
 })
 
-export type PlaidAccountWithTransactionCount = Prisma.PlaidAccountGetPayload<
-  typeof plaidAccountWithTransactionCount
+export type PlaidAccountWithTransactionCount = Serialized<
+  Prisma.PlaidAccountGetPayload<typeof plaidAccountWithTransactionCount>
 >
 
 // Legacy aliases for backward compatibility (deprecated - use PlaidAccount types)
@@ -114,7 +126,7 @@ export type AccountWithTransactionCount = PlaidAccountWithTransactionCount
 // ============================================================================
 
 /**
- * Item with institution and accounts
+ * Item with institution and accounts - auto-serialized
  */
 export const itemWithRelations = Prisma.validator<Prisma.ItemDefaultArgs>()({
   include: {
@@ -123,14 +135,16 @@ export const itemWithRelations = Prisma.validator<Prisma.ItemDefaultArgs>()({
   },
 })
 
-export type ItemWithRelations = Prisma.ItemGetPayload<typeof itemWithRelations>
+export type ItemWithRelations = Serialized<
+  Prisma.ItemGetPayload<typeof itemWithRelations>
+>
 
 // ============================================================================
 // CATEGORY TYPES
 // ============================================================================
 
 /**
- * Custom category with subcategories
+ * Custom category with subcategories - auto-serialized
  */
 export const customCategoryWithSubcategories = Prisma.validator<Prisma.CustomCategoryDefaultArgs>()({
   include: {
@@ -142,12 +156,12 @@ export const customCategoryWithSubcategories = Prisma.validator<Prisma.CustomCat
   },
 })
 
-export type CustomCategoryWithSubcategories = Prisma.CustomCategoryGetPayload<
-  typeof customCategoryWithSubcategories
+export type CustomCategoryWithSubcategories = Serialized<
+  Prisma.CustomCategoryGetPayload<typeof customCategoryWithSubcategories>
 >
 
 /**
- * Custom category with transaction count
+ * Custom category with transaction count - auto-serialized
  */
 export const customCategoryWithCount = Prisma.validator<Prisma.CustomCategoryDefaultArgs>()({
   include: {
@@ -159,8 +173,8 @@ export const customCategoryWithCount = Prisma.validator<Prisma.CustomCategoryDef
   },
 })
 
-export type CustomCategoryWithCount = Prisma.CustomCategoryGetPayload<
-  typeof customCategoryWithCount
+export type CustomCategoryWithCount = Serialized<
+  Prisma.CustomCategoryGetPayload<typeof customCategoryWithCount>
 >
 
 // ============================================================================
@@ -168,7 +182,7 @@ export type CustomCategoryWithCount = Prisma.CustomCategoryGetPayload<
 // ============================================================================
 
 /**
- * Tag with transaction count
+ * Tag with transaction count - auto-serialized
  */
 export const tagWithCount = Prisma.validator<Prisma.TagDefaultArgs>()({
   include: {
@@ -180,14 +194,16 @@ export const tagWithCount = Prisma.validator<Prisma.TagDefaultArgs>()({
   },
 })
 
-export type TagWithCount = Prisma.TagGetPayload<typeof tagWithCount>
+export type TagWithCount = Serialized<
+  Prisma.TagGetPayload<typeof tagWithCount>
+>
 
 // ============================================================================
 // HOLDING TYPES
 // ============================================================================
 
 /**
- * Holding with Plaid account and security
+ * Holding with Plaid account and security - auto-serialized
  * Use this for investment holdings with full account details
  */
 export const holdingWithRelations = Prisma.validator<Prisma.HoldingDefaultArgs>()({
@@ -197,14 +213,16 @@ export const holdingWithRelations = Prisma.validator<Prisma.HoldingDefaultArgs>(
   },
 })
 
-export type HoldingWithRelations = Prisma.HoldingGetPayload<typeof holdingWithRelations>
+export type HoldingWithRelations = Serialized<
+  Prisma.HoldingGetPayload<typeof holdingWithRelations>
+>
 
 // ============================================================================
 // INVESTMENT TRANSACTION TYPES
 // ============================================================================
 
 /**
- * Investment transaction with Plaid account and security
+ * Investment transaction with Plaid account and security - auto-serialized
  * Use this for investment transactions with full account and security details
  */
 export const investmentTransactionWithRelations = Prisma.validator<Prisma.InvestmentTransactionDefaultArgs>()({
@@ -214,8 +232,8 @@ export const investmentTransactionWithRelations = Prisma.validator<Prisma.Invest
   },
 })
 
-export type InvestmentTransactionWithRelations = Prisma.InvestmentTransactionGetPayload<
-  typeof investmentTransactionWithRelations
+export type InvestmentTransactionWithRelations = Serialized<
+  Prisma.InvestmentTransactionGetPayload<typeof investmentTransactionWithRelations>
 >
 
 // ============================================================================
@@ -223,7 +241,7 @@ export type InvestmentTransactionWithRelations = Prisma.InvestmentTransactionGet
 // ============================================================================
 
 /**
- * Security with holdings count
+ * Security with holdings count - auto-serialized
  */
 export const securityWithCount = Prisma.validator<Prisma.SecurityDefaultArgs>()({
   include: {
@@ -236,14 +254,16 @@ export const securityWithCount = Prisma.validator<Prisma.SecurityDefaultArgs>()(
   },
 })
 
-export type SecurityWithCount = Prisma.SecurityGetPayload<typeof securityWithCount>
+export type SecurityWithCount = Serialized<
+  Prisma.SecurityGetPayload<typeof securityWithCount>
+>
 
 // ============================================================================
 // CATEGORY GROUP TYPES
 // ============================================================================
 
 /**
- * Category group with items and categories
+ * Category group with items and categories - auto-serialized
  */
 export const categoryGroupWithItems = Prisma.validator<Prisma.CategoryGroupDefaultArgs>()({
   include: {
@@ -255,13 +275,28 @@ export const categoryGroupWithItems = Prisma.validator<Prisma.CategoryGroupDefau
   },
 })
 
-export type CategoryGroupWithItems = Prisma.CategoryGroupGetPayload<
-  typeof categoryGroupWithItems
+export type CategoryGroupWithItems = Serialized<
+  Prisma.CategoryGroupGetPayload<typeof categoryGroupWithItems>
 >
 
 // ============================================================================
 // TYPE UTILITIES
 // ============================================================================
+
+/**
+ * Auto-serialized versions of base Prisma models (without relations)
+ * These are the most commonly used types throughout the application
+ */
+export type Transaction = Serialized<Prisma.Transaction>
+export type PlaidAccount = Serialized<Prisma.PlaidAccount>
+export type Tag = Serialized<Prisma.Tag>
+export type CustomCategory = Serialized<Prisma.CustomCategory>
+export type CustomSubcategory = Serialized<Prisma.CustomSubcategory>
+export type Holding = Serialized<Prisma.Holding>
+export type Security = Serialized<Prisma.Security>
+export type InvestmentTransaction = Serialized<Prisma.InvestmentTransaction>
+export type Item = Serialized<Prisma.Item>
+export type Institution = Serialized<Prisma.Institution>
 
 /**
  * Extract just the tag data from a TransactionTag join

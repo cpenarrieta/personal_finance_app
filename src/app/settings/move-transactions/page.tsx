@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { MoveTransactionsClient } from "@/components/MoveTransactionsClient";
 import type { Metadata } from "next";
-import { serializeCustomCategory, type PrismaCustomCategoryWithSubcategories } from "@/types";
 
 export const metadata: Metadata = {
   title: "Move Transactions",
@@ -12,16 +11,15 @@ export const metadata: Metadata = {
 };
 
 export default async function MoveTransactionsPage() {
-  const categories = (await prisma.customCategory.findMany({
+  // No serialization needed - Prisma extension automatically converts Date/Decimal to strings
+  const categories = await prisma.customCategory.findMany({
     include: {
       subcategories: {
         orderBy: { name: "asc" },
       },
     },
     orderBy: { name: "asc" },
-  })) as PrismaCustomCategoryWithSubcategories[];
+  });
 
-  const serializedCategories = categories.map(serializeCustomCategory);
-
-  return <MoveTransactionsClient categories={serializedCategories} />;
+  return <MoveTransactionsClient categories={categories} />;
 }
