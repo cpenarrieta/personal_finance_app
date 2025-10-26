@@ -227,6 +227,7 @@ export const customCategoryWithSubcategoriesSchema = z.object({
   subcategories: z.array(
     z.object({
       id: z.string(),
+      categoryId: z.string(),
       name: z.string(),
       imageUrl: z.string().nullable(),
       createdAt: z.string(),

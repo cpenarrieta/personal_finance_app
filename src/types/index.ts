@@ -142,5 +142,11 @@ export {
 // Re-export component types
 export * from './components'
 
-// Re-export from transaction utilities (serializeTransaction is exported via './transaction' below)
-export { serializeTransaction, serializeCustomCategory, TRANSACTION_INCLUDE } from './transaction'
+// Re-export from transaction utilities
+export {
+  serializeTransaction,
+  serializeCustomCategory,
+  serializeTag,
+  serializePlaidAccount,
+  TRANSACTION_INCLUDE,
+} from './transaction'

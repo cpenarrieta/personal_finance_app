@@ -1,9 +1,13 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { TransactionsPageClient } from '@/components/TransactionsPageClient'
-import { serializeTransaction } from '@/types/transaction'
-import { PrismaIncludes, type CustomCategoryWithSubcategories } from '@/types/prisma'
-import type { Tag, CustomSubcategory, PlaidAccount } from '@prisma/client'
+import {
+  serializeTransaction,
+  serializeCustomCategory,
+  serializeTag,
+  serializePlaidAccount,
+} from '@/types'
+import { PrismaIncludes } from '@/types/prisma'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -40,37 +44,11 @@ export default async function TransactionsPage() {
     }),
   ])
 
-  // Serialize transactions for client component
+  // Serialize all data for client components
   const serializedTransactions = txs.map(serializeTransaction)
-
-  // Serialize categories and tags (convert dates to strings if needed)
-  const serializedCategories = categories.map((cat: CustomCategoryWithSubcategories) => ({
-    ...cat,
-    createdAt: cat.createdAt.toISOString(),
-    updatedAt: cat.updatedAt.toISOString(),
-    subcategories: cat.subcategories.map((sub: CustomSubcategory) => ({
-      ...sub,
-      createdAt: sub.createdAt.toISOString(),
-      updatedAt: sub.updatedAt.toISOString(),
-    })),
-  }))
-
-  const serializedTags = tags.map((tag: Tag) => ({
-    ...tag,
-    createdAt: tag.createdAt.toISOString(),
-    updatedAt: tag.updatedAt.toISOString(),
-  }))
-
-  // Serialize accounts for client component
-  const serializedAccounts = accounts.map((account: PlaidAccount) => ({
-    id: account.id,
-    name: account.name,
-    officialName: account.officialName,
-    mask: account.mask,
-    type: account.type,
-    subtype: account.subtype,
-    currency: account.currency,
-  }))
+  const serializedCategories = categories.map(serializeCustomCategory)
+  const serializedTags = tags.map(serializeTag)
+  const serializedAccounts = accounts.map(serializePlaidAccount)
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">

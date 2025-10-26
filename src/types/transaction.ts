@@ -5,9 +5,18 @@
  * Type definitions have been moved to centralized type files.
  */
 
+import type { Tag, PlaidAccount, CustomSubcategory } from '@prisma/client'
 import type { TransactionWithRelations } from './prisma'
-import type { SerializedTransaction, CustomCategoryWithSubcategories } from './api'
-import { PrismaIncludes, type CustomCategoryWithSubcategories as PrismaCustomCategoryWithSubcategories } from './prisma'
+import type {
+  SerializedTransaction,
+  CustomCategoryWithSubcategories,
+  SerializedTag,
+  SerializedPlaidAccountFull,
+} from './api'
+import {
+  PrismaIncludes,
+  type CustomCategoryWithSubcategories as PrismaCustomCategoryWithSubcategories,
+} from './prisma'
 
 /**
  * Serializes a Prisma transaction with relations to a plain object
@@ -97,13 +106,49 @@ export function serializeCustomCategory(
     imageUrl: category.imageUrl,
     createdAt: category.createdAt.toISOString(),
     updatedAt: category.updatedAt.toISOString(),
-    subcategories: category.subcategories.map((sub) => ({
+    subcategories: category.subcategories.map((sub: CustomSubcategory) => ({
       id: sub.id,
+      categoryId: sub.categoryId,
       name: sub.name,
       imageUrl: sub.imageUrl,
       createdAt: sub.createdAt.toISOString(),
       updatedAt: sub.updatedAt.toISOString(),
     })),
+  }
+}
+
+/**
+ * Serializes a Prisma tag to a plain object suitable for passing to client components
+ */
+export function serializeTag(tag: Tag): SerializedTag {
+  return {
+    id: tag.id,
+    name: tag.name,
+    color: tag.color,
+  }
+}
+
+/**
+ * Serializes a Prisma PlaidAccount to a full serialized account object
+ * suitable for passing to client components (e.g., for dropdowns, forms)
+ */
+export function serializePlaidAccount(account: PlaidAccount): SerializedPlaidAccountFull {
+  return {
+    id: account.id,
+    plaidAccountId: account.plaidAccountId,
+    itemId: account.itemId,
+    name: account.name,
+    officialName: account.officialName,
+    mask: account.mask,
+    type: account.type,
+    subtype: account.subtype,
+    currency: account.currency,
+    currentBalance: account.currentBalance?.toString() ?? null,
+    availableBalance: account.availableBalance?.toString() ?? null,
+    creditLimit: account.creditLimit?.toString() ?? null,
+    balanceUpdatedAt: account.balanceUpdatedAt?.toISOString() ?? null,
+    createdAt: account.createdAt.toISOString(),
+    updatedAt: account.updatedAt.toISOString(),
   }
 }
 

@@ -23,46 +23,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type SerializedCategory = {
-  id: string;
-  name: string;
-  imageUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
-  subcategories: {
-    id: string;
-    categoryId: string;
-    name: string;
-    imageUrl: string | null;
-    createdAt: string;
-    updatedAt: string;
-  }[];
-};
-
-type SerializedTag = {
-  id: string;
-  name: string;
-  color: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type SerializedAccount = {
-  id: string;
-  name: string;
-  officialName: string | null;
-  mask: string | null;
-  type: string;
-  subtype: string | null;
-  currency: 'CAD' | 'USD';
-};
+import type {
+  CustomCategoryWithSubcategories,
+  SerializedTag,
+  SerializedPlaidAccountFull,
+} from "@/types";
 
 interface AddTransactionModalProps {
   onClose: () => void;
-  categories: SerializedCategory[];
+  categories: CustomCategoryWithSubcategories[];
   tags: SerializedTag[];
-  accounts: SerializedAccount[];
+  accounts: SerializedPlaidAccountFull[];
 }
 
 export function AddTransactionModal({

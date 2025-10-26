@@ -3,6 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TransactionDetailView } from "@/components/TransactionDetailView";
 import { headers } from "next/headers";
+import {
+  serializeCustomCategory,
+  serializeTag,
+  TransactionWithRelations,
+} from "@/types";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -13,7 +18,7 @@ export async function generateMetadata({
   const { id } = await params;
   const transaction = await prisma.transaction.findUnique({
     where: { id },
-  });
+  }) as TransactionWithRelations;
 
   if (!transaction) {
     return {
@@ -69,7 +74,7 @@ export default async function TransactionDetailPage({
         },
       },
     },
-  });
+  }) as TransactionWithRelations;
 
   if (!transaction) {
     notFound();
@@ -80,33 +85,19 @@ export default async function TransactionDetailPage({
     prisma.customCategory.findMany({
       include: {
         subcategories: {
-          orderBy: { name: 'asc' },
+          orderBy: { name: "asc" },
         },
       },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     }),
     prisma.tag.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     }),
-  ])
+  ]);
 
   // Serialize categories and tags
-  const serializedCategories = categories.map(cat => ({
-    ...cat,
-    createdAt: cat.createdAt.toISOString(),
-    updatedAt: cat.updatedAt.toISOString(),
-    subcategories: cat.subcategories.map(sub => ({
-      ...sub,
-      createdAt: sub.createdAt.toISOString(),
-      updatedAt: sub.updatedAt.toISOString(),
-    })),
-  }))
-  
-  const serializedTags = tags.map(tag => ({
-    ...tag,
-    createdAt: tag.createdAt.toISOString(),
-    updatedAt: tag.updatedAt.toISOString(),
-  }))
+  const serializedCategories = categories.map(serializeCustomCategory);
+  const serializedTags = tags.map(serializeTag);
 
   // Serialize transaction for client component
   const serializedTransaction = {
@@ -218,7 +209,7 @@ export default async function TransactionDetailPage({
         </Link>
       </div>
 
-      <TransactionDetailView 
+      <TransactionDetailView
         transaction={serializedTransaction}
         categories={serializedCategories}
         tags={serializedTags}
