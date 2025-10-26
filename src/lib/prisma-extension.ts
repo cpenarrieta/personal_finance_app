@@ -58,7 +58,7 @@ export const serializationExtension = Prisma.defineExtension({
   query: {
     $allModels: {
       // Hook into all query operations
-      async $allOperations({ operation, model, args, query }) {
+      async $allOperations({ args, query }) {
         // Execute the query
         const result = await query(args)
 
