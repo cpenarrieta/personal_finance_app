@@ -111,16 +111,6 @@ export type PlaidAccountWithTransactionCount = Serialized<
   Prisma.PlaidAccountGetPayload<typeof plaidAccountWithTransactionCount>
 >
 
-// Legacy aliases for backward compatibility (deprecated - use PlaidAccount types)
-/** @deprecated Use plaidAccountWithRelations instead */
-export const accountWithRelations = plaidAccountWithRelations
-/** @deprecated Use PlaidAccountWithRelations instead */
-export type AccountWithRelations = PlaidAccountWithRelations
-/** @deprecated Use plaidAccountWithTransactionCount instead */
-export const accountWithTransactionCount = plaidAccountWithTransactionCount
-/** @deprecated Use PlaidAccountWithTransactionCount instead */
-export type AccountWithTransactionCount = PlaidAccountWithTransactionCount
-
 // ============================================================================
 // ITEM TYPES
 // ============================================================================
@@ -325,7 +315,6 @@ export function extractTags(transaction: TransactionWithRelations): TransactionT
 export const PrismaIncludes = {
   transaction: transactionWithRelations.include,
   plaidAccount: plaidAccountWithRelations.include,
-  account: plaidAccountWithRelations.include, // Legacy alias (deprecated)
   item: itemWithRelations.include,
   customCategory: customCategoryWithSubcategories.include,
   holding: holdingWithRelations.include,

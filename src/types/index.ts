@@ -36,12 +36,6 @@ export {
   plaidAccountWithTransactionCount,
   type PlaidAccountWithTransactionCount,
 
-  // Legacy aliases (deprecated)
-  accountWithRelations,
-  type AccountWithRelations,
-  accountWithTransactionCount,
-  type AccountWithTransactionCount,
-
   // Item types
   itemWithRelations,
   type ItemWithRelations,
@@ -85,14 +79,12 @@ export {
   type ApiError,
   type ApiResponse,
 
-  // Serialized type aliases (for backward compatibility)
-  // These are now just aliases to auto-serialized Prisma types
+  // Serialized type aliases
+  // These are just aliases to auto-serialized Prisma types
   type SerializedTag,
   type SerializedPlaidAccount,
-  type SerializedAccount, // Legacy alias
-  type SerializedTransaction,
   type SerializedPlaidAccountFull,
-  type SerializedAccountFull, // Legacy alias
+  type SerializedTransaction,
   type SerializedHolding,
   type SerializedInvestmentTransaction,
 
@@ -139,6 +131,3 @@ export {
 
 // Re-export component types
 export * from './components'
-
-// Re-export from transaction utilities (mostly deprecated now)
-export { TRANSACTION_INCLUDE } from './transaction'

@@ -49,13 +49,10 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError
 
 export type SerializedTag = Tag
 export type SerializedPlaidAccount = PlaidAccount
+export type SerializedPlaidAccountFull = PlaidAccount
 export type SerializedTransaction = TransactionWithRelations
 export type SerializedHolding = HoldingWithRelations
 export type SerializedInvestmentTransaction = InvestmentTransactionWithRelations
-
-// Legacy aliases for backward compatibility
-/** @deprecated Use SerializedPlaidAccount instead */
-export type SerializedAccount = SerializedPlaidAccount
 
 // ============================================================================
 // TRANSACTION API SCHEMAS
@@ -181,20 +178,6 @@ export type UpdateTagPayload = z.infer<typeof updateTagSchema>
  * Now uses auto-serialized Prisma type - no Zod schema needed
  */
 export type { TagWithCount } from './prisma'
-
-// ============================================================================
-// PLAID ACCOUNT API SCHEMAS
-// ============================================================================
-
-/**
- * Serialized Plaid account (full details)
- * Now uses auto-serialized Prisma type - no Zod schema needed
- */
-export type SerializedPlaidAccountFull = PlaidAccount
-
-// Legacy aliases for backward compatibility
-/** @deprecated Use SerializedPlaidAccountFull instead */
-export type SerializedAccountFull = SerializedPlaidAccountFull
 
 // ============================================================================
 // PLAID API SCHEMAS

@@ -1,6 +1,6 @@
 # Type System Documentation
 
-This directory contains the centralized type system for the Personal Finance App. The type system is organized into several modules to provide type safety from the database layer through to the frontend.
+This directory contains the centralized type system for the Personal Finance App. The type system uses **auto-serialization** via a Prisma extension, eliminating the need for manual Date/Decimal conversion.
 
 ## File Structure
 
@@ -8,11 +8,18 @@ This directory contains the centralized type system for the Personal Finance App
 src/types/
 ├── README.md          # This file
 ├── index.ts           # Central export point for all types
-├── prisma.ts          # Prisma-derived types and extractors
+├── prisma.ts          # Prisma-derived types (auto-serialized)
 ├── api.ts             # API schemas and types (with Zod validation)
-├── components.ts      # React component prop types
-└── transaction.ts     # Transaction utilities (backwards compatibility)
+└── components.ts      # React component prop types
 ```
+
+## Key Concept: Auto-Serialization
+
+All Prisma queries automatically return serialized data:
+- **Date fields** → ISO strings
+- **Decimal fields** → strings
+
+This is handled by the Prisma extension in `src/lib/prisma-extension.ts`. No manual serialization needed!
 
 ## Quick Start
 
@@ -32,36 +39,65 @@ import { SerializedTransaction, TransactionWithRelations } from '@/types'
 import { prisma } from '@/lib/prisma'
 import { PrismaIncludes } from '@/types'
 
-// Use the predefined include pattern
+// Fetch data - already auto-serialized!
 const transactions = await prisma.transaction.findMany({
   include: PrismaIncludes.transaction,
 })
-// Type is automatically: TransactionWithRelations[]
+// Type: TransactionWithRelations[] (with Date/Decimal as strings)
+
+// Pass directly to client components - no serialization needed!
+return <ClientComponent transactions={transactions} />
 ```
 
-#### 2. Serializing for Client Components
+#### 2. Working with Decimal Fields
 
 ```typescript
-import { serializeTransaction } from '@/types'
+// Decimal fields are now strings
+const account = await prisma.plaidAccount.findUnique({ where: { id } })
 
-// Server Component
-export default async function Page() {
-  const transactions = await prisma.transaction.findMany({
-    include: PrismaIncludes.transaction,
-  })
+// Convert to number for calculations
+const balance = account.currentBalance
+  ? parseFloat(account.currentBalance)
+  : 0
 
-  // Serialize for client
-  const serialized = transactions.map(serializeTransaction)
+// Create/update with Prisma.Decimal
+await prisma.plaidAccount.update({
+  where: { id },
+  data: {
+    currentBalance: new Prisma.Decimal("1234.56")
+  },
+})
+```
 
-  return <ClientComponent transactions={serialized} />
+#### 3. Client Components
+
+```typescript
+'use client'
+
+import type { TransactionListProps } from '@/types'
+
+export function TransactionList({ transactions }: TransactionListProps) {
+  // transactions is fully typed as TransactionWithRelations[]
+  // Date fields are ISO strings, Decimal fields are strings
+  return (
+    <div>
+      {transactions.map((t) => (
+        <div key={t.id}>
+          {t.name} - ${parseFloat(t.amount).toFixed(2)}
+          <span>{new Date(t.date).toLocaleDateString()}</span>
+        </div>
+      ))}
+    </div>
+  )
 }
 ```
 
-#### 3. API Route with Validation
+#### 4. API Route with Validation
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
 import { safeParseRequestBody, updateTransactionSchema } from '@/types/api'
+import { Prisma } from '@prisma/client'
 
 export async function PATCH(req: NextRequest) {
   // Validate with Zod
@@ -75,26 +111,14 @@ export async function PATCH(req: NextRequest) {
   }
 
   const data = parseResult.data // Fully typed!
-  // ... use data
-}
-```
 
-#### 4. Client Components
+  // Update database (results auto-serialized)
+  const updated = await prisma.transaction.update({
+    where: { id },
+    data,
+  })
 
-```typescript
-'use client'
-
-import type { TransactionListProps } from '@/types'
-
-export function TransactionList({ transactions }: TransactionListProps) {
-  // transactions is fully typed as SerializedTransaction[]
-  return (
-    <div>
-      {transactions.map((t) => (
-        <div key={t.id}>{t.name}</div>
-      ))}
-    </div>
-  )
+  return NextResponse.json(updated) // Already serialized!
 }
 ```
 
@@ -177,23 +201,15 @@ export function TransactionList({ transactions, showAccount }: TransactionListPr
 }
 ```
 
-### `transaction.ts` - Transaction Utilities
-
-Helper functions for working with transactions.
-
-**Key Exports:**
-
-- `serializeTransaction()` - Convert Prisma transaction to serialized form
-- `TRANSACTION_INCLUDE` - Deprecated, use `PrismaIncludes.transaction`
-
 ## Best Practices
 
-### 1. Server vs. Client Types
+### 1. All Types Are Auto-Serialized
 
-- **Server (API routes, Server Components):** Use Prisma types
-  - `TransactionWithRelations`, `PlaidAccountWithRelations`
-- **Client (Client Components):** Use serialized types
-  - `SerializedTransaction`, `SerializedPlaidAccount`
+Thanks to the Prisma extension, there's no distinction between "server" and "client" types:
+- Use the same types everywhere: `TransactionWithRelations`, `PlaidAccount`, etc.
+- Date fields are always ISO strings
+- Decimal fields are always strings
+- No manual serialization needed!
 
 ### 2. Always Validate API Input
 
