@@ -1,19 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
-import { CATEGORY_GROUPS, getCategoryGroup, getCategorySortOrder } from "@/config/category-groups";
-
-interface Category {
-  id: string;
-  name: string;
-  imageUrl?: string | null;
-  subcategories?: any[];
-}
+import {
+  CATEGORY_GROUPS,
+  getCategoryGroup,
+  getCategorySortOrder,
+} from "@/config/category-groups";
+import { CustomCategoryWithSubcategories } from "@/types";
 
 interface CategorySelectProps {
   value: string;
   onChange: (value: string) => void;
-  categories: Category[];
+  categories: CustomCategoryWithSubcategories[];
   placeholder?: string;
   disabled?: boolean;
   id?: string;
@@ -52,8 +50,12 @@ export function CategorySelect({
     }).filter((group) => group.categories.length > 0); // Only show groups with categories
 
     // Find uncategorized categories (not in any group config)
-    const categorizedIds = new Set(groups.flatMap((g) => g.categories.map((c) => c.id)));
-    const uncategorized = categories.filter((cat) => !categorizedIds.has(cat.id));
+    const categorizedIds = new Set(
+      groups.flatMap((g) => g.categories.map((c) => c.id))
+    );
+    const uncategorized = categories.filter(
+      (cat) => !categorizedIds.has(cat.id)
+    );
 
     // Add uncategorized categories to the Expenses group at the bottom (alphabetically sorted)
     if (uncategorized.length > 0) {
@@ -67,7 +69,9 @@ export function CategorySelect({
         // If no expenses group exists, create one with just the uncategorized items
         groups.push({
           type: "Expenses",
-          categories: uncategorized.sort((a, b) => a.name.localeCompare(b.name)),
+          categories: uncategorized.sort((a, b) =>
+            a.name.localeCompare(b.name)
+          ),
         });
       }
     }
@@ -96,4 +100,3 @@ export function CategorySelect({
     </select>
   );
 }
-

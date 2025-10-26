@@ -24,6 +24,17 @@ export const transactionWithRelations = Prisma.validator<Prisma.TransactionDefau
         category: true,
       },
     },
+    parentTransaction: {
+      include: {
+        customCategory: true,
+      },
+    },
+    childTransactions: {
+      include: {
+        customCategory: true,
+        customSubcategory: true,
+      },
+    },
     tags: {
       include: {
         tag: true,

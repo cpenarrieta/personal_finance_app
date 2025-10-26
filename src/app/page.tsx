@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { syncAllItems, syncTransactionsOnly, syncInvestmentsOnly } from "@/lib/sync";
+import {
+  syncAllItems,
+  syncTransactionsOnly,
+  syncInvestmentsOnly,
+} from "@/lib/sync";
 import { revalidatePath } from "next/cache";
 import { SyncButton } from "@/components/SyncButton";
 import { SyncTransactionsButton } from "@/components/SyncTransactionsButton";
@@ -10,6 +14,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import type { Metadata } from "next";
+import { Holding, PlaidAccount } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Personal Finance Dashboard",
@@ -64,16 +69,19 @@ export default async function Page() {
   });
 
   // Calculate total balances
-  const totalCurrent = accounts.reduce((sum, acc) => {
+  const totalCurrent = accounts.reduce((sum: number, acc: PlaidAccount) => {
     return sum + (acc.currentBalance?.toNumber() || 0);
   }, 0);
 
   // Calculate total investment value from holdings
-  const totalInvestmentValue = holdings.reduce((sum, holding) => {
-    const quantity = holding.quantity.toNumber();
-    const price = holding.institutionPrice?.toNumber() || 0;
-    return sum + quantity * price;
-  }, 0);
+  const totalInvestmentValue = holdings.reduce(
+    (sum: number, holding: Holding) => {
+      const quantity = holding.quantity.toNumber();
+      const price = holding.institutionPrice?.toNumber() || 0;
+      return sum + quantity * price;
+    },
+    0
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -154,13 +162,13 @@ export default async function Page() {
             </div>
             <div className="divide-y">
               {accounts
-                .filter((account) => {
+                .filter((account: PlaidAccount) => {
                   const currentBal = account.currentBalance?.toNumber() || 0;
                   const availableBal =
                     account.availableBalance?.toNumber() || 0;
                   return currentBal !== 0 || availableBal !== 0;
                 })
-                .map((account) => (
+                .map((account: PlaidAccount) => (
                   <Link
                     key={account.id}
                     href={`/accounts/${account.id}`}

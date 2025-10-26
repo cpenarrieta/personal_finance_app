@@ -1,69 +1,86 @@
-import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
-import { revalidatePath } from 'next/cache'
-import { DeleteButton } from '@/components/DeleteButton'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import type { Metadata } from 'next'
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { revalidatePath } from "next/cache";
+import { DeleteButton } from "@/components/DeleteButton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+import { PrismaTagWithCount } from "@/types";
 
 export const metadata: Metadata = {
-  title: 'Manage Tags',
+  title: "Manage Tags",
   robots: {
     index: false,
     follow: false,
   },
-}
+};
 
 // Server Actions
 async function createTag(formData: FormData) {
-  'use server'
-  const name = formData.get('name') as string
-  const color = formData.get('color') as string
+  "use server";
+  const name = formData.get("name") as string;
+  const color = formData.get("color") as string;
 
   await prisma.tag.create({
     data: { name, color },
-  })
-  revalidatePath('/settings/manage-tags')
+  });
+  revalidatePath("/settings/manage-tags");
 }
 
 async function deleteTag(formData: FormData) {
-  'use server'
-  const id = formData.get('id') as string
-  await prisma.tag.delete({ where: { id } })
-  revalidatePath('/settings/manage-tags')
+  "use server";
+  const id = formData.get("id") as string;
+  await prisma.tag.delete({ where: { id } });
+  revalidatePath("/settings/manage-tags");
 }
 
 async function updateTag(formData: FormData) {
-  'use server'
-  const id = formData.get('id') as string
-  const name = formData.get('name') as string
-  const color = formData.get('color') as string
+  "use server";
+  const id = formData.get("id") as string;
+  const name = formData.get("name") as string;
+  const color = formData.get("color") as string;
 
   await prisma.tag.update({
     where: { id },
     data: { name, color },
-  })
-  revalidatePath('/settings/manage-tags')
+  });
+  revalidatePath("/settings/manage-tags");
 }
 
 export default async function ManageTagsPage() {
-  const tags = await prisma.tag.findMany({
+  const tags = (await prisma.tag.findMany({
     include: {
       _count: {
         select: { transactions: true },
       },
     },
-    orderBy: { name: 'asc' },
-  })
+    orderBy: { name: "asc" },
+  })) as PrismaTagWithCount[];
 
   // Predefined color palette
   const colorPalette = [
-    '#EF4444', '#F97316', '#F59E0B', '#EAB308', '#84CC16',
-    '#22C55E', '#10B981', '#14B8A6', '#06B6D4', '#0EA5E9',
-    '#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#D946EF',
-    '#EC4899', '#F43F5E', '#64748B', '#78716C', '#A3A3A3',
-  ]
+    "#EF4444",
+    "#F97316",
+    "#F59E0B",
+    "#EAB308",
+    "#84CC16",
+    "#22C55E",
+    "#10B981",
+    "#14B8A6",
+    "#06B6D4",
+    "#0EA5E9",
+    "#3B82F6",
+    "#6366F1",
+    "#8B5CF6",
+    "#A855F7",
+    "#D946EF",
+    "#EC4899",
+    "#F43F5E",
+    "#64748B",
+    "#78716C",
+    "#A3A3A3",
+  ];
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -81,9 +98,7 @@ export default async function ManageTagsPage() {
           <h2 className="text-lg font-semibold mb-3">Add New Tag</h2>
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="tag-name">
-                Tag Name
-              </Label>
+              <Label htmlFor="tag-name">Tag Name</Label>
               <Input
                 id="tag-name"
                 type="text"
@@ -93,9 +108,7 @@ export default async function ManageTagsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>
-                Tag Color
-              </Label>
+              <Label>Tag Color</Label>
               <div className="grid grid-cols-10 gap-2 mb-2">
                 {colorPalette.map((color) => (
                   <label
@@ -126,10 +139,7 @@ export default async function ManageTagsPage() {
                 />
               </div>
             </div>
-            <Button
-              type="submit"
-              className="w-full"
-            >
+            <Button type="submit" className="w-full">
               Add Tag
             </Button>
           </div>
@@ -156,12 +166,11 @@ export default async function ManageTagsPage() {
                   >
                     {tag.name}
                   </div>
-
-                  {/* Tag Info */}
+                  Tag Info
                   <div className="flex-1 text-sm text-gray-600">
-                    {tag._count.transactions} transaction{tag._count.transactions !== 1 ? 's' : ''}
+                    {tag._count.transactions} transaction
+                    {tag._count.transactions !== 1 ? "s" : ""}
                   </div>
-
                   {/* Edit Form (Inline) */}
                   <form action={updateTag} className="flex items-center gap-2">
                     <input type="hidden" name="id" value={tag.id} />
@@ -186,12 +195,17 @@ export default async function ManageTagsPage() {
                       Update
                     </Button>
                   </form>
-
                   {/* Delete Button */}
                   <DeleteButton
                     id={tag.id}
                     action={deleteTag}
-                    confirmMessage={`Are you sure you want to delete the tag "${tag.name}"?${tag._count.transactions > 0 ? ` This tag is used in ${tag._count.transactions} transaction(s).` : ''}`}
+                    confirmMessage={`Are you sure you want to delete the tag "${
+                      tag.name
+                    }"?${
+                      tag._count.transactions > 0
+                        ? ` This tag is used in ${tag._count.transactions} transaction(s).`
+                        : ""
+                    }`}
                     buttonText="Delete"
                     className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
                   />
@@ -202,5 +216,5 @@ export default async function ManageTagsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { SerializedTransaction } from "@/types/transaction";
+import type {
+  CustomCategoryWithSubcategories,
+  SerializedCustomSubcategory,
+  SerializedTransaction,
+} from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -21,23 +25,10 @@ interface SplitItem {
   description: string;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  imageUrl: string | null;
-  subcategories: Subcategory[];
-}
-
-interface Subcategory {
-  id: string;
-  name: string;
-  imageUrl: string | null;
-}
-
 interface SplitTransactionModalProps {
   transaction: SerializedTransaction;
   onClose: () => void;
-  categories: Category[];
+  categories: CustomCategoryWithSubcategories[];
 }
 
 export function SplitTransactionModal({
@@ -86,7 +77,11 @@ export function SplitTransactionModal({
     }
   };
 
-  const updateSplit = (index: number, field: keyof SplitItem, value: string | null) => {
+  const updateSplit = (
+    index: number,
+    field: keyof SplitItem,
+    value: string | null
+  ) => {
     const newSplits = [...splits];
     const currentSplit = newSplits[index];
     if (currentSplit) {
@@ -126,7 +121,9 @@ export function SplitTransactionModal({
     const totalSplit = getTotalSplitAmount();
     if (Math.abs(totalSplit - originalAmount) > 0.01) {
       setError(
-        `Split amounts ($${totalSplit.toFixed(2)}) must equal original amount ($${originalAmount.toFixed(2)})`
+        `Split amounts ($${totalSplit.toFixed(
+          2
+        )}) must equal original amount ($${originalAmount.toFixed(2)})`
       );
       return false;
     }
@@ -143,13 +140,16 @@ export function SplitTransactionModal({
     setError(null);
 
     try {
-      const response = await fetch(`/api/transactions/${transaction.id}/split`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ splits }),
-      });
+      const response = await fetch(
+        `/api/transactions/${transaction.id}/split`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ splits }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -168,7 +168,9 @@ export function SplitTransactionModal({
     }
   };
 
-  const getSubcategoriesForCategory = (categoryId: string | null): Subcategory[] => {
+  const getSubcategoriesForCategory = (
+    categoryId: string | null
+  ): SerializedCustomSubcategory[] => {
     if (!categoryId) return [];
     const category = categories.find((c) => c.id === categoryId);
     return category?.subcategories || [];
@@ -183,7 +185,8 @@ export function SplitTransactionModal({
         <DialogHeader>
           <DialogTitle>Split Transaction</DialogTitle>
           <DialogDescription>
-            {transaction.name} • ${Math.abs(originalAmount).toLocaleString("en-US", {
+            {transaction.name} • $
+            {Math.abs(originalAmount).toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -202,7 +205,9 @@ export function SplitTransactionModal({
             }`}
           >
             <div className="flex justify-between items-center">
-              <span className="font-medium text-gray-900">Remaining to allocate:</span>
+              <span className="font-medium text-gray-900">
+                Remaining to allocate:
+              </span>
               <span
                 className={`text-2xl font-bold ${
                   isValid
@@ -212,7 +217,8 @@ export function SplitTransactionModal({
                     : "text-red-600"
                 }`}
               >
-                ${Math.abs(remaining).toLocaleString("en-US", {
+                $
+                {Math.abs(remaining).toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -256,7 +262,7 @@ export function SplitTransactionModal({
                       onChange={(e) => {
                         // Only allow valid number input
                         const value = e.target.value;
-                        if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        if (value === "" || /^\d*\.?\d*$/.test(value)) {
                           updateSplit(index, "amount", value);
                         }
                       }}
@@ -273,9 +279,13 @@ export function SplitTransactionModal({
                     <input
                       type="text"
                       value={split.description}
-                      onChange={(e) => updateSplit(index, "description", e.target.value)}
+                      onChange={(e) =>
+                        updateSplit(index, "description", e.target.value)
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={`${transaction.name} (Split ${index + 1}/${splits.length})`}
+                      placeholder={`${transaction.name} (Split ${index + 1}/${
+                        splits.length
+                      })`}
                     />
                   </div>
 
@@ -303,17 +313,23 @@ export function SplitTransactionModal({
                     <select
                       value={split.customSubcategoryId || ""}
                       onChange={(e) =>
-                        updateSplit(index, "customSubcategoryId", e.target.value || null)
+                        updateSplit(
+                          index,
+                          "customSubcategoryId",
+                          e.target.value || null
+                        )
                       }
                       disabled={!split.customCategoryId}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                       <option value="">No Subcategory</option>
-                      {getSubcategoriesForCategory(split.customCategoryId).map((sub) => (
-                        <option key={sub.id} value={sub.id}>
-                          {sub.name}
-                        </option>
-                      ))}
+                      {getSubcategoriesForCategory(split.customCategoryId).map(
+                        (sub) => (
+                          <option key={sub.id} value={sub.id}>
+                            {sub.name}
+                          </option>
+                        )
+                      )}
                     </select>
                   </div>
 
@@ -324,7 +340,9 @@ export function SplitTransactionModal({
                     </label>
                     <textarea
                       value={split.notes}
-                      onChange={(e) => updateSplit(index, "notes", e.target.value)}
+                      onChange={(e) =>
+                        updateSplit(index, "notes", e.target.value)
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       rows={2}
                       placeholder="Add any notes for this split..."
