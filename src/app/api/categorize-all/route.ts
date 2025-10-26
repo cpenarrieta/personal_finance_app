@@ -7,7 +7,7 @@ import {
 } from "@/types";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 interface CategoryMatch {
