@@ -37,7 +37,7 @@ type SerializedAccount = {
   mask: string | null;
   type: string;
   subtype: string | null;
-  currency: string | null;
+  currency: 'CAD' | 'USD';
 };
 
 interface TransactionsPageClientProps {

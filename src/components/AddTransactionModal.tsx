@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PlaidAccount } from "@prisma/client";
 import {
   Dialog,
   DialogContent,
@@ -56,7 +55,7 @@ type SerializedAccount = {
   mask: string | null;
   type: string;
   subtype: string | null;
-  currency: string | null;
+  currency: 'CAD' | 'USD';
 };
 
 interface AddTransactionModalProps {
@@ -84,10 +83,8 @@ export function AddTransactionModal({
 
   // Form state - Optional fields
   const [merchantName, setMerchantName] = useState("");
-  const [isoCurrencyCode, setIsoCurrencyCode] = useState("USD");
+  const [isoCurrencyCode, setIsoCurrencyCode] = useState("CAD");
   const [authorizedDate, setAuthorizedDate] = useState("");
-  const [category, setCategory] = useState("");
-  const [subcategory, setSubcategory] = useState("");
   const [paymentChannel, setPaymentChannel] = useState("");
   const [customCategoryId, setCustomCategoryId] = useState("");
   const [customSubcategoryId, setCustomSubcategoryId] = useState("");
@@ -140,8 +137,6 @@ export function AddTransactionModal({
           merchantName: merchantName.trim() || null,
           isoCurrencyCode: isoCurrencyCode || null,
           authorizedDate: authorizedDate || null,
-          category: category.trim() || null,
-          subcategory: subcategory.trim() || null,
           paymentChannel: paymentChannel || null,
           customCategoryId: customCategoryId || null,
           customSubcategoryId: customSubcategoryId || null,
@@ -240,7 +235,9 @@ export function AddTransactionModal({
                 id="currency"
                 type="text"
                 value={isoCurrencyCode}
-                onChange={(e) => setIsoCurrencyCode(e.target.value.toUpperCase())}
+                onChange={(e) =>
+                  setIsoCurrencyCode(e.target.value.toUpperCase())
+                }
                 placeholder="USD"
                 maxLength={3}
               />
@@ -294,7 +291,6 @@ export function AddTransactionModal({
                   <SelectValue placeholder="Select payment channel" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
                   <SelectItem value="online">Online</SelectItem>
                   <SelectItem value="in store">In Store</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
@@ -320,35 +316,10 @@ export function AddTransactionModal({
             </div>
           </div>
 
-          {/* Plaid Categories (for compatibility) */}
+          {/* Categories */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Plaid Category</Label>
-              <Input
-                id="category"
-                type="text"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="e.g., Food and Drink"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subcategory">Plaid Subcategory</Label>
-              <Input
-                id="subcategory"
-                type="text"
-                value={subcategory}
-                onChange={(e) => setSubcategory(e.target.value)}
-                placeholder="e.g., Groceries"
-              />
-            </div>
-          </div>
-
-          {/* Custom Categories */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="custom-category">Custom Category</Label>
+              <Label htmlFor="custom-category">Category</Label>
               <CategorySelect
                 id="custom-category"
                 value={customCategoryId}
@@ -362,7 +333,7 @@ export function AddTransactionModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="custom-subcategory">Custom Subcategory</Label>
+              <Label htmlFor="custom-subcategory">Subcategory</Label>
               <select
                 id="custom-subcategory"
                 value={customSubcategoryId}
