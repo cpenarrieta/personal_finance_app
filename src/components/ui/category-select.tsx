@@ -6,19 +6,12 @@ import {
   getCategoryGroup,
   getCategorySortOrder,
 } from "@/config/category-groups";
-import { CustomSubcategory } from "@prisma/client";
-
-interface Category {
-  id: string;
-  name: string;
-  imageUrl?: string | null;
-  subcategories?: CustomSubcategory[];
-}
+import { CustomCategoryWithSubcategories } from "@/types";
 
 interface CategorySelectProps {
   value: string;
   onChange: (value: string) => void;
-  categories: Category[];
+  categories: CustomCategoryWithSubcategories[];
   placeholder?: string;
   disabled?: boolean;
   id?: string;
