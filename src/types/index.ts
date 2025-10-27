@@ -1,8 +1,6 @@
 /**
  * Central type exports
  *
- * Import types from this file throughout your application:
- * import { SerializedTransaction, TransactionWithRelations } from '@/types'
  */
 
 // Re-export Prisma types (for database queries)
@@ -74,7 +72,7 @@ export {
   bulkUpdateTransactionsSchema,
   type BulkUpdateTransactionsPayload,
 
-  // Category API schemas (API version - for serialization)
+  // Category API schemas
   createCustomCategorySchema,
   type CreateCustomCategoryPayload,
   updateCustomCategorySchema,
@@ -82,35 +80,21 @@ export {
   createCustomSubcategorySchema,
   type CreateCustomSubcategoryPayload,
   customCategoryWithSubcategoriesSchema,
-  type CustomCategoryWithSubcategories, // API version (serialized)
+  type CustomCategoryWithSubcategories,
 
-  // Tag API schemas (API version - for serialization)
+  // Tag API schemas
   createTagSchema,
   type CreateTagPayload,
   updateTagSchema,
   type UpdateTagPayload,
   tagWithCountSchema,
-  type TagWithCount, // API version (serialized)
-
-  // PlaidAccount API schemas
-  serializedPlaidAccountFullSchema,
-  type SerializedPlaidAccountFull,
-  serializedAccountFullSchema, // Legacy alias
-  type SerializedAccountFull, // Legacy alias
+  type TagWithCount,
 
   // Plaid API schemas
   createLinkTokenResponseSchema,
   type CreateLinkTokenResponse,
   exchangePublicTokenSchema,
   type ExchangePublicTokenPayload,
-
-  // Holding API schemas
-  serializedHoldingSchema,
-  type SerializedHolding,
-
-  // Investment transaction API schemas
-  serializedInvestmentTransactionSchema,
-  type SerializedInvestmentTransaction,
 
   // Analytics API schemas
   transactionByCategorySchema,
@@ -128,7 +112,7 @@ export {
 // Re-export component types
 export * from "./components";
 
-// Re-export client types (using generated columns - no serialization needed)
+// Re-export client types
 export {
   type TransactionForClient,
   type CategoryForClient,
@@ -138,12 +122,3 @@ export {
   type HoldingForClient,
   type InvestmentTransactionForClient,
 } from "./client";
-
-// Re-export from transaction utilities
-export {
-  serializeTransaction,
-  serializeCustomCategory,
-  serializeTag,
-  serializePlaidAccount,
-  TRANSACTION_INCLUDE,
-} from "./transaction";

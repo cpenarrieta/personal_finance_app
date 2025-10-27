@@ -4,42 +4,48 @@
  * This file contains types used specifically in React components
  */
 
-import type { SerializedTransaction, SerializedTag, SerializedHolding, SerializedInvestmentTransaction, CustomCategoryWithSubcategories } from './api'
-import type { TransactionForClient, CategoryForClient, TagForClient } from './client'
+import type { CustomCategoryWithSubcategories } from "./api";
+import type {
+  TransactionForClient,
+  CategoryForClient,
+  TagForClient,
+  HoldingForClient,
+  InvestmentTransactionForClient,
+} from "./client";
 
 // ============================================================================
 // TRANSACTION COMPONENT TYPES
 // ============================================================================
 
 export interface TransactionListProps {
-  transactions: SerializedTransaction[]
-  showAccount?: boolean
+  transactions: TransactionForClient[];
+  showAccount?: boolean;
 }
 
 export interface TransactionItemProps {
-  transaction: SerializedTransaction
-  onClick?: (transaction: SerializedTransaction) => void
+  transaction: TransactionForClient;
+  onClick?: (transaction: TransactionForClient) => void;
 }
 
 export interface TransactionDetailViewProps {
-  transaction: SerializedTransaction
-  categories: CustomCategoryWithSubcategories[]
-  tags: SerializedTag[]
+  transaction: TransactionForClient;
+  categories: CategoryForClient[];
+  tags: TagForClient[];
 }
 
 export interface EditTransactionModalProps {
-  transaction: TransactionForClient
-  onClose: () => void
-  onSuccess?: () => void
-  categories: CategoryForClient[]
-  tags: TagForClient[]
+  transaction: TransactionForClient;
+  onClose: () => void;
+  onSuccess?: () => void;
+  categories: CategoryForClient[];
+  tags: TagForClient[];
 }
 
 export interface SearchableTransactionListProps {
-  transactions: TransactionForClient[]
-  showAccount?: boolean
-  categories: CategoryForClient[]
-  tags: TagForClient[]
+  transactions: TransactionForClient[];
+  showAccount?: boolean;
+  categories: CategoryForClient[];
+  tags: TagForClient[];
 }
 
 // ============================================================================
@@ -47,25 +53,25 @@ export interface SearchableTransactionListProps {
 // ============================================================================
 
 export interface CategorySelectorProps {
-  categories: CustomCategoryWithSubcategories[]
-  selectedCategoryId?: string | null
-  selectedSubcategoryId?: string | null
-  onCategoryChange: (categoryId: string | null) => void
-  onSubcategoryChange: (subcategoryId: string | null) => void
+  categories: CustomCategoryWithSubcategories[];
+  selectedCategoryId?: string | null;
+  selectedSubcategoryId?: string | null;
+  onCategoryChange: (categoryId: string | null) => void;
+  onSubcategoryChange: (subcategoryId: string | null) => void;
 }
 
 export interface CategoryBadgeProps {
   category: {
-    id: string
-    name: string
-    imageUrl?: string | null
-  }
+    id: string;
+    name: string;
+    imageUrl?: string | null;
+  };
   subcategory?: {
-    id: string
-    name: string
-    imageUrl?: string | null
-  } | null
-  size?: 'sm' | 'md' | 'lg'
+    id: string;
+    name: string;
+    imageUrl?: string | null;
+  } | null;
+  size?: "sm" | "md" | "lg";
 }
 
 // ============================================================================
@@ -73,21 +79,21 @@ export interface CategoryBadgeProps {
 // ============================================================================
 
 export interface TagSelectorProps {
-  availableTags: SerializedTag[]
-  selectedTagIds: string[]
-  onToggleTag: (tagId: string) => void
-  onCreateTag?: () => void
+  availableTags: TagForClient[];
+  selectedTagIds: string[];
+  onToggleTag: (tagId: string) => void;
+  onCreateTag?: () => void;
 }
 
 export interface TagBadgeProps {
-  tag: SerializedTag
-  size?: 'sm' | 'md' | 'lg'
-  onRemove?: (tagId: string) => void
+  tag: TagForClient;
+  size?: "sm" | "md" | "lg";
+  onRemove?: (tagId: string) => void;
 }
 
 export interface TagListProps {
-  tags: SerializedTag[]
-  onTagClick?: (tag: SerializedTag) => void
+  tags: TagForClient[];
+  onTagClick?: (tag: TagForClient) => void;
 }
 
 // ============================================================================
@@ -96,29 +102,29 @@ export interface TagListProps {
 
 export interface AccountCardProps {
   account: {
-    id: string
-    name: string
-    officialName?: string | null
-    type: string
-    subtype?: string | null
-    mask?: string | null
-    currentBalance?: string | null
-    availableBalance?: string | null
-    creditLimit?: string | null
-    balanceUpdatedAt?: string | null
-  }
-  onClick?: (accountId: string) => void
+    id: string;
+    name: string;
+    officialName?: string | null;
+    type: string;
+    subtype?: string | null;
+    mask?: string | null;
+    currentBalance?: string | null;
+    availableBalance?: string | null;
+    creditLimit?: string | null;
+    balanceUpdatedAt?: string | null;
+  };
+  onClick?: (accountId: string) => void;
 }
 
 export interface AccountSelectorProps {
   accounts: Array<{
-    id: string
-    name: string
-    type: string
-    mask?: string | null
-  }>
-  selectedAccountId?: string | null
-  onAccountChange: (accountId: string | null) => void
+    id: string;
+    name: string;
+    type: string;
+    mask?: string | null;
+  }>;
+  selectedAccountId?: string | null;
+  onAccountChange: (accountId: string | null) => void;
 }
 
 // ============================================================================
@@ -126,21 +132,21 @@ export interface AccountSelectorProps {
 // ============================================================================
 
 export interface HoldingListProps {
-  holdings: SerializedHolding[]
+  holdings: HoldingForClient[];
 }
 
 export interface HoldingItemProps {
-  holding: SerializedHolding
-  onClick?: (holding: SerializedHolding) => void
+  holding: HoldingForClient;
+  onClick?: (holding: HoldingForClient) => void;
 }
 
 export interface InvestmentTransactionListProps {
-  transactions: SerializedInvestmentTransaction[]
+  transactions: InvestmentTransactionForClient[];
 }
 
 export interface InvestmentTransactionItemProps {
-  transaction: SerializedInvestmentTransaction
-  onClick?: (transaction: SerializedInvestmentTransaction) => void
+  transaction: InvestmentTransactionForClient;
+  onClick?: (transaction: InvestmentTransactionForClient) => void;
 }
 
 // ============================================================================
@@ -148,29 +154,29 @@ export interface InvestmentTransactionItemProps {
 // ============================================================================
 
 export interface ChartDataPoint {
-  name: string
-  value: number
-  label?: string
+  name: string;
+  value: number;
+  label?: string;
 }
 
 export interface TransactionAnalyticsProps {
-  transactions: SerializedTransaction[]
+  transactions: TransactionForClient[];
   dateRange?: {
-    start: Date
-    end: Date
-  }
+    start: Date;
+    end: Date;
+  };
 }
 
 export interface PieChartData {
-  name: string
-  value: number
-  color?: string
+  name: string;
+  value: number;
+  color?: string;
 }
 
 export interface BarChartData {
-  name: string
-  amount: number
-  count: number
+  name: string;
+  amount: number;
+  count: number;
 }
 
 // ============================================================================
@@ -178,30 +184,30 @@ export interface BarChartData {
 // ============================================================================
 
 export interface TransactionFilters {
-  accountId?: string | null
-  categoryId?: string | null
-  subcategoryId?: string | null
-  tagIds?: string[]
-  startDate?: Date | null
-  endDate?: Date | null
-  minAmount?: number | null
-  maxAmount?: number | null
-  searchQuery?: string
-  pending?: boolean
+  accountId?: string | null;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  tagIds?: string[];
+  startDate?: Date | null;
+  endDate?: Date | null;
+  minAmount?: number | null;
+  maxAmount?: number | null;
+  searchQuery?: string;
+  pending?: boolean;
 }
 
 export interface DateRangePickerProps {
-  startDate?: Date | null
-  endDate?: Date | null
-  onStartDateChange: (date: Date | null) => void
-  onEndDateChange: (date: Date | null) => void
+  startDate?: Date | null;
+  endDate?: Date | null;
+  onStartDateChange: (date: Date | null) => void;
+  onEndDateChange: (date: Date | null) => void;
 }
 
 export interface AmountRangeInputProps {
-  minAmount?: number | null
-  maxAmount?: number | null
-  onMinAmountChange: (amount: number | null) => void
-  onMaxAmountChange: (amount: number | null) => void
+  minAmount?: number | null;
+  maxAmount?: number | null;
+  onMinAmountChange: (amount: number | null) => void;
+  onMaxAmountChange: (amount: number | null) => void;
 }
 
 // ============================================================================
@@ -209,20 +215,20 @@ export interface AmountRangeInputProps {
 // ============================================================================
 
 export interface SyncButtonProps {
-  onSyncComplete?: () => void
-  disabled?: boolean
+  onSyncComplete?: () => void;
+  disabled?: boolean;
 }
 
 export interface DeleteButtonProps {
-  itemId: string
-  itemType: 'transaction' | 'category' | 'tag' | 'account'
-  onDeleteComplete?: () => void
-  confirmMessage?: string
+  itemId: string;
+  itemType: "transaction" | "category" | "tag" | "account";
+  onDeleteComplete?: () => void;
+  confirmMessage?: string;
 }
 
 export interface CategorizeButtonProps {
-  transactionId?: string
-  onCategorizeComplete?: () => void
+  transactionId?: string;
+  onCategorizeComplete?: () => void;
 }
 
 // ============================================================================
@@ -230,21 +236,21 @@ export interface CategorizeButtonProps {
 // ============================================================================
 
 export interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  children: React.ReactNode
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
 }
 
 export interface ConfirmDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  title: string
-  message: string
-  confirmText?: string
-  cancelText?: string
-  variant?: 'danger' | 'warning' | 'info'
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: "danger" | "warning" | "info";
 }
 
 // ============================================================================
@@ -252,34 +258,34 @@ export interface ConfirmDialogProps {
 // ============================================================================
 
 export interface FormFieldError {
-  field: string
-  message: string
+  field: string;
+  message: string;
 }
 
 export interface FormState<T> {
-  values: T
-  errors: FormFieldError[]
-  isSubmitting: boolean
-  isDirty: boolean
+  values: T;
+  errors: FormFieldError[];
+  isSubmitting: boolean;
+  isDirty: boolean;
 }
 
 // ============================================================================
 // UTILITY TYPES
 // ============================================================================
 
-export type LoadingState = 'idle' | 'loading' | 'success' | 'error'
+export type LoadingState = "idle" | "loading" | "success" | "error";
 
 export interface AsyncData<T> {
-  data: T | null
-  loading: boolean
-  error: Error | null
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
 }
 
-export type SortDirection = 'asc' | 'desc'
+export type SortDirection = "asc" | "desc";
 
 export interface SortConfig<T extends string = string> {
-  field: T
-  direction: SortDirection
+  field: T;
+  direction: SortDirection;
 }
 
 // ============================================================================
@@ -287,10 +293,10 @@ export interface SortConfig<T extends string = string> {
 // ============================================================================
 
 export interface PlaidLinkButtonProps {
-  onSuccess?: () => void
-  onExit?: () => void
-  children?: React.ReactNode
-  className?: string
+  onSuccess?: () => void;
+  onExit?: () => void;
+  children?: React.ReactNode;
+  className?: string;
 }
 
 // ============================================================================
@@ -298,17 +304,17 @@ export interface PlaidLinkButtonProps {
 // ============================================================================
 
 export interface NavItem {
-  label: string
-  href: string
-  icon?: React.ComponentType<{ className?: string }>
-  badge?: number | string
+  label: string;
+  href: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  badge?: number | string;
 }
 
 export interface BreadcrumbItem {
-  label: string
-  href?: string
+  label: string;
+  href?: string;
 }
 
 export interface BreadcrumbsProps {
-  items: BreadcrumbItem[]
+  items: BreadcrumbItem[];
 }
