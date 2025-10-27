@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { SerializedTransaction, TransactionWithRelations, CustomCategoryWithSubcategories, SearchableTransactionListProps } from "@/types";
+import type { SearchableTransactionListProps, TransactionForClient } from "@/types";
 
 type DateRange =
   | "all"
@@ -41,7 +41,7 @@ export function SearchableTransactionList({
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [editingTransaction, setEditingTransaction] =
-    useState<SerializedTransaction | TransactionWithRelations | null>(null);
+    useState<TransactionForClient | null>(null);
   const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(false); // Filter for uncategorized transactions
 
   // Category/Subcategory filter state
@@ -71,7 +71,7 @@ export function SearchableTransactionList({
 
   // Filter transactions based on search query and date range
   const filteredTransactions = useMemo(() => {
-    let filtered = transactions;
+    let filtered: TransactionForClient[] = transactions;
 
     // Calculate date range
     const now = new Date();
@@ -107,7 +107,7 @@ export function SearchableTransactionList({
     // Date range filter
     if (range) {
       filtered = filtered.filter((t) =>
-        isWithinInterval(new Date(t.date), {
+        isWithinInterval(new Date(t.date_string), {
           start: range.start,
           end: range.end,
         })
@@ -120,10 +120,10 @@ export function SearchableTransactionList({
       return [];
     } else if (showIncome && !showExpenses) {
       // Show only income (negative amounts)
-      filtered = filtered.filter((t) => Number(t.amount) < 0);
+      filtered = filtered.filter((t) => t.amount_number < 0);
     } else if (!showIncome && showExpenses) {
       // Show only expenses (positive amounts)
-      filtered = filtered.filter((t) => Number(t.amount) > 0);
+      filtered = filtered.filter((t) => t.amount_number > 0);
     }
     // If both are selected, show both (no filter needed)
 
@@ -173,11 +173,7 @@ export function SearchableTransactionList({
 
       filtered = filtered.filter((t) => {
         // Search in multiple fields including tags
-        const tagNames = t.tags?.map(transactionTag => {
-          // Handle both serialized tags and join table structure
-          const tag = 'tag' in transactionTag ? (transactionTag as { tag: { id: string; name: string; color: string } }).tag : transactionTag;
-          return tag.name;
-        }).join(" ") || "";
+        const tagNames = t.tags?.map(tag => tag.name).join(" ") || "";
         const searchableText = [
           t.name,
           t.merchantName,
@@ -185,7 +181,7 @@ export function SearchableTransactionList({
           t.customSubcategory?.name,
           t.account?.name,
           t.isoCurrencyCode,
-          t.amount,
+          t.amount_number?.toString(),
           t.notes,
           tagNames,
         ]
@@ -203,13 +199,13 @@ export function SearchableTransactionList({
 
       switch (sortBy) {
         case "createdAt":
-          compareValue = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          compareValue = new Date(a.created_at_string).getTime() - new Date(b.created_at_string).getTime();
           break;
         case "date":
-          compareValue = new Date(a.date).getTime() - new Date(b.date).getTime();
+          compareValue = new Date(a.date_string).getTime() - new Date(b.date_string).getTime();
           break;
         case "amount":
-          compareValue = Number(a.amount) - Number(b.amount);
+          compareValue = a.amount_number - b.amount_number;
           break;
         case "name":
           compareValue = a.name.localeCompare(b.name);
@@ -242,7 +238,7 @@ export function SearchableTransactionList({
 
   // Set default exclusions (exclude Transfers by default)
   useEffect(() => {
-    const transfersCategory = categories.find((cat: CustomCategoryWithSubcategories) => cat.name === '🔁 Transfers');
+    const transfersCategory = categories.find((cat) => cat.name === '🔁 Transfers');
     if (transfersCategory) {
       setExcludedCategoryIds(new Set([transfersCategory.id]));
     }
@@ -272,13 +268,13 @@ export function SearchableTransactionList({
   // Calculate totals for filtered transactions
   const totals = useMemo(() => {
     const expenses = filteredTransactions
-      .filter((t) => Number(t.amount) > 0)
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+      .filter((t) => t.amount_number > 0)
+      .reduce((sum, t) => sum + t.amount_number, 0);
 
     const income = Math.abs(
       filteredTransactions
-        .filter((t) => Number(t.amount) < 0)
-        .reduce((sum, t) => sum + Number(t.amount), 0)
+        .filter((t) => t.amount_number < 0)
+        .reduce((sum, t) => sum + t.amount_number, 0)
     );
 
     const netBalance = income - expenses;
@@ -357,7 +353,7 @@ export function SearchableTransactionList({
       newSelected.delete(categoryId);
       // Also remove all subcategories of this category
       const category = categories.find((c) => c.id === categoryId);
-      if (category) {
+      if (category && category.subcategories) {
         const newSelectedSubs = new Set(selectedSubcategoryIds);
         category.subcategories.forEach((sub) => newSelectedSubs.delete(sub.id));
         setSelectedSubcategoryIds(newSelectedSubs);
@@ -577,7 +573,7 @@ export function SearchableTransactionList({
                             {category.name}
                           </span>
                         </label>
-                        {category.subcategories.length > 0 &&
+                        {category.subcategories && category.subcategories.length > 0 &&
                           selectedCategoryIds.has(category.id) && (
                             <div className="ml-6 mt-1 space-y-1">
                               {category.subcategories.map((sub) => (
@@ -765,9 +761,9 @@ export function SearchableTransactionList({
             })}
             {Array.from(selectedSubcategoryIds).map((subId) => {
               const category = categories.find((c) =>
-                c.subcategories.some((s) => s.id === subId)
+                c.subcategories?.some((s) => s.id === subId)
               );
-              const subcategory = category?.subcategories.find(
+              const subcategory = category?.subcategories?.find(
                 (s) => s.id === subId
               );
               if (!subcategory || !category) return null;

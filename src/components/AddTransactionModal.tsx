@@ -24,16 +24,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type {
-  CustomCategoryWithSubcategories,
-  SerializedTag,
-  SerializedPlaidAccountFull,
+  CategoryForClient,
+  PlaidAccountForClient,
+  TagForClient
 } from "@/types";
 
 interface AddTransactionModalProps {
   onClose: () => void;
-  categories: CustomCategoryWithSubcategories[];
-  tags: SerializedTag[];
-  accounts: SerializedPlaidAccountFull[];
+  categories: CategoryForClient[];
+  tags: TagForClient[];
+  accounts: PlaidAccountForClient[];
 }
 
 export function AddTransactionModal({

@@ -7,14 +7,14 @@ import { getCategoryImage } from "@/lib/categoryImages";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import type { TransactionWithRelations, SerializedTransaction } from "@/types";
+import type { TransactionForClient } from "@/types";
 
 interface TransactionItemProps {
-  transaction: TransactionWithRelations | SerializedTransaction;
+  transaction: TransactionForClient;
   showBulkUpdate?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
-  onEdit?: (transaction: TransactionWithRelations | SerializedTransaction) => void;
+  onEdit?: (transaction: TransactionForClient) => void;
   showAccount?: boolean; // Whether to display account name
 }
 
@@ -27,8 +27,11 @@ export function TransactionItem({
   showAccount = true,
 }: TransactionItemProps) {
   // Determine which image to show (merchant logo takes priority over category image)
-  const displayImage = t.logoUrl ||
-    (t.customCategory ? getCategoryImage(t.customCategory.name, t.customCategory.imageUrl) : null);
+  const displayImage =
+    t.logoUrl ||
+    (t.customCategory
+      ? getCategoryImage(t.customCategory.name, t.customCategory.imageUrl)
+      : null);
 
   return (
     <li className="hover:bg-gray-50 transition-colors">
@@ -66,12 +69,19 @@ export function TransactionItem({
               <div className="font-medium text-gray-900 flex items-center gap-2">
                 <span className="truncate">{t.name}</span>
                 {t.pending && (
-                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 flex-shrink-0">
+                  <Badge
+                    variant="secondary"
+                    className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 flex-shrink-0"
+                  >
                     Pending
                   </Badge>
                 )}
                 {t.parentTransactionId && (
-                  <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-100 flex-shrink-0" title="This transaction is part of a split">
+                  <Badge
+                    variant="secondary"
+                    className="bg-purple-100 text-purple-800 hover:bg-purple-100 flex-shrink-0"
+                    title="This transaction is part of a split"
+                  >
                     Split
                   </Badge>
                 )}
@@ -79,7 +89,7 @@ export function TransactionItem({
 
               {/* Date and Account */}
               <div className="text-sm text-gray-600 mt-1">
-                {format(new Date(t.date), "MMM d yyyy")}
+                {format(new Date(t.date_string), "MMM d yyyy")}
                 {showAccount && t.account && ` • ${t.account.name}`}
               </div>
 
@@ -112,9 +122,7 @@ export function TransactionItem({
               {/* Tags */}
               {t.tags && t.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {t.tags.map((transactionTag) => {
-                    // Handle both serialized tags and join table structure
-                    const tag = 'tag' in transactionTag ? transactionTag.tag : transactionTag;
+                  {t.tags.map((tag) => {
                     return (
                       <Badge
                         key={tag.id}
@@ -133,30 +141,24 @@ export function TransactionItem({
             <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
               <div
                 className={`text-lg font-semibold ${
-                  Number(t.amount) > 0
-                    ? "text-red-600"
-                    : "text-green-600"
+                  t.amount_number > 0 ? "text-red-600" : "text-green-600"
                 }`}
               >
-                {Number(t.amount) > 0 ? "-" : "+"}$
-                {Math.abs(Number(t.amount)).toLocaleString("en-US", {
+                {t.amount_number > 0 ? "-" : "+"}$
+                {Math.abs(t.amount_number).toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
               </div>
               {t.isoCurrencyCode && (
-                <div className="text-xs text-gray-500">
-                  {t.isoCurrencyCode}
-                </div>
+                <div className="text-xs text-gray-500">{t.isoCurrencyCode}</div>
               )}
               <Button
                 asChild
                 size="sm"
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
               >
-                <Link href={`/transactions/${t.id}`}>
-                  Details
-                </Link>
+                <Link href={`/transactions/${t.id}`}>Details</Link>
               </Button>
             </div>
           </div>

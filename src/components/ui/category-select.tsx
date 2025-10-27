@@ -6,12 +6,12 @@ import {
   getCategoryGroup,
   getCategorySortOrder,
 } from "@/config/category-groups";
-import { CustomCategoryWithSubcategories } from "@/types";
+import { CategoryForClient } from "@/types";
 
 interface CategorySelectProps {
   value: string;
   onChange: (value: string) => void;
-  categories: CustomCategoryWithSubcategories[];
+  categories: CategoryForClient[];
   placeholder?: string;
   disabled?: boolean;
   id?: string;

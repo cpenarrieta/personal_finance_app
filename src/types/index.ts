@@ -142,6 +142,17 @@ export {
 // Re-export component types
 export * from './components'
 
+// Re-export client types (using generated columns - no serialization needed)
+export {
+  type TransactionForClient,
+  type CategoryForClient,
+  type SubcategoryForClient,
+  type TagForClient,
+  type PlaidAccountForClient,
+  type HoldingForClient,
+  type InvestmentTransactionForClient,
+} from './client'
+
 // Re-export from transaction utilities
 export {
   serializeTransaction,

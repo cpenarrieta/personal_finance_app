@@ -5,17 +5,17 @@ import { SearchableTransactionList } from "./SearchableTransactionList";
 import { AddTransactionModal } from "./AddTransactionModal";
 import { Button } from "@/components/ui/button";
 import type {
-  SerializedTransaction,
-  CustomCategoryWithSubcategories,
-  SerializedTag,
-  SerializedPlaidAccountFull,
+  TransactionForClient,
+  CategoryForClient,
+  TagForClient,
+  PlaidAccountForClient,
 } from "@/types";
 
 interface TransactionsPageClientProps {
-  transactions: SerializedTransaction[];
-  categories: CustomCategoryWithSubcategories[];
-  tags: SerializedTag[];
-  accounts: SerializedPlaidAccountFull[];
+  transactions: TransactionForClient[];
+  categories: CategoryForClient[];
+  tags: TagForClient[];
+  accounts: PlaidAccountForClient[];
 }
 
 export function TransactionsPageClient({

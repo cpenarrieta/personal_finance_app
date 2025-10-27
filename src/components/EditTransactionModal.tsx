@@ -37,14 +37,7 @@ export function EditTransactionModal({
   );
   const [notes, setNotes] = useState(transaction.notes || "");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
-    transaction.tags?.map((t) => {
-      // Handle both serialized tags and join table structure
-      const tag =
-        "tag" in t
-          ? (t as { tag: { id: string; name: string; color: string } }).tag
-          : t;
-      return tag.id;
-    }) || []
+    transaction.tags?.map((tag) => tag.id) || []
   );
 
   // Get subcategories for selected custom category
@@ -226,7 +219,7 @@ export function EditTransactionModal({
               <div className="text-gray-600">Amount:</div>
               <div className="font-medium">
                 $
-                {Math.abs(Number(transaction.amount)).toLocaleString("en-US", {
+                {Math.abs(transaction.amount_number).toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -235,11 +228,11 @@ export function EditTransactionModal({
               <div className="font-medium">{transaction.account?.name}</div>
               <div className="text-gray-600">Transaction Date:</div>
               <div className="font-medium">
-                {format(new Date(transaction.date), "MMM d yyyy")}
+                {format(new Date(transaction.date_string), "MMM d yyyy")}
               </div>
               <div className="text-gray-600">Creation Date:</div>
               <div className="font-medium">
-                {format(new Date(transaction.createdAt), "MMM d yyyy, h:mm a")}
+                {format(new Date(transaction.created_at_string), "MMM d yyyy, h:mm a")}
               </div>
               {transaction.merchantName && (
                 <>
