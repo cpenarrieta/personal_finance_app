@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
       merchantName,
       isoCurrencyCode,
       authorizedDate,
-      category,
-      subcategory,
+      plaidCategory,
+      plaidSubcategory,
       paymentChannel,
-      customCategoryId,
-      customSubcategoryId,
+      categoryId,
+      subcategoryId,
       notes,
       tagIds,
     } = parseResult.data;
@@ -67,22 +67,22 @@ export async function POST(req: NextRequest) {
       merchantName: merchantName || null,
       isoCurrencyCode: isoCurrencyCode || null,
       authorizedDate: authorizedDate ? new Date(authorizedDate) : null,
-      category: category || null,
-      subcategory: subcategory || null,
+      plaidCategory: plaidCategory || null,
+      plaidSubcategory: plaidSubcategory || null,
       paymentChannel: paymentChannel || null,
       notes: notes || null,
       isSplit: false,
     };
 
-    // Handle custom category relation
-    if (customCategoryId) {
-      transactionData.customCategory = { connect: { id: customCategoryId } };
+    // Handle category relation
+    if (categoryId) {
+      transactionData.category = { connect: { id: categoryId } };
     }
 
-    // Handle custom subcategory relation
-    if (customSubcategoryId) {
-      transactionData.customSubcategory = {
-        connect: { id: customSubcategoryId },
+    // Handle subcategory relation
+    if (subcategoryId) {
+      transactionData.subcategory = {
+        connect: { id: subcategoryId },
       };
     }
 

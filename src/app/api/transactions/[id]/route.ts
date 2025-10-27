@@ -26,10 +26,10 @@ export async function PATCH(
 
     const {
       name,
-      category,
-      subcategory,
-      customCategoryId,
-      customSubcategoryId,
+      plaidCategory,
+      plaidSubcategory,
+      categoryId,
+      subcategoryId,
       notes,
       tagIds,
     } = parseResult.data
@@ -38,25 +38,25 @@ export async function PATCH(
     const updateData: Prisma.TransactionUpdateInput = {}
 
     if (name !== undefined) updateData.name = name
-    if (category !== undefined) updateData.category = category
-    if (subcategory !== undefined) updateData.subcategory = subcategory
+    if (plaidCategory !== undefined) updateData.plaidCategory = plaidCategory
+    if (plaidSubcategory !== undefined) updateData.plaidSubcategory = plaidSubcategory
     if (notes !== undefined) updateData.notes = notes
 
-    // Handle custom category relation
-    if (customCategoryId !== undefined) {
-      if (customCategoryId === null) {
-        updateData.customCategory = { disconnect: true }
+    // Handle category relation
+    if (categoryId !== undefined) {
+      if (categoryId === null) {
+        updateData.category = { disconnect: true }
       } else {
-        updateData.customCategory = { connect: { id: customCategoryId } }
+        updateData.category = { connect: { id: categoryId } }
       }
     }
 
-    // Handle custom subcategory relation
-    if (customSubcategoryId !== undefined) {
-      if (customSubcategoryId === null) {
-        updateData.customSubcategory = { disconnect: true }
+    // Handle subcategory relation
+    if (subcategoryId !== undefined) {
+      if (subcategoryId === null) {
+        updateData.subcategory = { disconnect: true }
       } else {
-        updateData.customSubcategory = { connect: { id: customSubcategoryId } }
+        updateData.subcategory = { connect: { id: subcategoryId } }
       }
     }
 

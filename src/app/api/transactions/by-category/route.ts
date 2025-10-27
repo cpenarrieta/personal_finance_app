@@ -17,13 +17,13 @@ export async function GET(request: NextRequest) {
 
     // Build the where clause with proper typing
     const whereClause: Prisma.TransactionWhereInput = {
-      customCategoryId: categoryId,
+      categoryId: categoryId,
       isSplit: false, // Filter out parent transactions that have been split
     };
 
     // If subcategoryId is provided, filter by it (can be null for "no subcategory")
     if (subcategoryId !== null && subcategoryId !== undefined) {
-      whereClause.customSubcategoryId =
+      whereClause.subcategoryId =
         subcategoryId === "null" ? null : subcategoryId;
     }
 
@@ -40,14 +40,14 @@ export async function GET(request: NextRequest) {
         pending: true,
         merchantName: true,
         name: true,
-        category: true,
-        subcategory: true,
+        plaidCategory: true,
+        plaidSubcategory: true,
         paymentChannel: true,
         pendingTransactionId: true,
         logoUrl: true,
         categoryIconUrl: true,
-        customCategoryId: true,
-        customSubcategoryId: true,
+        categoryId: true,
+        subcategoryId: true,
         notes: true,
         isSplit: true,
         parentTransactionId: true,
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
             mask: true,
           },
         },
-        customCategory: {
+        category: {
           select: {
             id: true,
             name: true,
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
             updated_at_string: true, // Generated column
           },
         },
-        customSubcategory: {
+        subcategory: {
           select: {
             id: true,
             categoryId: true,

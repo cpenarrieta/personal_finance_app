@@ -62,13 +62,13 @@ async function main() {
 
   // Delete all existing custom categories (cascades to subcategories and removes references)
   console.log('Deleting existing categories...')
-  await prisma.customCategory.deleteMany({})
+  await prisma.category.deleteMany({})
   console.log('All existing categories deleted.')
 
   // Create new categories with subcategories
   console.log('Creating new categories...')
   for (const category of categories) {
-    const createdCategory = await prisma.customCategory.create({
+    const createdCategory = await prisma.category.create({
       data: {
         name: category.name,
         subcategories: {

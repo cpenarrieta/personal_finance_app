@@ -37,7 +37,7 @@ export default async function ChartsPage() {
         pendingTransactionId: true,
         logoUrl: true,
         categoryIconUrl: true,
-        customCategoryId: true,
+        categoryId: true,
         customSubcategoryId: true,
         notes: true,
         isSplit: true,
@@ -59,7 +59,7 @@ export default async function ChartsPage() {
             updated_at_string: true, // Generated column
           },
         },
-        customCategory: {
+        category: {
           select: {
             id: true,
             name: true,
@@ -89,7 +89,7 @@ export default async function ChartsPage() {
         },
       },
     }),
-    prisma.customCategory.findMany({
+    prisma.category.findMany({
       select: {
         id: true,
         name: true,

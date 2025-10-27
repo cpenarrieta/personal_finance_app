@@ -197,16 +197,16 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     // Exclude categories filter
     if (excludedCategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customCategoryId) return true; // Keep uncategorized
-        return !excludedCategoryIds.has(t.customCategoryId);
+        if (!t.categoryId) return true; // Keep uncategorized
+        return !excludedCategoryIds.has(t.categoryId);
       });
     }
 
     // Category filter (include)
     if (selectedCategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customCategoryId) return false;
-        return selectedCategoryIds.has(t.customCategoryId);
+        if (!t.categoryId) return false;
+        return selectedCategoryIds.has(t.categoryId);
       });
     }
 
@@ -325,7 +325,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
       const imageUrl = t.customSubcategory?.imageUrl;
       const categoryName =
         t.customSubcategory?.category?.name ||
-        t.customCategory?.name ||
+        t.category?.name ||
         "Uncategorized";
 
       if (subcategoryMap.has(subcategoryName)) {
@@ -353,8 +353,8 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
 
     filteredTransactions.forEach((t) => {
       const amount = Math.abs(t.amount_number ?? 0);
-      const categoryName = t.customCategory?.name || "Uncategorized";
-      const imageUrl = t.customCategory?.imageUrl;
+      const categoryName = t.category?.name || "Uncategorized";
+      const imageUrl = t.category?.imageUrl;
 
       if (categoryMap.has(categoryName)) {
         categoryMap.get(categoryName)!.value += amount;

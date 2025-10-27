@@ -1,125 +1,102 @@
-// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model Institution {
-  id          String   @id
-  name        String
-  shortName   String?  // Short name for the institution
-  logoUrl     String?  // Institution logo
-  createdAt   DateTime @default(now())
-  items       Item[]
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
+  id                String   @id
+  name              String
+  createdAt         DateTime @default(now())
+  logoUrl           String?
+  shortName         String?
+  created_at_string String?  @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  items             Item[]
 }
 
 model Item {
-  id                String   @id @default(cuid())
-  plaidItemId       String   @unique
-  accessToken       String   // encrypted at rest (in local-only dev it's fine; production: KMS)
-  institutionId     String?
-  institution       Institution? @relation(fields: [institutionId], references: [id])
-  status            String?
-  lastTransactionsCursor String? // for /transactions/sync
-  lastInvestmentsCursor  String? // if using investments sync cursors later
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  accounts         PlaidAccount[]
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
-  updated_at_string String? // Auto-generated from updatedAt
+  id                     String         @id @default(cuid())
+  plaidItemId            String         @unique
+  accessToken            String
+  institutionId          String?
+  status                 String?
+  lastTransactionsCursor String?
+  lastInvestmentsCursor  String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  created_at_string      String?        @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string      String?        @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  institution            Institution?   @relation(fields: [institutionId], references: [id])
+  accounts               PlaidAccount[]
 }
 
-// Plaid Account model
 model PlaidAccount {
-  id              String   @id @default(cuid())
-  plaidAccountId  String   @unique
-  itemId          String
-  item            Item     @relation(fields: [itemId], references: [id])
-  name            String
-  officialName    String?
-  mask            String?
-  type            String
-  subtype         String?
-  currency        String?
-
-  // Balance information (updated during sync)
-  currentBalance   Decimal? @db.Decimal(14, 2)
-  availableBalance Decimal? @db.Decimal(14, 2)
-  creditLimit      Decimal? @db.Decimal(14, 2)
-  balanceUpdatedAt DateTime?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  transactions    Transaction[]
-  investmentTxns  InvestmentTransaction[]
-  holdings        Holding[]
-
-  // Generated columns for serialization
-  current_balance_number    Float?  // Auto-generated from currentBalance
-  available_balance_number  Float?  // Auto-generated from availableBalance
-  credit_limit_number       Float?  // Auto-generated from creditLimit
-  balance_updated_at_string String? // Auto-generated from balanceUpdatedAt
-  created_at_string         String? // Auto-generated from createdAt
-  updated_at_string         String? // Auto-generated from updatedAt
+  id                        String                  @id @default(cuid())
+  plaidAccountId            String                  @unique
+  itemId                    String
+  name                      String
+  officialName              String?
+  mask                      String?
+  type                      String
+  subtype                   String?
+  currency                  String?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+  availableBalance          Decimal?                @db.Decimal(14, 2)
+  balanceUpdatedAt          DateTime?
+  creditLimit               Decimal?                @db.Decimal(14, 2)
+  currentBalance            Decimal?                @db.Decimal(14, 2)
+  current_balance_number    Float?                  @default(dbgenerated("(\"currentBalance\")::double precision"))
+  available_balance_number  Float?                  @default(dbgenerated("(\"availableBalance\")::double precision"))
+  credit_limit_number       Float?                  @default(dbgenerated("(\"creditLimit\")::double precision"))
+  balance_updated_at_string String?                 @default(dbgenerated("timestamp_to_string(\"balanceUpdatedAt\")"))
+  created_at_string         String?                 @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string         String?                 @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  holdings                  Holding[]
+  investmentTxns            InvestmentTransaction[]
+  item                      Item                    @relation(fields: [itemId], references: [id])
+  transactions              Transaction[]
 }
 
 model Transaction {
-  id               String   @id @default(cuid())
-  plaidTransactionId String  @unique
-  accountId        String
-  account          PlaidAccount  @relation(fields: [accountId], references: [id])
-  amount           Decimal  @db.Decimal(14, 2)
-  isoCurrencyCode  String?
-  date             DateTime // posted date
-  authorizedDate   DateTime?
-  pending          Boolean
-  merchantName     String?
-  name             String
-  category         String?  // Plaid category
-  subcategory      String?  // Plaid subcategory
-  paymentChannel   String?
-  pendingTransactionId String?
-  logoUrl          String?  // Merchant logo (100x100 PNG)
-  categoryIconUrl  String?  // Category icon (100x100 PNG)
-
-  // Custom categories (user-managed)
-  customCategoryId    String?
-  customCategory      CustomCategory? @relation(fields: [customCategoryId], references: [id])
-  customSubcategoryId String?
-  customSubcategory   CustomSubcategory? @relation(fields: [customSubcategoryId], references: [id])
-
-  // User notes
-  notes            String?  // User-added notes for the transaction
-
-  // Tags
-  tags             TransactionTag[]
-
-  // Split transaction support
-  isSplit              Boolean  @default(false) // True if this transaction has been split (hidden from normal views)
-  parentTransactionId  String?  // If this is a split child, points to the immediate parent
-  parentTransaction    Transaction? @relation("TransactionSplits", fields: [parentTransactionId], references: [id], onDelete: Cascade)
-  childTransactions    Transaction[] @relation("TransactionSplits")
-  originalTransactionId String? // For all children, points to the original transaction that was split
-
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  // Generated columns for serialization
-  amount_number            Float?  // Auto-generated from amount
-  date_string              String? // Auto-generated from date
-  authorized_date_string   String? // Auto-generated from authorizedDate
-  created_at_string        String? // Auto-generated from createdAt
-  updated_at_string        String? // Auto-generated from updatedAt
+  id                     String        @id @default(cuid())
+  plaidTransactionId     String        @unique
+  accountId              String
+  amount                 Decimal       @db.Decimal(14, 2)
+  isoCurrencyCode        String?
+  date                   DateTime
+  authorizedDate         DateTime?
+  pending                Boolean
+  merchantName           String?
+  name                   String
+  plaidCategory          String?
+  plaidSubcategory       String?
+  paymentChannel         String?
+  pendingTransactionId   String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  categoryIconUrl        String?
+  logoUrl                String?
+  categoryId             String?
+  subcategoryId          String?
+  notes                  String?
+  isSplit                Boolean       @default(false)
+  originalTransactionId  String?
+  parentTransactionId    String?
+  amount_number          Float?        @default(dbgenerated("(amount)::double precision"))
+  date_string            String?       @default(dbgenerated("timestamp_to_string(date)"))
+  authorized_date_string String?       @default(dbgenerated("timestamp_to_string(\"authorizedDate\")"))
+  created_at_string      String?       @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string      String?       @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  account                PlaidAccount  @relation(fields: [accountId], references: [id])
+  category               Category?     @relation(fields: [categoryId], references: [id])
+  subcategory            Subcategory?  @relation(fields: [subcategoryId], references: [id])
+  parentTransaction      Transaction?  @relation("TransactionSplits", fields: [parentTransactionId], references: [id], onDelete: Cascade)
+  childTransactions      Transaction[] @relation("TransactionSplits")
+  tags                   TransactionTag[]
 
   @@index([plaidTransactionId])
   @@index([parentTransactionId])
@@ -127,140 +104,93 @@ model Transaction {
 }
 
 model Security {
-  id            String   @id @default(cuid())
-  plaidSecurityId String @unique
-  name          String?
-  tickerSymbol  String?
-  type          String?
-  isoCurrencyCode String?
-  logoUrl       String?  // Company logo from logo.dev
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  holdings      Holding[]
-  investmentTx  InvestmentTransaction[]
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
-  updated_at_string String? // Auto-generated from updatedAt
+  id                String                  @id @default(cuid())
+  plaidSecurityId   String                  @unique
+  name              String?
+  tickerSymbol      String?
+  type              String?
+  isoCurrencyCode   String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  logoUrl           String?
+  created_at_string String?                 @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string String?                 @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  holdings          Holding[]
+  investmentTx      InvestmentTransaction[]
 }
 
 model Holding {
-  id            String   @id @default(cuid())
-  accountId     String
-  account       PlaidAccount  @relation(fields: [accountId], references: [id])
-  securityId    String
-  security      Security @relation(fields: [securityId], references: [id])
-  quantity      Decimal  @db.Decimal(20, 8)
-  costBasis     Decimal? @db.Decimal(20, 8) // total cost basis of the holding (total amount spent to acquire all shares)
-  institutionPrice Decimal? @db.Decimal(20, 8)
-  institutionPriceAsOf DateTime?
-  isoCurrencyCode String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Generated columns for serialization
-  quantity_number                Float?  // Auto-generated from quantity
-  cost_basis_number              Float?  // Auto-generated from costBasis
-  institution_price_number       Float?  // Auto-generated from institutionPrice
-  institution_price_as_of_string String? // Auto-generated from institutionPriceAsOf
-  created_at_string              String? // Auto-generated from createdAt
-  updated_at_string              String? // Auto-generated from updatedAt
-  // optional: unique(accountId, securityId) for current snapshot rows; or history w/ asOf
+  id                             String       @id @default(cuid())
+  accountId                      String
+  securityId                     String
+  quantity                       Decimal      @db.Decimal(20, 8)
+  costBasis                      Decimal?     @db.Decimal(20, 8)
+  institutionPrice               Decimal?     @db.Decimal(20, 8)
+  institutionPriceAsOf           DateTime?
+  isoCurrencyCode                String?
+  createdAt                      DateTime     @default(now())
+  updatedAt                      DateTime     @updatedAt
+  quantity_number                Float?       @default(dbgenerated("(quantity)::double precision"))
+  cost_basis_number              Float?       @default(dbgenerated("(\"costBasis\")::double precision"))
+  institution_price_number       Float?       @default(dbgenerated("(\"institutionPrice\")::double precision"))
+  institution_price_as_of_string String?      @default(dbgenerated("timestamp_to_string(\"institutionPriceAsOf\")"))
+  created_at_string              String?      @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string              String?      @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  account                        PlaidAccount @relation(fields: [accountId], references: [id])
+  security                       Security     @relation(fields: [securityId], references: [id])
 }
 
 model InvestmentTransaction {
-  id               String   @id @default(cuid())
-  plaidInvestmentTransactionId String @unique
-  accountId        String
-  account          PlaidAccount  @relation(fields: [accountId], references: [id])
-  securityId       String?
-  security         Security? @relation(fields: [securityId], references: [id])
-  type             String    // buy, sell, dividend, fee, etc.
-  amount           Decimal?  @db.Decimal(20, 8)
-  price            Decimal?  @db.Decimal(20, 8)
-  quantity         Decimal?  @db.Decimal(20, 8)
-  fees             Decimal?  @db.Decimal(20, 8)
-  isoCurrencyCode  String?
-  date             DateTime
-  name             String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  // Generated columns for serialization
-  amount_number     Float?  // Auto-generated from amount
-  price_number      Float?  // Auto-generated from price
-  quantity_number   Float?  // Auto-generated from quantity
-  fees_number       Float?  // Auto-generated from fees
-  date_string       String? // Auto-generated from date
-  created_at_string String? // Auto-generated from createdAt
-  updated_at_string String? // Auto-generated from updatedAt
+  id                           String       @id @default(cuid())
+  plaidInvestmentTransactionId String       @unique
+  accountId                    String
+  securityId                   String?
+  type                         String
+  amount                       Decimal?     @db.Decimal(20, 8)
+  price                        Decimal?     @db.Decimal(20, 8)
+  quantity                     Decimal?     @db.Decimal(20, 8)
+  fees                         Decimal?     @db.Decimal(20, 8)
+  isoCurrencyCode              String?
+  date                         DateTime
+  name                         String?
+  createdAt                    DateTime     @default(now())
+  updatedAt                    DateTime     @updatedAt
+  amount_number                Float?       @default(dbgenerated("(amount)::double precision"))
+  price_number                 Float?       @default(dbgenerated("(price)::double precision"))
+  quantity_number              Float?       @default(dbgenerated("(quantity)::double precision"))
+  fees_number                  Float?       @default(dbgenerated("(fees)::double precision"))
+  date_string                  String?      @default(dbgenerated("timestamp_to_string(date)"))
+  created_at_string            String?      @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string            String?      @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  account                      PlaidAccount @relation(fields: [accountId], references: [id])
+  security                     Security?    @relation(fields: [securityId], references: [id])
 
   @@index([plaidInvestmentTransactionId])
 }
 
-// Custom Categories (user-managed, separate from Plaid categories)
-model CustomCategory {
-  id            String   @id @default(cuid())
-  name          String
-  imageUrl      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  subcategories CustomSubcategory[]
-  transactions  Transaction[]
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
-  updated_at_string String? // Auto-generated from updatedAt
-}
-
-model CustomSubcategory {
-  id            String   @id @default(cuid())
-  categoryId    String
-  category      CustomCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  name          String
-  imageUrl      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  transactions  Transaction[]
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
-  updated_at_string String? // Auto-generated from updatedAt
-}
-
-// Tags for transactions
 model Tag {
-  id            String   @id @default(cuid())
-  name          String   @unique
-  color         String   // hex color code
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  transactions  TransactionTag[]
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
-  updated_at_string String? // Auto-generated from updatedAt
+  id                String           @id @default(cuid())
+  name              String           @unique
+  color             String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  created_at_string String?          @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string String?          @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  transactions      TransactionTag[]
 }
 
-// Many-to-many relation between Transaction and Tag
 model TransactionTag {
-  id            String   @id @default(cuid())
-  transactionId String
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  tagId         String
-  tag           Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
+  id                String      @id @default(cuid())
+  transactionId     String
+  tagId             String
+  createdAt         DateTime    @default(now())
+  created_at_string String?     @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  tag               Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  transaction       Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@unique([transactionId, tagId])
 }
 
-// Better Auth models for authentication
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -269,44 +199,43 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-
-  sessions      Session[]
   accounts      Account[]
+  sessions      Session[]
 }
 
 model Session {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
   expiresAt DateTime
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// Better Auth models for authentication
 model Account {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   userId                String
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accountId             String   // OAuth provider's user ID (e.g., "107543347720814772769" from Google)
-  providerId            String   // Provider name (e.g., "google", "github")
+  providerId            String
+  accountId             String
   accessToken           String?
   refreshToken          String?
-  idToken               String?  @db.Text // For Google/Apple OAuth
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?  // OAuth scopes granted
-  password              String?  // For email/password (not used in our case)
   expiresAt             DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  accessTokenExpiresAt  DateTime?
+  idToken               String?
+  password              String?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, accountId])
+  @@unique([providerId, accountId], map: "OAuthAccount_provider_providerId_key")
   @@index([userId])
 }
 
@@ -319,4 +248,29 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@unique([identifier, value])
+}
+
+model Category {
+  id                String        @id
+  name              String
+  imageUrl          String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime
+  created_at_string String?       @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string String?       @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  subcategories     Subcategory[]
+  transactions      Transaction[]
+}
+
+model Subcategory {
+  id                String        @id
+  categoryId        String
+  name              String
+  imageUrl          String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime
+  created_at_string String?       @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string String?       @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  category          Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  transactions      Transaction[]
 }

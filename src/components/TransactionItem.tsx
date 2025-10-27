@@ -29,8 +29,8 @@ export function TransactionItem({
   // Determine which image to show (merchant logo takes priority over category image)
   const displayImage =
     t.logoUrl ||
-    (t.customCategory
-      ? getCategoryImage(t.customCategory.name, t.customCategory.imageUrl)
+    (t.category
+      ? getCategoryImage(t.category.name, t.category.imageUrl)
       : null);
 
   return (
@@ -101,12 +101,12 @@ export function TransactionItem({
               )}
 
               {/* Category and Subcategory */}
-              {t.customCategory && (
+              {t.category && (
                 <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                  <span>Category: {t.customCategory.name}</span>
-                  {t.customSubcategory && (
+                  <span>Category: {t.category.name}</span>
+                  {t.subcategory && (
                     <span className="text-gray-400">
-                      • {t.customSubcategory.name}
+                      • {t.subcategory.name}
                     </span>
                   )}
                 </div>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function MoveTransactionsPage() {
-  const categories = (await prisma.customCategory.findMany({
+  const categories = (await prisma.category.findMany({
     select: {
       id: true,
       name: true,

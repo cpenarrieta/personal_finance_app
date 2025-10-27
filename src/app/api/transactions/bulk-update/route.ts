@@ -17,7 +17,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const { transactionIds, customCategoryId, customSubcategoryId, tagIds } = parseResult.data
+    const { transactionIds, categoryId, subcategoryId, tagIds } = parseResult.data
 
     // Update all transactions with the new category/subcategory
     await prisma.transaction.updateMany({
@@ -27,8 +27,8 @@ export async function PATCH(request: NextRequest) {
         },
       },
       data: {
-        customCategoryId: customCategoryId ?? undefined,
-        customSubcategoryId: customSubcategoryId ?? undefined,
+        categoryId: categoryId ?? undefined,
+        subcategoryId: subcategoryId ?? undefined,
       },
     })
 

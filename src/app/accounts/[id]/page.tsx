@@ -90,8 +90,8 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         pendingTransactionId: true,
         logoUrl: true,
         categoryIconUrl: true,
-        customCategoryId: true,
-        customSubcategoryId: true,
+        categoryId: true,
+        subcategoryId: true,
         notes: true,
         isSplit: true,
         parentTransactionId: true,
@@ -106,7 +106,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             mask: true,
           },
         },
-        customCategory: {
+        category: {
           select: {
             id: true,
             name: true,
@@ -115,7 +115,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             updated_at_string: true, // Generated column
           },
         },
-        customSubcategory: {
+        subcategory: {
           select: {
             id: true,
             categoryId: true,
@@ -150,7 +150,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
 
   // Fetch categories and tags (needed for transaction editing)
   const [categories, tags] = await Promise.all([
-    prisma.customCategory.findMany({
+    prisma.category.findMany({
       select: {
         id: true,
         name: true,

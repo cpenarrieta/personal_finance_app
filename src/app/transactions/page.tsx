@@ -40,8 +40,8 @@ export default async function TransactionsPage() {
         pendingTransactionId: true,
         logoUrl: true,
         categoryIconUrl: true,
-        customCategoryId: true,
-        customSubcategoryId: true,
+        categoryId: true,
+        subcategoryId: true,
         notes: true,
         isSplit: true,
         parentTransactionId: true,
@@ -56,7 +56,7 @@ export default async function TransactionsPage() {
             mask: true,
           },
         },
-        customCategory: {
+        category: {
           select: {
             id: true,
             name: true,
@@ -65,7 +65,7 @@ export default async function TransactionsPage() {
             updated_at_string: true, // Generated column
           },
         },
-        customSubcategory: {
+        subcategory: {
           select: {
             id: true,
             categoryId: true,
@@ -90,7 +90,7 @@ export default async function TransactionsPage() {
         },
       },
     }),
-    prisma.customCategory.findMany({
+    prisma.category.findMany({
       select: {
         id: true,
         name: true,

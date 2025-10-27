@@ -70,8 +70,8 @@ export default async function TransactionDetailPage({
       pendingTransactionId: true,
       logoUrl: true,
       categoryIconUrl: true,
-      customCategoryId: true,
-      customSubcategoryId: true,
+      categoryId: true,
+      subcategoryId: true,
       notes: true,
       isSplit: true,
       parentTransactionId: true,
@@ -86,7 +86,7 @@ export default async function TransactionDetailPage({
           mask: true,
         },
       },
-      customCategory: {
+      category: {
         select: {
           id: true,
           name: true,
@@ -95,7 +95,7 @@ export default async function TransactionDetailPage({
           updated_at_string: true, // Generated column
         },
       },
-      customSubcategory: {
+      subcategory: {
         select: {
           id: true,
           categoryId: true,
@@ -124,7 +124,7 @@ export default async function TransactionDetailPage({
           name: true,
           amount_number: true, // Generated column
           date_string: true, // Generated column
-          customCategory: {
+          category: {
             select: {
               id: true,
               name: true,
@@ -138,13 +138,13 @@ export default async function TransactionDetailPage({
           name: true,
           amount_number: true, // Generated column
           date_string: true, // Generated column
-          customCategory: {
+          category: {
             select: {
               id: true,
               name: true,
             },
           },
-          customSubcategory: {
+          subcategory: {
             select: {
               id: true,
               name: true,
@@ -170,7 +170,7 @@ export default async function TransactionDetailPage({
 
   // Fetch categories and tags (needed for transaction editing)
   const [categories, tags] = await Promise.all([
-    prisma.customCategory.findMany({
+    prisma.category.findMany({
       select: {
         id: true,
         name: true,

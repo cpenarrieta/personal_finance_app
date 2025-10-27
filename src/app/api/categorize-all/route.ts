@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 import {
-  CustomCategoryWithSubcategories,
+  CategoryWithSubcategories,
   TransactionWithRelations,
 } from "@/types";
 
@@ -22,8 +22,8 @@ async function categorizeBatch(
     id: string;
     name: string;
     merchantName: string | null;
-    category: string | null;
-    subcategory: string | null;
+    plaidCategory: string | null;
+    plaidSubcategory: string | null;
     notes: string | null;
     amount: string;
   }>,
@@ -135,12 +135,12 @@ Return ONLY the JSON array, no other text.`;
 
 export async function POST() {
   try {
-    // Fetch all custom categories with subcategories
-    const categories = (await prisma.customCategory.findMany({
+    // Fetch all categories with subcategories
+    const categories = (await prisma.category.findMany({
       include: {
         subcategories: true,
       },
-    })) as CustomCategoryWithSubcategories[];
+    })) as CategoryWithSubcategories[];
 
     // Fetch ALL transactions (no filter for existing categories)
     const transactions = (await prisma.transaction.findMany({
@@ -148,8 +148,8 @@ export async function POST() {
         id: true,
         name: true,
         merchantName: true,
-        category: true,
-        subcategory: true,
+        plaidCategory: true,
+        plaidSubcategory: true,
         notes: true,
         amount: true,
       },
@@ -179,8 +179,8 @@ export async function POST() {
         id: t.id,
         name: t.name,
         merchantName: t.merchantName,
-        category: t.category,
-        subcategory: t.subcategory,
+        plaidCategory: t.plaidCategory,
+        plaidSubcategory: t.plaidSubcategory,
         notes: t.notes,
         amount: t.amount.toString(),
       }));
@@ -208,8 +208,8 @@ export async function POST() {
         await prisma.transaction.update({
           where: { id: transaction.id },
           data: {
-            customCategory: { connect: { id: category.id } },
-            customSubcategory: subcategory
+            category: { connect: { id: category.id } },
+            subcategory: subcategory
               ? { connect: { id: subcategory.id } }
               : { disconnect: true },
           },

@@ -43,11 +43,11 @@ export const createTransactionSchema = z.object({
   merchantName: z.string().nullable().optional(),
   isoCurrencyCode: z.string().nullable().optional(),
   authorizedDate: z.string().nullable().optional(),
-  category: z.string().nullable().optional(),
-  subcategory: z.string().nullable().optional(),
+  plaidCategory: z.string().nullable().optional(),
+  plaidSubcategory: z.string().nullable().optional(),
   paymentChannel: z.string().nullable().optional(),
-  customCategoryId: z.string().nullable().optional(),
-  customSubcategoryId: z.string().nullable().optional(),
+  categoryId: z.string().nullable().optional(),
+  subcategoryId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
 });
@@ -59,10 +59,10 @@ export type CreateTransactionPayload = z.infer<typeof createTransactionSchema>;
  */
 export const updateTransactionSchema = z.object({
   name: z.string().optional(),
-  category: z.string().nullable().optional(),
-  subcategory: z.string().nullable().optional(),
-  customCategoryId: z.string().nullable().optional(),
-  customSubcategoryId: z.string().nullable().optional(),
+  plaidCategory: z.string().nullable().optional(),
+  plaidSubcategory: z.string().nullable().optional(),
+  categoryId: z.string().nullable().optional(),
+  subcategoryId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
 });
@@ -74,8 +74,8 @@ export type UpdateTransactionPayload = z.infer<typeof updateTransactionSchema>;
  */
 export const bulkUpdateTransactionsSchema = z.object({
   transactionIds: z.array(z.string()).min(1),
-  customCategoryId: z.string().nullable().optional(),
-  customSubcategoryId: z.string().nullable().optional(),
+  categoryId: z.string().nullable().optional(),
+  subcategoryId: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
 });
 
@@ -88,46 +88,46 @@ export type BulkUpdateTransactionsPayload = z.infer<
 // ============================================================================
 
 /**
- * Schema for creating a custom category
+ * Schema for creating a category
  */
-export const createCustomCategorySchema = z.object({
+export const createCategorySchema = z.object({
   name: z.string().min(1).max(100),
   imageUrl: z.string().url().nullable().optional(),
 });
 
-export type CreateCustomCategoryPayload = z.infer<
-  typeof createCustomCategorySchema
+export type CreateCategoryPayload = z.infer<
+  typeof createCategorySchema
 >;
 
 /**
- * Schema for updating a custom category
+ * Schema for updating a category
  */
-export const updateCustomCategorySchema = z.object({
+export const updateCategorySchema = z.object({
   name: z.string().min(1).max(100).optional(),
   imageUrl: z.string().url().nullable().optional(),
 });
 
-export type UpdateCustomCategoryPayload = z.infer<
-  typeof updateCustomCategorySchema
+export type UpdateCategoryPayload = z.infer<
+  typeof updateCategorySchema
 >;
 
 /**
- * Schema for creating a custom subcategory
+ * Schema for creating a subcategory
  */
-export const createCustomSubcategorySchema = z.object({
+export const createSubcategorySchema = z.object({
   categoryId: z.string(),
   name: z.string().min(1).max(100),
   imageUrl: z.string().url().nullable().optional(),
 });
 
-export type CreateCustomSubcategoryPayload = z.infer<
-  typeof createCustomSubcategorySchema
+export type CreateSubcategoryPayload = z.infer<
+  typeof createSubcategorySchema
 >;
 
 /**
- * Schema for custom category with subcategories (API response)
+ * Schema for category with subcategories (API response)
  */
-export const customCategoryWithSubcategoriesSchema = z.object({
+export const categoryWithSubcategoriesSchema = z.object({
   id: z.string(),
   name: z.string(),
   imageUrl: z.string().nullable(),
@@ -145,8 +145,8 @@ export const customCategoryWithSubcategoriesSchema = z.object({
   ),
 });
 
-export type CustomCategoryWithSubcategories = z.infer<
-  typeof customCategoryWithSubcategoriesSchema
+export type CategoryWithSubcategories = z.infer<
+  typeof categoryWithSubcategoriesSchema
 >;
 
 // ============================================================================

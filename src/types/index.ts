@@ -28,10 +28,10 @@ export {
   type ItemWithRelations,
 
   // Category types (Prisma version - for database queries)
-  customCategoryWithSubcategories,
-  type CustomCategoryWithSubcategories as PrismaCustomCategoryWithSubcategories,
-  customCategoryWithCount,
-  type CustomCategoryWithCount,
+  categoryWithSubcategories,
+  type CategoryWithSubcategories as PrismaCategoryWithSubcategories,
+  categoryWithCount,
+  type CategoryWithCount,
 
   // Tag types (Prisma version - for database queries)
   tagWithCount,
@@ -69,14 +69,14 @@ export {
   type BulkUpdateTransactionsPayload,
 
   // Category API schemas
-  createCustomCategorySchema,
-  type CreateCustomCategoryPayload,
-  updateCustomCategorySchema,
-  type UpdateCustomCategoryPayload,
-  createCustomSubcategorySchema,
-  type CreateCustomSubcategoryPayload,
-  customCategoryWithSubcategoriesSchema,
-  type CustomCategoryWithSubcategories,
+  createCategorySchema,
+  type CreateCategoryPayload,
+  updateCategorySchema,
+  type UpdateCategoryPayload,
+  createSubcategorySchema,
+  type CreateSubcategoryPayload,
+  categoryWithSubcategoriesSchema,
+  type CategoryWithSubcategories,
 
   // Tag API schemas
   createTagSchema,

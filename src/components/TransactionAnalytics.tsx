@@ -147,16 +147,16 @@ export function TransactionAnalytics({
     // Exclude categories filter
     if (excludedCategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customCategoryId) return true; // Keep uncategorized
-        return !excludedCategoryIds.has(t.customCategoryId);
+        if (!t.categoryId) return true; // Keep uncategorized
+        return !excludedCategoryIds.has(t.categoryId);
       });
     }
 
     // Category filter (include)
     if (selectedCategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customCategoryId) return false;
-        return selectedCategoryIds.has(t.customCategoryId);
+        if (!t.categoryId) return false;
+        return selectedCategoryIds.has(t.categoryId);
       });
     }
 
@@ -181,8 +181,8 @@ export function TransactionAnalytics({
           comparison = a.amount_number - b.amount_number;
           break;
         case "category":
-          const catA = a.customCategory?.name || "";
-          const catB = b.customCategory?.name || "";
+          const catA = a.category?.name || "";
+          const catB = b.category?.name || "";
           comparison = catA.localeCompare(catB);
           break;
       }
@@ -239,8 +239,8 @@ export function TransactionAnalytics({
 
     filteredTransactions.forEach((t) => {
       const amount = Math.abs(t.amount_number);
-      const categoryName = t.customCategory?.name || "Uncategorized";
-      const imageUrl = t.customCategory?.imageUrl;
+      const categoryName = t.category?.name || "Uncategorized";
+      const imageUrl = t.category?.imageUrl;
 
       if (categoryMap.has(categoryName)) {
         categoryMap.get(categoryName)!.value += amount;
@@ -970,9 +970,9 @@ export function TransactionAnalytics({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center gap-2">
-                      {transaction.customCategory?.imageUrl && (
+                      {transaction.category?.imageUrl && (
                         <Image
-                          src={transaction.customCategory.imageUrl}
+                          src={transaction.category.imageUrl}
                           alt=""
                           width={20}
                           height={20}
@@ -980,7 +980,7 @@ export function TransactionAnalytics({
                         />
                       )}
                       <span className="text-gray-900">
-                        {transaction.customCategory?.name || "Uncategorized"}
+                        {transaction.category?.name || "Uncategorized"}
                       </span>
                     </div>
                   </td>

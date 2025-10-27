@@ -14,7 +14,7 @@ async function main() {
   console.log(`Created category group: ${defaultGroup.name}`)
 
   // Get all existing custom categories
-  const categories = await prisma.customCategory.findMany()
+  const categories = await prisma.category.findMany()
   console.log(`Found ${categories.length} categories to add to the group`)
 
   // Add all categories to the default group

@@ -19,8 +19,8 @@ import { CategorySelect } from "@/components/ui/category-select";
 
 interface SplitItem {
   amount: string;
-  customCategoryId: string | null;
-  customSubcategoryId: string | null;
+  categoryId: string | null;
+  subcategoryId: string | null;
   notes: string;
   description: string;
 }
@@ -40,15 +40,15 @@ export function SplitTransactionModal({
   const [splits, setSplits] = useState<SplitItem[]>([
     {
       amount: "",
-      customCategoryId: null,
-      customSubcategoryId: null,
+      categoryId: null,
+      subcategoryId: null,
       notes: "",
       description: "",
     },
     {
       amount: "",
-      customCategoryId: null,
-      customSubcategoryId: null,
+      categoryId: null,
+      subcategoryId: null,
       notes: "",
       description: "",
     },
@@ -63,8 +63,8 @@ export function SplitTransactionModal({
       ...splits,
       {
         amount: "",
-        customCategoryId: null,
-        customSubcategoryId: null,
+        categoryId: null,
+        subcategoryId: null,
         notes: "",
         description: "",
       },
@@ -88,8 +88,8 @@ export function SplitTransactionModal({
       newSplits[index] = { ...currentSplit, [field]: value };
 
       // If category changes, reset subcategory
-      if (field === "customCategoryId") {
-        newSplits[index]!.customSubcategoryId = null;
+      if (field === "categoryId") {
+        newSplits[index]!.subcategoryId = null;
       }
     }
 
@@ -295,9 +295,9 @@ export function SplitTransactionModal({
                       Category
                     </label>
                     <CategorySelect
-                      value={split.customCategoryId || ""}
+                      value={split.categoryId || ""}
                       onChange={(value) =>
-                        updateSplit(index, "customCategoryId", value || null)
+                        updateSplit(index, "categoryId", value || null)
                       }
                       categories={categories}
                       placeholder="No Category"
@@ -311,19 +311,19 @@ export function SplitTransactionModal({
                       Subcategory
                     </label>
                     <select
-                      value={split.customSubcategoryId || ""}
+                      value={split.subcategoryId || ""}
                       onChange={(e) =>
                         updateSplit(
                           index,
-                          "customSubcategoryId",
+                          "subcategoryId",
                           e.target.value || null
                         )
                       }
-                      disabled={!split.customCategoryId}
+                      disabled={!split.categoryId}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                       <option value="">No Subcategory</option>
-                      {getSubcategoriesForCategory(split.customCategoryId).map(
+                      {getSubcategoriesForCategory(split.categoryId).map(
                         (sub) => (
                           <option key={sub.id} value={sub.id}>
                             {sub.name}

@@ -14,8 +14,8 @@ const splitTransactionSchema = z.object({
           .string()
           .or(z.number())
           .transform((val) => new Decimal(val.toString())),
-        customCategoryId: z.string().optional().nullable(),
-        customSubcategoryId: z.string().optional().nullable(),
+        categoryId: z.string().optional().nullable(),
+        subcategoryId: z.string().optional().nullable(),
         notes: z.string().optional().nullable(),
         description: z.string().optional(), // Optional custom description for the split
       })
@@ -114,13 +114,13 @@ export async function POST(
                   `${originalTransaction.name} (Split ${index + 1}/${
                     splits.length
                   })`,
-                category: originalTransaction.category,
-                subcategory: originalTransaction.subcategory,
+                plaidCategory: originalTransaction.plaidCategory,
+                plaidSubcategory: originalTransaction.plaidSubcategory,
                 paymentChannel: originalTransaction.paymentChannel,
                 logoUrl: originalTransaction.logoUrl,
                 categoryIconUrl: originalTransaction.categoryIconUrl,
-                customCategoryId: split.customCategoryId || null,
-                customSubcategoryId: split.customSubcategoryId || null,
+                categoryId: split.categoryId || null,
+                subcategoryId: split.subcategoryId || null,
                 notes: split.notes || null,
                 parentTransactionId: originalTransaction.id,
                 originalTransactionId: originalTransaction.id,

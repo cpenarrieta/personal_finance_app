@@ -119,7 +119,7 @@ async function main() {
   console.log('Starting GPT-powered auto-categorization...\n')
 
   // Fetch all custom categories with subcategories
-  const categories = await prisma.customCategory.findMany({
+  const categories = await prisma.category.findMany({
     include: {
       subcategories: true
     }
@@ -136,8 +136,8 @@ async function main() {
       subcategory: true,
       notes: true,
       amount: true,
-      customCategoryId: true,
-      customSubcategoryId: true
+      categoryId: true,
+      subcategoryId: true
     }
   })
   console.log(`Processing ${transactions.length} transactions...\n`)
@@ -191,8 +191,8 @@ async function main() {
         await prisma.transaction.update({
           where: { id: transaction.id },
           data: {
-            customCategory: { connect: { id: category.id } },
-            customSubcategory: subcategory
+            category: { connect: { id: category.id } },
+            subcategory: subcategory
               ? { connect: { id: subcategory.id } }
               : { disconnect: true }
           }

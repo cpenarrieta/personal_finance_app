@@ -18,21 +18,21 @@ import { Prisma } from '@prisma/client'
 export const transactionWithRelations = Prisma.validator<Prisma.TransactionDefaultArgs>()({
   include: {
     account: true,
-    customCategory: true,
-    customSubcategory: {
+    category: true,
+    subcategory: {
       include: {
         category: true,
       },
     },
     parentTransaction: {
       include: {
-        customCategory: true,
+        category: true,
       },
     },
     childTransactions: {
       include: {
-        customCategory: true,
-        customSubcategory: true,
+        category: true,
+        subcategory: true,
       },
     },
     tags: {
@@ -130,9 +130,9 @@ export type ItemWithRelations = Prisma.ItemGetPayload<typeof itemWithRelations>
 // ============================================================================
 
 /**
- * Custom category with subcategories
+ * Category with subcategories
  */
-export const customCategoryWithSubcategories = Prisma.validator<Prisma.CustomCategoryDefaultArgs>()({
+export const categoryWithSubcategories = Prisma.validator<Prisma.CategoryDefaultArgs>()({
   include: {
     subcategories: {
       orderBy: {
@@ -142,14 +142,14 @@ export const customCategoryWithSubcategories = Prisma.validator<Prisma.CustomCat
   },
 })
 
-export type CustomCategoryWithSubcategories = Prisma.CustomCategoryGetPayload<
-  typeof customCategoryWithSubcategories
+export type CategoryWithSubcategories = Prisma.CategoryGetPayload<
+  typeof categoryWithSubcategories
 >
 
 /**
- * Custom category with transaction count
+ * Category with transaction count
  */
-export const customCategoryWithCount = Prisma.validator<Prisma.CustomCategoryDefaultArgs>()({
+export const categoryWithCount = Prisma.validator<Prisma.CategoryDefaultArgs>()({
   include: {
     _count: {
       select: {
@@ -159,8 +159,8 @@ export const customCategoryWithCount = Prisma.validator<Prisma.CustomCategoryDef
   },
 })
 
-export type CustomCategoryWithCount = Prisma.CustomCategoryGetPayload<
-  typeof customCategoryWithCount
+export type CategoryWithCount = Prisma.CategoryGetPayload<
+  typeof categoryWithCount
 >
 
 // ============================================================================
@@ -271,7 +271,7 @@ export const PrismaIncludes = {
   plaidAccount: plaidAccountWithRelations.include,
   account: plaidAccountWithRelations.include, // Legacy alias (deprecated)
   item: itemWithRelations.include,
-  customCategory: customCategoryWithSubcategories.include,
+  category: categoryWithSubcategories.include,
   holding: holdingWithRelations.include,
   investmentTransaction: investmentTransactionWithRelations.include,
 } as const

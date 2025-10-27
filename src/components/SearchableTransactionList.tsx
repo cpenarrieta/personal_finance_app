@@ -137,24 +137,24 @@ export function SearchableTransactionList({
     // Exclude categories filter
     if (excludedCategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customCategoryId) return true; // Keep uncategorized
-        return !excludedCategoryIds.has(t.customCategoryId);
+        if (!t.categoryId) return true; // Keep uncategorized
+        return !excludedCategoryIds.has(t.categoryId);
       });
     }
 
     // Category filter (include)
     if (selectedCategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customCategoryId) return false;
-        return selectedCategoryIds.has(t.customCategoryId);
+        if (!t.categoryId) return false;
+        return selectedCategoryIds.has(t.categoryId);
       });
     }
 
     // Subcategory filter
     if (selectedSubcategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customSubcategoryId) return false;
-        return selectedSubcategoryIds.has(t.customSubcategoryId);
+        if (!t.subcategoryId) return false;
+        return selectedSubcategoryIds.has(t.subcategoryId);
       });
     }
 
@@ -323,8 +323,8 @@ export function SearchableTransactionList({
         },
         body: JSON.stringify({
           transactionIds: Array.from(selectedTransactions),
-          customCategoryId: bulkCategoryId,
-          customSubcategoryId: bulkSubcategoryId && bulkSubcategoryId !== "NONE" ? bulkSubcategoryId : null,
+          categoryId: bulkCategoryId,
+          subcategoryId: bulkSubcategoryId && bulkSubcategoryId !== "NONE" ? bulkSubcategoryId : null,
         }),
       });
 

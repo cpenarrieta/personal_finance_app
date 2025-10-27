@@ -84,7 +84,7 @@ async function main() {
   console.log('Starting auto-categorization...')
 
   // Fetch all custom categories with subcategories
-  const categories = await prisma.customCategory.findMany({
+  const categories = await prisma.category.findMany({
     include: {
       subcategories: true
     }
@@ -100,8 +100,8 @@ async function main() {
       category: true,
       subcategory: true,
       notes: true,
-      customCategoryId: true,
-      customSubcategoryId: true
+      categoryId: true,
+      subcategoryId: true
     }
   })
   console.log(`Processing ${transactions.length} transactions...`)
@@ -127,8 +127,8 @@ async function main() {
       await prisma.transaction.update({
         where: { id: transaction.id },
         data: {
-          customCategory: { connect: { id: match.categoryId } },
-          customSubcategory: match.subcategoryId
+          category: { connect: { id: match.categoryId } },
+          subcategory: match.subcategoryId
             ? { connect: { id: match.subcategoryId } }
             : { disconnect: true }
         }

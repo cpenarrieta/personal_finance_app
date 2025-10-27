@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
-import { CustomCategoryWithSubcategories } from "@/types";
+import { CategoryWithSubcategories } from "@/types";
 
 export const metadata: Metadata = {
   title: "Manage Categories",
@@ -24,7 +24,7 @@ async function createCategory(formData: FormData) {
   const name = formData.get("name") as string;
   const imageUrl = formData.get("imageUrl") as string;
 
-  await prisma.customCategory.create({
+  await prisma.category.create({
     data: { name, imageUrl: imageUrl || null },
   });
   revalidatePath("/settings/manage-categories");
@@ -33,7 +33,7 @@ async function createCategory(formData: FormData) {
 async function deleteCategory(formData: FormData) {
   "use server";
   const id = formData.get("id") as string;
-  await prisma.customCategory.delete({ where: { id } });
+  await prisma.category.delete({ where: { id } });
   revalidatePath("/settings/manage-categories");
 }
 
@@ -57,10 +57,10 @@ async function deleteSubcategory(formData: FormData) {
 }
 
 export default async function ManageCategoriesPage() {
-  const categories = (await prisma.customCategory.findMany({
+  const categories = (await prisma.category.findMany({
     include: { subcategories: true },
     orderBy: { name: "asc" },
-  })) as CustomCategoryWithSubcategories[];
+  })) as CategoryWithSubcategories[];
 
   return (
     <div className="min-h-screen bg-gray-50">

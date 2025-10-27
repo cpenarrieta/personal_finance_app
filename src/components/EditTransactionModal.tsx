@@ -29,11 +29,11 @@ export function EditTransactionModal({
 
   // Form state
   const [name, setName] = useState(transaction.name);
-  const [customCategoryId, setCustomCategoryId] = useState(
-    transaction.customCategoryId || ""
+  const [categoryId, setCustomCategoryId] = useState(
+    transaction.categoryId || ""
   );
-  const [customSubcategoryId, setCustomSubcategoryId] = useState(
-    transaction.customSubcategoryId || ""
+  const [subcategoryId, setCustomSubcategoryId] = useState(
+    transaction.subcategoryId || ""
   );
   const [notes, setNotes] = useState(transaction.notes || "");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
@@ -41,7 +41,7 @@ export function EditTransactionModal({
   );
 
   // Get subcategories for selected custom category
-  const selectedCategory = categories.find((c) => c.id === customCategoryId);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
   const availableSubcategories = selectedCategory?.subcategories || [];
 
   const toggleTag = (tagId: string) => {
@@ -64,8 +64,8 @@ export function EditTransactionModal({
         },
         body: JSON.stringify({
           name,
-          customCategoryId: customCategoryId || null,
-          customSubcategoryId: customSubcategoryId || null,
+          categoryId: categoryId || null,
+          subcategoryId: subcategoryId || null,
           notes: notes || null,
           tagIds: selectedTagIds,
         }),
@@ -112,7 +112,7 @@ export function EditTransactionModal({
               <Label htmlFor="custom-category">Custom Category</Label>
               <CategorySelect
                 id="custom-category"
-                value={customCategoryId}
+                value={categoryId}
                 onChange={(value) => {
                   setCustomCategoryId(value);
                   setCustomSubcategoryId(""); // Reset subcategory when category changes
@@ -126,10 +126,10 @@ export function EditTransactionModal({
               <Label htmlFor="custom-subcategory">Custom Subcategory</Label>
               <select
                 id="custom-subcategory"
-                value={customSubcategoryId}
+                value={subcategoryId}
                 onChange={(e) => setCustomSubcategoryId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                disabled={!customCategoryId}
+                disabled={!categoryId}
               >
                 <option value="">None</option>
                 {availableSubcategories.map((sub) => (

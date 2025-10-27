@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 import {
-  CustomCategoryWithSubcategories,
+  CategoryWithSubcategories,
   TransactionWithRelations,
 } from "@/types";
 
@@ -22,8 +22,8 @@ async function categorizeBatch(
     id: string;
     name: string;
     merchantName: string | null;
-    category: string | null;
-    subcategory: string | null;
+    plaidCategory: string | null;
+    plaidSubcategory: string | null;
     notes: string | null;
     amount: string;
   }>,
@@ -47,8 +47,8 @@ async function categorizeBatch(
       return `[${idx}] "${t.name}" | Merchant: ${
         t.merchantName || "N/A"
       } | Amount: $${Math.abs(amount).toFixed(2)} (${type}) | Plaid: ${
-        t.category || "N/A"
-      }/${t.subcategory || "N/A"} | Notes: ${t.notes || "N/A"}`;
+        t.plaidCategory || "N/A"
+      }/${t.plaidSubcategory || "N/A"} | Notes: ${t.notes || "N/A"}`;
     })
     .join("\n");
 
@@ -134,24 +134,24 @@ Return ONLY the JSON array, no other text.`;
 
 export async function POST() {
   try {
-    // Fetch all custom categories with subcategories
-    const categories = (await prisma.customCategory.findMany({
+    // Fetch all categories with subcategories
+    const categories = (await prisma.category.findMany({
       include: {
         subcategories: true,
       },
-    })) as CustomCategoryWithSubcategories[];
+    })) as CategoryWithSubcategories[];
 
-    // Fetch transactions that don't have a custom category
+    // Fetch transactions that don't have a category
     const transactions = (await prisma.transaction.findMany({
       where: {
-        customCategoryId: null,
+        categoryId: null,
       },
       select: {
         id: true,
         name: true,
         merchantName: true,
-        category: true,
-        subcategory: true,
+        plaidCategory: true,
+        plaidSubcategory: true,
         notes: true,
         amount: true,
       },
@@ -181,8 +181,8 @@ export async function POST() {
         id: t.id,
         name: t.name,
         merchantName: t.merchantName,
-        category: t.category,
-        subcategory: t.subcategory,
+        plaidCategory: t.plaidCategory,
+        plaidSubcategory: t.plaidSubcategory,
         notes: t.notes,
         amount: t.amount.toString(),
       }));
@@ -210,8 +210,8 @@ export async function POST() {
         await prisma.transaction.update({
           where: { id: transaction.id },
           data: {
-            customCategory: { connect: { id: category.id } },
-            customSubcategory: subcategory
+            category: { connect: { id: category.id } },
+            subcategory: subcategory
               ? { connect: { id: subcategory.id } }
               : { disconnect: true },
           },

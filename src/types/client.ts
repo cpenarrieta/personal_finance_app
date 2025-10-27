@@ -27,14 +27,14 @@ export interface TransactionForClient {
   pending: boolean
   merchantName: string | null
   name: string
-  category: string | null
-  subcategory: string | null
+  plaidCategory: string | null
+  plaidSubcategory: string | null
   paymentChannel: string | null
   pendingTransactionId: string | null
   logoUrl: string | null
   categoryIconUrl: string | null
-  customCategoryId: string | null
-  customSubcategoryId: string | null
+  categoryId: string | null
+  subcategoryId: string | null
   notes: string | null
   isSplit: boolean
   parentTransactionId: string | null
@@ -49,15 +49,15 @@ export interface TransactionForClient {
     type: string
     mask: string | null
   } | null
-  customCategory: CategoryForClient | null
-  customSubcategory: SubcategoryForClient | null
+  category: CategoryForClient | null
+  subcategory: SubcategoryForClient | null
   tags: TagForClient[]
   parentTransaction?: {
     id: string
     name: string
     amount_number: number
     date_string: string
-    customCategory: {
+    category: {
       id: string
       name: string
     } | null
@@ -67,11 +67,11 @@ export interface TransactionForClient {
     name: string
     amount_number: number
     date_string: string
-    customCategory: {
+    category: {
       id: string
       name: string
     } | null
-    customSubcategory: {
+    subcategory: {
       id: string
       name: string
     } | null

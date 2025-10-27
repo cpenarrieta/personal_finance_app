@@ -153,11 +153,11 @@ export function TransactionDetailView({
                           <p className="font-medium text-gray-900">
                             {index + 1}. {child.name}
                           </p>
-                          {child.customCategory && (
+                          {child.category && (
                             <p className="text-sm text-gray-600 mt-1">
-                              {child.customCategory.name}
-                              {child.customSubcategory &&
-                                ` • ${child.customSubcategory.name}`}
+                              {child.category.name}
+                              {child.subcategory &&
+                                ` • ${child.subcategory.name}`}
                             </p>
                           )}
                         </div>
@@ -234,18 +234,18 @@ export function TransactionDetailView({
 
             {/* Category Information */}
             <div className="space-y-4">
-              {(transaction.customCategory ||
-                transaction.customSubcategory) && (
+              {(transaction.category ||
+                transaction.subcategory) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     Category
                   </label>
                   <div className="text-gray-900">
-                    {transaction.customCategory?.name || "None"}
+                    {transaction.category?.name || "None"}
                   </div>
-                  {transaction.customSubcategory && (
+                  {transaction.subcategory && (
                     <div className="text-sm text-gray-500">
-                      {transaction.customSubcategory.name}
+                      {transaction.subcategory.name}
                     </div>
                   )}
                 </div>

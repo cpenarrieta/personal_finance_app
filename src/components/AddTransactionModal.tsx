@@ -57,13 +57,13 @@ export function AddTransactionModal({
   const [isoCurrencyCode, setIsoCurrencyCode] = useState("CAD");
   const [authorizedDate, setAuthorizedDate] = useState("");
   const [paymentChannel, setPaymentChannel] = useState("");
-  const [customCategoryId, setCustomCategoryId] = useState("");
-  const [customSubcategoryId, setCustomSubcategoryId] = useState("");
+  const [categoryId, setCustomCategoryId] = useState("");
+  const [subcategoryId, setCustomSubcategoryId] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   // Get subcategories for selected custom category
-  const selectedCategory = categories.find((c) => c.id === customCategoryId);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
   const availableSubcategories = selectedCategory?.subcategories || [];
 
   const toggleTag = (tagId: string) => {
@@ -109,8 +109,8 @@ export function AddTransactionModal({
           isoCurrencyCode: isoCurrencyCode || null,
           authorizedDate: authorizedDate || null,
           paymentChannel: paymentChannel || null,
-          customCategoryId: customCategoryId || null,
-          customSubcategoryId: customSubcategoryId || null,
+          categoryId: categoryId || null,
+          subcategoryId: subcategoryId || null,
           notes: notes.trim() || null,
           tagIds: selectedTagIds,
         }),
@@ -293,7 +293,7 @@ export function AddTransactionModal({
               <Label htmlFor="custom-category">Category</Label>
               <CategorySelect
                 id="custom-category"
-                value={customCategoryId}
+                value={categoryId}
                 onChange={(value) => {
                   setCustomCategoryId(value);
                   setCustomSubcategoryId(""); // Reset subcategory when category changes
@@ -307,10 +307,10 @@ export function AddTransactionModal({
               <Label htmlFor="custom-subcategory">Subcategory</Label>
               <select
                 id="custom-subcategory"
-                value={customSubcategoryId}
+                value={subcategoryId}
                 onChange={(e) => setCustomSubcategoryId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                disabled={!customCategoryId}
+                disabled={!categoryId}
               >
                 <option value="">None</option>
                 {availableSubcategories.map((sub) => (

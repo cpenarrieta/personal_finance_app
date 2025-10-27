@@ -112,8 +112,8 @@ export function MoveTransactionsClient({
         },
         body: JSON.stringify({
           transactionIds: Array.from(selectedTransactionIds),
-          customCategoryId: toCategoryId,
-          customSubcategoryId: toSubcategoryId || null,
+          categoryId: toCategoryId,
+          subcategoryId: toSubcategoryId || null,
         }),
       });
 
