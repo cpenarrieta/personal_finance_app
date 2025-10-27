@@ -5,9 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Quick Reference
 
 📖 **Detailed Documentation:**
-- [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, props pattern, serialization
+- [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, props pattern, generated columns
 - [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
 - [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup, testing
+- [Generated Columns](docs/GENERATED_COLUMNS.md) - PostgreSQL generated columns for passing data to client components
 
 ## Project Overview
 

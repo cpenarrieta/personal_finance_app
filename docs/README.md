@@ -4,7 +4,8 @@ This folder contains detailed documentation for the Personal Finance App. The ma
 
 ## Documentation Files
 
-- **[DATA_FETCHING.md](DATA_FETCHING.md)** - Server Components data fetching patterns, props over API calls, serialization guidelines
+- **[DATA_FETCHING.md](DATA_FETCHING.md)** - Server Components data fetching patterns, props over API calls
+- **[GENERATED_COLUMNS.md](GENERATED_COLUMNS.md)** - PostgreSQL generated columns for passing data to client components
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Database schema, Plaid sync logic, project structure, AI categorization
 - **[DEVELOPMENT.md](DEVELOPMENT.md)** - Development commands, environment setup, testing, debugging
 
@@ -12,10 +13,11 @@ This folder contains detailed documentation for the Personal Finance App. The ma
 
 ```
 docs/
-├── README.md           # This file
-├── DATA_FETCHING.md    # Data fetching patterns (Server Components, props)
-├── ARCHITECTURE.md     # Database schema, sync patterns, project structure
-└── DEVELOPMENT.md      # Commands, setup, testing
+├── README.md            # This file
+├── DATA_FETCHING.md     # Data fetching patterns (Server Components, props)
+├── GENERATED_COLUMNS.md # PostgreSQL generated columns for client data
+├── ARCHITECTURE.md      # Database schema, sync patterns, project structure
+└── DEVELOPMENT.md       # Commands, setup, testing
 ```
 
 ## How to Use

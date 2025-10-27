@@ -11,7 +11,7 @@ src/types/
 ├── prisma.ts          # Prisma-derived types and extractors
 ├── api.ts             # API schemas and types (with Zod validation)
 ├── components.ts      # React component prop types
-└── transaction.ts     # Transaction utilities (backwards compatibility)
+└── client.ts          # Client-side types for components
 ```
 
 ## Quick Start
@@ -21,7 +21,7 @@ src/types/
 Always import types from the central index:
 
 ```typescript
-import { SerializedTransaction, TransactionWithRelations } from '@/types'
+import { TransactionWithRelations, CustomCategoryWithSubcategories } from '@/types'
 ```
 
 ### Common Patterns
@@ -39,21 +39,45 @@ const transactions = await prisma.transaction.findMany({
 // Type is automatically: TransactionWithRelations[]
 ```
 
-#### 2. Serializing for Client Components
+#### 2. Passing Data to Client Components (Using Generated Columns)
 
 ```typescript
-import { serializeTransaction } from '@/types'
-
 // Server Component
 export default async function Page() {
   const transactions = await prisma.transaction.findMany({
-    include: PrismaIncludes.transaction,
+    select: {
+      id: true,
+      name: true,
+      merchantName: true,
+      // Use generated columns for client-compatible types
+      amount_number: true,        // Float instead of Decimal
+      date_string: true,           // String instead of Date
+      authorized_date_string: true,
+      pending: true,
+      notes: true,
+      customCategory: {
+        select: {
+          id: true,
+          name: true,
+          imageUrl: true,
+        },
+      },
+      tags: {
+        select: {
+          tag: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { date: 'desc' },
   })
 
-  // Serialize for client
-  const serialized = transactions.map(serializeTransaction)
-
-  return <ClientComponent transactions={serialized} />
+  return <ClientComponent transactions={transactions} />
 }
 ```
 
@@ -87,11 +111,15 @@ export async function PATCH(req: NextRequest) {
 import type { TransactionListProps } from '@/types'
 
 export function TransactionList({ transactions }: TransactionListProps) {
-  // transactions is fully typed as SerializedTransaction[]
+  // transactions is fully typed with generated columns
   return (
     <div>
       {transactions.map((t) => (
-        <div key={t.id}>{t.name}</div>
+        <div key={t.id}>
+          <span>{t.name}</span>
+          <span>${t.amount_number.toFixed(2)}</span>
+          <span>{new Date(t.date_string).toLocaleDateString()}</span>
+        </div>
       ))}
     </div>
   )
@@ -137,7 +165,7 @@ Contains Zod schemas for runtime validation and TypeScript types.
 **Key Exports:**
 
 - **Schemas:** `updateTransactionSchema`, `createTagSchema`, etc.
-- **Types:** `SerializedTransaction`, `UpdateTransactionPayload`, etc.
+- **Types:** `UpdateTransactionPayload`, `CreateTagPayload`, etc.
 - **Helpers:** `safeParseRequestBody()`, `createSuccessResponse()`
 
 **Example:**
@@ -177,23 +205,26 @@ export function TransactionList({ transactions, showAccount }: TransactionListPr
 }
 ```
 
-### `transaction.ts` - Transaction Utilities
+### `client.ts` - Client-Side Types
 
-Helper functions for working with transactions.
+Types specifically for client components, using generated columns for client-compatible data types.
 
-**Key Exports:**
+**Key Features:**
 
-- `serializeTransaction()` - Convert Prisma transaction to serialized form
-- `TRANSACTION_INCLUDE` - Deprecated, use `PrismaIncludes.transaction`
+- Uses generated columns (`amount_number`, `date_string`, etc.)
+- Fully compatible with React Server Components
+- No type conversion needed
 
 ## Best Practices
 
 ### 1. Server vs. Client Types
 
-- **Server (API routes, Server Components):** Use Prisma types
+- **Server (API routes, Server Components):** Use Prisma types with source columns
   - `TransactionWithRelations`, `PlaidAccountWithRelations`
-- **Client (Client Components):** Use serialized types
-  - `SerializedTransaction`, `SerializedPlaidAccount`
+  - Use `amount` (Decimal), `date` (Date) for calculations
+- **Client (Client Components):** Use `select` with generated columns
+  - Use `amount_number` (Float), `date_string` (String)
+  - No conversion needed - pass directly as props
 
 ### 2. Always Validate API Input
 
@@ -263,21 +294,61 @@ type MyFormData = z.infer<typeof myFormSchema>
 
 ## Common Patterns
 
-### Pattern: Fetching and Serializing Transactions
+### Pattern: Fetching Data for Client Components
 
 ```typescript
 // Server Component or API Route
 import { prisma } from '@/lib/prisma'
-import { PrismaIncludes, serializeTransaction } from '@/types'
 
+// Use select with generated columns for client components
 const transactions = await prisma.transaction.findMany({
-  include: PrismaIncludes.transaction,
+  select: {
+    id: true,
+    name: true,
+    merchantName: true,
+    amount_number: true,     // Generated column (Float)
+    date_string: true,        // Generated column (String)
+    pending: true,
+    customCategory: {
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+      },
+    },
+  },
   orderBy: { date: 'desc' },
 })
 
-const serialized = transactions.map(serializeTransaction)
+// Pass directly to client component - no conversion needed!
+return <TransactionList transactions={transactions} />
+```
 
-return <TransactionList transactions={serialized} />
+### Pattern: Server-Side Calculations
+
+```typescript
+import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
+
+// Use source columns for precise calculations
+const transactions = await prisma.transaction.findMany({
+  select: {
+    amount: true,    // Decimal for precise math
+    date: true,      // Date for date operations
+  },
+  where: {
+    date: {
+      gte: new Date('2024-01-01'),
+      lte: new Date('2024-12-31'),
+    },
+  },
+})
+
+// Calculate total using Decimal for precision
+const total = transactions.reduce(
+  (sum, t) => sum.add(t.amount),
+  new Prisma.Decimal(0)
+)
 ```
 
 ### Pattern: Creating a New API Endpoint
@@ -310,18 +381,73 @@ export async function POST(req: NextRequest) {
 ### Pattern: Type-Safe Component Props
 
 ```typescript
-import type { SerializedTransaction } from '@/types'
-
 interface MyComponentProps {
-  transaction: SerializedTransaction
+  transaction: {
+    id: string
+    name: string
+    amount_number: number
+    date_string: string
+  }
   onUpdate?: (id: string) => void
 }
 
 export function MyComponent({ transaction, onUpdate }: MyComponentProps) {
   // transaction is fully typed
-  return <div>{transaction.name}</div>
+  return (
+    <div>
+      <span>{transaction.name}</span>
+      <span>${transaction.amount_number.toFixed(2)}</span>
+    </div>
+  )
 }
 ```
+
+## Generated Columns
+
+This project uses **PostgreSQL generated columns** to provide client-compatible data types without manual conversion.
+
+### Available Generated Columns
+
+**Transactions:**
+- `amount_number` (Float) - from `amount` (Decimal)
+- `date_string` (String) - from `date` (Date)
+- `authorized_date_string` (String) - from `authorizedDate` (Date)
+- `created_at_string` (String) - from `createdAt` (Date)
+- `updated_at_string` (String) - from `updatedAt` (Date)
+
+**Accounts:**
+- `current_balance_number` (Float) - from `currentBalance` (Decimal)
+- `available_balance_number` (Float) - from `availableBalance` (Decimal)
+- `balance_updated_at_string` (String) - from `balanceUpdatedAt` (Date)
+
+**Holdings:**
+- `quantity_number` (Float) - from `quantity` (Decimal)
+- `cost_basis_number` (Float) - from `costBasis` (Decimal)
+- `institution_price_number` (Float) - from `institutionPrice` (Decimal)
+
+### When to Use Generated Columns
+
+```typescript
+// ✅ Use generated columns for client components
+const transactions = await prisma.transaction.findMany({
+  select: {
+    amount_number: true,  // Client-compatible Float
+    date_string: true,    // Client-compatible String
+  }
+})
+return <ClientComponent transactions={transactions} />
+
+// ✅ Use source columns for server calculations
+const transactions = await prisma.transaction.findMany({
+  select: {
+    amount: true,  // Precise Decimal for math
+    date: true,    // Date for filtering/sorting
+  }
+})
+const total = transactions.reduce((sum, t) => sum.add(t.amount), new Prisma.Decimal(0))
+```
+
+👉 See [docs/GENERATED_COLUMNS.md](../../docs/GENERATED_COLUMNS.md) for complete details.
 
 ## Migration Guide
 
@@ -334,11 +460,16 @@ export function MyComponent({ transaction, onUpdate }: MyComponentProps) {
 interface Transaction {
   id: string
   amount: string
-  // ...
+  date: string
 }
 
 // After
-import type { SerializedTransaction } from '@/types'
+// Define inline or use existing types from @/types
+interface TransactionForClient {
+  id: string
+  amount_number: number
+  date_string: string
+}
 ```
 
 2. **Replace `any` types:**
@@ -378,10 +509,10 @@ These help catch bugs at compile time.
 
 ### "Type 'X' is not assignable to type 'Y'"
 
-Make sure you're using the correct type for server vs. client:
+Make sure you're using the correct approach:
 
-- Server: `TransactionWithRelations` (Prisma type)
-- Client: `SerializedTransaction` (JSON-serializable)
+- **Server calculations:** Use source columns (`amount`, `date`) with Prisma types
+- **Client components:** Use generated columns (`amount_number`, `date_string`) with select
 
 ### "Cannot find module '@/types'"
 
@@ -408,3 +539,4 @@ if (!result.success) {
 - [Prisma Type System](https://www.prisma.io/docs/concepts/components/prisma-client/advanced-type-safety)
 - [Zod Documentation](https://zod.dev/)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
+- [PostgreSQL Generated Columns](https://www.postgresql.org/docs/current/ddl-generated-columns.html)
