@@ -324,7 +324,7 @@ export function SearchableTransactionList({
         body: JSON.stringify({
           transactionIds: Array.from(selectedTransactions),
           customCategoryId: bulkCategoryId,
-          customSubcategoryId: bulkSubcategoryId || null,
+          customSubcategoryId: bulkSubcategoryId && bulkSubcategoryId !== "NONE" ? bulkSubcategoryId : null,
         }),
       });
 
@@ -994,7 +994,7 @@ export function SearchableTransactionList({
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="NONE">None</SelectItem>
                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {availableBulkSubcategories.map((sub: any) => (
                         <SelectItem key={sub.id} value={sub.id}>
