@@ -31,14 +31,14 @@ export default async function AnalyticsPage() {
         pending: true,
         merchantName: true,
         name: true,
-        category: true,
-        subcategory: true,
+        plaidCategory: true,
+        plaidSubcategory: true,
         paymentChannel: true,
         pendingTransactionId: true,
         logoUrl: true,
         categoryIconUrl: true,
         categoryId: true,
-        customSubcategoryId: true,
+        subcategoryId: true,
         notes: true,
         isSplit: true,
         parentTransactionId: true,
@@ -68,7 +68,7 @@ export default async function AnalyticsPage() {
             updated_at_string: true, // Generated column
           },
         },
-        customSubcategory: {
+        subcategory: {
           select: {
             id: true,
             categoryId: true,

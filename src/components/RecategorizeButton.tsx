@@ -12,7 +12,7 @@ export function RecategorizeButton() {
     if (isLoading) return
 
     const confirmed = confirm(
-      '⚠️ WARNING: This will re-categorize ALL transactions using AI, overwriting any existing custom categories you have set manually. This action cannot be undone. Continue?'
+      '⚠️ WARNING: This will re-categorize ALL transactions using AI, overwriting any existing categories you have set manually. This action cannot be undone. Continue?'
     )
 
     if (!confirmed) return

@@ -4,7 +4,7 @@
  * This file contains types used specifically in React components
  */
 
-import type { CustomCategoryWithSubcategories } from "./api";
+import type { CategoryWithSubcategories } from "./api";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -53,7 +53,7 @@ export interface SearchableTransactionListProps {
 // ============================================================================
 
 export interface CategorySelectorProps {
-  categories: CustomCategoryWithSubcategories[];
+  categories: CategoryWithSubcategories[];
   selectedCategoryId?: string | null;
   selectedSubcategoryId?: string | null;
   onCategoryChange: (categoryId: string | null) => void;

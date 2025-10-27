@@ -21,7 +21,7 @@ src/types/
 Always import types from the central index:
 
 ```typescript
-import { TransactionWithRelations, CustomCategoryWithSubcategories } from '@/types'
+import { TransactionWithRelations, CategoryWithSubcategories } from '@/types'
 ```
 
 ### Common Patterns
@@ -55,7 +55,7 @@ export default async function Page() {
       authorized_date_string: true,
       pending: true,
       notes: true,
-      customCategory: {
+      category: {
         select: {
           id: true,
           name: true,
@@ -137,7 +137,7 @@ This file contains type-safe extractors for Prisma models with their relations.
 - `TransactionWithRelations` - Transaction with all common relations
 - `TransactionWithAccount` - Transaction with account only
 - `PlaidAccountWithRelations` - Plaid bank account with item and institution
-- `CustomCategoryWithSubcategories` - Category with subcategories
+- `CategoryWithSubcategories` - Category with subcategories
 - `HoldingWithRelations` - Holding with account and security
 - `PrismaIncludes` - Reusable include patterns
 
@@ -250,7 +250,7 @@ const { name } = result.data // Type-safe!
 const transactions = await prisma.transaction.findMany({
   include: {
     account: true,
-    customCategory: true,
+    category: true,
     // ... repeated everywhere
   },
 })
@@ -309,7 +309,7 @@ const transactions = await prisma.transaction.findMany({
     amount_number: true,     // Generated column (Float)
     date_string: true,        // Generated column (String)
     pending: true,
-    customCategory: {
+    category: {
       select: {
         id: true,
         name: true,

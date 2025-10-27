@@ -57,12 +57,12 @@ export function AddTransactionModal({
   const [isoCurrencyCode, setIsoCurrencyCode] = useState("CAD");
   const [authorizedDate, setAuthorizedDate] = useState("");
   const [paymentChannel, setPaymentChannel] = useState("");
-  const [categoryId, setCustomCategoryId] = useState("");
-  const [subcategoryId, setCustomSubcategoryId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [subcategoryId, setSubcategoryId] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
-  // Get subcategories for selected custom category
+  // Get subcategories for selected category
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const availableSubcategories = selectedCategory?.subcategories || [];
 
@@ -290,13 +290,13 @@ export function AddTransactionModal({
           {/* Categories */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="custom-category">Category</Label>
+              <Label htmlFor="category">Category</Label>
               <CategorySelect
-                id="custom-category"
+                id="category"
                 value={categoryId}
                 onChange={(value) => {
-                  setCustomCategoryId(value);
-                  setCustomSubcategoryId(""); // Reset subcategory when category changes
+                  setCategoryId(value);
+                  setSubcategoryId(""); // Reset subcategory when category changes
                 }}
                 categories={categories}
                 placeholder="None"
@@ -304,11 +304,11 @@ export function AddTransactionModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="custom-subcategory">Subcategory</Label>
+              <Label htmlFor="subcategory">Subcategory</Label>
               <select
-                id="custom-subcategory"
+                id="subcategory"
                 value={subcategoryId}
-                onChange={(e) => setCustomSubcategoryId(e.target.value)}
+                onChange={(e) => setSubcategoryId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={!categoryId}
               >

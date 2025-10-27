@@ -213,8 +213,8 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     // Subcategory filter
     if (selectedSubcategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customSubcategoryId) return false;
-        return selectedSubcategoryIds.has(t.customSubcategoryId);
+        if (!t.subcategoryId) return false;
+        return selectedSubcategoryIds.has(t.subcategoryId);
       });
     }
 
@@ -321,10 +321,10 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
 
     filteredTransactions.forEach((t) => {
       const amount = Math.abs(t.amount_number ?? 0);
-      const subcategoryName = t.customSubcategory?.name || "No Subcategory";
-      const imageUrl = t.customSubcategory?.imageUrl;
+      const subcategoryName = t.subcategory?.name || "No Subcategory";
+      const imageUrl = t.subcategory?.imageUrl;
       const categoryName =
-        t.customSubcategory?.category?.name ||
+        t.subcategory?.category?.name ||
         t.category?.name ||
         "Uncategorized";
 

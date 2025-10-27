@@ -32,7 +32,7 @@ export default async function SomePage() {
         authorized_date_string: true,
         pending: true,
         notes: true,
-        customCategory: {
+        category: {
           select: {
             id: true,
             name: true,
@@ -53,7 +53,7 @@ export default async function SomePage() {
       },
       orderBy: { date: 'desc' },
     }),
-    prisma.customCategory.findMany({
+    prisma.category.findMany({
       select: {
         id: true,
         name: true,
@@ -142,7 +142,7 @@ export function ClientComponent({ transactions, categories, tags }: ClientCompon
 
 The following data should be fetched server-side and passed as props:
 
-- **Categories**: `prisma.customCategory.findMany()` with subcategories included
+- **Categories**: `prisma.category.findMany()` with subcategories included
 - **Tags**: `prisma.tag.findMany()`
 - **Accounts**: `prisma.plaidAccount.findMany()` when needed for dropdowns
 
@@ -172,7 +172,7 @@ The following components **require** categories/tags as props (do NOT fetch inte
 2. **Caching**: Next.js automatically caches server component data
 3. **No Loading States**: Client components render immediately with data
 4. **Type Safety**: Full TypeScript support with explicit types
-5. **Reduced API Calls**: No `/api/custom-categories` or `/api/tags` calls from client
+5. **Reduced API Calls**: No `/api/categories` or `/api/tags` calls from client
 6. **No Type Conversion**: Generated columns provide client-compatible types (numbers/strings)
 
 ## When to Use Client-Side Fetching
@@ -276,4 +276,4 @@ When adding a new page or component that needs reference data:
 4. ✅ Pass as props to Client Components
 5. ✅ Update TypeScript interfaces in `types/components.ts`
 6. ✅ Remove any `useEffect` fetching from client components
-7. ✅ Remove `/api/custom-categories` and `/api/tags` calls
+7. ✅ Remove `/api/categories` and `/api/tags` calls

@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 async function addOtherSubcategories() {
   try {
-    // Get all custom categories
+    // Get all categories
     const categories = await prisma.category.findMany({
       include: {
         subcategories: true,
@@ -25,7 +25,7 @@ async function addOtherSubcategories() {
       }
 
       // Create "Other" subcategory
-      await prisma.customSubcategory.create({
+      await prisma.subcategory.create({
         data: {
           categoryId: category.id,
           name: 'Other',

@@ -47,12 +47,12 @@ async function categorizeBatch(
       return `[${idx}] "${t.name}" | Merchant: ${
         t.merchantName || "N/A"
       } | Amount: $${Math.abs(amount).toFixed(2)} (${type}) | Plaid: ${
-        t.category || "N/A"
-      }/${t.subcategory || "N/A"} | Notes: ${t.notes || "N/A"}`;
+        t.plaidCategory || "N/A"
+      }/${t.plaidSubcategory || "N/A"} | Notes: ${t.notes || "N/A"}`;
     })
     .join("\n");
 
-  const prompt = `You are a financial transaction categorizer. Given the following custom categories and transactions, categorize each transaction.
+  const prompt = `You are a financial transaction categorizer. Given the following categories and transactions, categorize each transaction.
 
 CATEGORIES:
 ${categoriesStr}

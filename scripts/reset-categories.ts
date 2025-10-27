@@ -60,7 +60,7 @@ const categories = [
 async function main() {
   console.log('Starting category reset...')
 
-  // Delete all existing custom categories (cascades to subcategories and removes references)
+  // Delete all existing categories (cascades to subcategories and removes references)
   console.log('Deleting existing categories...')
   await prisma.category.deleteMany({})
   console.log('All existing categories deleted.')

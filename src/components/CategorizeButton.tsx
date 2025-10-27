@@ -12,7 +12,7 @@ export function CategorizeButton() {
     if (isLoading) return
 
     const confirmed = confirm(
-      'This will automatically categorize all transactions that don\'t have a custom category using AI. Continue?'
+      'This will automatically categorize all transactions that don\'t have a category using AI. Continue?'
     )
 
     if (!confirmed) return

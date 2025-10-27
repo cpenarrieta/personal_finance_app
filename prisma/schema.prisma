@@ -251,11 +251,11 @@ model Verification {
 }
 
 model Category {
-  id                String        @id
+  id                String        @id @default(cuid())
   name              String
   imageUrl          String?
   createdAt         DateTime      @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime      @updatedAt
   created_at_string String?       @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
   updated_at_string String?       @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
   subcategories     Subcategory[]
@@ -263,12 +263,12 @@ model Category {
 }
 
 model Subcategory {
-  id                String        @id
+  id                String        @id @default(cuid())
   categoryId        String
   name              String
   imageUrl          String?
   createdAt         DateTime      @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime      @updatedAt
   created_at_string String?       @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
   updated_at_string String?       @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
   category          Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)

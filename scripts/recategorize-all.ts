@@ -18,8 +18,8 @@ async function categorizeBatch(
     id: string
     name: string
     merchantName: string | null
-    category: string | null
-    subcategory: string | null
+    plaidCategory: string | null
+    plaidSubcategory: string | null
     notes: string | null
     amount: string
   }>,
@@ -37,10 +37,10 @@ async function categorizeBatch(
   const transactionsStr = transactions.map((t, idx) => {
     const amount = Number(t.amount)
     const type = amount > 0 ? 'expense' : 'income'
-    return `[${idx}] "${t.name}" | Merchant: ${t.merchantName || 'N/A'} | Amount: $${Math.abs(amount).toFixed(2)} (${type}) | Plaid: ${t.category || 'N/A'}/${t.subcategory || 'N/A'} | Notes: ${t.notes || 'N/A'}`
+    return `[${idx}] "${t.name}" | Merchant: ${t.merchantName || 'N/A'} | Amount: $${Math.abs(amount).toFixed(2)} (${type}) | Plaid: ${t.plaidCategory || 'N/A'}/${t.plaidSubcategory || 'N/A'} | Notes: ${t.notes || 'N/A'}`
   }).join('\n')
 
-  const prompt = `You are a financial transaction categorizer. Given the following custom categories and transactions, categorize each transaction.
+  const prompt = `You are a financial transaction categorizer. Given the following categories and transactions, categorize each transaction.
 
 CATEGORIES:
 ${categoriesStr}
@@ -113,9 +113,9 @@ Return ONLY the JSON array, no other text.`
 }
 
 async function main() {
-  console.log('⚠️  WARNING: This will re-categorize ALL transactions using AI, overwriting any existing custom categories.\n')
+  console.log('⚠️  WARNING: This will re-categorize ALL transactions using AI, overwriting any existing categories.\n')
 
-  // Fetch all custom categories with subcategories
+  // Fetch all categories with subcategories
   const categories = await prisma.category.findMany({
     include: {
       subcategories: true
@@ -129,8 +129,8 @@ async function main() {
       id: true,
       name: true,
       merchantName: true,
-      category: true,
-      subcategory: true,
+      plaidCategory: true,
+      plaidSubcategory: true,
       notes: true,
       amount: true
     }
@@ -157,8 +157,8 @@ async function main() {
       id: t.id,
       name: t.name,
       merchantName: t.merchantName,
-      category: t.category,
-      subcategory: t.subcategory,
+      plaidCategory: t.plaidCategory,
+      plaidSubcategory: t.plaidSubcategory,
       notes: t.notes,
       amount: t.amount.toString()
     }))

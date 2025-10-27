@@ -163,8 +163,8 @@ export function TransactionAnalytics({
     // Subcategory filter
     if (selectedSubcategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.customSubcategoryId) return false;
-        return selectedSubcategoryIds.has(t.customSubcategoryId);
+        if (!t.subcategoryId) return false;
+        return selectedSubcategoryIds.has(t.subcategoryId);
       });
     }
 
@@ -267,8 +267,8 @@ export function TransactionAnalytics({
 
     filteredTransactions.forEach((t) => {
       const amount = Math.abs(t.amount_number);
-      const subcategoryName = t.customSubcategory?.name || "No Subcategory";
-      const imageUrl = t.customSubcategory?.imageUrl;
+      const subcategoryName = t.subcategory?.name || "No Subcategory";
+      const imageUrl = t.subcategory?.imageUrl;
 
       if (subcategoryMap.has(subcategoryName)) {
         subcategoryMap.get(subcategoryName)!.value += amount;
@@ -985,7 +985,7 @@ export function TransactionAnalytics({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transaction.customSubcategory?.name || "-"}
+                    {transaction.subcategory?.name || "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {transaction.account?.name}

@@ -52,7 +52,7 @@ async function categorizeBatch(
     })
     .join("\n");
 
-  const prompt = `You are a financial transaction categorizer. Given the following custom categories and transactions, categorize each transaction.
+  const prompt = `You are a financial transaction categorizer. Given the following categories and transactions, categorize each transaction.
 
 CATEGORIES:
 ${categoriesStr}

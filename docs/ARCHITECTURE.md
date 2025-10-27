@@ -20,14 +20,14 @@
 3. **Database Schema** (`prisma/schema.prisma`):
    - **Plaid entities**: Institution → Item → PlaidAccount → Transaction
    - **Investment entities**: Security, Holding, InvestmentTransaction
-   - **Custom categorization**: CustomCategory ↔ CustomSubcategory ← Transaction
+   - **Categorization**: Category ↔ Subcategory ← Transaction
    - **Organization**: Tag (many-to-many with transactions)
    - **Split transactions**: Parent-child relationship with `isSplit`, `parentTransactionId`, `originalTransactionId`
    - **Auth models**: User, Session, Account, Verification (Better Auth)
 
 4. **Transaction Categorization**:
-   - Plaid provides base categories (`category`, `subcategory` fields)
-   - Users can override with custom categories (`customCategoryId`, `customSubcategoryId`)
+   - Plaid provides base categories (`plaidCategory`, `plaidSubcategory` fields). Only saved for reference not used anywhere.
+   - ategories (`categoryId`, `subcategoryId`)
    - Rule-based auto-categorization: `scripts/auto-categorize.ts`
    - AI-powered categorization: `scripts/auto-categorize-gpt.ts` (batches of 20, uses GPT-4o-mini, considers notes/merchant/Plaid categories)
 
@@ -60,7 +60,7 @@ src/
 │   │   ├── categorize/           # Single transaction categorization
 │   │   ├── categorize-all/       # Bulk categorization
 │   │   ├── tags/                 # Tag management
-│   │   └── custom-categories/    # Category CRUD
+│   │   └── categories/           # Category CRUD
 │   ├── accounts/                 # Account list and detail pages
 │   ├── transactions/             # Transaction list and detail pages
 │   ├── investments/              # Holdings and investment transactions

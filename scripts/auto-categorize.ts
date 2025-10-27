@@ -83,7 +83,7 @@ function findBestMatch(
 async function main() {
   console.log('Starting auto-categorization...')
 
-  // Fetch all custom categories with subcategories
+  // Fetch all categories with subcategories
   const categories = await prisma.category.findMany({
     include: {
       subcategories: true
@@ -97,8 +97,8 @@ async function main() {
       id: true,
       name: true,
       merchantName: true,
-      category: true,
-      subcategory: true,
+      plaidCategory: true,
+      plaidSubcategory: true,
       notes: true,
       categoryId: true,
       subcategoryId: true
@@ -116,8 +116,8 @@ async function main() {
     if (transaction.notes) transactionData.push(transaction.notes) // Highest priority
     if (transaction.name) transactionData.push(transaction.name)
     if (transaction.merchantName) transactionData.push(transaction.merchantName)
-    if (transaction.category) transactionData.push(transaction.category)
-    if (transaction.subcategory) transactionData.push(transaction.subcategory)
+    if (transaction.plaidCategory) transactionData.push(transaction.plaidCategory)
+    if (transaction.plaidSubcategory) transactionData.push(transaction.plaidSubcategory)
 
     // Find best match
     const match = findBestMatch(transactionData, categories)

@@ -130,7 +130,7 @@ export function SearchableTransactionList({
     // Uncategorized filter
     if (showOnlyUncategorized) {
       filtered = filtered.filter(
-        (t) => !t.customCategory || !t.customSubcategory
+        (t) => !t.category || !t.subcategory
       );
     }
 
@@ -177,8 +177,8 @@ export function SearchableTransactionList({
         const searchableText = [
           t.name,
           t.merchantName,
-          t.customCategory?.name,
-          t.customSubcategory?.name,
+          t.category?.name,
+          t.subcategory?.name,
           t.account?.name,
           t.isoCurrencyCode,
           t.amount_number?.toString(),
@@ -959,7 +959,7 @@ export function SearchableTransactionList({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div className="space-y-2">
                   <Label htmlFor="bulk-category">
-                    Custom Category
+                    Category
                   </Label>
                   <Select
                     value={bulkCategoryId}
@@ -983,7 +983,7 @@ export function SearchableTransactionList({
 
                 <div className="space-y-2">
                   <Label htmlFor="bulk-subcategory">
-                    Custom Subcategory
+                    Subcategory
                   </Label>
                   <Select
                     value={bulkSubcategoryId}

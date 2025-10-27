@@ -36,7 +36,7 @@ A personal finance application built with Next.js 15 (App Router) that integrate
 export default async function Page() {
   const [transactions, categories, tags] = await Promise.all([
     prisma.transaction.findMany(...),
-    prisma.customCategory.findMany({ include: { subcategories: true } }),
+    prisma.category.findMany({ include: { subcategories: true } }),
     prisma.tag.findMany(),
   ])
 
@@ -48,7 +48,7 @@ export default async function Page() {
 export function ClientComponent() {
   const [categories, setCategories] = useState([])
   useEffect(() => {
-    fetch('/api/custom-categories').then(...)  // ❌ NO!
+    fetch('/api/categories').then(...)  // ❌ NO!
   }, [])
 }
 ```

@@ -43,7 +43,7 @@ async function createSubcategory(formData: FormData) {
   const name = formData.get("name") as string;
   const imageUrl = formData.get("imageUrl") as string;
 
-  await prisma.customSubcategory.create({
+  await prisma.subcategory.create({
     data: { categoryId, name, imageUrl: imageUrl || null },
   });
   revalidatePath("/settings/manage-categories");
@@ -52,7 +52,7 @@ async function createSubcategory(formData: FormData) {
 async function deleteSubcategory(formData: FormData) {
   "use server";
   const id = formData.get("id") as string;
-  await prisma.customSubcategory.delete({ where: { id } });
+  await prisma.subcategory.delete({ where: { id } });
   revalidatePath("/settings/manage-categories");
 }
 
@@ -79,7 +79,7 @@ export default async function ManageCategoriesPage() {
             Manage Categories
           </h1>
           <p className="text-gray-600 mt-1">
-            Create and organize your custom categories and subcategories
+            Create and organize your categories and subcategories
           </p>
         </div>
 
