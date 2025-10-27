@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { MoveTransactionsClient } from "@/components/MoveTransactionsClient";
 import type { Metadata } from "next";
-import { serializeCustomCategory, type PrismaCustomCategoryWithSubcategories } from "@/types";
+import type { CategoryForClient } from "@/types";
 
 export const metadata: Metadata = {
   title: "Move Transactions",
@@ -13,15 +13,26 @@ export const metadata: Metadata = {
 
 export default async function MoveTransactionsPage() {
   const categories = (await prisma.customCategory.findMany({
-    include: {
+    select: {
+      id: true,
+      name: true,
+      imageUrl: true,
+      created_at_string: true, // Generated column
+      updated_at_string: true, // Generated column
       subcategories: {
+        select: {
+          id: true,
+          categoryId: true,
+          name: true,
+          imageUrl: true,
+          created_at_string: true, // Generated column
+          updated_at_string: true, // Generated column
+        },
         orderBy: { name: "asc" },
       },
     },
     orderBy: { name: "asc" },
-  })) as PrismaCustomCategoryWithSubcategories[];
+  })) as CategoryForClient[];
 
-  const serializedCategories = categories.map(serializeCustomCategory);
-
-  return <MoveTransactionsClient categories={serializedCategories} />;
+  return <MoveTransactionsClient categories={categories} />;
 }

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
-  CustomCategoryWithSubcategories,
-  SerializedCustomSubcategory,
-  SerializedTransaction,
+  TransactionForClient,
+  CategoryForClient,
+  SubcategoryForClient,
 } from "@/types";
 import {
   Dialog,
@@ -26,9 +26,9 @@ interface SplitItem {
 }
 
 interface SplitTransactionModalProps {
-  transaction: SerializedTransaction;
+  transaction: TransactionForClient;
   onClose: () => void;
-  categories: CustomCategoryWithSubcategories[];
+  categories: CategoryForClient[];
 }
 
 export function SplitTransactionModal({
@@ -56,7 +56,7 @@ export function SplitTransactionModal({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const originalAmount = Number(transaction.amount);
+  const originalAmount = transaction.amount_number;
 
   const addSplit = () => {
     setSplits([
@@ -170,7 +170,7 @@ export function SplitTransactionModal({
 
   const getSubcategoriesForCategory = (
     categoryId: string | null
-  ): SerializedCustomSubcategory[] => {
+  ): SubcategoryForClient[] => {
     if (!categoryId) return [];
     const category = categories.find((c) => c.id === categoryId);
     return category?.subcategories || [];

@@ -52,7 +52,30 @@ export interface TransactionForClient {
   customCategory: CategoryForClient | null
   customSubcategory: SubcategoryForClient | null
   tags: TagForClient[]
-  childTransactions?: TransactionForClient[]
+  parentTransaction?: {
+    id: string
+    name: string
+    amount_number: number
+    date_string: string
+    customCategory: {
+      id: string
+      name: string
+    } | null
+  }
+  childTransactions?: {
+    id: string
+    name: string
+    amount_number: number
+    date_string: string
+    customCategory: {
+      id: string
+      name: string
+    } | null
+    customSubcategory: {
+      id: string
+      name: string
+    } | null
+  }[]
 }
 
 // ============================================================================

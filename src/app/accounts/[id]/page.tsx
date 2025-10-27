@@ -4,16 +4,9 @@ import { notFound } from 'next/navigation'
 import { SearchableTransactionList } from '@/components/SearchableTransactionList'
 import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
 import { HoldingList } from '@/components/HoldingList'
-import {
-  serializeTransaction,
-  serializeCustomCategory,
-  serializeTag,
-} from '@/types'
-import { PrismaIncludes } from '@/types/prisma'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
-import type { InvestmentTransactionWithRelations, HoldingWithRelations, SerializedTransaction, PrismaCustomCategoryWithSubcategories } from '@/types'
-import { Tag } from '@prisma/client'
+import type { InvestmentTransactionWithRelations, HoldingWithRelations, TransactionForClient, CategoryForClient, TagForClient } from '@/types'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -55,7 +48,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   const isInvestmentAccount = account.type === 'investment' || account.subtype?.includes('brokerage')
 
   // Fetch transactions or investment data based on account type
-  let transactions: SerializedTransaction[] = []
+  let transactions: TransactionForClient[] = []
   let investmentTransactions: InvestmentTransactionWithRelations[] = []
   let holdings: HoldingWithRelations[] = []
 
@@ -80,31 +73,115 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         isSplit: false, // Filter out parent transactions that have been split
       },
       orderBy: { date: 'desc' },
-      include: PrismaIncludes.transaction,
+      select: {
+        id: true,
+        plaidTransactionId: true,
+        accountId: true,
+        amount_number: true, // Generated column
+        isoCurrencyCode: true,
+        date_string: true, // Generated column
+        authorized_date_string: true, // Generated column
+        pending: true,
+        merchantName: true,
+        name: true,
+        category: true,
+        subcategory: true,
+        paymentChannel: true,
+        pendingTransactionId: true,
+        logoUrl: true,
+        categoryIconUrl: true,
+        customCategoryId: true,
+        customSubcategoryId: true,
+        notes: true,
+        isSplit: true,
+        parentTransactionId: true,
+        originalTransactionId: true,
+        created_at_string: true, // Generated column
+        updated_at_string: true, // Generated column
+        account: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            mask: true,
+          },
+        },
+        customCategory: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
+        },
+        customSubcategory: {
+          select: {
+            id: true,
+            categoryId: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
+        },
+        tags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+                created_at_string: true, // Generated column
+                updated_at_string: true, // Generated column
+              },
+            },
+          },
+        },
+      },
     })
 
-    // Serialize transactions for client component
-    transactions = txs.map(serializeTransaction)
+    // Flatten tags structure
+    transactions = txs.map((t: typeof txs[0]) => ({
+      ...t,
+      tags: t.tags.map((tt: typeof t.tags[0]) => tt.tag),
+    }))
   }
 
   // Fetch categories and tags (needed for transaction editing)
   const [categories, tags] = await Promise.all([
     prisma.customCategory.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        created_at_string: true, // Generated column
+        updated_at_string: true, // Generated column
         subcategories: {
+          select: {
+            id: true,
+            categoryId: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
           orderBy: { name: 'asc' },
         },
       },
       orderBy: { name: 'asc' },
-    }) as PrismaCustomCategoryWithSubcategories[],
+    }) as CategoryForClient[],
     prisma.tag.findMany({
+      select: {
+        id: true,
+        name: true,
+        color: true,
+        created_at_string: true, // Generated column
+        updated_at_string: true, // Generated column
+      },
       orderBy: { name: 'asc' },
-    }) as Tag[],
+    }) as TagForClient[],
   ])
-
-  // Serialize categories and tags
-  const serializedCategories = categories.map(serializeCustomCategory)
-  const serializedTags = tags.map(serializeTag)
 
   return (
     <div className="p-6">
@@ -180,11 +257,11 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         /* Banking Transactions Section */
         <div>
           <h3 className="text-lg font-semibold mb-3">Transactions</h3>
-          <SearchableTransactionList 
-            transactions={transactions} 
+          <SearchableTransactionList
+            transactions={transactions}
             showAccount={false}
-            categories={serializedCategories}
-            tags={serializedTags}
+            categories={categories}
+            tags={tags}
           />
         </div>
       )}

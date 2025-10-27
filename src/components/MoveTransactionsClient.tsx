@@ -4,13 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { TransactionItem } from "@/components/TransactionItem";
 import { CategorySelect } from "@/components/ui/category-select";
-import {
-  SerializedTransaction,
-  CustomCategoryWithSubcategories,
+import type {
+  TransactionForClient,
+  CategoryForClient,
 } from "@/types";
 
 interface MoveTransactionsClientProps {
-  categories: CustomCategoryWithSubcategories[];
+  categories: CategoryForClient[];
 }
 
 export function MoveTransactionsClient({
@@ -25,7 +25,7 @@ export function MoveTransactionsClient({
   const [toSubcategoryId, setToSubcategoryId] = useState<string>("");
 
   // Step 3: Show transactions and allow selection
-  const [transactions, setTransactions] = useState<SerializedTransaction[]>([]);
+  const [transactions, setTransactions] = useState<TransactionForClient[]>([]);
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<
     Set<string>
   >(new Set());
@@ -196,6 +196,7 @@ export function MoveTransactionsClient({
 
           {fromCategoryId &&
             fromCategory &&
+            fromCategory.subcategories &&
             fromCategory.subcategories.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -259,6 +260,7 @@ export function MoveTransactionsClient({
 
               {toCategoryId &&
                 toCategory &&
+                toCategory.subcategories &&
                 toCategory.subcategories.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -341,7 +343,7 @@ export function MoveTransactionsClient({
                       {" "}
                       (
                       {
-                        fromCategory?.subcategories.find(
+                        fromCategory?.subcategories?.find(
                           (s) => s.id === fromSubcategoryId
                         )?.name
                       }
@@ -354,7 +356,7 @@ export function MoveTransactionsClient({
                       {" "}
                       (
                       {
-                        toCategory?.subcategories.find(
+                        toCategory?.subcategories?.find(
                           (s) => s.id === toSubcategoryId
                         )?.name
                       }

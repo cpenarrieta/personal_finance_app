@@ -2,11 +2,10 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { TransactionsPageClient } from "@/components/TransactionsPageClient";
 import type { Metadata } from "next";
-import {
+import type {
   CategoryForClient,
   PlaidAccountForClient,
   TagForClient,
-  TransactionForClient,
 } from "@/types";
 
 export const metadata: Metadata = {

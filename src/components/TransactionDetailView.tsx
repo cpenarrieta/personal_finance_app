@@ -7,16 +7,15 @@ import Image from "next/image";
 import { EditTransactionModal } from "./EditTransactionModal";
 import { SplitTransactionModal } from "./SplitTransactionModal";
 import type {
-  CustomCategoryWithSubcategories,
-  SerializedTag,
-  SerializedTransaction,
-  TransactionWithRelations,
+  TransactionForClient,
+  CategoryForClient,
+  TagForClient,
 } from "@/types";
 
 interface TransactionDetailViewProps {
-  transaction: TransactionWithRelations;
-  categories: CustomCategoryWithSubcategories[];
-  tags: SerializedTag[];
+  transaction: TransactionForClient;
+  categories: CategoryForClient[];
+  tags: TagForClient[];
 }
 
 export function TransactionDetailView({
@@ -27,7 +26,7 @@ export function TransactionDetailView({
   const [isEditing, setIsEditing] = useState(false);
   const [isSplitting, setIsSplitting] = useState(false);
 
-  const amount = Number(transaction.amount);
+  const amount = transaction.amount_number;
   const isExpense = amount > 0;
   const absoluteAmount = Math.abs(amount);
 
@@ -118,7 +117,7 @@ export function TransactionDetailView({
                   <p className="text-sm text-blue-700">
                     Original: {transaction.parentTransaction.name} • $
                     {Math.abs(
-                      Number(transaction.parentTransaction.amount)
+                      transaction.parentTransaction.amount_number
                     ).toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -165,13 +164,13 @@ export function TransactionDetailView({
                         <div className="text-right">
                           <p
                             className={`font-semibold ${
-                              Number(child.amount) > 0
+                              child.amount_number > 0
                                 ? "text-red-600"
                                 : "text-green-600"
                             }`}
                           >
-                            {Number(child.amount) > 0 ? "-" : "+"}$
-                            {Math.abs(Number(child.amount)).toLocaleString(
+                            {child.amount_number > 0 ? "-" : "+"}$
+                            {Math.abs(child.amount_number).toLocaleString(
                               "en-US",
                               {
                                 minimumFractionDigits: 2,
@@ -196,21 +195,21 @@ export function TransactionDetailView({
                   Transaction Date
                 </label>
                 <div className="text-lg font-semibold text-gray-900">
-                  {format(new Date(transaction.date), "MMM d yyyy")}
+                  {format(new Date(transaction.date_string), "MMM d yyyy")}
                 </div>
                 <div className="text-sm text-gray-500">
-                  {format(new Date(transaction.date), "EEEE")} at{" "}
-                  {format(new Date(transaction.date), "h:mm a")}
+                  {format(new Date(transaction.date_string), "EEEE")} at{" "}
+                  {format(new Date(transaction.date_string), "h:mm a")}
                 </div>
               </div>
 
-              {transaction.authorizedDate && (
+              {transaction.authorized_date_string && (
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     Authorized Date
                   </label>
                   <div className="text-gray-900">
-                    {format(new Date(transaction.authorizedDate), "MMM d yyyy")}
+                    {format(new Date(transaction.authorized_date_string), "MMM d yyyy")}
                   </div>
                 </div>
               )}
@@ -284,19 +283,15 @@ export function TransactionDetailView({
                 Tags
               </label>
               <div className="flex flex-wrap gap-2">
-                {transaction.tags.map((transactionTag) => {
-                  // Handle both serialized tags and join table structure
-                  const tag = 'tag' in transactionTag ? transactionTag.tag : transactionTag;
-                  return (
-                    <span
-                      key={tag.id}
-                      className="px-3 py-1 rounded-full text-sm font-medium text-white"
-                      style={{ backgroundColor: tag.color }}
-                    >
-                      {tag.name}
-                    </span>
-                  );
-                })}
+                {transaction.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                    style={{ backgroundColor: tag.color }}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
               </div>
             </div>
           )}
@@ -322,13 +317,13 @@ export function TransactionDetailView({
               <div>
                 <span className="text-gray-600">Created:</span>
                 <div className="text-gray-900 mt-1">
-                  {format(new Date(transaction.createdAt), "MMM d yyyy h:mm a")}
+                  {format(new Date(transaction.created_at_string), "MMM d yyyy h:mm a")}
                 </div>
               </div>
               <div>
                 <span className="text-gray-600">Last Updated:</span>
                 <div className="text-gray-900 mt-1">
-                  {format(new Date(transaction.updatedAt), "MMM d yyyy h:mm a")}
+                  {format(new Date(transaction.updated_at_string), "MMM d yyyy h:mm a")}
                 </div>
               </div>
               {transaction.pendingTransactionId && (
@@ -347,7 +342,7 @@ export function TransactionDetailView({
       {/* Edit Modal */}
       {isEditing && (
         <EditTransactionModal
-          transaction={transaction as unknown as SerializedTransaction}
+          transaction={transaction}
           onClose={() => setIsEditing(false)}
           categories={categories}
           tags={tags}
@@ -357,7 +352,7 @@ export function TransactionDetailView({
       {/* Split Modal */}
       {isSplitting && (
         <SplitTransactionModal
-          transaction={transaction as unknown as SerializedTransaction}
+          transaction={transaction}
           onClose={() => setIsSplitting(false)}
           categories={categories}
         />

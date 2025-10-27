@@ -3,11 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TransactionDetailView } from "@/components/TransactionDetailView";
 import { headers } from "next/headers";
-import {
-  serializeCustomCategory,
-  CustomCategoryWithSubcategories,
-  serializeTag,
-  TransactionWithRelations,
+import type {
+  TransactionForClient,
+  CategoryForClient,
+  TagForClient,
 } from "@/types";
 import type { Metadata } from "next";
 
@@ -17,9 +16,12 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const transaction = (await prisma.transaction.findUnique({
+  const transaction = await prisma.transaction.findUnique({
     where: { id },
-  })) as TransactionWithRelations;
+    select: {
+      name: true,
+    },
+  });
 
   if (!transaction) {
     return {
@@ -49,151 +51,157 @@ export default async function TransactionDetailPage({
   const headersList = await headers();
   const referer = headersList.get("referer") || "";
 
-  const transaction = (await prisma.transaction.findUnique({
+  const txResult = await prisma.transaction.findUnique({
     where: { id },
-    include: {
-      account: true,
-      customCategory: true,
-      customSubcategory: true,
+    select: {
+      id: true,
+      plaidTransactionId: true,
+      accountId: true,
+      amount_number: true, // Generated column
+      isoCurrencyCode: true,
+      date_string: true, // Generated column
+      authorized_date_string: true, // Generated column
+      pending: true,
+      merchantName: true,
+      name: true,
+      category: true,
+      subcategory: true,
+      paymentChannel: true,
+      pendingTransactionId: true,
+      logoUrl: true,
+      categoryIconUrl: true,
+      customCategoryId: true,
+      customSubcategoryId: true,
+      notes: true,
+      isSplit: true,
+      parentTransactionId: true,
+      originalTransactionId: true,
+      created_at_string: true, // Generated column
+      updated_at_string: true, // Generated column
+      account: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          mask: true,
+        },
+      },
+      customCategory: {
+        select: {
+          id: true,
+          name: true,
+          imageUrl: true,
+          created_at_string: true, // Generated column
+          updated_at_string: true, // Generated column
+        },
+      },
+      customSubcategory: {
+        select: {
+          id: true,
+          categoryId: true,
+          name: true,
+          imageUrl: true,
+          created_at_string: true, // Generated column
+          updated_at_string: true, // Generated column
+        },
+      },
       tags: {
-        include: {
-          tag: true,
+        select: {
+          tag: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+              created_at_string: true, // Generated column
+              updated_at_string: true, // Generated column
+            },
+          },
         },
       },
       parentTransaction: {
-        include: {
-          customCategory: true,
+        select: {
+          id: true,
+          name: true,
+          amount_number: true, // Generated column
+          date_string: true, // Generated column
+          customCategory: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
       childTransactions: {
-        include: {
-          customCategory: true,
-          customSubcategory: true,
+        select: {
+          id: true,
+          name: true,
+          amount_number: true, // Generated column
+          date_string: true, // Generated column
+          customCategory: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          customSubcategory: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "asc",
         },
       },
     },
-  })) as TransactionWithRelations;
+  });
 
-  if (!transaction) {
+  if (!txResult) {
     notFound();
   }
+
+  // Flatten tags structure
+  const transaction: TransactionForClient = {
+    ...txResult,
+    tags: txResult.tags.map((tt: typeof txResult.tags[0]) => tt.tag),
+  };
 
   // Fetch categories and tags (needed for transaction editing)
   const [categories, tags] = await Promise.all([
     prisma.customCategory.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        created_at_string: true, // Generated column
+        updated_at_string: true, // Generated column
         subcategories: {
+          select: {
+            id: true,
+            categoryId: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
           orderBy: { name: "asc" },
         },
       },
       orderBy: { name: "asc" },
-    }),
+    }) as CategoryForClient[],
     prisma.tag.findMany({
+      select: {
+        id: true,
+        name: true,
+        color: true,
+        created_at_string: true, // Generated column
+        updated_at_string: true, // Generated column
+      },
       orderBy: { name: "asc" },
-    }),
+    }) as TagForClient[],
   ]);
-
-  // Serialize categories and tags
-  const serializedCategories = categories.map(serializeCustomCategory);
-  const serializedTags = tags.map(serializeTag);
-
-  // Serialize transaction for client component
-  const serializedTransaction = {
-    id: transaction.id,
-    plaidTransactionId: transaction.plaidTransactionId,
-    accountId: transaction.accountId,
-    amount: transaction.amount.toString(),
-    isoCurrencyCode: transaction.isoCurrencyCode,
-    date: transaction.date.toISOString(),
-    authorizedDate: transaction.authorizedDate?.toISOString() || null,
-    pending: transaction.pending,
-    merchantName: transaction.merchantName,
-    name: transaction.name,
-    category: transaction.category,
-    subcategory: transaction.subcategory,
-    paymentChannel: transaction.paymentChannel,
-    pendingTransactionId: transaction.pendingTransactionId,
-    logoUrl: transaction.logoUrl,
-    categoryIconUrl: transaction.categoryIconUrl,
-    customCategoryId: transaction.customCategoryId,
-    customSubcategoryId: transaction.customSubcategoryId,
-    notes: transaction.notes,
-    tags:
-      transaction.tags?.map((tt) => ({
-        id: tt.tag.id,
-        name: tt.tag.name,
-        color: tt.tag.color,
-      })) || [],
-    // Split transaction fields
-    isSplit: transaction.isSplit,
-    parentTransactionId: transaction.parentTransactionId,
-    originalTransactionId: transaction.originalTransactionId,
-    createdAt: transaction.createdAt.toISOString(),
-    updatedAt: transaction.updatedAt.toISOString(),
-    account: transaction.account
-      ? {
-          id: transaction.account.id,
-          name: transaction.account.name,
-          type: transaction.account.type,
-          mask: transaction.account.mask,
-        }
-      : null,
-    customCategory: transaction.customCategory
-      ? {
-          id: transaction.customCategory.id,
-          name: transaction.customCategory.name,
-          imageUrl: transaction.customCategory.imageUrl,
-          createdAt: transaction.customCategory.createdAt.toISOString(),
-          updatedAt: transaction.customCategory.updatedAt.toISOString(),
-        }
-      : null,
-    customSubcategory: transaction.customSubcategory
-      ? {
-          id: transaction.customSubcategory.id,
-          name: transaction.customSubcategory.name,
-          imageUrl: transaction.customSubcategory.imageUrl,
-          categoryId: transaction.customSubcategory.categoryId,
-          createdAt: transaction.customSubcategory.createdAt.toISOString(),
-          updatedAt: transaction.customSubcategory.updatedAt.toISOString(),
-        }
-      : null,
-    parentTransaction: transaction.parentTransaction
-      ? {
-          id: transaction.parentTransaction.id,
-          name: transaction.parentTransaction.name,
-          amount: transaction.parentTransaction.amount.toString(),
-          date: transaction.parentTransaction.date.toISOString(),
-          customCategory: transaction.parentTransaction.customCategory
-            ? {
-                id: transaction.parentTransaction.customCategory.id,
-                name: transaction.parentTransaction.customCategory.name,
-              }
-            : null,
-        }
-      : null,
-    childTransactions:
-      transaction.childTransactions?.map((child) => ({
-        id: child.id,
-        name: child.name,
-        amount: child.amount.toString(),
-        date: child.date.toISOString(),
-        customCategory: child.customCategory
-          ? {
-              id: child.customCategory.id,
-              name: child.customCategory.name,
-            }
-          : null,
-        customSubcategory: child.customSubcategory
-          ? {
-              id: child.customSubcategory.id,
-              name: child.customSubcategory.name,
-            }
-          : null,
-      })) || [],
-  };
 
   // Determine which page to go back to based on referrer
   const isFromAnalytics = referer.includes("/analytics");
@@ -211,13 +219,9 @@ export default async function TransactionDetailPage({
       </div>
 
       <TransactionDetailView
-        transaction={
-          serializedTransaction as unknown as TransactionWithRelations
-        }
-        categories={
-          serializedCategories as unknown as CustomCategoryWithSubcategories[]
-        }
-        tags={serializedTags}
+        transaction={transaction}
+        categories={categories}
+        tags={tags}
       />
     </div>
   );
