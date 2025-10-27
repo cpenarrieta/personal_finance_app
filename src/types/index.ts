@@ -49,10 +49,6 @@ export {
   securityWithCount,
   type SecurityWithCount,
 
-  // Category group types
-  categoryGroupWithItems,
-  type CategoryGroupWithItems,
-
   // Utilities
   type TransactionTagData,
   extractTags,

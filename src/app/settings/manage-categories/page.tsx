@@ -74,12 +74,6 @@ export default async function ManageCategoriesPage() {
             >
               ← Back to Home
             </Link>
-            <Link
-              href="/settings/category-groups"
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              Manage Category Groups
-            </Link>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">
             Manage Categories

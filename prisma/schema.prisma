@@ -39,6 +39,7 @@ model Item {
   updated_at_string String? // Auto-generated from updatedAt
 }
 
+// Plaid Account model
 model PlaidAccount {
   id              String   @id @default(cuid())
   plaidAccountId  String   @unique
@@ -207,7 +208,6 @@ model CustomCategory {
 
   subcategories CustomSubcategory[]
   transactions  Transaction[]
-  groupItems    CategoryGroupItem[]
 
   // Generated columns for serialization
   created_at_string String? // Auto-generated from createdAt
@@ -228,34 +228,6 @@ model CustomSubcategory {
   // Generated columns for serialization
   created_at_string String? // Auto-generated from createdAt
   updated_at_string String? // Auto-generated from updatedAt
-}
-
-// Category Groups (for organizing categories into different groupings)
-model CategoryGroup {
-  id            String   @id @default(cuid())
-  name          String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  items         CategoryGroupItem[]
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
-  updated_at_string String? // Auto-generated from updatedAt
-}
-
-model CategoryGroupItem {
-  id            String   @id @default(cuid())
-  groupId       String
-  group         CategoryGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  categoryId    String
-  category      CustomCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-
-  // Generated columns for serialization
-  created_at_string String? // Auto-generated from createdAt
-
-  @@unique([groupId, categoryId])
 }
 
 // Tags for transactions
@@ -316,6 +288,7 @@ model Session {
   @@index([userId])
 }
 
+// Better Auth models for authentication
 model Account {
   id                    String   @id @default(cuid())
   userId                String

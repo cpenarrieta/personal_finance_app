@@ -21,6 +21,8 @@ $$;
 -- TRANSACTION TABLE
 -- ============================================================================
 ALTER TABLE "Transaction"
+  ADD COLUMN IF NOT EXISTS amount_number DOUBLE PRECISION
+    GENERATED ALWAYS AS (CAST(amount AS double precision)) STORED,
   ADD COLUMN IF NOT EXISTS date_string TEXT
     GENERATED ALWAYS AS (timestamp_to_string(date)) STORED,
   ADD COLUMN IF NOT EXISTS authorized_date_string TEXT

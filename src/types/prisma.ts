@@ -239,27 +239,6 @@ export const securityWithCount = Prisma.validator<Prisma.SecurityDefaultArgs>()(
 export type SecurityWithCount = Prisma.SecurityGetPayload<typeof securityWithCount>
 
 // ============================================================================
-// CATEGORY GROUP TYPES
-// ============================================================================
-
-/**
- * Category group with items and categories
- */
-export const categoryGroupWithItems = Prisma.validator<Prisma.CategoryGroupDefaultArgs>()({
-  include: {
-    items: {
-      include: {
-        category: true,
-      },
-    },
-  },
-})
-
-export type CategoryGroupWithItems = Prisma.CategoryGroupGetPayload<
-  typeof categoryGroupWithItems
->
-
-// ============================================================================
 // TYPE UTILITIES
 // ============================================================================
 

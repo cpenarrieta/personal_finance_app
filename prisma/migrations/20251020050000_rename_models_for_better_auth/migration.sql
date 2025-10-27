@@ -1,8 +1,16 @@
 -- Step 1: Rename existing Account table to PlaidAccount
 ALTER TABLE "Account" RENAME TO "PlaidAccount";
 
+-- Step 1a: Rename PlaidAccount constraints and indexes (PostgreSQL auto-renames when table is renamed)
+-- Primary keys and indexes are auto-renamed, but we explicitly rename to ensure consistency
+ALTER INDEX IF EXISTS "Account_plaidAccountId_key" RENAME TO "PlaidAccount_plaidAccountId_key";
+
 -- Step 2: Rename OAuthAccount table to Account
 ALTER TABLE "OAuthAccount" RENAME TO "Account";
+
+-- Step 2a: Rename Account indexes (after table rename)
+-- Primary keys are auto-renamed, indexes need explicit rename
+ALTER INDEX IF EXISTS "OAuthAccount_userId_idx" RENAME TO "Account_userId_idx";
 
 -- Step 3: Rename columns in Account table to match Better Auth expectations
 ALTER TABLE "Account" RENAME COLUMN "providerId" TO "temp_providerId";

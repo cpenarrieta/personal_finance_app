@@ -21,7 +21,7 @@
    - **Plaid entities**: Institution → Item → PlaidAccount → Transaction
    - **Investment entities**: Security, Holding, InvestmentTransaction
    - **Custom categorization**: CustomCategory ↔ CustomSubcategory ← Transaction
-   - **Organization**: CategoryGroup (for grouping categories), Tag (many-to-many with transactions)
+   - **Organization**: Tag (many-to-many with transactions)
    - **Split transactions**: Parent-child relationship with `isSplit`, `parentTransactionId`, `originalTransactionId`
    - **Auth models**: User, Session, Account, Verification (Better Auth)
 
