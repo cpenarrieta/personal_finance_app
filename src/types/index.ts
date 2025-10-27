@@ -59,7 +59,7 @@ export {
   type TransactionTagData,
   extractTags,
   PrismaIncludes,
-} from './prisma'
+} from "./prisma";
 
 // Re-export API types and schemas (for API requests/responses)
 export {
@@ -67,20 +67,6 @@ export {
   type ApiSuccess,
   type ApiError,
   type ApiResponse,
-
-  // Serialized types
-  serializedTagSchema,
-  type SerializedTag,
-  serializedPlaidAccountSchema,
-  type SerializedPlaidAccount,
-  serializedAccountSchema, // Legacy alias
-  type SerializedAccount, // Legacy alias
-  serializedCustomCategorySchema,
-  type SerializedCustomCategory,
-  serializedCustomSubcategorySchema,
-  type SerializedCustomSubcategory,
-  serializedTransactionSchema,
-  type SerializedTransaction,
 
   // Transaction API schemas
   updateTransactionSchema,
@@ -137,10 +123,10 @@ export {
   createErrorResponse,
   parseRequestBody,
   safeParseRequestBody,
-} from './api'
+} from "./api";
 
 // Re-export component types
-export * from './components'
+export * from "./components";
 
 // Re-export client types (using generated columns - no serialization needed)
 export {
@@ -151,7 +137,7 @@ export {
   type PlaidAccountForClient,
   type HoldingForClient,
   type InvestmentTransactionForClient,
-} from './client'
+} from "./client";
 
 // Re-export from transaction utilities
 export {
@@ -160,4 +146,4 @@ export {
   serializeTag,
   serializePlaidAccount,
   TRANSACTION_INCLUDE,
-} from './transaction'
+} from "./transaction";

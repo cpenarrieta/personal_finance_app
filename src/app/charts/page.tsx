@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { ChartsView } from '@/components/ChartsView'
 import type { Metadata } from 'next'
+import type { CategoryForClient } from '@/types'
 
 export const metadata: Metadata = {
   title: 'Financial Charts',
@@ -13,81 +14,103 @@ export const metadata: Metadata = {
 
 export default async function ChartsPage() {
   // Fetch all transactions and categories in parallel
-  const transactionsPromise = prisma.transaction.findMany({
-    where: {
-      isSplit: false, // Filter out parent transactions that have been split
-    },
-    orderBy: { date: 'desc' },
-    include: {
-      account: true,
-      customCategory: true,
-      customSubcategory: {
-        include: {
-          category: true,
+  const [transactions, categories] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        isSplit: false, // Filter out parent transactions that have been split
+      },
+      orderBy: { date: 'desc' },
+      select: {
+        id: true,
+        plaidTransactionId: true,
+        accountId: true,
+        amount_number: true, // Generated column
+        isoCurrencyCode: true,
+        date_string: true, // Generated column
+        authorized_date_string: true, // Generated column
+        pending: true,
+        merchantName: true,
+        name: true,
+        category: true,
+        subcategory: true,
+        paymentChannel: true,
+        pendingTransactionId: true,
+        logoUrl: true,
+        categoryIconUrl: true,
+        customCategoryId: true,
+        customSubcategoryId: true,
+        notes: true,
+        isSplit: true,
+        parentTransactionId: true,
+        originalTransactionId: true,
+        created_at_string: true, // Generated column
+        updated_at_string: true, // Generated column
+        account: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            mask: true,
+            current_balance_number: true, // Generated column
+            available_balance_number: true, // Generated column
+            credit_limit_number: true, // Generated column
+            balance_updated_at_string: true, // Generated column
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
+        },
+        customCategory: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
+        },
+        customSubcategory: {
+          select: {
+            id: true,
+            categoryId: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+            category: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+                created_at_string: true, // Generated column
+                updated_at_string: true, // Generated column
+              },
+            },
+          },
         },
       },
-    },
-  })
-
-  const categoriesPromise = prisma.customCategory.findMany({
-    include: {
-      subcategories: {
-        orderBy: { name: 'asc' },
+    }),
+    prisma.customCategory.findMany({
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+        created_at_string: true, // Generated column
+        updated_at_string: true, // Generated column
+        subcategories: {
+          select: {
+            id: true,
+            categoryId: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
+          orderBy: { name: 'asc' },
+        },
       },
-    },
-    orderBy: { name: 'asc' },
-  })
-
-  const [transactions, categories] = await Promise.all([transactionsPromise, categoriesPromise])
-
-  // Serialize transactions to make them compatible with client components
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const serializedTransactions = transactions.map((t: any) => ({
-    ...t,
-    amount: t.amount.toString(),
-    date: t.date.toISOString(),
-    authorizedDate: t.authorizedDate?.toISOString() || null,
-    createdAt: t.createdAt.toISOString(),
-    updatedAt: t.updatedAt.toISOString(),
-    account: t.account ? {
-      ...t.account,
-      currentBalance: t.account.currentBalance?.toString() || null,
-      availableBalance: t.account.availableBalance?.toString() || null,
-      creditLimit: t.account.creditLimit?.toString() || null,
-      balanceUpdatedAt: t.account.balanceUpdatedAt?.toISOString() || null,
-      createdAt: t.account.createdAt.toISOString(),
-      updatedAt: t.account.updatedAt.toISOString(),
-    } : null,
-    customCategory: t.customCategory ? {
-      ...t.customCategory,
-      createdAt: t.customCategory.createdAt.toISOString(),
-      updatedAt: t.customCategory.updatedAt.toISOString(),
-    } : null,
-    customSubcategory: t.customSubcategory ? {
-      ...t.customSubcategory,
-      createdAt: t.customSubcategory.createdAt.toISOString(),
-      updatedAt: t.customSubcategory.updatedAt.toISOString(),
-      category: t.customSubcategory.category ? {
-        ...t.customSubcategory.category,
-        createdAt: t.customSubcategory.category.createdAt.toISOString(),
-        updatedAt: t.customSubcategory.category.updatedAt.toISOString(),
-      } : undefined,
-    } : null,
-  }))
-
-  // Serialize categories
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const serializedCategories = categories.map((cat: any) => ({
-    ...cat,
-    createdAt: cat.createdAt.toISOString(),
-    updatedAt: cat.updatedAt.toISOString(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    subcategories: cat.subcategories.map((sub: any) => ({
-      ...sub,
-      createdAt: sub.createdAt.toISOString(),
-      updatedAt: sub.updatedAt.toISOString(),
-    })),
-  }))
+      orderBy: { name: 'asc' },
+    }) as Promise<CategoryForClient[]>,
+  ])
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -102,7 +125,7 @@ export default async function ChartsPage() {
         <p className="text-gray-600 mt-1">Visualize your spending and income patterns</p>
       </div>
 
-      <ChartsView transactions={serializedTransactions} categories={serializedCategories} />
+      <ChartsView transactions={transactions} categories={categories} />
     </div>
   )
 }

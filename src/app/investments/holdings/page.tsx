@@ -7,7 +7,6 @@ import { SyncPricesButton } from "@/components/SyncPricesButton";
 import { SyncHoldingsLogosButton } from "@/components/SyncHoldingsLogosButton";
 import { HoldingsPortfolio } from "@/components/HoldingsPortfolio";
 import type { Metadata } from "next";
-import { HoldingWithRelations } from "@/types";
 
 export const metadata: Metadata = {
   title: "Investment Holdings",
@@ -30,37 +29,38 @@ async function doSyncHoldingsLogos() {
 }
 
 export default async function HoldingsPage() {
-  const holdings = (await prisma.holding.findMany({
-    include: { account: true, security: true },
-  })) as HoldingWithRelations[];
-
-  // Serialize holdings for client component
-  const serializedHoldings = holdings.map((h) => ({
-    id: h.id,
-    accountId: h.accountId,
-    securityId: h.securityId,
-    quantity: h.quantity.toString(),
-    costBasis: h.costBasis?.toString() || null,
-    institutionPrice: h.institutionPrice?.toString() || null,
-    institutionPriceAsOf: h.institutionPriceAsOf?.toISOString() || null,
-    isoCurrencyCode: h.isoCurrencyCode,
-    createdAt: h.createdAt.toISOString(),
-    updatedAt: h.updatedAt.toISOString(),
-    account: {
-      id: h.account.id,
-      name: h.account.name,
-      type: h.account.type,
-      subtype: h.account.subtype,
+  const holdings = await prisma.holding.findMany({
+    select: {
+      id: true,
+      accountId: true,
+      securityId: true,
+      quantity_number: true, // Generated column
+      cost_basis_number: true, // Generated column
+      institution_price_number: true, // Generated column
+      institution_price_as_of_string: true, // Generated column
+      isoCurrencyCode: true,
+      created_at_string: true, // Generated column
+      updated_at_string: true, // Generated column
+      account: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          subtype: true,
+        },
+      },
+      security: {
+        select: {
+          id: true,
+          name: true,
+          tickerSymbol: true,
+          type: true,
+          isoCurrencyCode: true,
+          logoUrl: true,
+        },
+      },
     },
-    security: {
-      id: h.security.id,
-      name: h.security.name,
-      tickerSymbol: h.security.tickerSymbol,
-      type: h.security.type,
-      isoCurrencyCode: h.security.isoCurrencyCode,
-      logoUrl: h.security.logoUrl,
-    },
-  }));
+  });
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -83,7 +83,7 @@ export default async function HoldingsPage() {
         </p>
       </div>
 
-      <HoldingsPortfolio holdings={serializedHoldings} />
+      <HoldingsPortfolio holdings={holdings} />
     </div>
   );
 }

@@ -165,6 +165,13 @@ export interface HoldingForClient {
     isoCurrencyCode: string | null
     logoUrl: string | null
   }
+
+  account: {
+    id: string
+    name: string
+    type: string
+    mask: string | null
+  }
 }
 
 // ============================================================================

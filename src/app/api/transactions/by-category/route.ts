@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { TransactionWithRelations } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,38 +27,86 @@ export async function GET(request: NextRequest) {
         subcategoryId === "null" ? null : subcategoryId;
     }
 
-    const transactions = (await prisma.transaction.findMany({
+    const transactions = await prisma.transaction.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        plaidTransactionId: true,
+        accountId: true,
+        amount_number: true, // Generated column
+        isoCurrencyCode: true,
+        date_string: true, // Generated column
+        authorized_date_string: true, // Generated column
+        pending: true,
+        merchantName: true,
+        name: true,
+        category: true,
+        subcategory: true,
+        paymentChannel: true,
+        pendingTransactionId: true,
+        logoUrl: true,
+        categoryIconUrl: true,
+        customCategoryId: true,
+        customSubcategoryId: true,
+        notes: true,
+        isSplit: true,
+        parentTransactionId: true,
+        originalTransactionId: true,
+        created_at_string: true, // Generated column
+        updated_at_string: true, // Generated column
         account: {
           select: {
             id: true,
             name: true,
+            type: true,
+            mask: true,
           },
         },
-        customCategory: true,
-        customSubcategory: true,
+        customCategory: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
+        },
+        customSubcategory: {
+          select: {
+            id: true,
+            categoryId: true,
+            name: true,
+            imageUrl: true,
+            created_at_string: true, // Generated column
+            updated_at_string: true, // Generated column
+          },
+        },
+        tags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+                created_at_string: true, // Generated column
+                updated_at_string: true, // Generated column
+              },
+            },
+          },
+        },
       },
       orderBy: {
         date: "desc",
       },
-    })) as TransactionWithRelations[];
+    });
 
-    // Serialize the transactions (convert Decimal to string)
-    const serializedTransactions = transactions.map((t) => ({
+    // Flatten tags structure
+    const transactionsWithFlatTags = transactions.map((t: typeof transactions[0]) => ({
       ...t,
-      amount: t.amount.toString(),
-      account: t.account
-        ? {
-            ...t.account,
-            currentBalance: null,
-            availableBalance: null,
-            creditLimit: null,
-          }
-        : null,
+      tags: t.tags.map((tt: typeof t.tags[0]) => tt.tag),
     }));
 
-    return NextResponse.json(serializedTransactions);
+    return NextResponse.json(transactionsWithFlatTags);
   } catch (error) {
     console.error("Error fetching transactions by category:", error);
     return NextResponse.json(

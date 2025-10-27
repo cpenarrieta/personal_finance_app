@@ -104,7 +104,6 @@ Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Sw
 
 - Strict TypeScript mode enabled
 - Use `@/*` path alias for imports
-- Serialize Prisma data before passing to client components (convert Dates to ISO strings)
 - Use `Prisma.Decimal` for monetary amounts
 
 ## Common Tasks
@@ -112,7 +111,6 @@ Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Sw
 ### Adding a New Page with Reference Data
 
 1. ✅ Fetch categories/tags in Server Component (page.tsx)
-2. ✅ Serialize data (convert Dates to ISO strings)
 3. ✅ Pass as props to Client Components
 4. ✅ Update TypeScript interfaces in `types/components.ts`
 5. ❌ Never fetch categories/tags in client components with useEffect
