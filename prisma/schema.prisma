@@ -16,6 +16,9 @@ model Institution {
   logoUrl     String?  // Institution logo
   createdAt   DateTime @default(now())
   items       Item[]
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
 }
 
 model Item {
@@ -30,6 +33,10 @@ model Item {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   accounts         PlaidAccount[]
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
+  updated_at_string String? // Auto-generated from updatedAt
 }
 
 model PlaidAccount {
@@ -55,6 +62,14 @@ model PlaidAccount {
   transactions    Transaction[]
   investmentTxns  InvestmentTransaction[]
   holdings        Holding[]
+
+  // Generated columns for serialization
+  current_balance_number    Float?  // Auto-generated from currentBalance
+  available_balance_number  Float?  // Auto-generated from availableBalance
+  credit_limit_number       Float?  // Auto-generated from creditLimit
+  balance_updated_at_string String? // Auto-generated from balanceUpdatedAt
+  created_at_string         String? // Auto-generated from createdAt
+  updated_at_string         String? // Auto-generated from updatedAt
 }
 
 model Transaction {
@@ -98,6 +113,13 @@ model Transaction {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Generated columns for serialization
+  amount_number            Float?  // Auto-generated from amount
+  date_string              String? // Auto-generated from date
+  authorized_date_string   String? // Auto-generated from authorizedDate
+  created_at_string        String? // Auto-generated from createdAt
+  updated_at_string        String? // Auto-generated from updatedAt
+
   @@index([plaidTransactionId])
   @@index([parentTransactionId])
   @@index([originalTransactionId])
@@ -115,6 +137,10 @@ model Security {
   updatedAt     DateTime @updatedAt
   holdings      Holding[]
   investmentTx  InvestmentTransaction[]
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
+  updated_at_string String? // Auto-generated from updatedAt
 }
 
 model Holding {
@@ -130,6 +156,14 @@ model Holding {
   isoCurrencyCode String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // Generated columns for serialization
+  quantity_number                Float?  // Auto-generated from quantity
+  cost_basis_number              Float?  // Auto-generated from costBasis
+  institution_price_number       Float?  // Auto-generated from institutionPrice
+  institution_price_as_of_string String? // Auto-generated from institutionPriceAsOf
+  created_at_string              String? // Auto-generated from createdAt
+  updated_at_string              String? // Auto-generated from updatedAt
   // optional: unique(accountId, securityId) for current snapshot rows; or history w/ asOf
 }
 
@@ -151,6 +185,15 @@ model InvestmentTransaction {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Generated columns for serialization
+  amount_number     Float?  // Auto-generated from amount
+  price_number      Float?  // Auto-generated from price
+  quantity_number   Float?  // Auto-generated from quantity
+  fees_number       Float?  // Auto-generated from fees
+  date_string       String? // Auto-generated from date
+  created_at_string String? // Auto-generated from createdAt
+  updated_at_string String? // Auto-generated from updatedAt
+
   @@index([plaidInvestmentTransactionId])
 }
 
@@ -165,6 +208,10 @@ model CustomCategory {
   subcategories CustomSubcategory[]
   transactions  Transaction[]
   groupItems    CategoryGroupItem[]
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
+  updated_at_string String? // Auto-generated from updatedAt
 }
 
 model CustomSubcategory {
@@ -177,6 +224,10 @@ model CustomSubcategory {
   updatedAt     DateTime @updatedAt
 
   transactions  Transaction[]
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
+  updated_at_string String? // Auto-generated from updatedAt
 }
 
 // Category Groups (for organizing categories into different groupings)
@@ -187,6 +238,10 @@ model CategoryGroup {
   updatedAt     DateTime @updatedAt
 
   items         CategoryGroupItem[]
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
+  updated_at_string String? // Auto-generated from updatedAt
 }
 
 model CategoryGroupItem {
@@ -196,6 +251,9 @@ model CategoryGroupItem {
   categoryId    String
   category      CustomCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
 
   @@unique([groupId, categoryId])
 }
@@ -209,6 +267,10 @@ model Tag {
   updatedAt     DateTime @updatedAt
 
   transactions  TransactionTag[]
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
+  updated_at_string String? // Auto-generated from updatedAt
 }
 
 // Many-to-many relation between Transaction and Tag
@@ -219,6 +281,9 @@ model TransactionTag {
   tagId         String
   tag           Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
+
+  // Generated columns for serialization
+  created_at_string String? // Auto-generated from createdAt
 
   @@unique([transactionId, tagId])
 }
