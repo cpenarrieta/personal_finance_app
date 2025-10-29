@@ -8,6 +8,7 @@ Read detailed documentation in `docs/` folder:
 - `docs/DATA_FETCHING.md` - Server Components, props pattern, serialization
 - `docs/ARCHITECTURE.md` - Database schema, Plaid sync, project structure
 - `docs/DEVELOPMENT.md` - Commands, environment setup, testing
+- `docs/MIGRATIONS.md` - Database migrations process and best practices
 
 ## Critical Rules Summary
 
