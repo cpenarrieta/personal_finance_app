@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
 - [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup, testing
 - [Generated Columns](docs/GENERATED_COLUMNS.md) - PostgreSQL generated columns for passing data to client components
+- [Migrations Guide](docs/MIGRATIONS.md) - Prisma migration best practices and workflows
 
 ## Project Overview
 
@@ -325,10 +326,11 @@ To change the entire app theme, modify these CSS variables or use tools like [tw
 npm run dev              # Start dev server (never run - always running locally)
 npm run build            # Build for production
 
-# Database
-npx prisma migrate dev   # Create migrations
+# Database Migrations ⭐️ ALWAYS use migrate dev, NEVER db push
+npx prisma migrate dev --name change_description  # Create & apply migration
 npx prisma generate      # Generate Prisma Client
 npx prisma studio        # Open database GUI
+npx prisma migrate status  # Check migration status
 
 # Plaid Sync
 npm run sync             # Sync financial data
@@ -347,5 +349,7 @@ npm run sync             # Sync financial data
 
 - **Never run** `npm run dev` (always running locally)
 - **Never run** `npm run categorize:gpt` (AI categorization)
+- **Never use** `npx prisma db push` on databases with real data (use `migrate dev` instead)
+- **Always commit** migration files to git (never delete them)
 - **Sync preserves** user customizations (renamed accounts, custom prices)
 - **TypeScript strict mode** enabled - full type safety required
