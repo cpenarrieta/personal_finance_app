@@ -3,7 +3,7 @@
  * Run with: npx tsx scripts/populate-category-order.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, CategoryGroupType } from "@prisma/client";
 import { CATEGORY_GROUPS } from "../src/config/category-groups";
 
 const prisma = new PrismaClient();
@@ -51,7 +51,7 @@ async function main() {
       await prisma.category.update({
         where: { id: cat.id },
         data: {
-          groupType: "Expenses",
+          groupType: CategoryGroupType.EXPENSES,
           displayOrder: 9999, // Put at end
         },
       });
