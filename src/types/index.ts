@@ -117,4 +117,5 @@ export {
   type PlaidAccountForClient,
   type HoldingForClient,
   type InvestmentTransactionForClient,
+  CategoryGroupType,
 } from "./client";

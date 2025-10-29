@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { CategoryForClient } from "@/types";
+import { CategoryGroupType } from "@/types";
 
 interface CategoryOrderClientProps {
   categories: CategoryForClient[];
@@ -20,9 +21,9 @@ export function CategoryOrderClient({
 
   // Group categories by groupType and sort within each group
   const grouped = useMemo(() => {
-    const groups = new Map<string, CategoryForClient[]>();
+    const groups = new Map<CategoryGroupType, CategoryForClient[]>();
     for (const cat of categories) {
-      const group = cat.groupType || "Expenses";
+      const group = cat.groupType || CategoryGroupType.EXPENSES;
       if (!groups.has(group)) {
         groups.set(group, []);
       }
@@ -40,7 +41,7 @@ export function CategoryOrderClient({
     return groups;
   }, [categories]);
 
-  const groupOrder = ["Expenses", "Income", "Investment"];
+  const groupOrder = [CategoryGroupType.EXPENSES, CategoryGroupType.INCOME, CategoryGroupType.INVESTMENT];
 
   const moveUp = (categoryId: string) => {
     setCategories((prevCategories) => {
@@ -49,7 +50,7 @@ export function CategoryOrderClient({
 
       // Get all categories in the same group, sorted by displayOrder
       const groupCats = prevCategories
-        .filter((c) => (c.groupType || "Expenses") === (cat.groupType || "Expenses"))
+        .filter((c) => (c.groupType || CategoryGroupType.EXPENSES) === (cat.groupType || CategoryGroupType.EXPENSES))
         .sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999));
 
       const index = groupCats.findIndex((c) => c.id === categoryId);
@@ -79,7 +80,7 @@ export function CategoryOrderClient({
 
       // Get all categories in the same group, sorted by displayOrder
       const groupCats = prevCategories
-        .filter((c) => (c.groupType || "Expenses") === (cat.groupType || "Expenses"))
+        .filter((c) => (c.groupType || CategoryGroupType.EXPENSES) === (cat.groupType || CategoryGroupType.EXPENSES))
         .sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999));
 
       const index = groupCats.findIndex((c) => c.id === categoryId);
@@ -102,7 +103,7 @@ export function CategoryOrderClient({
     });
   };
 
-  const changeGroup = (categoryId: string, newGroupType: string) => {
+  const changeGroup = (categoryId: string, newGroupType: CategoryGroupType) => {
     const updated = categories.map((c) =>
       c.id === categoryId
         ? { ...c, groupType: newGroupType, displayOrder: 9999 }
@@ -201,7 +202,7 @@ export function CategoryOrderClient({
                     {/* Change group */}
                     <select
                       value={groupType}
-                      onChange={(e) => changeGroup(cat.id, e.target.value)}
+                      onChange={(e) => changeGroup(cat.id, e.target.value as CategoryGroupType)}
                       className="text-sm border rounded px-2 py-1"
                     >
                       {groupOrder.map((g) => (

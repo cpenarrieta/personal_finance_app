@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { CategoryGroupType } from "@prisma/client";
 
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
     const { updates } = body as {
-      updates: Array<{ id: string; groupType: string | null; displayOrder: number | null }>;
+      updates: Array<{ id: string; groupType: CategoryGroupType | null; displayOrder: number | null }>;
     };
 
     if (!updates || !Array.isArray(updates)) {

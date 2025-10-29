@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { CategoryForClient } from "@/types";
+import { CategoryForClient, CategoryGroupType } from "@/types";
 
 interface CategorySelectProps {
   value: string;
@@ -29,10 +29,10 @@ export function CategorySelect({
   // Group and sort categories by groupType and displayOrder
   const groupedCategories = useMemo(() => {
     // Group categories by groupType
-    const grouped = new Map<string, CategoryForClient[]>();
+    const grouped = new Map<CategoryGroupType, CategoryForClient[]>();
 
     for (const category of categories) {
-      const groupType = category.groupType || "Expenses";
+      const groupType = category.groupType || CategoryGroupType.EXPENSES;
       if (!grouped.has(groupType)) {
         grouped.set(groupType, []);
       }
@@ -50,7 +50,7 @@ export function CategorySelect({
     }
 
     // Define group order
-    const groupOrder = ["Expenses", "Income", "Investment"];
+    const groupOrder = [CategoryGroupType.EXPENSES, CategoryGroupType.INCOME, CategoryGroupType.INVESTMENT];
 
     // Return groups in the defined order
     return groupOrder

@@ -12,6 +12,11 @@
  * See docs/GENERATED_COLUMNS.md for more information.
  */
 
+import { CategoryGroupType } from "@prisma/client"
+
+// Export the enum for use in components
+export { CategoryGroupType }
+
 // ============================================================================
 // TRANSACTION TYPES
 // ============================================================================
@@ -86,7 +91,7 @@ export interface CategoryForClient {
   id: string
   name: string
   imageUrl: string | null
-  groupType: string | null
+  groupType: CategoryGroupType | null
   displayOrder: number | null
   created_at_string: string // Generated from createdAt
   updated_at_string: string // Generated from updatedAt

@@ -8,7 +8,7 @@
  * Expenses group at the bottom (sorted alphabetically)
  */
 
-export type CategoryGroupType = "Income" | "Investment" | "Expenses";
+import { CategoryGroupType } from "@prisma/client";
 
 export interface CategoryGroupConfig {
   type: CategoryGroupType;
@@ -22,7 +22,7 @@ export interface CategoryGroupConfig {
  */
 export const CATEGORY_GROUPS: CategoryGroupConfig[] = [
   {
-    type: "Expenses",
+    type: CategoryGroupType.EXPENSES,
     order: [
       "🍔 Food",
       "🛒 Groceries",
@@ -40,11 +40,11 @@ export const CATEGORY_GROUPS: CategoryGroupConfig[] = [
     ],
   },
   {
-    type: "Income",
+    type: CategoryGroupType.INCOME,
     order: ["💵 Income"],
   },
   {
-    type: "Investment",
+    type: CategoryGroupType.INVESTMENT,
     order: ["🏦 Savings", "🔁 Transfers"],
   },
 ];
