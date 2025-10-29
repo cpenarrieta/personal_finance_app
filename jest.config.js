@@ -1,9 +1,9 @@
 /** @type {import('jest').Config} */
 const config = {
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom', // Use jsdom for React component tests
   roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx', '**/?(*.)+(spec|test).ts', '**/?(*.)+(spec|test).tsx'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
@@ -16,6 +16,9 @@ const config = {
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
+  testEnvironmentOptions: {
+    customExportConditions: [''],
+  },
 };
 
 module.exports = config;
