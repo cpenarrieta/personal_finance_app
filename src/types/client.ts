@@ -86,6 +86,8 @@ export interface CategoryForClient {
   id: string
   name: string
   imageUrl: string | null
+  groupType: string | null
+  displayOrder: number | null
   created_at_string: string // Generated from createdAt
   updated_at_string: string // Generated from updatedAt
   subcategories?: SubcategoryForClient[]

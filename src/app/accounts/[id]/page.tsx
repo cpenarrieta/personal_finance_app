@@ -155,6 +155,8 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         id: true,
         name: true,
         imageUrl: true,
+        groupType: true,
+        displayOrder: true,
         created_at_string: true, // Generated column
         updated_at_string: true, // Generated column
         subcategories: {

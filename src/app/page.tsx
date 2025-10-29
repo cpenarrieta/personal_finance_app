@@ -342,6 +342,16 @@ export default async function Page() {
                   Customize transaction categories
                 </div>
               </Link>
+
+              <Link
+                href="/settings/category-order"
+                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+              >
+                <div className="font-medium text-gray-900">Category Order</div>
+                <div className="text-sm text-gray-600">
+                  Organize category dropdown order
+                </div>
+              </Link>
               <Link
                 href="/settings/manage-tags"
                 className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"

@@ -11,7 +11,7 @@ import type {
   PlaidAccountForClient,
 } from "@/types";
 
-interface TransactionsPageClientProps {
+interface TransactionsPageClientProps{
   transactions: TransactionForClient[];
   categories: CategoryForClient[];
   tags: TagForClient[];

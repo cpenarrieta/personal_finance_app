@@ -175,6 +175,8 @@ export default async function TransactionDetailPage({
         id: true,
         name: true,
         imageUrl: true,
+        groupType: true,
+        displayOrder: true,
         created_at_string: true, // Generated column
         updated_at_string: true, // Generated column
         subcategories: {
