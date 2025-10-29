@@ -234,7 +234,6 @@ model Account {
   scope                 String?
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([providerId, accountId])
   @@unique([providerId, accountId], map: "OAuthAccount_provider_providerId_key")
   @@index([userId])
 }
