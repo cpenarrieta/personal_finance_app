@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { SearchableTransactionListProps, TransactionForClient } from "@/types";
 import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { TagSelector } from "@/components/TagSelector";
 
 type DateRange =
   | "all"
@@ -682,25 +683,13 @@ export function SearchableTransactionList({
             <div className="flex-shrink-0 flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Tags:</span>
               <div className="flex flex-wrap gap-1">
-                {tags.map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    variant={selectedTagIds.has(tag.id) ? "default" : "secondary"}
-                    className={`cursor-pointer transition-all ${
-                      selectedTagIds.has(tag.id)
-                        ? "text-white ring-2 ring-offset-1"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}
-                    style={
-                      selectedTagIds.has(tag.id)
-                        ? { backgroundColor: tag.color }
-                        : undefined
-                    }
-                    onClick={() => toggleTag(tag.id)}
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
+                <TagSelector
+                  tags={tags}
+                  selectedTagIds={Array.from(selectedTagIds)}
+                  onToggleTag={toggleTag}
+                  label=""
+                  showManageLink={false}
+                />
               </div>
             </div>
           )}

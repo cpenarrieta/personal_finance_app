@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CategorySelect } from "@/components/ui/category-select";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { TagSelector } from "@/components/TagSelector";
 
 export function EditTransactionModal({
   transaction,
@@ -156,56 +156,11 @@ export function EditTransactionModal({
           </div>
 
           {/* Tags */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label>Tags</Label>
-              <a
-                href="/settings/manage-tags"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary hover:text-primary/80"
-              >
-                Manage Tags
-              </a>
-            </div>
-            {tags.length === 0 ? (
-              <p className="text-sm text-gray-500">
-                No tags available.{" "}
-                <a
-                  href="/settings/manage-tags"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Create tags
-                </a>
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    variant={
-                      selectedTagIds.includes(tag.id) ? "default" : "secondary"
-                    }
-                    className={`cursor-pointer transition-all ${
-                      selectedTagIds.includes(tag.id)
-                        ? "text-white ring-2 ring-offset-2"
-                        : "text-gray-700 bg-gray-100 hover:bg-gray-200"
-                    }`}
-                    style={
-                      selectedTagIds.includes(tag.id)
-                        ? { backgroundColor: tag.color }
-                        : undefined
-                    }
-                    onClick={() => toggleTag(tag.id)}
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
+          <TagSelector
+            tags={tags}
+            selectedTagIds={selectedTagIds}
+            onToggleTag={toggleTag}
+          />
 
           {/* Transaction Details (Read-only) */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
