@@ -539,7 +539,7 @@ export function TransactionAnalytics({
                     </h4>
                     {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
-                        <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <label className="flex items-center p-2 hover:bg-muted/50 rounded cursor-pointer">
                           <Checkbox
                             checked={selectedCategoryIds.has(category.id)}
                             onCheckedChange={() => toggleCategory(category.id)}
@@ -555,7 +555,7 @@ export function TransactionAnalytics({
                               {category.subcategories?.map((sub) => (
                                 <label
                                   key={sub.id}
-                                  className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer"
+                                  className="flex items-center p-1 hover:bg-muted/50 rounded cursor-pointer"
                                 >
                                   <Checkbox
                                     checked={selectedSubcategoryIds.has(sub.id)}
@@ -581,7 +581,7 @@ export function TransactionAnalytics({
                     {sortedCategories.map((category) => (
                       <label
                         key={category.id}
-                        className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
+                        className="flex items-center p-2 hover:bg-muted/50 rounded cursor-pointer"
                       >
                         <Checkbox
                           checked={excludedCategoryIds.has(category.id)}
@@ -958,7 +958,7 @@ export function TransactionAnalytics({
               <tr>
                 <th
                   onClick={() => toggleSort("date")}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Date {sortBy === "date" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
@@ -967,7 +967,7 @@ export function TransactionAnalytics({
                 </th>
                 <th
                   onClick={() => toggleSort("category")}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Category{" "}
                   {sortBy === "category" && (sortOrder === "asc" ? "↑" : "↓")}
@@ -980,7 +980,7 @@ export function TransactionAnalytics({
                 </th>
                 <th
                   onClick={() => toggleSort("amount")}
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Amount{" "}
                   {sortBy === "amount" && (sortOrder === "asc" ? "↑" : "↓")}
@@ -991,7 +991,7 @@ export function TransactionAnalytics({
               {filteredTransactions.map((transaction) => (
                 <tr
                   key={transaction.id}
-                  className="hover:bg-gray-50 cursor-pointer"
+                  className="hover:bg-muted/50 cursor-pointer"
                   onClick={() =>
                     (window.location.href = `/transactions/${transaction.id}`)
                   }

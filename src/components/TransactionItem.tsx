@@ -34,7 +34,7 @@ export function TransactionItem({
       : null);
 
   return (
-    <li className="hover:bg-gray-50 transition-colors">
+    <li className="hover:bg-muted/50 transition-colors">
       <div className="p-4 flex items-start gap-3">
         {/* Bulk select checkbox */}
         {showBulkUpdate && (
