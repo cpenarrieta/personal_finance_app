@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function ConnectAccountPage() {
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-4 min-h-screen bg-background">
       <h1 className="text-2xl font-semibold">Connect Account</h1>
       <p className="text-muted-foreground">
         Connect your Wealthsimple account to sync your financial data.

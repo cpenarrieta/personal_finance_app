@@ -83,7 +83,7 @@ export default async function ManageTagsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto min-h-screen bg-background">
       <div className="mb-4">
         <Link href="/" className="text-primary hover:underline">
           ← Back to Home

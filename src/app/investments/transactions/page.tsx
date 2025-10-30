@@ -17,7 +17,7 @@ export default async function InvTxPage() {
     include: { account: true, security: true },
   });
   return (
-    <div className="p-6">
+    <div className="p-6 min-h-screen bg-background">
       <div className="mb-4">
         <Link href="/" className="text-primary hover:underline">
           ← Back to Home

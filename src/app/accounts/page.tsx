@@ -40,7 +40,7 @@ export default async function AccountsPage() {
   const institutionNames = Object.keys(accountsByInstitution).sort();
 
   return (
-    <div className="p-6">
+    <div className="p-6 min-h-screen bg-background">
       <div className="mb-4">
         <Link href="/" className="text-primary hover:underline">
           ← Back to Home

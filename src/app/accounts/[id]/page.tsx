@@ -186,7 +186,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   ])
 
   return (
-    <div className="p-6">
+    <div className="p-6 min-h-screen bg-background">
       <div className="mb-4">
         <Link href="/accounts" className="text-primary hover:underline">
           ← Back to Accounts
