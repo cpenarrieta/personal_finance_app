@@ -9,7 +9,7 @@ interface TransactionListProps {
 
 export function TransactionList({ transactions, showAccount = false }: TransactionListProps) {
   if (transactions.length === 0) {
-    return <p className="text-gray-500">No transactions found.</p>
+    return <p className="text-muted-foreground">No transactions found.</p>
   }
 
   return (
@@ -32,9 +32,9 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })} {t.isoCurrencyCode}
-                {t.pending && <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Pending</span>}
+                {t.pending && <span className="ml-2 text-xs bg-warning/10 text-warning-foreground px-2 py-1 rounded">Pending</span>}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 {format(t.date, 'MMM d yyyy')}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>

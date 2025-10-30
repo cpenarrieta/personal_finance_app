@@ -217,9 +217,9 @@ export default async function TransactionDetailPage({
     : "← Back to Transactions";
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-background min-h-screen">
       <div className="mb-6">
-        <Link href={backUrl} className="text-blue-600 hover:underline">
+        <Link href={backUrl} className="text-primary hover:underline">
           {backText}
         </Link>
       </div>

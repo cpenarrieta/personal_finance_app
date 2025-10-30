@@ -119,16 +119,16 @@ export default async function ChartsPage() {
   ])
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-background min-h-screen">
       <div className="mb-6">
-        <Link href="/" className="text-blue-600 hover:underline">
+        <Link href="/" className="text-primary hover:underline">
           ← Back to Home
         </Link>
       </div>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Financial Charts</h1>
-        <p className="text-gray-600 mt-1">Visualize your spending and income patterns</p>
+        <h1 className="text-3xl font-bold text-foreground">Financial Charts</h1>
+        <p className="text-muted-foreground mt-1">Visualize your spending and income patterns</p>
       </div>
 
       <ChartsView transactions={transactions} categories={categories} />

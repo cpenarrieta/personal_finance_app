@@ -249,7 +249,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
   };
 
   if (holdings.length === 0) {
-    return <p className="text-gray-500">No holdings found.</p>;
+    return <p className="text-muted-foreground">No holdings found.</p>;
   }
 
   return (
@@ -261,7 +261,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Search
             </label>
             <input
@@ -269,19 +269,19 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
               placeholder="Ticker or name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-blue-500"
             />
           </div>
 
           {/* Group By */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Group By
             </label>
             <select
               value={groupBy}
               onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-blue-500"
             >
               <option value="none">Individual Holdings</option>
               <option value="ticker">Stock Ticker (Consolidated)</option>
@@ -290,13 +290,13 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
           {/* Account Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Account
             </label>
             <select
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-blue-500"
             >
               <option value="all">All Accounts</option>
               {uniqueAccounts.map(([id, name]) => (
@@ -309,13 +309,13 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
           {/* Sort By */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Sort By
             </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortBy)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-blue-500"
             >
               <option value="value">Market Value</option>
               <option value="gainLoss">Gain/Loss ($)</option>
@@ -330,8 +330,8 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
       {/* Portfolio Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Portfolio Value</div>
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-sm text-muted-foreground mb-1">Portfolio Value</div>
+          <div className="text-3xl font-bold text-foreground">
             $
             {portfolioStats.totalValue.toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -341,12 +341,12 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Total Gain/Loss</div>
+          <div className="text-sm text-muted-foreground mb-1">Total Gain/Loss</div>
           <div
             className={`text-3xl font-bold ${
               portfolioStats.totalGainLoss >= 0
-                ? "text-green-600"
-                : "text-red-600"
+                ? "text-success"
+                : "text-destructive"
             }`}
           >
             {portfolioStats.totalGainLoss >= 0 ? "+" : ""}$
@@ -358,8 +358,8 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           <div
             className={`text-sm ${
               portfolioStats.totalGainLoss >= 0
-                ? "text-green-600"
-                : "text-red-600"
+                ? "text-success"
+                : "text-destructive"
             }`}
           >
             {portfolioStats.totalGainLoss >= 0 ? "+" : ""}
@@ -368,34 +368,34 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Best Performer</div>
+          <div className="text-sm text-muted-foreground mb-1">Best Performer</div>
           {portfolioStats.bestPerformer ? (
             <>
-              <div className="text-xl font-bold text-green-600">
+              <div className="text-xl font-bold text-success">
                 {portfolioStats.bestPerformer.security.tickerSymbol}
               </div>
-              <div className="text-sm text-green-600">
+              <div className="text-sm text-success">
                 +{portfolioStats.bestPerformer.gainLossPercent.toFixed(2)}%
               </div>
             </>
           ) : (
-            <div className="text-gray-400">N/A</div>
+            <div className="text-muted-foreground/60">N/A</div>
           )}
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Worst Performer</div>
+          <div className="text-sm text-muted-foreground mb-1">Worst Performer</div>
           {portfolioStats.worstPerformer ? (
             <>
-              <div className="text-xl font-bold text-red-600">
+              <div className="text-xl font-bold text-destructive">
                 {portfolioStats.worstPerformer.security.tickerSymbol}
               </div>
-              <div className="text-sm text-red-600">
+              <div className="text-sm text-destructive">
                 {portfolioStats.worstPerformer.gainLossPercent.toFixed(2)}%
               </div>
             </>
           ) : (
-            <div className="text-gray-400">N/A</div>
+            <div className="text-muted-foreground/60">N/A</div>
           )}
         </div>
       </div>
@@ -458,7 +458,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                         maximumFractionDigits: 2,
                       })}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-muted-foreground">
                       {item.percent.toFixed(2)}%
                     </div>
                   </div>
@@ -473,7 +473,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="p-6 border-b">
           <h3 className="text-lg font-semibold">Holdings</h3>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Showing {sortedHoldings.length}{" "}
             {groupBy !== "none" ? "grouped " : ""}holding
             {sortedHoldings.length !== 1 ? "s" : ""}
@@ -482,56 +482,56 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Security
                 </th>
                 <th
                   onClick={() => toggleSort("quantity")}
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Quantity{" "}
                   {sortBy === "quantity" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Avg Price
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Avg Cost
                 </th>
                 <th
                   onClick={() => toggleSort("value")}
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Market Value{" "}
                   {sortBy === "value" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 <th
                   onClick={() => toggleSort("gainLoss")}
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Gain/Loss{" "}
                   {sortBy === "gainLoss" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 <th
                   onClick={() => toggleSort("gainLossPercent")}
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Return{" "}
                   {sortBy === "gainLossPercent" &&
                     (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 {groupBy === "none" && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Account
                   </th>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-border">
               {sortedHoldings.map((holding) => (
-                <tr key={holding.id} className="hover:bg-gray-50">
+                <tr key={holding.id} className="hover:bg-muted/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       {holding.security?.logoUrl && (
@@ -544,36 +544,36 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                         />
                       )}
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-foreground">
                           {holding.security?.tickerSymbol || "N/A"}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                           {holding.security?.name}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-foreground">
                     {holding.calculatedQuantity.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 6,
                     })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-foreground">
                     $
                     {holding.calculatedPrice.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-muted-foreground">
                     $
                     {holding.calculatedCostBasis.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-foreground">
                     $
                     {holding.marketValue.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
@@ -584,8 +584,8 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                     <span
                       className={
                         holding.gainLoss >= 0
-                          ? "text-green-600 font-medium"
-                          : "text-red-600 font-medium"
+                          ? "text-success font-medium"
+                          : "text-destructive font-medium"
                       }
                     >
                       {holding.gainLoss >= 0 ? "+" : ""}$
@@ -599,8 +599,8 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                     <span
                       className={
                         holding.gainLossPercent >= 0
-                          ? "text-green-600 font-medium"
-                          : "text-red-600 font-medium"
+                          ? "text-success font-medium"
+                          : "text-destructive font-medium"
                       }
                     >
                       {holding.gainLossPercent >= 0 ? "+" : ""}
@@ -608,7 +608,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                     </span>
                   </td>
                   {groupBy === "none" && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {holding.account?.name}
                     </td>
                   )}
@@ -619,7 +619,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         </div>
 
         {sortedHoldings.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-muted-foreground">
             No holdings found matching the selected filters.
           </div>
         )}

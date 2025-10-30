@@ -66,12 +66,12 @@ export function TransactionItem({
               onClick={() => !showBulkUpdate && onEdit?.(t)}
             >
               {/* Transaction Name */}
-              <div className="font-medium text-gray-900 flex items-center gap-2">
+              <div className="font-medium text-foreground flex items-center gap-2">
                 <span className="truncate">{t.name}</span>
                 {t.pending && (
                   <Badge
                     variant="secondary"
-                    className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 flex-shrink-0"
+                    className="bg-warning/10 text-warning-foreground flex-shrink-0"
                   >
                     Pending
                   </Badge>
@@ -79,7 +79,7 @@ export function TransactionItem({
                 {t.parentTransactionId && (
                   <Badge
                     variant="secondary"
-                    className="bg-purple-100 text-purple-800 hover:bg-purple-100 flex-shrink-0"
+                    className="bg-secondary/20 text-secondary-foreground flex-shrink-0"
                     title="This transaction is part of a split"
                   >
                     Split
@@ -88,24 +88,24 @@ export function TransactionItem({
               </div>
 
               {/* Date and Account */}
-              <div className="text-sm text-gray-600 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {format(new Date(t.date_string), "MMM d yyyy")}
                 {showAccount && t.account && ` • ${t.account.name}`}
               </div>
 
               {/* Merchant Name */}
               {t.merchantName && (
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="text-sm text-muted-foreground mt-1">
                   Merchant: {t.merchantName}
                 </div>
               )}
 
               {/* Category and Subcategory */}
               {t.category && (
-                <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
                   <span>Category: {t.category.name}</span>
                   {t.subcategory && (
-                    <span className="text-gray-400">
+                    <span className="text-muted-foreground/60">
                       • {t.subcategory.name}
                     </span>
                   )}
@@ -114,7 +114,7 @@ export function TransactionItem({
 
               {/* Notes */}
               {t.notes && (
-                <div className="text-sm text-gray-500 mt-1 italic">
+                <div className="text-sm text-muted-foreground mt-1 italic">
                   Note: {t.notes}
                 </div>
               )}
@@ -141,7 +141,7 @@ export function TransactionItem({
             <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
               <div
                 className={`text-lg font-semibold ${
-                  t.amount_number > 0 ? "text-red-600" : "text-green-600"
+                  t.amount_number > 0 ? "text-destructive" : "text-success"
                 }`}
               >
                 {t.amount_number > 0 ? "-" : "+"}$
@@ -151,7 +151,7 @@ export function TransactionItem({
                 })}
               </div>
               {t.isoCurrencyCode && (
-                <div className="text-xs text-gray-500">{t.isoCurrencyCode}</div>
+                <div className="text-xs text-muted-foreground">{t.isoCurrencyCode}</div>
               )}
               <Button
                 asChild

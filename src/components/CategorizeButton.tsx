@@ -59,7 +59,7 @@ export function CategorizeButton() {
         <AlertDialogTrigger asChild>
           <Button
             disabled={isLoading}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700"
+            className="px-6 py-3 bg-primary hover:bg-primary/90"
           >
             {isLoading ? '🤖 Categorizing...' : '🤖 Auto-Categorize Transactions'}
           </Button>
@@ -73,14 +73,14 @@ export function CategorizeButton() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCategorize} className="bg-purple-600 hover:bg-purple-700">
+            <AlertDialogAction onClick={handleCategorize} className="bg-primary hover:bg-primary/90">
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       {message && (
-        <span className={`text-sm ${message.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>
+        <span className={`text-sm ${message.startsWith('✓') ? 'text-success' : 'text-destructive'}`}>
           {message}
         </span>
       )}

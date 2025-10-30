@@ -119,18 +119,18 @@ export default async function AnalyticsPage() {
   ]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-background min-h-screen">
       <div className="mb-6">
-        <Link href="/" className="text-blue-600 hover:underline">
+        <Link href="/" className="text-primary hover:underline">
           ← Back to Home
         </Link>
       </div>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-foreground">
           Transaction Analytics
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-muted-foreground mt-1">
           Analyze your spending patterns by Plaid category and time
         </p>
       </div>

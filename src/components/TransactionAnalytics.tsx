@@ -534,7 +534,7 @@ export function TransactionAnalytics({
               <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
                 <div className="p-3">
                   <div className="mb-3 pb-3 border-b border-gray-200">
-                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
                       Include Categories
                     </h4>
                     {sortedCategories.map((category) => (
@@ -544,7 +544,7 @@ export function TransactionAnalytics({
                             checked={selectedCategoryIds.has(category.id)}
                             onCheckedChange={() => toggleCategory(category.id)}
                           />
-                          <span className="ml-2 text-sm font-medium text-gray-900">
+                          <span className="ml-2 text-sm font-medium text-foreground">
                             {category.name}
                           </span>
                         </label>
@@ -563,7 +563,7 @@ export function TransactionAnalytics({
                                       toggleSubcategory(sub.id, category.id)
                                     }
                                   />
-                                  <span className="ml-2 text-sm text-gray-700">
+                                  <span className="ml-2 text-sm text-muted-foreground">
                                     {sub.name}
                                   </span>
                                 </label>
@@ -575,7 +575,7 @@ export function TransactionAnalytics({
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
                       Exclude Categories
                     </h4>
                     {sortedCategories.map((category) => (
@@ -587,7 +587,7 @@ export function TransactionAnalytics({
                           checked={excludedCategoryIds.has(category.id)}
                           onCheckedChange={() => toggleExcludedCategory(category.id)}
                         />
-                        <span className="ml-2 text-sm text-gray-900">
+                        <span className="ml-2 text-sm text-foreground">
                           {category.name}
                         </span>
                       </label>
@@ -641,12 +641,12 @@ export function TransactionAnalytics({
               return (
                 <span
                   key={catId}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
                 >
                   ✓ {category.name}
                   <button
                     onClick={() => toggleCategory(catId)}
-                    className="hover:bg-blue-200 rounded-full p-0.5"
+                    className="hover:bg-primary/20 rounded-full p-0.5"
                   >
                     <svg
                       className="h-3 w-3"
@@ -676,12 +676,12 @@ export function TransactionAnalytics({
               return (
                 <span
                   key={subId}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm"
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-secondary/20 text-secondary-foreground rounded-full text-sm"
                 >
                   ✓ {subcategory.name}
                   <button
                     onClick={() => toggleSubcategory(subId, category.id)}
-                    className="hover:bg-indigo-200 rounded-full p-0.5"
+                    className="hover:bg-secondary/30 rounded-full p-0.5"
                   >
                     <svg
                       className="h-3 w-3"
@@ -706,12 +706,12 @@ export function TransactionAnalytics({
               return (
                 <span
                   key={`excluded-${catId}`}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm"
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-destructive/10 text-destructive rounded-full text-sm"
                 >
                   ✕ {category.name}
                   <button
                     onClick={() => toggleExcludedCategory(catId)}
-                    className="hover:bg-red-200 rounded-full p-0.5"
+                    className="hover:bg-destructive/20 rounded-full p-0.5"
                   >
                     <svg
                       className="h-3 w-3"
@@ -737,12 +737,12 @@ export function TransactionAnalytics({
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Total Transactions</div>
-          <div className="text-3xl font-bold text-gray-900">{stats.count}</div>
+          <div className="text-sm text-muted-foreground mb-1">Total Transactions</div>
+          <div className="text-3xl font-bold text-foreground">{stats.count}</div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Total Expenses</div>
-          <div className="text-3xl font-bold text-red-600">
+          <div className="text-sm text-muted-foreground mb-1">Total Expenses</div>
+          <div className="text-3xl font-bold text-destructive">
             $
             {stats.totalExpenses.toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -751,8 +751,8 @@ export function TransactionAnalytics({
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Total Income</div>
-          <div className="text-3xl font-bold text-green-600">
+          <div className="text-sm text-muted-foreground mb-1">Total Income</div>
+          <div className="text-3xl font-bold text-success">
             $
             {stats.totalIncome.toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -761,8 +761,8 @@ export function TransactionAnalytics({
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Avg Transaction</div>
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-sm text-muted-foreground mb-1">Avg Transaction</div>
+          <div className="text-3xl font-bold text-foreground">
             $
             {Math.abs(stats.avgTransaction).toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -827,9 +827,9 @@ export function TransactionAnalytics({
                           className="w-5 h-5 rounded flex-shrink-0"
                         />
                       )}
-                      <span className="text-gray-700 truncate">{cat.name}</span>
+                      <span className="text-muted-foreground truncate">{cat.name}</span>
                     </div>
-                    <span className="font-medium text-gray-900 ml-2 flex-shrink-0">
+                    <span className="font-medium text-foreground ml-2 flex-shrink-0">
                       $
                       {cat.value.toLocaleString("en-US", {
                         minimumFractionDigits: 2,
@@ -898,9 +898,9 @@ export function TransactionAnalytics({
                           className="w-5 h-5 rounded flex-shrink-0"
                         />
                       )}
-                      <span className="text-gray-700 truncate">{sub.name}</span>
+                      <span className="text-muted-foreground truncate">{sub.name}</span>
                     </div>
-                    <span className="font-medium text-gray-900 ml-2 flex-shrink-0">
+                    <span className="font-medium text-foreground ml-2 flex-shrink-0">
                       $
                       {sub.value.toLocaleString("en-US", {
                         minimumFractionDigits: 2,
@@ -946,7 +946,7 @@ export function TransactionAnalytics({
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="p-6 border-b">
           <h3 className="text-lg font-semibold">Transaction Details</h3>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Showing {filteredTransactions.length} transaction
             {filteredTransactions.length !== 1 ? "s" : ""}
           </p>
@@ -996,10 +996,10 @@ export function TransactionAnalytics({
                     (window.location.href = `/transactions/${transaction.id}`)
                   }
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                     {format(new Date(transaction.date_string), "MMM d yyyy")}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-6 py-4 text-sm text-foreground">
                     <div className="flex items-center gap-2">
                       {transaction.logoUrl && (
                         <Image
@@ -1033,7 +1033,7 @@ export function TransactionAnalytics({
                           className="w-5 h-5 rounded"
                         />
                       )}
-                      <span className="text-gray-900">
+                      <span className="text-foreground">
                         {transaction.category?.name || "Uncategorized"}
                       </span>
                     </div>
@@ -1048,8 +1048,8 @@ export function TransactionAnalytics({
                     <span
                       className={
                         transaction.amount_number > 0
-                          ? "text-red-600 font-medium"
-                          : "text-green-600 font-medium"
+                          ? "text-destructive font-medium"
+                          : "text-success font-medium"
                       }
                     >
                       {transaction.amount_number > 0 ? "-" : "+"}$

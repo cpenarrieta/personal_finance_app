@@ -480,7 +480,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
       <div className="bg-white p-4 rounded-lg shadow-sm border relative">
         {filtersDisabled && (
           <div className="absolute top-2 right-2 z-10">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning-foreground">
               ⚠️ Filters disabled for this chart
             </span>
           </div>
@@ -629,20 +629,20 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
 
             {/* Dropdown Menu */}
             {showCategoryDropdown && !filtersDisabled && (
-              <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
+              <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-border rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
                 <div className="p-3">
-                  <div className="mb-3 pb-3 border-b border-gray-200">
-                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
+                  <div className="mb-3 pb-3 border-b border-border">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
                       Include Categories
                     </h4>
                     {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
-                        <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <label className="flex items-center p-2 hover:bg-muted/50 rounded cursor-pointer">
                           <Checkbox
                             checked={selectedCategoryIds.has(category.id)}
                             onCheckedChange={() => toggleCategory(category.id)}
                           />
-                          <span className="ml-2 text-sm font-medium text-gray-900">
+                          <span className="ml-2 text-sm font-medium text-foreground">
                             {category.name}
                           </span>
                         </label>
@@ -653,7 +653,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                               {category.subcategories?.map((sub) => (
                                 <label
                                   key={sub.id}
-                                  className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer"
+                                  className="flex items-center p-1 hover:bg-muted/50 rounded cursor-pointer"
                                 >
                                   <Checkbox
                                     checked={selectedSubcategoryIds.has(sub.id)}
@@ -661,7 +661,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                       toggleSubcategory(sub.id, category.id)
                                     }
                                   />
-                                  <span className="ml-2 text-sm text-gray-700">
+                                  <span className="ml-2 text-sm text-muted-foreground">
                                     {sub.name}
                                   </span>
                                 </label>
@@ -673,13 +673,13 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
                       Exclude Categories
                     </h4>
                     {sortedCategories.map((category) => (
                       <label
                         key={category.id}
-                        className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
+                        className="flex items-center p-2 hover:bg-muted/50 rounded cursor-pointer"
                       >
                         <Checkbox
                           checked={excludedCategoryIds.has(category.id)}
@@ -687,7 +687,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                             toggleExcludedCategory(category.id)
                           }
                         />
-                        <span className="ml-2 text-sm text-gray-900">
+                        <span className="ml-2 text-sm text-foreground">
                           {category.name}
                         </span>
                       </label>
@@ -848,7 +848,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-border">
           <nav className="flex overflow-x-auto">
             {tabs.map((tab) => (
               <Button
@@ -857,8 +857,8 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-shrink-0 px-6 py-4 rounded-none border-b-2 ${
                   activeTab === tab.id
-                    ? "border-blue-500 text-blue-600 bg-blue-50"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-primary text-primary bg-primary/5"
+                    : "border-transparent text-muted-foreground hover:text-muted-foreground hover:border-border"
                 }`}
               >
                 <span className="mr-2">{tab.icon}</span>
@@ -970,7 +970,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </div>
                 </>
               ) : (
-                <p className="text-gray-500 text-center py-12">
+                <p className="text-muted-foreground text-center py-12">
                   No data available
                 </p>
               )}
@@ -1025,14 +1025,14 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                               <TableCell className="font-medium">
                                 {month.month}
                               </TableCell>
-                              <TableCell className="text-right text-green-600">
+                              <TableCell className="text-right text-success">
                                 $
                                 {month.income.toLocaleString("en-US", {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
                                 })}
                               </TableCell>
-                              <TableCell className="text-right text-red-600">
+                              <TableCell className="text-right text-destructive">
                                 $
                                 {month.expenses.toLocaleString("en-US", {
                                   minimumFractionDigits: 2,
@@ -1042,8 +1042,8 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                               <TableCell
                                 className={`text-right font-medium ${
                                   month.net >= 0
-                                    ? "text-green-600"
-                                    : "text-red-600"
+                                    ? "text-success"
+                                    : "text-destructive"
                                 }`}
                               >
                                 {month.net >= 0 ? "+" : ""}$
@@ -1060,7 +1060,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </div>
                 </>
               ) : (
-                <p className="text-gray-500 text-center py-12">
+                <p className="text-muted-foreground text-center py-12">
                   No data available
                 </p>
               )}
@@ -1097,7 +1097,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-gray-500 text-center py-12">
+                <p className="text-muted-foreground text-center py-12">
                   No data available
                 </p>
               )}
@@ -1155,19 +1155,19 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
 
                   <div className="flex flex-col justify-center space-y-4">
                     {incomeVsExpensesData.map((item, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="text-sm text-gray-600 mb-1">
+                      <div key={index} className="bg-muted/50 p-4 rounded-lg">
+                        <div className="text-sm text-muted-foreground mb-1">
                           {item.name}
                         </div>
                         <div
                           className={`text-2xl font-bold ${
                             item.name === "Income"
-                              ? "text-green-600"
+                              ? "text-success"
                               : item.name === "Expenses"
-                              ? "text-red-600"
+                              ? "text-destructive"
                               : item.value >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
+                              ? "text-success"
+                              : "text-destructive"
                           }`}
                         >
                           {item.name !== "Net" && item.name === "Expenses"
@@ -1186,7 +1186,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-12">
+                <p className="text-muted-foreground text-center py-12">
                   No data available
                 </p>
               )}
@@ -1247,7 +1247,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       return (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded"
+                          className="flex items-center justify-between p-3 bg-muted/50 rounded"
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div
@@ -1265,19 +1265,19 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                 className="w-5 h-5 rounded flex-shrink-0"
                               />
                             )}
-                            <span className="text-sm text-gray-700 truncate">
+                            <span className="text-sm text-muted-foreground truncate">
                               {cat.name}
                             </span>
                           </div>
                           <div className="text-right ml-2 flex-shrink-0">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-foreground">
                               $
                               {cat.value.toLocaleString("en-US", {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                               })}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {percentage.toFixed(1)}%
                             </div>
                           </div>
@@ -1287,7 +1287,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-12">
+                <p className="text-muted-foreground text-center py-12">
                   No data available
                 </p>
               )}

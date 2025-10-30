@@ -19,7 +19,7 @@ export function DeleteButton({
   action,
   confirmMessage,
   buttonText = 'Delete',
-  className = 'text-red-600 hover:text-red-800 text-sm',
+  className = 'text-destructive hover:text-destructive/80 text-sm',
 }: {
   id: string
   action: (formData: FormData) => Promise<void>
@@ -52,7 +52,7 @@ export function DeleteButton({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogAction onClick={handleConfirm} className="bg-destructive hover:bg-destructive/90">
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>

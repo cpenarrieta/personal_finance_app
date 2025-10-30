@@ -460,7 +460,7 @@ export function SearchableTransactionList({
             className="pl-10"
           />
           <svg
-            className="absolute left-3 top-3.5 h-5 w-5 text-gray-400"
+            className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -618,7 +618,7 @@ export function SearchableTransactionList({
               <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
                 <div className="p-3">
                   <div className="mb-3 pb-3 border-b border-gray-200">
-                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Include Categories</h4>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Include Categories</h4>
                     {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
@@ -626,7 +626,7 @@ export function SearchableTransactionList({
                             checked={selectedCategoryIds.has(category.id)}
                             onCheckedChange={() => toggleCategory(category.id)}
                           />
-                          <span className="ml-2 text-sm font-medium text-gray-900">
+                          <span className="ml-2 text-sm font-medium text-foreground">
                             {category.name}
                           </span>
                         </label>
@@ -644,7 +644,7 @@ export function SearchableTransactionList({
                                       toggleSubcategory(sub.id, category.id)
                                     }
                                   />
-                                  <span className="ml-2 text-sm text-gray-700">
+                                  <span className="ml-2 text-sm text-muted-foreground">
                                     {sub.name}
                                   </span>
                                 </label>
@@ -656,14 +656,14 @@ export function SearchableTransactionList({
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Exclude Categories</h4>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Exclude Categories</h4>
                     {sortedCategories.map((category) => (
                       <label key={category.id} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                         <Checkbox
                           checked={excludedCategoryIds.has(category.id)}
                           onCheckedChange={() => toggleExcludedCategory(category.id)}
                         />
-                        <span className="ml-2 text-sm text-gray-900">{category.name}</span>
+                        <span className="ml-2 text-sm text-foreground">{category.name}</span>
                       </label>
                     ))}
                   </div>
@@ -678,9 +678,9 @@ export function SearchableTransactionList({
               type="checkbox"
               checked={showIncome}
               onChange={(e) => setShowIncome(e.target.checked)}
-              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              className="w-4 h-4 text-success border-gray-300 rounded focus:ring-green-500"
             />
-            <span className="ml-2 text-sm text-gray-700">Income</span>
+            <span className="ml-2 text-sm text-muted-foreground">Income</span>
           </label>
 
           {/* Expenses Toggle */}
@@ -689,15 +689,15 @@ export function SearchableTransactionList({
               type="checkbox"
               checked={showExpenses}
               onChange={(e) => setShowExpenses(e.target.checked)}
-              className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+              className="w-4 h-4 text-destructive border-gray-300 rounded focus:ring-red-500"
             />
-            <span className="ml-2 text-sm text-gray-700">Expenses</span>
+            <span className="ml-2 text-sm text-muted-foreground">Expenses</span>
           </label>
 
           {/* Tag Filter */}
           {tags.length > 0 && (
             <div className="flex-shrink-0 flex items-center gap-2">
-              <span className="text-sm text-gray-700">Tags:</span>
+              <span className="text-sm text-muted-foreground">Tags:</span>
               <div className="flex flex-wrap gap-1">
                 {tags.map((tag) => (
                   <Badge
@@ -706,7 +706,7 @@ export function SearchableTransactionList({
                     className={`cursor-pointer transition-all ${
                       selectedTagIds.has(tag.id)
                         ? "text-white ring-2 ring-offset-1"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
                     }`}
                     style={
                       selectedTagIds.has(tag.id)
@@ -728,12 +728,12 @@ export function SearchableTransactionList({
               checked={showOnlyUncategorized}
               onCheckedChange={(checked) => setShowOnlyUncategorized(checked === true)}
             />
-            <span className="text-sm text-gray-700">Uncategorized</span>
+            <span className="text-sm text-muted-foreground">Uncategorized</span>
           </label>
 
           {/* Order By Dropdown */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-sm text-gray-700">Sort by:</span>
+            <span className="text-sm text-muted-foreground">Sort by:</span>
             <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue />
@@ -786,14 +786,14 @@ export function SearchableTransactionList({
                 <Badge
                   key={catId}
                   variant="secondary"
-                  className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-100"
+                  className="inline-flex items-center gap-1 bg-primary/10 text-primary"
                 >
                   ✓ {category.name}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleCategory(catId)}
-                    className="h-auto p-0.5 hover:bg-blue-200"
+                    className="h-auto p-0.5 hover:bg-primary/20"
                   >
                     <svg
                       className="h-3 w-3"
@@ -824,14 +824,14 @@ export function SearchableTransactionList({
                 <Badge
                   key={subId}
                   variant="secondary"
-                  className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 hover:bg-indigo-100"
+                  className="inline-flex items-center gap-1 bg-secondary/20 text-secondary-foreground"
                 >
                   ✓ {subcategory.name}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleSubcategory(subId, category.id)}
-                    className="h-auto p-0.5 hover:bg-indigo-200"
+                    className="h-auto p-0.5 hover:bg-secondary/30"
                   >
                     <svg
                       className="h-3 w-3"
@@ -857,14 +857,14 @@ export function SearchableTransactionList({
                 <Badge
                   key={`excluded-${catId}`}
                   variant="secondary"
-                  className="inline-flex items-center gap-1 bg-red-100 text-red-800 hover:bg-red-100"
+                  className="inline-flex items-center gap-1 bg-destructive/10 text-destructive"
                 >
                   ✕ {category.name}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleExcludedCategory(catId)}
-                    className="h-auto p-0.5 hover:bg-red-200"
+                    className="h-auto p-0.5 hover:bg-destructive/20"
                   >
                     <svg
                       className="h-3 w-3"
@@ -923,8 +923,8 @@ export function SearchableTransactionList({
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Total Income</div>
-          <div className="text-2xl font-bold text-green-600">
+          <div className="text-sm text-muted-foreground mb-1">Total Income</div>
+          <div className="text-2xl font-bold text-success">
             +$
             {totals.income.toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -934,8 +934,8 @@ export function SearchableTransactionList({
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Total Expenses</div>
-          <div className="text-2xl font-bold text-red-600">
+          <div className="text-sm text-muted-foreground mb-1">Total Expenses</div>
+          <div className="text-2xl font-bold text-destructive">
             -$
             {totals.expenses.toLocaleString("en-US", {
               minimumFractionDigits: 2,
@@ -945,10 +945,10 @@ export function SearchableTransactionList({
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-gray-600 mb-1">Net Balance</div>
+          <div className="text-sm text-muted-foreground mb-1">Net Balance</div>
           <div
             className={`text-2xl font-bold ${
-              totals.netBalance >= 0 ? "text-green-600" : "text-red-600"
+              totals.netBalance >= 0 ? "text-success" : "text-destructive"
             }`}
           >
             {totals.netBalance >= 0 ? "+" : ""}$
@@ -963,14 +963,14 @@ export function SearchableTransactionList({
       {/* Action Bar */}
       <div className="bg-white p-4 rounded-lg shadow-sm border">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             Showing {filteredTransactions.length} of {transactions.length}{" "}
             transactions
           </div>
           {filteredTransactions.length > 0 && (
             <Button
               onClick={() => setShowBulkUpdate(!showBulkUpdate)}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90"
             >
               {showBulkUpdate ? "Hide Bulk Update" : "Bulk Update"}
             </Button>
@@ -980,16 +980,16 @@ export function SearchableTransactionList({
 
       {/* Bulk Update Panel */}
       {showBulkUpdate && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-purple-900">
+            <h3 className="text-lg font-semibold text-primary-foreground">
               Bulk Update Categories
             </h3>
             <div className="flex gap-2">
               <Button
                 size="sm"
                 onClick={selectAll}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-primary hover:bg-primary/90"
               >
                 Select All ({filteredTransactions.length})
               </Button>
@@ -1005,7 +1005,7 @@ export function SearchableTransactionList({
 
           {selectedTransactions.size > 0 && (
             <div className="bg-white rounded-lg p-4 mb-4">
-              <p className="text-sm text-gray-700 mb-3">
+              <p className="text-sm text-muted-foreground mb-3">
                 Selected {selectedTransactions.size} transaction
                 {selectedTransactions.size !== 1 ? "s" : ""}
               </p>
@@ -1061,7 +1061,7 @@ export function SearchableTransactionList({
                 <Button
                   onClick={handleBulkUpdate}
                   disabled={!bulkCategoryId || isBulkUpdating}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   {isBulkUpdating
                     ? "Updating..."
@@ -1078,13 +1078,13 @@ export function SearchableTransactionList({
       {/* Transaction List */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         {filteredTransactions.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-muted-foreground">
             {searchQuery
               ? "No transactions found matching your search."
               : "No transactions found."}
           </div>
         ) : (
-          <ul className="divide-y divide-gray-200">
+          <ul className="divide-y divide-border">
             {filteredTransactions.map((t) => (
               <TransactionItem
                 key={t.id}

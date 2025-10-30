@@ -155,7 +155,7 @@ export function MoveTransactionsClient({
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-4">
-        <Link href="/" className="text-blue-600 hover:underline">
+        <Link href="/" className="text-primary hover:underline">
           ← Back to Home
         </Link>
       </div>
@@ -165,7 +165,7 @@ export function MoveTransactionsClient({
       </h1>
 
       {moveComplete && (
-        <div className="mb-4 p-4 bg-green-100 text-green-800 rounded">
+        <div className="mb-4 p-4 bg-success/10 text-success-foreground rounded">
           Successfully moved {movedCount} transaction(s)!
         </div>
       )}
@@ -178,7 +178,7 @@ export function MoveTransactionsClient({
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               From Category
             </label>
             <CategorySelect
@@ -190,7 +190,7 @@ export function MoveTransactionsClient({
               }}
               categories={categories}
               placeholder="Select a category..."
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -199,7 +199,7 @@ export function MoveTransactionsClient({
             fromCategory.subcategories &&
             fromCategory.subcategories.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   From Subcategory (Optional)
                 </label>
                 <select
@@ -208,7 +208,7 @@ export function MoveTransactionsClient({
                     setFromSubcategoryId(e.target.value);
                     setShowTransactions(false);
                   }}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
                 >
                   <option value="">All subcategories</option>
                   <option value="null">No subcategory</option>
@@ -225,7 +225,7 @@ export function MoveTransactionsClient({
             <button
               onClick={fetchTransactions}
               disabled={loadingTransactions}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-muted"
             >
               {loadingTransactions ? "Loading..." : "Next: View Transactions"}
             </button>
@@ -243,7 +243,7 @@ export function MoveTransactionsClient({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   To Category
                 </label>
                 <CategorySelect
@@ -254,7 +254,7 @@ export function MoveTransactionsClient({
                   }}
                   categories={categories}
                   placeholder="Select a category..."
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
                 />
               </div>
 
@@ -263,13 +263,13 @@ export function MoveTransactionsClient({
                 toCategory.subcategories &&
                 toCategory.subcategories.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       To Subcategory (Optional)
                     </label>
                     <select
                       value={toSubcategoryId}
                       onChange={(e) => setToSubcategoryId(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
                     >
                       <option value="">No subcategory</option>
                       {toCategory.subcategories.map((sub) => (
@@ -291,7 +291,7 @@ export function MoveTransactionsClient({
               {transactions.length > 0 && (
                 <button
                   onClick={handleSelectAll}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                  className="px-4 py-2 bg-gray-200 text-foreground rounded-lg hover:bg-gray-300"
                 >
                   {selectedTransactionIds.size === transactions.length
                     ? "Deselect All"
@@ -301,7 +301,7 @@ export function MoveTransactionsClient({
             </div>
 
             {transactions.length === 0 ? (
-              <p className="text-gray-500">
+              <p className="text-muted-foreground">
                 No transactions found for this category/subcategory.
               </p>
             ) : (
@@ -368,14 +368,14 @@ export function MoveTransactionsClient({
                   <button
                     onClick={handleMoveTransactions}
                     disabled={isMoving}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 font-semibold"
+                    className="px-6 py-3 bg-success text-success-foreground rounded-lg hover:bg-success/90 disabled:bg-muted font-semibold"
                   >
                     {isMoving ? "Moving..." : "Confirm and Move Transactions"}
                   </button>
                   <button
                     onClick={handleReset}
                     disabled={isMoving}
-                    className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:bg-gray-400"
+                    className="px-6 py-3 bg-gray-200 text-foreground rounded-lg hover:bg-gray-300 disabled:bg-gray-400"
                   >
                     Reset
                   </button>

@@ -70,7 +70,7 @@ export function TransactionDetailView({
       {/* Header Card */}
       <div className="bg-white rounded-lg shadow-md border overflow-hidden">
         {/* Header with Logo/Icon */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+        <div className="bg-primary p-6 text-primary-foreground">
           <div className="flex items-start gap-4">
             {transaction.logoUrl && (
               <Image
@@ -85,12 +85,12 @@ export function TransactionDetailView({
               <h1 className="text-2xl font-bold mb-2">{transaction.name}</h1>
               <div className="flex items-center gap-4 text-sm">
                 {transaction.merchantName && (
-                  <span className="bg-blue-800 bg-opacity-50 px-3 py-1 rounded">
+                  <span className="bg-primary-foreground/20 px-3 py-1 rounded">
                     {transaction.merchantName}
                   </span>
                 )}
                 {transaction.pending && (
-                  <span className="bg-yellow-500 text-yellow-900 px-3 py-1 rounded font-medium">
+                  <span className="bg-warning text-warning-foreground px-3 py-1 rounded font-medium">
                     Pending
                   </span>
                 )}
@@ -120,21 +120,21 @@ export function TransactionDetailView({
         {/* Main Details */}
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-foreground">
               Transaction Details
             </h2>
             <div className="flex gap-2">
               {!transaction.isSplit && !transaction.parentTransactionId && (
                 <Button
                   onClick={() => setIsSplitting(true)}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-secondary hover:bg-secondary/90"
                 >
                   Split Transaction
                 </Button>
               )}
               <Button
                 onClick={() => setIsEditing(true)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-primary hover:bg-primary/90"
               >
                 Edit Transaction
               </Button>
@@ -149,13 +149,13 @@ export function TransactionDetailView({
 
           {/* Parent Transaction Info (if this is a split child) */}
           {transaction.parentTransaction && (
-            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+            <div className="mb-6 p-4 bg-primary/5 border-l-4 border-primary rounded">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-blue-900 mb-1">
+                  <p className="text-sm font-medium text-primary mb-1">
                     This is part of a split transaction
                   </p>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-primary">
                     Original: {transaction.parentTransaction.name} • $
                     {Math.abs(
                       transaction.parentTransaction.amount_number
@@ -179,7 +179,7 @@ export function TransactionDetailView({
           {transaction.childTransactions &&
             transaction.childTransactions.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                <h3 className="text-lg font-semibold text-foreground mb-3">
                   Split Into {transaction.childTransactions.length} Transactions
                 </h3>
                 <div className="space-y-2">
@@ -187,15 +187,15 @@ export function TransactionDetailView({
                     <Link
                       key={child.id}
                       href={`/transactions/${child.id}`}
-                      className="block p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="block p-4 bg-muted/50 border border-border rounded-lg hover:bg-muted transition-colors"
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-foreground">
                             {index + 1}. {child.name}
                           </p>
                           {child.category && (
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-muted-foreground mt-1">
                               {child.category.name}
                               {child.subcategory &&
                                 ` • ${child.subcategory.name}`}
@@ -206,8 +206,8 @@ export function TransactionDetailView({
                           <p
                             className={`font-semibold ${
                               child.amount_number > 0
-                                ? "text-red-600"
-                                : "text-green-600"
+                                ? "text-destructive"
+                                : "text-success"
                             }`}
                           >
                             {child.amount_number > 0 ? "-" : "+"}$
@@ -232,13 +232,13 @@ export function TransactionDetailView({
             {/* Date Information */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Transaction Date
                 </label>
-                <div className="text-lg font-semibold text-gray-900">
+                <div className="text-lg font-semibold text-foreground">
                   {format(new Date(transaction.date_string), "MMM d yyyy")}
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   {format(new Date(transaction.date_string), "EEEE")} at{" "}
                   {format(new Date(transaction.date_string), "h:mm a")}
                 </div>
@@ -246,28 +246,28 @@ export function TransactionDetailView({
 
               {transaction.authorized_date_string && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Authorized Date
                   </label>
-                  <div className="text-gray-900">
+                  <div className="text-foreground">
                     {format(new Date(transaction.authorized_date_string), "MMM d yyyy")}
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Account
                 </label>
-                <div className="text-gray-900">
+                <div className="text-foreground">
                   {transaction.account?.name}
                   {transaction.account?.mask && (
-                    <span className="text-gray-500 ml-2">
+                    <span className="text-muted-foreground ml-2">
                       ••{transaction.account.mask}
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   {transaction.account?.type}
                 </div>
               </div>
@@ -278,14 +278,14 @@ export function TransactionDetailView({
               {(transaction.category ||
                 transaction.subcategory) && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Category
                   </label>
-                  <div className="text-gray-900">
+                  <div className="text-foreground">
                     {transaction.category?.name || "None"}
                   </div>
                   {transaction.subcategory && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                       {transaction.subcategory.name}
                     </div>
                   )}
@@ -294,10 +294,10 @@ export function TransactionDetailView({
 
               {transaction.paymentChannel && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
                     Payment Channel
                   </label>
-                  <div className="text-gray-900 capitalize">
+                  <div className="text-foreground capitalize">
                     {transaction.paymentChannel.replace("_", " ")}
                   </div>
                 </div>
@@ -307,11 +307,11 @@ export function TransactionDetailView({
 
           {/* Notes Section */}
           {transaction.notes && (
-            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <label className="block text-sm font-medium text-amber-900 mb-2">
+            <div className="mt-6 p-4 bg-warning/10 border border-warning/30 rounded-lg">
+              <label className="block text-sm font-medium text-warning-foreground mb-2">
                 Notes
               </label>
-              <div className="text-gray-900 whitespace-pre-wrap">
+              <div className="text-foreground whitespace-pre-wrap">
                 {transaction.notes}
               </div>
             </div>
@@ -320,7 +320,7 @@ export function TransactionDetailView({
           {/* Tags Section */}
           {transaction.tags && transaction.tags.length > 0 && (
             <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-600 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Tags
               </label>
               <div className="flex flex-wrap gap-2">
@@ -339,38 +339,38 @@ export function TransactionDetailView({
 
           {/* Technical Details */}
           <div className="mt-8 pt-6 border-t">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">
               Technical Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Transaction ID:</span>
-                <div className="font-mono text-xs text-gray-900 mt-1 break-all">
+                <span className="text-muted-foreground">Transaction ID:</span>
+                <div className="font-mono text-xs text-foreground mt-1 break-all">
                   {transaction.id}
                 </div>
               </div>
               <div>
-                <span className="text-gray-600">Plaid Transaction ID:</span>
-                <div className="font-mono text-xs text-gray-900 mt-1 break-all">
+                <span className="text-muted-foreground">Plaid Transaction ID:</span>
+                <div className="font-mono text-xs text-foreground mt-1 break-all">
                   {transaction.plaidTransactionId}
                 </div>
               </div>
               <div>
-                <span className="text-gray-600">Created:</span>
-                <div className="text-gray-900 mt-1">
+                <span className="text-muted-foreground">Created:</span>
+                <div className="text-foreground mt-1">
                   {format(new Date(transaction.created_at_string), "MMM d yyyy h:mm a")}
                 </div>
               </div>
               <div>
-                <span className="text-gray-600">Last Updated:</span>
-                <div className="text-gray-900 mt-1">
+                <span className="text-muted-foreground">Last Updated:</span>
+                <div className="text-foreground mt-1">
                   {format(new Date(transaction.updated_at_string), "MMM d yyyy h:mm a")}
                 </div>
               </div>
               {transaction.pendingTransactionId && (
                 <div>
-                  <span className="text-gray-600">Pending Transaction ID:</span>
-                  <div className="font-mono text-xs text-gray-900 mt-1 break-all">
+                  <span className="text-muted-foreground">Pending Transaction ID:</span>
+                  <div className="font-mono text-xs text-foreground mt-1 break-all">
                     {transaction.pendingTransactionId}
                   </div>
                 </div>
@@ -418,11 +418,11 @@ export function TransactionDetailView({
           </DialogHeader>
           <div className="py-4">
             <div className="p-3 bg-gray-50 rounded-lg border">
-              <p className="font-medium text-gray-900">{transaction.name}</p>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="font-medium text-foreground">{transaction.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">
                 {format(new Date(transaction.date_string), "MMM d, yyyy")} •{" "}
                 <span
-                  className={isExpense ? "text-red-600" : "text-green-600"}
+                  className={isExpense ? "text-destructive" : "text-success"}
                 >
                   {isExpense ? "-" : "+"}$
                   {absoluteAmount.toLocaleString("en-US", {
