@@ -85,7 +85,7 @@ export default async function ManageTagsPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-4">
-        <Link href="/" className="text-blue-600 hover:underline">
+        <Link href="/" className="text-primary hover:underline">
           ← Back to Home
         </Link>
       </div>
@@ -94,7 +94,7 @@ export default async function ManageTagsPage() {
 
       <div className="border rounded-lg p-4">
         {/* Add Tag Form */}
-        <form action={createTag} className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <form action={createTag} className="mb-6 p-4 bg-muted/50 rounded-lg">
           <h2 className="text-lg font-semibold mb-3">Add New Tag</h2>
           <div className="space-y-3">
             <div className="space-y-2">
@@ -131,11 +131,11 @@ export default async function ManageTagsPage() {
                 ))}
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <label className="text-sm text-gray-600">Or custom:</label>
+                <label className="text-sm text-muted-foreground">Or custom:</label>
                 <input
                   type="color"
                   name="color"
-                  className="h-8 w-16 rounded border border-gray-300 cursor-pointer"
+                  className="h-8 w-16 rounded border cursor-pointer"
                 />
               </div>
             </div>
@@ -149,7 +149,7 @@ export default async function ManageTagsPage() {
         <div>
           <h2 className="text-lg font-semibold mb-3">Existing Tags</h2>
           {tags.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
+            <p className="text-muted-foreground text-center py-8">
               No tags created yet. Add your first tag above!
             </p>
           ) : (
@@ -157,7 +157,7 @@ export default async function ManageTagsPage() {
               {tags.map((tag) => (
                 <div
                   key={tag.id}
-                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   {/* Tag Preview */}
                   <div
@@ -167,7 +167,7 @@ export default async function ManageTagsPage() {
                     {tag.name}
                   </div>
                   Tag Info
-                  <div className="flex-1 text-sm text-gray-600">
+                  <div className="flex-1 text-sm text-muted-foreground">
                     {tag._count.transactions} transaction
                     {tag._count.transactions !== 1 ? "s" : ""}
                   </div>
@@ -185,12 +185,12 @@ export default async function ManageTagsPage() {
                       type="color"
                       name="color"
                       defaultValue={tag.color}
-                      className="h-8 w-12 rounded border border-gray-300 cursor-pointer"
+                      className="h-8 w-12 rounded border cursor-pointer"
                     />
                     <Button
                       type="submit"
                       size="sm"
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-success hover:bg-success/90"
                     >
                       Update
                     </Button>
@@ -207,7 +207,7 @@ export default async function ManageTagsPage() {
                         : ""
                     }`}
                     buttonText="Delete"
-                    className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+                    className="px-3 py-1 bg-destructive text-destructive-foreground rounded text-sm hover:bg-destructive/90 transition-colors"
                   />
                 </div>
               ))}

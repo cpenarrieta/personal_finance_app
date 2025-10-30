@@ -330,7 +330,7 @@ export function MoveTransactionsClient({
           {transactions.length > 0 &&
             selectedTransactionIds.size > 0 &&
             toCategoryId && (
-              <div className="border rounded-lg p-6 mb-6 bg-blue-50">
+              <div className="border rounded-lg p-6 mb-6 bg-primary/10">
                 <h2 className="text-xl font-semibold mb-4">
                   Step 4: Confirm Move
                 </h2>

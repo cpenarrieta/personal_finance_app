@@ -188,17 +188,17 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="p-6">
       <div className="mb-4">
-        <Link href="/accounts" className="text-blue-600 hover:underline">
+        <Link href="/accounts" className="text-primary hover:underline">
           ← Back to Accounts
         </Link>
       </div>
 
       {/* Account Header */}
-      <div className="mb-6 p-6 border rounded-lg bg-white shadow-md">
+      <div className="mb-6 p-6 border rounded-lg bg-card shadow-md">
         <h2 className="text-2xl font-semibold mb-4">
           {account.name} {account.mask ? `• ${account.mask}` : ''}
         </h2>
-        <div className="text-sm text-gray-600 mb-4">
+        <div className="text-sm text-muted-foreground mb-4">
           {account.type}
           {account.subtype ? ` / ${account.subtype}` : ''} · {account.currency}
         </div>
@@ -206,27 +206,27 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         {/* Balance Information */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           {account.currentBalance !== null && (
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <div className="text-sm text-blue-700 mb-1">Current Balance</div>
-              <div className="text-2xl font-bold text-blue-900">
+            <div className="bg-primary/10 rounded-lg p-4 border border-primary/30">
+              <div className="text-sm text-primary mb-1">Current Balance</div>
+              <div className="text-2xl font-bold text-foreground">
                 ${account.currentBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           )}
 
           {account.availableBalance !== null && (
-            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-              <div className="text-sm text-green-700 mb-1">Available Balance</div>
-              <div className="text-2xl font-bold text-green-900">
+            <div className="bg-success/10 rounded-lg p-4 border border-success/30">
+              <div className="text-sm text-success mb-1">Available Balance</div>
+              <div className="text-2xl font-bold text-foreground">
                 ${account.availableBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           )}
 
           {account.creditLimit !== null && (
-            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-              <div className="text-sm text-purple-700 mb-1">Credit Limit</div>
-              <div className="text-2xl font-bold text-purple-900">
+            <div className="bg-secondary/10 rounded-lg p-4 border border-secondary/30">
+              <div className="text-sm text-secondary mb-1">Credit Limit</div>
+              <div className="text-2xl font-bold text-foreground">
                 ${account.creditLimit.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
@@ -234,7 +234,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         </div>
 
         {account.balanceUpdatedAt && (
-          <div className="text-xs text-gray-500 mt-4">
+          <div className="text-xs text-muted-foreground mt-4">
             Balance last updated: {format(new Date(account.balanceUpdatedAt), 'MMM d yyyy h:mm a')}
           </div>
         )}

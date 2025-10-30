@@ -167,7 +167,7 @@ export function TransactionDetailView({
                 </div>
                 <Link
                   href={`/transactions/${transaction.parentTransaction.id}`}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded hover:bg-primary/90"
                 >
                   View Original
                 </Link>

@@ -42,13 +42,13 @@ export default async function AccountsPage() {
   return (
     <div className="p-6">
       <div className="mb-4">
-        <Link href="/" className="text-blue-600 hover:underline">
+        <Link href="/" className="text-primary hover:underline">
           ← Back to Home
         </Link>
       </div>
       <h2 className="text-xl font-semibold mb-4">Accounts</h2>
       {accounts.length === 0 ? (
-        <p className="text-gray-500">
+        <p className="text-muted-foreground">
           No accounts found. Connect your bank and run sync.
         </p>
       ) : (
@@ -69,7 +69,7 @@ export default async function AccountsPage() {
                       className="rounded object-contain"
                     />
                   )}
-                  <h3 className="text-lg font-semibold text-gray-800">
+                  <h3 className="text-lg font-semibold text-foreground">
                     {institutionName}
                   </h3>
                 </div>
@@ -78,17 +78,17 @@ export default async function AccountsPage() {
                     <li key={a.id}>
                       <Link
                         href={`/accounts/${a.id}`}
-                        className="block border p-3 rounded hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="block border p-3 rounded hover:bg-muted/50 transition-colors cursor-pointer"
                       >
                         <div className="font-medium">
                           {a.name} {a.mask ? `• ${a.mask}` : ""}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-muted-foreground">
                           {a.type}
                           {a.subtype ? ` / ${a.subtype}` : ""} · {a.currency}
                         </div>
                         {(a.currentBalance || a.availableBalance) && (
-                          <div className="text-sm text-gray-700 mt-1">
+                          <div className="text-sm text-foreground mt-1">
                             {a.currentBalance && (
                               <span>
                                 Balance: ${Number(a.currentBalance).toFixed(2)}

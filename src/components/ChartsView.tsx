@@ -745,14 +745,14 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   <Badge
                     key={catId}
                     variant="secondary"
-                    className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 hover:bg-blue-100"
+                    className="inline-flex items-center gap-1 bg-primary/10 text-primary hover:bg-primary/10"
                   >
                     ✓ {category.name}
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleCategory(catId)}
-                      className="h-auto p-0.5 hover:bg-blue-200"
+                      className="h-auto p-0.5 hover:bg-primary/20"
                     >
                       <svg
                         className="h-3 w-3"

@@ -202,23 +202,23 @@ export function SplitTransactionModal({
           <div
             className={`mb-6 p-4 rounded-lg border-2 ${
               isValid
-                ? "bg-green-50 border-green-300"
+                ? "bg-success/10 border-success/30"
                 : remaining > 0
-                ? "bg-yellow-50 border-yellow-300"
-                : "bg-red-50 border-red-300"
+                ? "bg-warning/10 border-warning/30"
+                : "bg-destructive/10 border-destructive/30"
             }`}
           >
             <div className="flex justify-between items-center">
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-foreground">
                 Remaining to allocate:
               </span>
               <span
                 className={`text-2xl font-bold ${
                   isValid
-                    ? "text-green-600"
+                    ? "text-success"
                     : remaining > 0
-                    ? "text-yellow-600"
-                    : "text-red-600"
+                    ? "text-warning-foreground"
+                    : "text-destructive"
                 }`}
               >
                 $
@@ -229,7 +229,7 @@ export function SplitTransactionModal({
               </span>
             </div>
             {isValid && (
-              <p className="text-sm text-green-700 mt-1">
+              <p className="text-sm text-success mt-1">
                 Perfect! All amounts are allocated.
               </p>
             )}
@@ -238,9 +238,9 @@ export function SplitTransactionModal({
           {/* Split Items */}
           <div className="space-y-4">
             {splits.map((split, index) => (
-              <div key={index} className="border rounded-lg p-4 bg-gray-50">
+              <div key={index} className="border rounded-lg p-4 bg-muted/50">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-foreground">
                     Split #{index + 1}
                   </h3>
                   {splits.length > 2 && (
@@ -307,7 +307,7 @@ export function SplitTransactionModal({
                       }
                       categories={categories}
                       placeholder="No Category"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
                     />
                   </div>
 
@@ -327,7 +327,7 @@ export function SplitTransactionModal({
                         )
                       }
                       disabled={!split.categoryId}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
                     >
                       <option value="">No Subcategory</option>
                       {getSubcategoriesForCategory(split.categoryId).map(
@@ -363,14 +363,14 @@ export function SplitTransactionModal({
           {/* Add Split Button */}
           <button
             onClick={addSplit}
-            className="mt-4 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+            className="mt-4 w-full py-2 border-2 border-dashed rounded-lg text-muted-foreground hover:border-primary hover:text-primary transition-colors"
           >
             + Add Another Split
           </button>
 
           {/* Error Message */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
@@ -380,7 +380,7 @@ export function SplitTransactionModal({
           <button
             onClick={onClose}
             type="button"
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-foreground bg-card border rounded-lg hover:bg-muted/50"
             disabled={isSubmitting}
           >
             Cancel
@@ -389,7 +389,7 @@ export function SplitTransactionModal({
             onClick={handleSubmit}
             type="button"
             disabled={!isValid || isSubmitting}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed transition-colors"
           >
             {isSubmitting ? "Splitting..." : "Split Transaction"}
           </button>

@@ -162,7 +162,7 @@ export function EditTransactionModal({
                 href="/settings/manage-tags"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-700"
+                className="text-xs text-primary hover:text-primary/80"
               >
                 Manage Tags
               </a>
@@ -174,7 +174,7 @@ export function EditTransactionModal({
                   href="/settings/manage-tags"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
+                  className="text-primary hover:underline"
                 >
                   Create tags
                 </a>

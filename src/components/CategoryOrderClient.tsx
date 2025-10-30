@@ -164,17 +164,17 @@ export function CategoryOrderClient({
         if (groupCats.length === 0) return null;
 
         return (
-          <div key={groupType} className="bg-white rounded-lg shadow p-6">
+          <div key={groupType} className="bg-card rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">{groupType}</h2>
 
             <div className="space-y-2">
               {groupCats.map((cat, index) => (
                 <div
                   key={cat.id}
-                  className="flex items-center justify-between p-3 border rounded-lg bg-gray-50"
+                  className="flex items-center justify-between p-3 border rounded-lg bg-muted/50"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500 font-mono w-8">
+                    <span className="text-sm text-muted-foreground font-mono w-8">
                       {index + 1}.
                     </span>
                     <span>{cat.name}</span>

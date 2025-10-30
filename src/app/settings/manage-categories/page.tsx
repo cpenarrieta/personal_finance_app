@@ -63,29 +63,29 @@ export default async function ManageCategoriesPage() {
   })) as CategoryWithSubcategories[];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto p-6">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <Link
               href="/"
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              className="text-primary hover:text-primary/80 font-medium"
             >
               ← Back to Home
             </Link>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Manage Categories
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Create and organize your categories and subcategories
           </p>
         </div>
 
         {/* Add Category Form */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <div className="bg-card rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
             Add New Category
           </h2>
           <form action={createCategory} className="space-y-4">
@@ -116,13 +116,13 @@ export default async function ManageCategoriesPage() {
 
         {/* Categories List */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-foreground">
             Your Categories ({categories.length})
           </h2>
 
           {categories.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-500">
+            <div className="bg-card rounded-lg shadow-md p-8 text-center">
+              <p className="text-muted-foreground">
                 No categories yet. Create your first category above!
               </p>
             </div>
@@ -131,10 +131,10 @@ export default async function ManageCategoriesPage() {
               {categories.map((cat) => (
                 <div
                   key={cat.id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden"
+                  className="bg-card rounded-lg shadow-md overflow-hidden"
                 >
                   {/* Category Header */}
-                  <div className="p-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+                  <div className="p-4 bg-muted/50 border-b">
                     <div className="flex items-center gap-3">
                       {getCategoryImage(cat.name, cat.imageUrl) && (
                         <div className="flex-shrink-0">
@@ -143,15 +143,15 @@ export default async function ManageCategoriesPage() {
                             alt={cat.name}
                             width={40}
                             height={40}
-                            className="w-10 h-10 rounded-lg object-cover border border-gray-200"
+                            className="w-10 h-10 rounded-lg object-cover border"
                           />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-gray-900">
+                        <h3 className="font-semibold text-lg text-foreground">
                           {cat.name}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           {cat.subcategories.length === 0
                             ? "No subcategories"
                             : `${cat.subcategories.length} subcategory${
@@ -170,7 +170,7 @@ export default async function ManageCategoriesPage() {
                             : ""
                         }`}
                         buttonText="Delete Category"
-                        className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
+                        className="px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg text-sm font-medium transition-colors"
                       />
                     </div>
                   </div>
@@ -182,7 +182,7 @@ export default async function ManageCategoriesPage() {
                         {cat.subcategories.map((sub) => (
                           <div
                             key={sub.id}
-                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                            className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
                           >
                             {getCategoryImage(sub.name, sub.imageUrl) && (
                               <Image
@@ -190,10 +190,10 @@ export default async function ManageCategoriesPage() {
                                 alt={sub.name}
                                 width={32}
                                 height={32}
-                                className="w-8 h-8 rounded object-cover border border-gray-200"
+                                className="w-8 h-8 rounded object-cover border"
                               />
                             )}
-                            <span className="flex-1 text-gray-900 font-medium">
+                            <span className="flex-1 text-foreground font-medium">
                               {sub.name}
                             </span>
                             <DeleteButton
@@ -201,7 +201,7 @@ export default async function ManageCategoriesPage() {
                               action={deleteSubcategory}
                               confirmMessage={`Are you sure you want to delete "${sub.name}"?`}
                               buttonText="Remove"
-                              className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors"
+                              className="px-3 py-1.5 text-destructive hover:bg-destructive/10 rounded text-sm font-medium transition-colors"
                             />
                           </div>
                         ))}
@@ -211,7 +211,7 @@ export default async function ManageCategoriesPage() {
                     {/* Add Subcategory Form */}
                     <form
                       action={createSubcategory}
-                      className="border-t border-gray-200 pt-4 space-y-2"
+                      className="border-t pt-4 space-y-2"
                     >
                       <input type="hidden" name="categoryId" value={cat.id} />
                       <Label>Add Subcategory</Label>
@@ -231,7 +231,7 @@ export default async function ManageCategoriesPage() {
                         <Button
                           type="submit"
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-success hover:bg-success/90"
                         >
                           + Add
                         </Button>

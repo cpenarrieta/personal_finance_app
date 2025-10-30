@@ -11,7 +11,7 @@ export function HoldingList({
   showAccount = false,
 }: HoldingListProps) {
   if (holdings.length === 0) {
-    return <p className="text-gray-500">No holdings found.</p>;
+    return <p className="text-muted-foreground">No holdings found.</p>;
   }
 
   // Calculate totals by currency
@@ -29,12 +29,12 @@ export function HoldingList({
     <div>
       {/* Totals Summary */}
       {Object.keys(totalsByCurrency).length > 0 && (
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg">
           <h3 className="font-semibold mb-2">Portfolio Value</h3>
           <div className="space-y-1">
             {Object.entries(totalsByCurrency).map(([currency, total]) => (
               <div key={currency} className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">{currency}:</span>
+                <span className="text-sm text-muted-foreground">{currency}:</span>
                 <span className="font-medium text-lg">
                   {total.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
@@ -70,7 +70,7 @@ export function HoldingList({
                     maximumFractionDigits: 6,
                   })} shares
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   {showAccount && h.account && `${h.account.name} · `}
                   {h.isoCurrencyCode}
                 </div>

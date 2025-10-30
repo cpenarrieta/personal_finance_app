@@ -19,7 +19,7 @@ export default async function InvTxPage() {
   return (
     <div className="p-6">
       <div className="mb-4">
-        <Link href="/" className="text-blue-600 hover:underline">
+        <Link href="/" className="text-primary hover:underline">
           ← Back to Home
         </Link>
       </div>

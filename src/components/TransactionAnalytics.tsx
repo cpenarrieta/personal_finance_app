@@ -1011,7 +1011,7 @@ export function TransactionAnalytics({
                         />
                       )}
                       <div>
-                        <div className="font-medium hover:text-blue-600">
+                        <div className="font-medium hover:text-primary">
                           {transaction.name}
                         </div>
                         {transaction.merchantName && (

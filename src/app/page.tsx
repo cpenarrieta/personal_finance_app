@@ -84,14 +84,14 @@ export default async function Page() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6 space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-gray-900">
+          <h1 className="text-4xl font-bold text-foreground">
             Personal Finance Dashboard
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Manage your accounts, track investments, and analyze spending
           </p>
         </div>
@@ -99,7 +99,7 @@ export default async function Page() {
         {/* Account Balances Summary */}
         {accounts.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 text-white">
+            <div className="bg-primary rounded-lg shadow-lg p-6 text-primary-foreground">
               <div className="text-sm opacity-90 mb-1">
                 Total Current Balance
               </div>
@@ -115,7 +115,7 @@ export default async function Page() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg shadow-lg p-6 text-white">
+            <div className="bg-secondary rounded-lg shadow-lg p-6 text-secondary-foreground">
               <div className="text-sm opacity-90 mb-1">
                 Total Investment Value
               </div>
@@ -134,13 +134,13 @@ export default async function Page() {
         )}
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-md border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-card rounded-lg shadow-md border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Quick Actions
           </h2>
           <div className="flex flex-wrap gap-3">
             <Link href="/connect-account">
-              <button className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium shadow-sm transition-colors">
+              <button className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm transition-colors">
                 + Connect New Account
               </button>
             </Link>
@@ -154,9 +154,9 @@ export default async function Page() {
 
         {/* Account Balances Detail */}
         {accounts.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md border overflow-hidden">
-            <div className="px-6 py-4 border-b bg-gray-50">
-              <h2 className="text-lg font-semibold text-gray-900">
+          <div className="bg-card rounded-lg shadow-md border overflow-hidden">
+            <div className="px-6 py-4 border-b bg-muted/50">
+              <h2 className="text-lg font-semibold text-foreground">
                 Account Balances
               </h2>
             </div>
@@ -172,24 +172,24 @@ export default async function Page() {
                   <Link
                     key={account.id}
                     href={`/accounts/${account.id}`}
-                    className="block px-6 py-4 hover:bg-gray-50 transition-colors"
+                    className="block px-6 py-4 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-foreground">
                           {account.name}
                           {account.mask && (
-                            <span className="text-gray-500 ml-2">
+                            <span className="text-muted-foreground ml-2">
                               ••{account.mask}
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                           {account.type}
                           {account.subtype ? ` • ${account.subtype}` : ""}
                         </div>
                         {account.balanceUpdatedAt && (
-                          <div className="text-xs text-gray-400 mt-1">
+                          <div className="text-xs text-muted-foreground/60 mt-1">
                             Updated{" "}
                             {format(
                               new Date(account.balanceUpdatedAt),
@@ -200,7 +200,7 @@ export default async function Page() {
                       </div>
                       <div className="text-right ml-4">
                         {account.currentBalance !== null && (
-                          <div className="font-semibold text-gray-900">
+                          <div className="font-semibold text-foreground">
                             $
                             {account.currentBalance
                               .toNumber()
@@ -213,7 +213,7 @@ export default async function Page() {
                         {account.availableBalance !== null &&
                           account.availableBalance.toNumber() !==
                             account.currentBalance?.toNumber() && (
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-muted-foreground">
                               Available: $
                               {account.availableBalance
                                 .toNumber()
@@ -224,7 +224,7 @@ export default async function Page() {
                             </div>
                           )}
                         {account.creditLimit !== null && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-muted-foreground">
                             Limit: $
                             {account.creditLimit
                               .toNumber()
@@ -245,47 +245,47 @@ export default async function Page() {
         {/* Main Navigation Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Banking Section */}
-          <div className="bg-white rounded-lg shadow-md border overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="bg-blue-600 text-white px-6 py-4">
+          <div className="bg-card rounded-lg shadow-md border overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-primary text-primary-foreground px-6 py-4">
               <h3 className="text-xl font-semibold">Banking</h3>
-              <p className="text-sm text-blue-100 mt-1">
+              <p className="text-sm opacity-90 mt-1">
                 Manage your bank accounts and transactions
               </p>
             </div>
             <div className="p-6 space-y-3">
               <Link
                 href="/accounts"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">Accounts</div>
-                <div className="text-sm text-gray-600">
+                <div className="font-medium text-foreground">Accounts</div>
+                <div className="text-sm text-muted-foreground">
                   View all connected accounts
                 </div>
               </Link>
               <Link
                 href="/transactions"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">Transactions</div>
-                <div className="text-sm text-gray-600">
+                <div className="font-medium text-foreground">Transactions</div>
+                <div className="text-sm text-muted-foreground">
                   Browse banking transactions
                 </div>
               </Link>
               <Link
                 href="/analytics"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">Analytics</div>
-                <div className="text-sm text-gray-600">
+                <div className="font-medium text-foreground">Analytics</div>
+                <div className="text-sm text-muted-foreground">
                   Spending insights & charts
                 </div>
               </Link>
               <Link
                 href="/charts"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">Charts</div>
-                <div className="text-sm text-gray-600">
+                <div className="font-medium text-foreground">Charts</div>
+                <div className="text-sm text-muted-foreground">
                   Visualize your spending and income patterns
                 </div>
               </Link>
@@ -293,29 +293,29 @@ export default async function Page() {
           </div>
 
           {/* Investments Section */}
-          <div className="bg-white rounded-lg shadow-md border overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="bg-green-600 text-white px-6 py-4">
+          <div className="bg-card rounded-lg shadow-md border overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-success text-success-foreground px-6 py-4">
               <h3 className="text-xl font-semibold">Investments</h3>
-              <p className="text-sm text-green-100 mt-1">
+              <p className="text-sm opacity-90 mt-1">
                 Track your portfolio and holdings
               </p>
             </div>
             <div className="p-6 space-y-3">
               <Link
                 href="/investments/holdings"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">Holdings</div>
-                <div className="text-sm text-gray-600">
+                <div className="font-medium text-foreground">Holdings</div>
+                <div className="text-sm text-muted-foreground">
                   Portfolio & performance tracking
                 </div>
               </Link>
               <Link
                 href="/investments/transactions"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">Transactions</div>
-                <div className="text-sm text-gray-600">
+                <div className="font-medium text-foreground">Transactions</div>
+                <div className="text-sm text-muted-foreground">
                   Investment activity history
                 </div>
               </Link>
@@ -323,56 +323,56 @@ export default async function Page() {
           </div>
 
           {/* Settings Section */}
-          <div className="bg-white rounded-lg shadow-md border overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="bg-purple-600 text-white px-6 py-4">
+          <div className="bg-card rounded-lg shadow-md border overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="bg-secondary text-secondary-foreground px-6 py-4">
               <h3 className="text-xl font-semibold">Settings</h3>
-              <p className="text-sm text-purple-100 mt-1">
+              <p className="text-sm opacity-90 mt-1">
                 Configure categories and preferences
               </p>
             </div>
             <div className="p-6 space-y-3">
               <Link
                 href="/settings/manage-categories"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">
+                <div className="font-medium text-foreground">
                   Manage Categories
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   Customize transaction categories
                 </div>
               </Link>
 
               <Link
                 href="/settings/category-order"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">Category Order</div>
-                <div className="text-sm text-gray-600">
+                <div className="font-medium text-foreground">Category Order</div>
+                <div className="text-sm text-muted-foreground">
                   Organize category dropdown order
                 </div>
               </Link>
               <Link
                 href="/settings/manage-tags"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">Manage Tags</div>
-                <div className="text-sm text-gray-600">
+                <div className="font-medium text-foreground">Manage Tags</div>
+                <div className="text-sm text-muted-foreground">
                   Organize transactions with custom tags
                 </div>
               </Link>
               <Link
                 href="/settings/move-transactions"
-                className="block p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                className="block p-3 rounded-lg hover:bg-muted/50 transition-colors border"
               >
-                <div className="font-medium text-gray-900">
+                <div className="font-medium text-foreground">
                   Move Transactions
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   Move transactions between categories
                 </div>
               </Link>
-              <div className="pt-3 mt-3 border-t border-gray-200">
+              <div className="pt-3 mt-3 border-t">
                 <LogoutButton variant="destructive" className="w-full" />
               </div>
             </div>
@@ -380,7 +380,7 @@ export default async function Page() {
         </div>
 
         {/* Footer Info */}
-        <div className="text-center text-sm text-gray-500"></div>
+        <div className="text-center text-sm text-muted-foreground"></div>
       </div>
     </div>
   );
