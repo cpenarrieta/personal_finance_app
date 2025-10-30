@@ -460,7 +460,7 @@ export function SearchableTransactionList({
             className="pl-10"
           />
           <svg
-            className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground"
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
