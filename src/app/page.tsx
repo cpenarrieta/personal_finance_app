@@ -5,6 +5,7 @@ import {
   syncInvestmentsOnly,
 } from "@/lib/sync";
 import { revalidatePath } from "next/cache";
+import { formatAmount } from "@/lib/utils";
 import { SyncButton } from "@/components/SyncButton";
 import { SyncTransactionsButton } from "@/components/SyncTransactionsButton";
 import { SyncInvestmentsButton } from "@/components/SyncInvestmentsButton";
@@ -105,10 +106,7 @@ export default async function Page() {
               </div>
               <div className="text-4xl font-bold mb-2">
                 $
-                {totalCurrent.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatAmount(totalCurrent)}
               </div>
               <div className="text-sm opacity-75">
                 {accounts.length} account{accounts.length !== 1 ? "s" : ""}
@@ -121,10 +119,7 @@ export default async function Page() {
               </div>
               <div className="text-4xl font-bold mb-2">
                 $
-                {totalInvestmentValue.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatAmount(totalInvestmentValue)}
               </div>
               <div className="text-sm opacity-75">
                 {holdings.length} holding{holdings.length !== 1 ? "s" : ""}
@@ -202,12 +197,7 @@ export default async function Page() {
                         {account.currentBalance !== null && (
                           <div className="font-semibold text-foreground">
                             $
-                            {account.currentBalance
-                              .toNumber()
-                              .toLocaleString("en-US", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
+                            {formatAmount(account.currentBalance.toNumber())}
                           </div>
                         )}
                         {account.availableBalance !== null &&
@@ -215,23 +205,13 @@ export default async function Page() {
                             account.currentBalance?.toNumber() && (
                             <div className="text-sm text-muted-foreground">
                               Available: $
-                              {account.availableBalance
-                                .toNumber()
-                                .toLocaleString("en-US", {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
+                              {formatAmount(account.availableBalance.toNumber())}
                             </div>
                           )}
                         {account.creditLimit !== null && (
                           <div className="text-xs text-muted-foreground">
                             Limit: $
-                            {account.creditLimit
-                              .toNumber()
-                              .toLocaleString("en-US", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
+                            {formatAmount(account.creditLimit.toNumber())}
                           </div>
                         )}
                       </div>

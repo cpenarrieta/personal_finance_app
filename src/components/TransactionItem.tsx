@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
 import { getCategoryImage } from "@/lib/categoryImages";
+import { formatAmount } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -145,10 +146,7 @@ export function TransactionItem({
                 }`}
               >
                 {t.amount_number > 0 ? "-" : "+"}$
-                {Math.abs(t.amount_number).toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatAmount(t.amount_number)}
               </div>
               {t.isoCurrencyCode && (
                 <div className="text-xs text-muted-foreground">{t.isoCurrencyCode}</div>

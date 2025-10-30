@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { formatAmount } from "@/lib/utils";
 import { EditTransactionModal } from "./EditTransactionModal";
 import { SplitTransactionModal } from "./SplitTransactionModal";
 import { Button } from "./ui/button";
@@ -103,10 +104,7 @@ export function TransactionDetailView({
                 }`}
               >
                 {isExpense ? "-" : "+"}$
-                {absoluteAmount.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatAmount(absoluteAmount)}
               </div>
               {transaction.isoCurrencyCode && (
                 <div className="text-sm opacity-90 mt-1">
@@ -157,12 +155,7 @@ export function TransactionDetailView({
                   </p>
                   <p className="text-sm text-primary">
                     Original: {transaction.parentTransaction.name} • $
-                    {Math.abs(
-                      transaction.parentTransaction.amount_number
-                    ).toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {formatAmount(transaction.parentTransaction.amount_number)}
                   </p>
                 </div>
                 <Link
@@ -425,10 +418,7 @@ export function TransactionDetailView({
                   className={isExpense ? "text-destructive" : "text-success"}
                 >
                   {isExpense ? "-" : "+"}$
-                  {absoluteAmount.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+                  {formatAmount(absoluteAmount)}
                 </span>
               </p>
             </div>

@@ -1,5 +1,6 @@
 import type { HoldingWithRelations } from "@/types";
 import Image from "next/image";
+import { formatAmount } from "@/lib/utils";
 
 interface HoldingListProps {
   holdings: HoldingWithRelations[];
@@ -36,10 +37,7 @@ export function HoldingList({
               <div key={currency} className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">{currency}:</span>
                 <span className="font-medium text-lg">
-                  {total.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
+                  {formatAmount(total)}{" "}
                   {currency}
                 </span>
               </div>
@@ -76,18 +74,12 @@ export function HoldingList({
                 </div>
                 {h.costBasis && (
                   <div className="text-sm">
-                    Cost Basis: {h.costBasis.toNumber().toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    Cost Basis: {formatAmount(h.costBasis.toNumber())}
                   </div>
                 )}
                 {h.institutionPrice && (
                   <div className="text-sm">
-                    Price: {h.institutionPrice.toNumber().toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    Price: {formatAmount(h.institutionPrice.toNumber())}
                   </div>
                 )}
               </div>

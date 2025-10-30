@@ -19,7 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { SearchableTransactionListProps, TransactionForClient } from "@/types";
-import { sortCategoriesByGroupAndOrder } from "@/lib/utils";
+import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 type DateRange =
   | "all"
@@ -252,25 +253,7 @@ export function SearchableTransactionList({
   }, [categories]);
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowCategoryDropdown(false);
-      }
-    }
-
-    if (showCategoryDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-    
-    return undefined;
-  }, [showCategoryDropdown]);
+  useClickOutside(dropdownRef, () => setShowCategoryDropdown(false), showCategoryDropdown);
 
   // Calculate totals for filtered transactions
   const totals = useMemo(() => {
@@ -926,10 +909,7 @@ export function SearchableTransactionList({
           <div className="text-sm text-muted-foreground mb-1">Total Income</div>
           <div className="text-2xl font-bold text-success">
             +$
-            {totals.income.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(totals.income)}
           </div>
         </div>
 
@@ -937,10 +917,7 @@ export function SearchableTransactionList({
           <div className="text-sm text-muted-foreground mb-1">Total Expenses</div>
           <div className="text-2xl font-bold text-destructive">
             -$
-            {totals.expenses.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(totals.expenses)}
           </div>
         </div>
 
@@ -952,10 +929,7 @@ export function SearchableTransactionList({
             }`}
           >
             {totals.netBalance >= 0 ? "+" : ""}$
-            {totals.netBalance.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(Math.abs(totals.netBalance))}
           </div>
         </div>
       </div>

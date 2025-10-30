@@ -53,7 +53,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CategoryForClient, TransactionForClient } from "@/types";
-import { sortCategoriesByGroupAndOrder } from "@/lib/utils";
+import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 interface ChartsViewProps {
   transactions: TransactionForClient[];
@@ -117,25 +118,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
   );
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowCategoryDropdown(false);
-      }
-    }
-
-    if (showCategoryDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-
-    return undefined;
-  }, [showCategoryDropdown]);
+  useClickOutside(dropdownRef, () => setShowCategoryDropdown(false), showCategoryDropdown);
 
   // Determine if filters should be disabled for current tab
   const filtersDisabled = activeTab === "monthly-comparison";
@@ -896,10 +879,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       />
                       <Tooltip
                         formatter={(value: number) =>
-                          `$${value.toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}`
+                          `$${formatAmount(value)}`
                         }
                       />
                       <Bar dataKey="value" fill="#10b981" />
@@ -953,10 +933,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                 <TableCell>{sub.categoryName}</TableCell>
                                 <TableCell className="text-right">
                                   $
-                                  {sub.value.toLocaleString("en-US", {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })}
+                                  {formatAmount(sub.value)}
                                 </TableCell>
                                 <TableCell className="text-right text-muted-foreground">
                                   {percentage.toFixed(1)}%
@@ -991,10 +968,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       <YAxis />
                       <Tooltip
                         formatter={(value: number) =>
-                          `$${value.toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}`
+                          `$${formatAmount(value)}`
                         }
                       />
                       <Legend />
@@ -1027,17 +1001,11 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                               </TableCell>
                               <TableCell className="text-right text-success">
                                 $
-                                {month.income.toLocaleString("en-US", {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
+                                {formatAmount(month.income)}
                               </TableCell>
                               <TableCell className="text-right text-destructive">
                                 $
-                                {month.expenses.toLocaleString("en-US", {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
+                                {formatAmount(month.expenses)}
                               </TableCell>
                               <TableCell
                                 className={`text-right font-medium ${
@@ -1047,10 +1015,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                 }`}
                               >
                                 {month.net >= 0 ? "+" : ""}$
-                                {month.net.toLocaleString("en-US", {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
+                                {formatAmount(Math.abs(month.net))}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -1144,10 +1109,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       </Pie>
                       <Tooltip
                         formatter={(value: number) =>
-                          `$${value.toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}`
+                          `$${formatAmount(value)}`
                         }
                       />
                     </PieChart>
@@ -1176,10 +1138,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                             ? "+"
                             : ""}
                           $
-                          {Math.abs(item.value).toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
+                          {formatAmount(item.value)}
                         </div>
                       </div>
                     ))}
@@ -1225,10 +1184,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       </Pie>
                       <Tooltip
                         formatter={(value: number) =>
-                          `$${value.toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}`
+                          `$${formatAmount(value)}`
                         }
                       />
                     </PieChart>
@@ -1272,10 +1228,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           <div className="text-right ml-2 flex-shrink-0">
                             <div className="text-sm font-medium text-foreground">
                               $
-                              {cat.value.toLocaleString("en-US", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
+                              {formatAmount(cat.value)}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {percentage.toFixed(1)}%

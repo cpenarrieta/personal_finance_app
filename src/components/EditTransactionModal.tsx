@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { formatAmount } from "@/lib/utils";
 import type { EditTransactionModalProps } from "@/types";
 import {
   Dialog,
@@ -219,10 +220,7 @@ export function EditTransactionModal({
               <div className="text-gray-600">Amount:</div>
               <div className="font-medium">
                 $
-                {Math.abs(transaction.amount_number).toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatAmount(transaction.amount_number)}
               </div>
               <div className="text-gray-600">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>

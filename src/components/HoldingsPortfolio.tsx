@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { formatAmount } from "@/lib/utils";
 import type { HoldingForClient } from "@/types";
 interface HoldingsPortfolioProps {
   holdings: HoldingForClient[];
@@ -333,10 +334,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           <div className="text-sm text-muted-foreground mb-1">Portfolio Value</div>
           <div className="text-3xl font-bold text-foreground">
             $
-            {portfolioStats.totalValue.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(portfolioStats.totalValue)}
           </div>
         </div>
 
@@ -350,10 +348,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
             }`}
           >
             {portfolioStats.totalGainLoss >= 0 ? "+" : ""}$
-            {portfolioStats.totalGainLoss.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(Math.abs(portfolioStats.totalGainLoss))}
           </div>
           <div
             className={`text-sm ${
@@ -428,10 +423,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                 </Pie>
                 <Tooltip
                   formatter={(value: number) =>
-                    `$${value.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`
+                    `$${formatAmount(value)}`
                   }
                 />
               </PieChart>
@@ -453,10 +445,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                   <div className="text-right">
                     <div className="font-medium">
                       $
-                      {item.value.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatAmount(item.value)}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {item.percent.toFixed(2)}%
@@ -561,24 +550,15 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-foreground">
                     $
-                    {holding.calculatedPrice.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {formatAmount(holding.calculatedPrice)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-muted-foreground">
                     $
-                    {holding.calculatedCostBasis.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {formatAmount(holding.calculatedCostBasis)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-foreground">
                     $
-                    {holding.marketValue.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {formatAmount(holding.marketValue)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                     <span
@@ -589,10 +569,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                       }
                     >
                       {holding.gainLoss >= 0 ? "+" : ""}$
-                      {holding.gainLoss.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatAmount(Math.abs(holding.gainLoss))}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm">

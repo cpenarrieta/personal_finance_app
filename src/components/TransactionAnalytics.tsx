@@ -25,7 +25,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { CategoryForClient, TransactionForClient } from "@/types/client";
-import { sortCategoriesByGroupAndOrder } from "@/lib/utils";
+import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 interface TransactionAnalyticsProps {
   transactions: TransactionForClient[];
@@ -74,25 +75,7 @@ export function TransactionAnalytics({
   const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories]);
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowCategoryDropdown(false);
-      }
-    }
-
-    if (showCategoryDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-
-    return undefined;
-  }, [showCategoryDropdown]);
+  useClickOutside(dropdownRef, () => setShowCategoryDropdown(false), showCategoryDropdown);
 
   // No longer needed - we're using the categories from the API
 
@@ -744,30 +727,21 @@ export function TransactionAnalytics({
           <div className="text-sm text-muted-foreground mb-1">Total Expenses</div>
           <div className="text-3xl font-bold text-destructive">
             $
-            {stats.totalExpenses.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(stats.totalExpenses)}
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="text-sm text-muted-foreground mb-1">Total Income</div>
           <div className="text-3xl font-bold text-success">
             $
-            {stats.totalIncome.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(stats.totalIncome)}
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="text-sm text-muted-foreground mb-1">Avg Transaction</div>
           <div className="text-3xl font-bold text-foreground">
             $
-            {Math.abs(stats.avgTransaction).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(stats.avgTransaction)}
           </div>
         </div>
       </div>
@@ -800,10 +774,7 @@ export function TransactionAnalytics({
                   />
                   <Tooltip
                     formatter={(value: number) =>
-                      `$${value.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
+                      `$${formatAmount(value)}`
                     }
                   />
                   <Bar dataKey="value" fill="#3b82f6" />
@@ -831,10 +802,7 @@ export function TransactionAnalytics({
                     </div>
                     <span className="font-medium text-foreground ml-2 flex-shrink-0">
                       $
-                      {cat.value.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatAmount(cat.value)}
                     </span>
                   </div>
                 ))}
@@ -871,10 +839,7 @@ export function TransactionAnalytics({
                   />
                   <Tooltip
                     formatter={(value: number) =>
-                      `$${value.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
+                      `$${formatAmount(value)}`
                     }
                   />
                   <Bar dataKey="value" fill="#10b981" />
@@ -902,10 +867,7 @@ export function TransactionAnalytics({
                     </div>
                     <span className="font-medium text-foreground ml-2 flex-shrink-0">
                       $
-                      {sub.value.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {formatAmount(sub.value)}
                     </span>
                   </div>
                 ))}

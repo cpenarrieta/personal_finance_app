@@ -1,6 +1,7 @@
 import type { InvestmentTransactionWithRelations } from '@/types'
 import Image from 'next/image'
 import { format } from 'date-fns'
+import { formatAmount } from '@/lib/utils'
 
 interface InvestmentTransactionListProps {
   transactions: InvestmentTransactionWithRelations[]
@@ -38,14 +39,8 @@ export function InvestmentTransactionList({ transactions, showAccount = false }:
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 6,
               })}</div>}
-              {t.amount && <div className="text-sm">Amount: {t.amount.toNumber().toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}</div>}
-              {t.price && <div className="text-sm">Price: {t.price.toNumber().toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}</div>}
+              {t.amount && <div className="text-sm">Amount: {formatAmount(t.amount.toNumber())}</div>}
+              {t.price && <div className="text-sm">Price: {formatAmount(t.price.toNumber())}</div>}
             </div>
           </div>
         </li>

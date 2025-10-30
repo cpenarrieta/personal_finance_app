@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatAmount } from "@/lib/utils";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -190,10 +191,7 @@ export function SplitTransactionModal({
           <DialogTitle>Split Transaction</DialogTitle>
           <DialogDescription>
             {transaction.name} • $
-            {Math.abs(originalAmount).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+            {formatAmount(originalAmount)}
           </DialogDescription>
         </DialogHeader>
 
@@ -222,10 +220,7 @@ export function SplitTransactionModal({
                 }`}
               >
                 $
-                {Math.abs(remaining).toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatAmount(remaining)}
               </span>
             </div>
             {isValid && (
