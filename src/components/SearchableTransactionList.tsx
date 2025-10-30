@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { SearchableTransactionListProps, TransactionForClient } from "@/types";
+import { sortCategoriesByGroupAndOrder } from "@/lib/utils";
 
 type DateRange =
   | "all"
@@ -71,6 +72,9 @@ export function SearchableTransactionList({
   const [bulkCategoryId, setBulkCategoryId] = useState("");
   const [bulkSubcategoryId, setBulkSubcategoryId] = useState("");
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+
+  // Sort categories by group type and display order
+  const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories]);
 
   // Filter transactions based on search query and date range
   const filteredTransactions = useMemo(() => {
@@ -615,7 +619,7 @@ export function SearchableTransactionList({
                 <div className="p-3">
                   <div className="mb-3 pb-3 border-b border-gray-200">
                     <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Include Categories</h4>
-                    {categories.map((category) => (
+                    {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                           <Checkbox
@@ -653,7 +657,7 @@ export function SearchableTransactionList({
 
                   <div>
                     <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Exclude Categories</h4>
-                    {categories.map((category) => (
+                    {sortedCategories.map((category) => (
                       <label key={category.id} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                         <Checkbox
                           checked={excludedCategoryIds.has(category.id)}

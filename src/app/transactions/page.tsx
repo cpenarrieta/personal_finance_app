@@ -111,7 +111,11 @@ export default async function TransactionsPage() {
           orderBy: { name: "asc" },
         },
       },
-      orderBy: { name: "asc" },
+      orderBy: [
+        { groupType: "asc" },
+        { displayOrder: "asc" },
+        { name: "asc" },
+      ],
     }) as CategoryForClient[],
     prisma.tag.findMany({
       select: {

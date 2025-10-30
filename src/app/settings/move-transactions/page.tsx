@@ -33,7 +33,11 @@ export default async function MoveTransactionsPage() {
         orderBy: { name: "asc" },
       },
     },
-    orderBy: { name: "asc" },
+    orderBy: [
+      { groupType: "asc" },
+      { displayOrder: "asc" },
+      { name: "asc" },
+    ],
   })) as CategoryForClient[];
 
   return <MoveTransactionsClient categories={categories} />;

@@ -94,6 +94,8 @@ export default async function ChartsPage() {
         id: true,
         name: true,
         imageUrl: true,
+        groupType: true,
+        displayOrder: true,
         created_at_string: true, // Generated column
         updated_at_string: true, // Generated column
         subcategories: {
@@ -108,7 +110,11 @@ export default async function ChartsPage() {
           orderBy: { name: 'asc' },
         },
       },
-      orderBy: { name: 'asc' },
+      orderBy: [
+        { groupType: 'asc' },
+        { displayOrder: 'asc' },
+        { name: 'asc' },
+      ],
     }) as Promise<CategoryForClient[]>,
   ])
 

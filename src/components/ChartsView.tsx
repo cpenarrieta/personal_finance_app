@@ -53,6 +53,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CategoryForClient, TransactionForClient } from "@/types";
+import { sortCategoriesByGroupAndOrder } from "@/lib/utils";
 
 interface ChartsViewProps {
   transactions: TransactionForClient[];
@@ -98,6 +99,9 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     Set<string>
   >(new Set());
   const [showIncome, setShowIncome] = useState(false);
+
+  // Sort categories by group type and display order
+  const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories]);
   const [showExpenses, setShowExpenses] = useState(true);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -631,7 +635,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                     <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
                       Include Categories
                     </h4>
-                    {categories.map((category) => (
+                    {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                           <Checkbox
@@ -672,7 +676,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                     <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
                       Exclude Categories
                     </h4>
-                    {categories.map((category) => (
+                    {sortedCategories.map((category) => (
                       <label
                         key={category.id}
                         className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"

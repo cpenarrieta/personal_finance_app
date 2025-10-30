@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { CategoryForClient, TransactionForClient } from "@/types/client";
+import { sortCategoriesByGroupAndOrder } from "@/lib/utils";
 
 interface TransactionAnalyticsProps {
   transactions: TransactionForClient[];
@@ -68,6 +69,9 @@ export function TransactionAnalytics({
       return transfersCategory ? new Set([transfersCategory.id]) : new Set();
     }
   );
+
+  // Sort categories by group type and display order
+  const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -533,7 +537,7 @@ export function TransactionAnalytics({
                     <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
                       Include Categories
                     </h4>
-                    {categories.map((category) => (
+                    {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                           <Checkbox
@@ -574,7 +578,7 @@ export function TransactionAnalytics({
                     <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">
                       Exclude Categories
                     </h4>
-                    {categories.map((category) => (
+                    {sortedCategories.map((category) => (
                       <label
                         key={category.id}
                         className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
