@@ -4,8 +4,18 @@ import { useState } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { EditTransactionModal } from "./EditTransactionModal";
 import { SplitTransactionModal } from "./SplitTransactionModal";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -25,10 +35,35 @@ export function TransactionDetailView({
 }: TransactionDetailViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSplitting, setIsSplitting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
   const amount = transaction.amount_number;
   const isExpense = amount > 0;
   const absoluteAmount = Math.abs(amount);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/transactions/${transaction.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete transaction");
+      }
+
+      // Redirect to transactions page after successful deletion
+      router.push("/transactions");
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      alert("Failed to delete transaction. Please try again.");
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -90,19 +125,25 @@ export function TransactionDetailView({
             </h2>
             <div className="flex gap-2">
               {!transaction.isSplit && !transaction.parentTransactionId && (
-                <button
+                <Button
                   onClick={() => setIsSplitting(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="bg-purple-600 hover:bg-purple-700"
                 >
                   Split Transaction
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 Edit Transaction
-              </button>
+              </Button>
+              <Button
+                onClick={() => setIsDeleteDialogOpen(true)}
+                variant="destructive"
+              >
+                Delete
+              </Button>
             </div>
           </div>
 
@@ -357,6 +398,59 @@ export function TransactionDetailView({
           categories={categories}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Transaction</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this transaction? This action
+              cannot be undone.
+              {transaction.childTransactions &&
+                transaction.childTransactions.length > 0 && (
+                  <span className="block mt-2 font-medium text-yellow-600">
+                    Warning: This will also delete all{" "}
+                    {transaction.childTransactions.length} split transactions.
+                  </span>
+                )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="p-3 bg-gray-50 rounded-lg border">
+              <p className="font-medium text-gray-900">{transaction.name}</p>
+              <p className="text-sm text-gray-600 mt-1">
+                {format(new Date(transaction.date_string), "MMM d, yyyy")} •{" "}
+                <span
+                  className={isExpense ? "text-red-600" : "text-green-600"}
+                >
+                  {isExpense ? "-" : "+"}$
+                  {absoluteAmount.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Transaction"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

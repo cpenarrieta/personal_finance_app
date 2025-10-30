@@ -33,14 +33,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -326,9 +329,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
       const subcategoryName = t.subcategory?.name || "No Subcategory";
       const imageUrl = t.subcategory?.imageUrl;
       const categoryName =
-        t.subcategory?.category?.name ||
-        t.category?.name ||
-        "Uncategorized";
+        t.subcategory?.category?.name || t.category?.name || "Uncategorized";
 
       if (subcategoryMap.has(subcategoryName)) {
         subcategoryMap.get(subcategoryName)!.value += amount;
@@ -530,14 +531,22 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customStartDate ? format(new Date(customStartDate), "PPP") : "Start date"}
+                      {customStartDate
+                        ? format(new Date(customStartDate), "PPP")
+                        : "Start date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={customStartDate ? new Date(customStartDate) : undefined}
-                      onSelect={(date) => setCustomStartDate(date ? format(date, "yyyy-MM-dd") : "")}
+                      selected={
+                        customStartDate ? new Date(customStartDate) : undefined
+                      }
+                      onSelect={(date) =>
+                        setCustomStartDate(
+                          date ? format(date, "yyyy-MM-dd") : ""
+                        )
+                      }
                       weekStartsOn={1}
                       initialFocus
                     />
@@ -565,14 +574,20 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customEndDate ? format(new Date(customEndDate), "PPP") : "End date"}
+                      {customEndDate
+                        ? format(new Date(customEndDate), "PPP")
+                        : "End date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={customEndDate ? new Date(customEndDate) : undefined}
-                      onSelect={(date) => setCustomEndDate(date ? format(date, "yyyy-MM-dd") : "")}
+                      selected={
+                        customEndDate ? new Date(customEndDate) : undefined
+                      }
+                      onSelect={(date) =>
+                        setCustomEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                      }
                       weekStartsOn={1}
                       initialFocus
                     />

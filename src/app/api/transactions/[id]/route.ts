@@ -93,3 +93,52 @@ export async function PATCH(
     )
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    // Check if transaction exists
+    const transaction = await prisma.transaction.findUnique({
+      where: { id },
+      include: {
+        childTransactions: true,
+      },
+    })
+
+    if (!transaction) {
+      return NextResponse.json(
+        { error: 'Transaction not found' },
+        { status: 404 }
+      )
+    }
+
+    // If transaction has child transactions (is a split parent), delete them first
+    if (transaction.childTransactions && transaction.childTransactions.length > 0) {
+      await prisma.transaction.deleteMany({
+        where: { parentTransactionId: id },
+      })
+    }
+
+    // Delete associated tags
+    await prisma.transactionTag.deleteMany({
+      where: { transactionId: id },
+    })
+
+    // Delete the transaction
+    await prisma.transaction.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting transaction:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete transaction' },
+      { status: 500 }
+    )
+  }
+}
