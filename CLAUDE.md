@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 📖 **Detailed Documentation:**
 - [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, props pattern, generated columns
+- [Theming Guidelines](docs/THEMING.md) - shadcn/ui theme variables, NO hardcoded colors
 - [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
 - [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup, testing
 - [Generated Columns](docs/GENERATED_COLUMNS.md) - PostgreSQL generated columns for passing data to client components
@@ -62,7 +63,39 @@ export function ClientComponent() {
 
 👉 See [DATA_FETCHING.md](docs/DATA_FETCHING.md) for complete patterns
 
-### 2. UI Components ⭐️ ALWAYS USE shadcn/ui
+### 2. Theming ⭐️ NO HARDCODED COLORS
+
+**NEVER use hardcoded Tailwind colors (e.g., `text-gray-600`, `bg-blue-500`). ALWAYS use shadcn/ui theme variables.**
+
+👉 See [THEMING.md](docs/THEMING.md) for complete guide
+
+```typescript
+// ✅ DO: Use theme variables
+<div className="bg-background text-foreground">
+  <h1 className="text-2xl text-foreground">Title</h1>
+  <p className="text-muted-foreground">Description</p>
+  <Button className="bg-primary hover:bg-primary/90">Action</Button>
+</div>
+
+// ❌ DON'T: Use hardcoded colors
+<div className="bg-gray-50 text-gray-900">
+  <h1 className="text-2xl text-gray-900">Title</h1>
+  <p className="text-gray-600">Description</p>
+  <button className="bg-blue-600 hover:bg-blue-700">Action</button>
+</div>
+```
+
+**Quick reference:**
+- `text-gray-900` → `text-foreground`
+- `text-gray-600` → `text-muted-foreground`
+- `bg-gray-50` → `bg-background`
+- `text-blue-600` → `text-primary`
+- `text-green-600` → `text-success`
+- `text-red-600` → `text-destructive`
+
+**Exceptions:** User-defined colors (tags), chart data visualization only.
+
+### 3. UI Components ⭐️ ALWAYS USE shadcn/ui
 
 **Never create custom form inputs, selects, badges, or alerts. Use shadcn/ui components.**
 
@@ -95,14 +128,14 @@ Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Sw
 3. Keep styling minimal - design overhaul is planned
 4. Always pair Label with form inputs for accessibility
 
-### 3. Component Patterns
+### 4. Component Patterns
 
 - **Server Components by default** - Use `'use client'` only when needed
 - **Client components**: Forms, interactive elements, Plaid Link, modals
 - **All UI components** in `src/components/ui/` (shadcn/ui)
 - **Use cn() utility** from `src/lib/utils.ts` for conditional Tailwind classes
 
-### 4. Type Safety
+### 5. Type Safety
 
 - Strict TypeScript mode enabled
 - Use `@/*` path alias for imports
