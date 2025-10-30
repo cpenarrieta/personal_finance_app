@@ -21,6 +21,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { CategoryForClient, TransactionForClient } from "@/types/client";
 
 interface TransactionAnalyticsProps {
@@ -411,18 +414,19 @@ export function TransactionAnalytics({
         <div className="flex flex-wrap items-center gap-4">
           {/* Date Range */}
           <div className="flex-shrink-0">
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as DateRange)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Time</option>
-              <option value="last30">Last 30 Days</option>
-              <option value="last90">Last 90 Days</option>
-              <option value="thisMonth">This Month</option>
-              <option value="lastMonth">Last Month</option>
-              <option value="custom">Custom Range</option>
-            </select>
+            <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRange)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select date range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="last30">Last 30 Days</SelectItem>
+                <SelectItem value="last90">Last 90 Days</SelectItem>
+                <SelectItem value="thisMonth">This Month</SelectItem>
+                <SelectItem value="lastMonth">Last Month</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Custom Date Range */}
@@ -501,13 +505,13 @@ export function TransactionAnalytics({
 
           {/* Category/Subcategory Multi-select */}
           <div className="flex-shrink-0 relative" ref={dropdownRef}>
-            <button
+            <Button
+              variant="outline"
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              className="px-3 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center gap-2"
             >
-              <span className="text-gray-700">Select Categories...</span>
+              <span>Select Categories...</span>
               <svg
-                className="h-4 w-4 text-gray-400"
+                className="h-4 w-4 ml-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -519,7 +523,7 @@ export function TransactionAnalytics({
                   d="M19 9l-7 7-7-7"
                 />
               </svg>
-            </button>
+            </Button>
 
             {/* Dropdown Menu */}
             {showCategoryDropdown && (
@@ -532,11 +536,9 @@ export function TransactionAnalytics({
                     {categories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedCategoryIds.has(category.id)}
-                            onChange={() => toggleCategory(category.id)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            onCheckedChange={() => toggleCategory(category.id)}
                           />
                           <span className="ml-2 text-sm font-medium text-gray-900">
                             {category.name}
@@ -551,13 +553,11 @@ export function TransactionAnalytics({
                                   key={sub.id}
                                   className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer"
                                 >
-                                  <input
-                                    type="checkbox"
+                                  <Checkbox
                                     checked={selectedSubcategoryIds.has(sub.id)}
-                                    onChange={() =>
+                                    onCheckedChange={() =>
                                       toggleSubcategory(sub.id, category.id)
                                     }
-                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                   />
                                   <span className="ml-2 text-sm text-gray-700">
                                     {sub.name}
@@ -579,11 +579,9 @@ export function TransactionAnalytics({
                         key={category.id}
                         className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
                       >
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={excludedCategoryIds.has(category.id)}
-                          onChange={() => toggleExcludedCategory(category.id)}
-                          className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                          onCheckedChange={() => toggleExcludedCategory(category.id)}
                         />
                         <span className="ml-2 text-sm text-gray-900">
                           {category.name}
@@ -597,35 +595,34 @@ export function TransactionAnalytics({
           </div>
 
           {/* Income Toggle */}
-          <label className="flex items-center cursor-pointer flex-shrink-0">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Checkbox
+              id="income-toggle-analytics"
               checked={showIncome}
-              onChange={(e) => setShowIncome(e.target.checked)}
-              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              onCheckedChange={(checked) => setShowIncome(checked === true)}
             />
-            <span className="ml-2 text-sm text-gray-700">Income</span>
-          </label>
+            <Label htmlFor="income-toggle-analytics" className="cursor-pointer">Income</Label>
+          </div>
 
           {/* Expenses Toggle */}
-          <label className="flex items-center cursor-pointer flex-shrink-0">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Checkbox
+              id="expenses-toggle-analytics"
               checked={showExpenses}
-              onChange={(e) => setShowExpenses(e.target.checked)}
-              className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+              onCheckedChange={(checked) => setShowExpenses(checked === true)}
             />
-            <span className="ml-2 text-sm text-gray-700">Expenses</span>
-          </label>
+            <Label htmlFor="expenses-toggle-analytics" className="cursor-pointer">Expenses</Label>
+          </div>
 
           {/* Clear Filters */}
           {hasActiveFilters && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={clearAllFilters}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0"
             >
               Clear Filters
-            </button>
+            </Button>
           )}
         </div>
 

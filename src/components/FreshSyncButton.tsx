@@ -2,15 +2,27 @@
 
 import { useState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function SubmitButton() {
   const { pending } = useFormStatus()
 
   return (
-    <button
+    <Button
       type="submit"
+      variant="outline"
       disabled={pending}
-      className="px-4 py-2 rounded border border-orange-500 text-orange-600 hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      className="border-orange-500 text-orange-600 hover:bg-orange-50"
     >
       {pending && (
         <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -19,7 +31,7 @@ function SubmitButton() {
         </svg>
       )}
       {pending ? 'Syncing from scratch...' : 'Sync from Scratch'}
-    </button>
+    </Button>
   )
 }
 
@@ -42,30 +54,22 @@ export function FreshSyncButton({ action }: { action: () => Promise<void> }) {
         <SubmitButton />
       </form>
 
-      {showConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold mb-2 text-gray-900">Confirm Sync from Scratch</h3>
-            <p className="text-gray-600 mb-6">
+      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Sync from Scratch</AlertDialogTitle>
+            <AlertDialogDescription>
               This will re-sync all your data from scratch. This operation may take a few minutes. Are you sure you want to continue?
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowConfirmation(false)}
-                className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirm}
-                className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm} className="bg-orange-500 hover:bg-orange-600">
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

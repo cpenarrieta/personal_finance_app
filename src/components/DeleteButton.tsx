@@ -1,5 +1,19 @@
 'use client'
 
+import { useState } from 'react'
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 export function DeleteButton({
   id,
   action,
@@ -13,21 +27,37 @@ export function DeleteButton({
   buttonText?: string
   className?: string
 }) {
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+
+  const handleConfirm = () => {
+    setShowConfirmDialog(false)
+    const formData = new FormData()
+    formData.append('id', id)
+    action(formData)
+  }
+
   return (
-    <form action={action}>
-      <input type="hidden" name="id" value={id} />
-      <button
-        type="submit"
-        className={className}
-        onClick={(e) => {
-          if (!confirm(confirmMessage)) {
-            e.preventDefault()
-          }
-        }}
-      >
-        {buttonText}
-      </button>
-    </form>
+    <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="sm" className={className}>
+          {buttonText}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+          <AlertDialogDescription>
+            {confirmMessage}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirm} className="bg-red-600 hover:bg-red-700">
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 

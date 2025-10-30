@@ -2,21 +2,29 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function CategorizeButton() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const router = useRouter()
 
   const handleCategorize = async () => {
     if (isLoading) return
 
-    const confirmed = confirm(
-      'This will automatically categorize all transactions that don\'t have a category using AI. Continue?'
-    )
-
-    if (!confirmed) return
-
+    setShowConfirmDialog(false)
     setIsLoading(true)
     setMessage(null)
 
@@ -47,13 +55,30 @@ export function CategorizeButton() {
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        onClick={handleCategorize}
-        disabled={isLoading}
-        className="px-6 py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 font-medium shadow-sm transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
-      >
-        {isLoading ? '🤖 Categorizing...' : '🤖 Auto-Categorize Transactions'}
-      </button>
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogTrigger asChild>
+          <Button
+            disabled={isLoading}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700"
+          >
+            {isLoading ? '🤖 Categorizing...' : '🤖 Auto-Categorize Transactions'}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Auto-Categorize Transactions</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will automatically categorize all transactions that don't have a category using AI. Continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCategorize} className="bg-purple-600 hover:bg-purple-700">
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {message && (
         <span className={`text-sm ${message.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>
           {message}

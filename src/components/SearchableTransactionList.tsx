@@ -618,11 +618,9 @@ export function SearchableTransactionList({
                     {categories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedCategoryIds.has(category.id)}
-                            onChange={() => toggleCategory(category.id)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            onCheckedChange={() => toggleCategory(category.id)}
                           />
                           <span className="ml-2 text-sm font-medium text-gray-900">
                             {category.name}
@@ -636,13 +634,11 @@ export function SearchableTransactionList({
                                   key={sub.id}
                                   className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer"
                                 >
-                                  <input
-                                    type="checkbox"
+                                  <Checkbox
                                     checked={selectedSubcategoryIds.has(sub.id)}
-                                    onChange={() =>
+                                    onCheckedChange={() =>
                                       toggleSubcategory(sub.id, category.id)
                                     }
-                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                   />
                                   <span className="ml-2 text-sm text-gray-700">
                                     {sub.name}
@@ -659,11 +655,9 @@ export function SearchableTransactionList({
                     <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Exclude Categories</h4>
                     {categories.map((category) => (
                       <label key={category.id} className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={excludedCategoryIds.has(category.id)}
-                          onChange={() => toggleExcludedCategory(category.id)}
-                          className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                          onCheckedChange={() => toggleExcludedCategory(category.id)}
                         />
                         <span className="ml-2 text-sm text-gray-900">{category.name}</span>
                       </label>
