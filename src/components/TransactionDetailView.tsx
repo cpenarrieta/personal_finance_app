@@ -98,11 +98,7 @@ export function TransactionDetailView({
               </div>
             </div>
             <div className="text-right">
-              <div
-                className={`text-3xl font-bold ${
-                  isExpense ? "text-red-300" : "text-green-300"
-                }`}
-              >
+              <div className="text-3xl font-bold text-primary-foreground">
                 {isExpense ? "-" : "+"}$
                 {formatAmount(absoluteAmount)}
               </div>
@@ -125,7 +121,8 @@ export function TransactionDetailView({
               {!transaction.isSplit && !transaction.parentTransactionId && (
                 <Button
                   onClick={() => setIsSplitting(true)}
-                  className="bg-secondary hover:bg-secondary/90"
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary/10"
                 >
                   Split Transaction
                 </Button>
@@ -402,7 +399,7 @@ export function TransactionDetailView({
               cannot be undone.
               {transaction.childTransactions &&
                 transaction.childTransactions.length > 0 && (
-                  <span className="block mt-2 font-medium text-yellow-600">
+                  <span className="block mt-2 font-medium text-destructive">
                     Warning: This will also delete all{" "}
                     {transaction.childTransactions.length} split transactions.
                   </span>
@@ -410,7 +407,7 @@ export function TransactionDetailView({
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="p-3 bg-gray-50 rounded-lg border">
+            <div className="p-3 bg-muted rounded-lg border border-border">
               <p className="font-medium text-foreground">{transaction.name}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {format(new Date(transaction.date_string), "MMM d, yyyy")} •{" "}
