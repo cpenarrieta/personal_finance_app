@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import Image from 'next/image'
+import { formatAmount } from '@/lib/utils'
 import type { TransactionWithAccount } from '@/types/prisma'
 
 interface TransactionListProps {
@@ -28,10 +29,7 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
             )}
             <div className="flex-1 min-w-0">
               <div className="font-medium">
-                {t.name} — {t.amount.toNumber().toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })} {t.isoCurrencyCode}
+                {t.name} — {formatAmount(t.amount.toNumber())} {t.isoCurrencyCode}
                 {t.pending && <span className="ml-2 text-xs bg-warning/10 text-warning-foreground px-2 py-1 rounded">Pending</span>}
               </div>
               <div className="text-sm text-muted-foreground">

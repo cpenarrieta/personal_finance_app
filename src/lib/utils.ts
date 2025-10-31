@@ -39,3 +39,37 @@ export function sortCategoriesByGroupAndOrder(categories: CategoryForClient[]): 
     .filter((groupType) => grouped.has(groupType))
     .flatMap((groupType) => grouped.get(groupType)!);
 }
+
+/**
+ * Format amount as currency with symbol
+ * @param amount - Numeric amount to format
+ * @param currency - Currency code (default: "USD")
+ * @returns Formatted currency string (e.g., "$1,234.56")
+ */
+export function formatCurrency(amount: number, currency = "USD"): string {
+  return Math.abs(amount).toLocaleString("en-US", {
+    style: 'currency',
+    currency: currency,
+  });
+}
+
+/**
+ * Format amount as numeric value with 2 decimal places
+ * @param amount - Numeric amount to format
+ * @returns Formatted numeric string (e.g., "1,234.56")
+ */
+export function formatAmount(amount: number): string {
+  return Math.abs(amount).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * Format percentage with 2 decimal places
+ * @param value - Numeric value to format as percentage
+ * @returns Formatted percentage string (e.g., "12.34%")
+ */
+export function formatPercentage(value: number): string {
+  return `${value.toFixed(2)}%`;
+}
