@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useRef, RefObject } from "react";
 import Image from "next/image";
 import {
   ResponsiveContainer,
@@ -102,7 +102,10 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
   const [showIncome, setShowIncome] = useState(false);
 
   // Sort categories by group type and display order
-  const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories]);
+  const sortedCategories = useMemo(
+    () => sortCategoriesByGroupAndOrder(categories),
+    [categories]
+  );
   const [showExpenses, setShowExpenses] = useState(true);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -118,7 +121,11 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
   );
 
   // Close dropdown when clicking outside
-  useClickOutside(dropdownRef, () => setShowCategoryDropdown(false), showCategoryDropdown);
+  useClickOutside(
+    dropdownRef as RefObject<HTMLElement>,
+    () => setShowCategoryDropdown(false),
+    showCategoryDropdown
+  );
 
   // Determine if filters should be disabled for current tab
   const filtersDisabled = activeTab === "monthly-comparison";
@@ -878,9 +885,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                         tick={{ fontSize: 12 }}
                       />
                       <Tooltip
-                        formatter={(value: number) =>
-                          `$${formatAmount(value)}`
-                        }
+                        formatter={(value: number) => `$${formatAmount(value)}`}
                       />
                       <Bar dataKey="value" fill="#10b981" />
                     </BarChart>
@@ -932,8 +937,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                 </TableCell>
                                 <TableCell>{sub.categoryName}</TableCell>
                                 <TableCell className="text-right">
-                                  $
-                                  {formatAmount(sub.value)}
+                                  ${formatAmount(sub.value)}
                                 </TableCell>
                                 <TableCell className="text-right text-muted-foreground">
                                   {percentage.toFixed(1)}%
@@ -967,9 +971,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip
-                        formatter={(value: number) =>
-                          `$${formatAmount(value)}`
-                        }
+                        formatter={(value: number) => `$${formatAmount(value)}`}
                       />
                       <Legend />
                       <Bar dataKey="income" fill="#10b981" name="Income" />
@@ -1000,12 +1002,10 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                 {month.month}
                               </TableCell>
                               <TableCell className="text-right text-success">
-                                $
-                                {formatAmount(month.income)}
+                                ${formatAmount(month.income)}
                               </TableCell>
                               <TableCell className="text-right text-destructive">
-                                $
-                                {formatAmount(month.expenses)}
+                                ${formatAmount(month.expenses)}
                               </TableCell>
                               <TableCell
                                 className={`text-right font-medium ${
@@ -1108,9 +1108,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value: number) =>
-                          `$${formatAmount(value)}`
-                        }
+                        formatter={(value: number) => `$${formatAmount(value)}`}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -1137,8 +1135,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                             : item.value >= 0
                             ? "+"
                             : ""}
-                          $
-                          {formatAmount(item.value)}
+                          ${formatAmount(item.value)}
                         </div>
                       </div>
                     ))}
@@ -1183,9 +1180,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value: number) =>
-                          `$${formatAmount(value)}`
-                        }
+                        formatter={(value: number) => `$${formatAmount(value)}`}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -1227,8 +1222,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           </div>
                           <div className="text-right ml-2 flex-shrink-0">
                             <div className="text-sm font-medium text-foreground">
-                              $
-                              {formatAmount(cat.value)}
+                              ${formatAmount(cat.value)}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {percentage.toFixed(1)}%

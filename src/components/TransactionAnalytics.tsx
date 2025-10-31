@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useRef, RefObject } from "react";
 import Image from "next/image";
 import {
   ResponsiveContainer,
@@ -20,8 +20,18 @@ import {
 } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { CategoryForClient, TransactionForClient } from "@/types/client";
@@ -72,10 +82,17 @@ export function TransactionAnalytics({
   );
 
   // Sort categories by group type and display order
-  const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories]);
+  const sortedCategories = useMemo(
+    () => sortCategoriesByGroupAndOrder(categories),
+    [categories]
+  );
 
   // Close dropdown when clicking outside
-  useClickOutside(dropdownRef, () => setShowCategoryDropdown(false), showCategoryDropdown);
+  useClickOutside(
+    dropdownRef as RefObject<HTMLElement>,
+    () => setShowCategoryDropdown(false),
+    showCategoryDropdown
+  );
 
   // No longer needed - we're using the categories from the API
 
@@ -401,7 +418,10 @@ export function TransactionAnalytics({
         <div className="flex flex-wrap items-center gap-4">
           {/* Date Range */}
           <div className="flex-shrink-0">
-            <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRange)}>
+            <Select
+              value={dateRange}
+              onValueChange={(value) => setDateRange(value as DateRange)}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select date range" />
               </SelectTrigger>
@@ -439,14 +459,22 @@ export function TransactionAnalytics({
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customStartDate ? format(new Date(customStartDate), "PPP") : "Start date"}
+                      {customStartDate
+                        ? format(new Date(customStartDate), "PPP")
+                        : "Start date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={customStartDate ? new Date(customStartDate) : undefined}
-                      onSelect={(date) => setCustomStartDate(date ? format(date, "yyyy-MM-dd") : "")}
+                      selected={
+                        customStartDate ? new Date(customStartDate) : undefined
+                      }
+                      onSelect={(date) =>
+                        setCustomStartDate(
+                          date ? format(date, "yyyy-MM-dd") : ""
+                        )
+                      }
                       weekStartsOn={1}
                       initialFocus
                     />
@@ -473,14 +501,20 @@ export function TransactionAnalytics({
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customEndDate ? format(new Date(customEndDate), "PPP") : "End date"}
+                      {customEndDate
+                        ? format(new Date(customEndDate), "PPP")
+                        : "End date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={customEndDate ? new Date(customEndDate) : undefined}
-                      onSelect={(date) => setCustomEndDate(date ? format(date, "yyyy-MM-dd") : "")}
+                      selected={
+                        customEndDate ? new Date(customEndDate) : undefined
+                      }
+                      onSelect={(date) =>
+                        setCustomEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                      }
                       weekStartsOn={1}
                       initialFocus
                     />
@@ -568,7 +602,9 @@ export function TransactionAnalytics({
                       >
                         <Checkbox
                           checked={excludedCategoryIds.has(category.id)}
-                          onCheckedChange={() => toggleExcludedCategory(category.id)}
+                          onCheckedChange={() =>
+                            toggleExcludedCategory(category.id)
+                          }
                         />
                         <span className="ml-2 text-sm text-foreground">
                           {category.name}
@@ -588,7 +624,9 @@ export function TransactionAnalytics({
               checked={showIncome}
               onCheckedChange={(checked) => setShowIncome(checked === true)}
             />
-            <Label htmlFor="income-toggle-analytics" className="cursor-pointer">Income</Label>
+            <Label htmlFor="income-toggle-analytics" className="cursor-pointer">
+              Income
+            </Label>
           </div>
 
           {/* Expenses Toggle */}
@@ -598,16 +636,17 @@ export function TransactionAnalytics({
               checked={showExpenses}
               onCheckedChange={(checked) => setShowExpenses(checked === true)}
             />
-            <Label htmlFor="expenses-toggle-analytics" className="cursor-pointer">Expenses</Label>
+            <Label
+              htmlFor="expenses-toggle-analytics"
+              className="cursor-pointer"
+            >
+              Expenses
+            </Label>
           </div>
 
           {/* Clear Filters */}
           {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAllFilters}
-            >
+            <Button variant="ghost" size="sm" onClick={clearAllFilters}>
               Clear Filters
             </Button>
           )}
@@ -720,28 +759,33 @@ export function TransactionAnalytics({
       {/* Summary Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-muted-foreground mb-1">Total Transactions</div>
-          <div className="text-3xl font-bold text-foreground">{stats.count}</div>
+          <div className="text-sm text-muted-foreground mb-1">
+            Total Transactions
+          </div>
+          <div className="text-3xl font-bold text-foreground">
+            {stats.count}
+          </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-muted-foreground mb-1">Total Expenses</div>
+          <div className="text-sm text-muted-foreground mb-1">
+            Total Expenses
+          </div>
           <div className="text-3xl font-bold text-destructive">
-            $
-            {formatAmount(stats.totalExpenses)}
+            ${formatAmount(stats.totalExpenses)}
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="text-sm text-muted-foreground mb-1">Total Income</div>
           <div className="text-3xl font-bold text-success">
-            $
-            {formatAmount(stats.totalIncome)}
+            ${formatAmount(stats.totalIncome)}
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <div className="text-sm text-muted-foreground mb-1">Avg Transaction</div>
+          <div className="text-sm text-muted-foreground mb-1">
+            Avg Transaction
+          </div>
           <div className="text-3xl font-bold text-foreground">
-            $
-            {formatAmount(stats.avgTransaction)}
+            ${formatAmount(stats.avgTransaction)}
           </div>
         </div>
       </div>
@@ -773,9 +817,7 @@ export function TransactionAnalytics({
                     tick={{ fontSize: 12 }}
                   />
                   <Tooltip
-                    formatter={(value: number) =>
-                      `$${formatAmount(value)}`
-                    }
+                    formatter={(value: number) => `$${formatAmount(value)}`}
                   />
                   <Bar dataKey="value" fill="#3b82f6" />
                 </BarChart>
@@ -798,11 +840,12 @@ export function TransactionAnalytics({
                           className="w-5 h-5 rounded flex-shrink-0"
                         />
                       )}
-                      <span className="text-muted-foreground truncate">{cat.name}</span>
+                      <span className="text-muted-foreground truncate">
+                        {cat.name}
+                      </span>
                     </div>
                     <span className="font-medium text-foreground ml-2 flex-shrink-0">
-                      $
-                      {formatAmount(cat.value)}
+                      ${formatAmount(cat.value)}
                     </span>
                   </div>
                 ))}
@@ -838,9 +881,7 @@ export function TransactionAnalytics({
                     tick={{ fontSize: 12 }}
                   />
                   <Tooltip
-                    formatter={(value: number) =>
-                      `$${formatAmount(value)}`
-                    }
+                    formatter={(value: number) => `$${formatAmount(value)}`}
                   />
                   <Bar dataKey="value" fill="#10b981" />
                 </BarChart>
@@ -863,11 +904,12 @@ export function TransactionAnalytics({
                           className="w-5 h-5 rounded flex-shrink-0"
                         />
                       )}
-                      <span className="text-muted-foreground truncate">{sub.name}</span>
+                      <span className="text-muted-foreground truncate">
+                        {sub.name}
+                      </span>
                     </div>
                     <span className="font-medium text-foreground ml-2 flex-shrink-0">
-                      $
-                      {formatAmount(sub.value)}
+                      ${formatAmount(sub.value)}
                     </span>
                   </div>
                 ))}
