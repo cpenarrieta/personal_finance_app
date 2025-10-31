@@ -4,10 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { TransactionItem } from "@/components/TransactionItem";
 import { CategorySelect } from "@/components/ui/category-select";
-import type {
-  TransactionForClient,
-  CategoryForClient,
-} from "@/types";
+import { SubcategorySelect } from "@/components/ui/subcategory-select";
+import type { TransactionForClient, CategoryForClient } from "@/types";
 
 interface MoveTransactionsClientProps {
   categories: CategoryForClient[];
@@ -194,32 +192,25 @@ export function MoveTransactionsClient({
             />
           </div>
 
-          {fromCategoryId &&
-            fromCategory &&
-            fromCategory.subcategories &&
-            fromCategory.subcategories.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  From Subcategory (Optional)
-                </label>
-                <select
-                  value={fromSubcategoryId}
-                  onChange={(e) => {
-                    setFromSubcategoryId(e.target.value);
-                    setShowTransactions(false);
-                  }}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">All subcategories</option>
-                  <option value="null">No subcategory</option>
-                  {fromCategory.subcategories.map((sub) => (
-                    <option key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+          {fromCategoryId && (
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                From Subcategory (Optional)
+              </label>
+              <SubcategorySelect
+                value={fromSubcategoryId}
+                onChange={(value) => {
+                  setFromSubcategoryId(value);
+                  setShowTransactions(false);
+                }}
+                categories={categories}
+                categoryId={fromCategoryId}
+                showAllOption
+                showNullOption
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+              />
+            </div>
+          )}
 
           {fromCategoryId && (
             <button
@@ -258,28 +249,21 @@ export function MoveTransactionsClient({
                 />
               </div>
 
-              {toCategoryId &&
-                toCategory &&
-                toCategory.subcategories &&
-                toCategory.subcategories.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      To Subcategory (Optional)
-                    </label>
-                    <select
-                      value={toSubcategoryId}
-                      onChange={(e) => setToSubcategoryId(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="">No subcategory</option>
-                      {toCategory.subcategories.map((sub) => (
-                        <option key={sub.id} value={sub.id}>
-                          {sub.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+              {toCategoryId && (
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    To Subcategory (Optional)
+                  </label>
+                  <SubcategorySelect
+                    value={toSubcategoryId}
+                    onChange={setToSubcategoryId}
+                    categories={categories}
+                    categoryId={toCategoryId}
+                    placeholder="No subcategory"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CategorySelect } from "@/components/ui/category-select";
+import { SubcategorySelect } from "@/components/ui/subcategory-select";
 import { Button } from "@/components/ui/button";
 import { TagSelector } from "@/components/TagSelector";
 
@@ -30,9 +31,7 @@ export function EditTransactionModal({
 
   // Form state
   const [name, setName] = useState(transaction.name);
-  const [categoryId, setCategoryId] = useState(
-    transaction.categoryId || ""
-  );
+  const [categoryId, setCategoryId] = useState(transaction.categoryId || "");
   const [subcategoryId, setSubcategoryId] = useState(
     transaction.subcategoryId || ""
   );
@@ -41,9 +40,7 @@ export function EditTransactionModal({
     transaction.tags?.map((tag) => tag.id) || []
   );
 
-  // Get subcategories for selected category
-  const selectedCategory = categories.find((c) => c.id === categoryId);
-  const availableSubcategories = selectedCategory?.subcategories || [];
+  // No longer needed - SubcategorySelect handles this internally
 
   const toggleTag = (tagId: string) => {
     setSelectedTagIds((prev) =>
@@ -125,20 +122,13 @@ export function EditTransactionModal({
 
             <div className="space-y-2">
               <Label htmlFor="subcategory">Subcategory</Label>
-              <select
+              <SubcategorySelect
                 id="subcategory"
                 value={subcategoryId}
-                onChange={(e) => setSubcategoryId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                disabled={!categoryId}
-              >
-                <option value="">None</option>
-                {availableSubcategories.map((sub) => (
-                  <option key={sub.id} value={sub.id}>
-                    {sub.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setSubcategoryId}
+                categories={categories}
+                categoryId={categoryId}
+              />
             </div>
           </div>
 
@@ -174,8 +164,7 @@ export function EditTransactionModal({
               </div>
               <div className="text-gray-600">Amount:</div>
               <div className="font-medium">
-                $
-                {formatAmount(transaction.amount_number)}
+                ${formatAmount(transaction.amount_number)}
               </div>
               <div className="text-gray-600">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>
@@ -185,7 +174,10 @@ export function EditTransactionModal({
               </div>
               <div className="text-gray-600">Creation Date:</div>
               <div className="font-medium">
-                {format(new Date(transaction.created_at_string), "MMM d yyyy, h:mm a")}
+                {format(
+                  new Date(transaction.created_at_string),
+                  "MMM d yyyy, h:mm a"
+                )}
               </div>
               {transaction.merchantName && (
                 <>

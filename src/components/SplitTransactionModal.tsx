@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatAmount } from "@/lib/utils";
-import type {
-  TransactionForClient,
-  CategoryForClient,
-  SubcategoryForClient,
-} from "@/types";
+import type { TransactionForClient, CategoryForClient } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { CategorySelect } from "@/components/ui/category-select";
+import { SubcategorySelect } from "@/components/ui/subcategory-select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -173,13 +170,7 @@ export function SplitTransactionModal({
     }
   };
 
-  const getSubcategoriesForCategory = (
-    categoryId: string | null
-  ): SubcategoryForClient[] => {
-    if (!categoryId) return [];
-    const category = categories.find((c) => c.id === categoryId);
-    return category?.subcategories || [];
-  };
+  // No longer needed - SubcategorySelect handles this internally
 
   const remaining = getRemainingAmount();
   const isValid = Math.abs(remaining) < 0.01;
@@ -190,8 +181,7 @@ export function SplitTransactionModal({
         <DialogHeader>
           <DialogTitle>Split Transaction</DialogTitle>
           <DialogDescription>
-            {transaction.name} • $
-            {formatAmount(originalAmount)}
+            {transaction.name} • ${formatAmount(originalAmount)}
           </DialogDescription>
         </DialogHeader>
 
@@ -219,8 +209,7 @@ export function SplitTransactionModal({
                     : "text-destructive"
                 }`}
               >
-                $
-                {formatAmount(remaining)}
+                ${formatAmount(remaining)}
               </span>
             </div>
             {isValid && (
@@ -252,9 +241,7 @@ export function SplitTransactionModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Amount */}
                   <div className="space-y-2">
-                    <Label htmlFor={`split-amount-${index}`}>
-                      Amount *
-                    </Label>
+                    <Label htmlFor={`split-amount-${index}`}>Amount *</Label>
                     <Input
                       id={`split-amount-${index}`}
                       type="text"
@@ -291,9 +278,7 @@ export function SplitTransactionModal({
 
                   {/* Category */}
                   <div className="space-y-2">
-                    <Label htmlFor={`split-category-${index}`}>
-                      Category
-                    </Label>
+                    <Label htmlFor={`split-category-${index}`}>Category</Label>
                     <CategorySelect
                       id={`split-category-${index}`}
                       value={split.categoryId || ""}
@@ -311,35 +296,22 @@ export function SplitTransactionModal({
                     <Label htmlFor={`split-subcategory-${index}`}>
                       Subcategory
                     </Label>
-                    <select
+                    <SubcategorySelect
                       id={`split-subcategory-${index}`}
                       value={split.subcategoryId || ""}
-                      onChange={(e) =>
-                        updateSplit(
-                          index,
-                          "subcategoryId",
-                          e.target.value || null
-                        )
+                      onChange={(value) =>
+                        updateSplit(index, "subcategoryId", value || null)
                       }
-                      disabled={!split.categoryId}
+                      categories={categories}
+                      categoryId={split.categoryId}
+                      placeholder="No Subcategory"
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
-                    >
-                      <option value="">No Subcategory</option>
-                      {getSubcategoriesForCategory(split.categoryId).map(
-                        (sub) => (
-                          <option key={sub.id} value={sub.id}>
-                            {sub.name}
-                          </option>
-                        )
-                      )}
-                    </select>
+                    />
                   </div>
 
                   {/* Notes */}
                   <div className="md:col-span-2 space-y-2">
-                    <Label htmlFor={`split-notes-${index}`}>
-                      Notes
-                    </Label>
+                    <Label htmlFor={`split-notes-${index}`}>Notes</Label>
                     <Textarea
                       id={`split-notes-${index}`}
                       value={split.notes}
