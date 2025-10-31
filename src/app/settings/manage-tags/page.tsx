@@ -124,7 +124,7 @@ export default async function ManageTagsPage() {
                       className="sr-only peer"
                     />
                     <div
-                      className="w-8 h-8 rounded-full border-2 border-gray-300 peer-checked:border-gray-900 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-gray-900 hover:scale-110 transition-transform"
+                      className="w-8 h-8 rounded-full border-2 border-border peer-checked:border-foreground peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-foreground hover:scale-110 transition-transform"
                       style={{ backgroundColor: color }}
                     />
                   </label>
@@ -166,7 +166,7 @@ export default async function ManageTagsPage() {
                   >
                     {tag.name}
                   </div>
-                  Tag Info
+                  <span className="sr-only">Tag Info</span>
                   <div className="flex-1 text-sm text-muted-foreground">
                     {tag._count.transactions} transaction
                     {tag._count.transactions !== 1 ? "s" : ""}
