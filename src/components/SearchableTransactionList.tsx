@@ -751,7 +751,7 @@ export function SearchableTransactionList({
       {bulk.showBulkUpdate && (
         <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-primary-foreground">
+            <h3 className="text-lg font-semibold text-primary">
               Bulk Update Categories
             </h3>
             <div className="flex gap-2">
