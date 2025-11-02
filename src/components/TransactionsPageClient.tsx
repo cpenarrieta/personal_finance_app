@@ -42,6 +42,7 @@ export function TransactionsPageClient({
         transactions={transactions}
         categories={categories}
         tags={tags}
+        accounts={accounts}
       />
 
       {showAddModal && (

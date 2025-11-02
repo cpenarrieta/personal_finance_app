@@ -46,6 +46,12 @@ export interface SearchableTransactionListProps {
   showAccount?: boolean;
   categories: CategoryForClient[];
   tags: TagForClient[];
+  accounts?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    mask?: string | null;
+  }>;
 }
 
 // ============================================================================

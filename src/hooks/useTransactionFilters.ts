@@ -7,6 +7,7 @@ export type DateRange = 'all' | 'last30' | 'last90' | 'thisMonth' | 'lastMonth' 
 interface UseTransactionFiltersConfig {
   categories: CategoryForClient[]
   tags?: TagForClient[]
+  accounts?: Array<{ id: string; name: string; type: string; mask?: string | null }>
   defaultDateRange?: DateRange
   defaultShowIncome?: boolean
   defaultShowExpenses?: boolean
@@ -14,11 +15,13 @@ interface UseTransactionFiltersConfig {
   enableSearch?: boolean
   enableTagFilter?: boolean
   enableUncategorizedFilter?: boolean
+  enableAccountFilter?: boolean
 }
 
 export function useTransactionFilters({
   categories,
   tags: _tags = [],
+  accounts: _accounts = [],
   defaultDateRange = 'all',
   defaultShowIncome = false,
   defaultShowExpenses = true,
@@ -26,6 +29,7 @@ export function useTransactionFilters({
   enableSearch = false,
   enableTagFilter = false,
   enableUncategorizedFilter = false,
+  enableAccountFilter = false,
 }: UseTransactionFiltersConfig) {
   // Date filters
   const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange)
@@ -59,6 +63,11 @@ export function useTransactionFilters({
   // Optional: Uncategorized
   const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(
     enableUncategorizedFilter ? false : undefined
+  )
+
+  // Optional: Account
+  const [selectedAccountIds, setSelectedAccountIds] = useState<Set<string>>(
+    enableAccountFilter ? new Set() : (undefined as never)
   )
 
   // Get date range interval
@@ -134,6 +143,11 @@ export function useTransactionFilters({
         if (!t.tags.some((tag) => selectedTagIds.has(tag.id))) return false
       }
 
+      // Account filter
+      if (selectedAccountIds && selectedAccountIds.size > 0) {
+        if (!t.accountId || !selectedAccountIds.has(t.accountId)) return false
+      }
+
       // Search filter
       if (searchQuery !== undefined && searchQuery.trim()) {
         const query = searchQuery.toLowerCase()
@@ -174,6 +188,7 @@ export function useTransactionFilters({
     if (searchQuery !== undefined) setSearchQuery('')
     if (selectedTagIds !== undefined) setSelectedTagIds(new Set())
     if (showOnlyUncategorized !== undefined) setShowOnlyUncategorized(false)
+    if (selectedAccountIds !== undefined) setSelectedAccountIds(new Set())
 
     // Reset to default exclusions
     if (excludeTransfersByDefault) {
@@ -211,7 +226,8 @@ export function useTransactionFilters({
     const optionalFilters =
       (searchQuery !== undefined && searchQuery.trim() !== '') ||
       (selectedTagIds !== undefined && selectedTagIds.size > 0) ||
-      (showOnlyUncategorized !== undefined && showOnlyUncategorized)
+      (showOnlyUncategorized !== undefined && showOnlyUncategorized) ||
+      (selectedAccountIds !== undefined && selectedAccountIds.size > 0)
 
     return baseFilters || optionalFilters
   }, [
@@ -268,6 +284,10 @@ export function useTransactionFilters({
     ...(showOnlyUncategorized !== undefined && {
       showOnlyUncategorized,
       setShowOnlyUncategorized: setShowOnlyUncategorized as (show: boolean) => void,
+    }),
+    ...(selectedAccountIds !== undefined && {
+      selectedAccountIds,
+      setSelectedAccountIds: setSelectedAccountIds as (accountIds: Set<string>) => void,
     }),
 
     // Methods
