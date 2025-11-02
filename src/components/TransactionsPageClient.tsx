@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { SearchableTransactionList } from "./SearchableTransactionList";
+import { TransactionChartsView } from "./TransactionChartsView";
 import { AddTransactionModal } from "./AddTransactionModal";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -33,21 +35,35 @@ export function TransactionsPageClient({
     <>
       <div className="mb-4 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Banking Transactions</h1>
-          <p className="text-gray-600 mt-1">View and search all your banking transactions</p>
+          <h1 className="text-3xl font-bold text-foreground">Banking Transactions</h1>
+          <p className="text-muted-foreground mt-1">View and search all your banking transactions</p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
           Add Transaction
         </Button>
       </div>
 
-      <SearchableTransactionList
-        transactions={transactions}
-        categories={categories}
-        tags={tags}
-        accounts={accounts}
-        initialFilters={initialFilters}
-      />
+      <Tabs defaultValue="table" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="table">Table</TabsTrigger>
+          <TabsTrigger value="charts">Charts</TabsTrigger>
+        </TabsList>
+        <TabsContent value="table">
+          <SearchableTransactionList
+            transactions={transactions}
+            categories={categories}
+            tags={tags}
+            accounts={accounts}
+            initialFilters={initialFilters}
+          />
+        </TabsContent>
+        <TabsContent value="charts">
+          <TransactionChartsView
+            transactions={transactions}
+            categories={categories}
+          />
+        </TabsContent>
+      </Tabs>
 
       {showAddModal && (
         <AddTransactionModal

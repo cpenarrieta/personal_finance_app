@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { TransactionsPageClient } from "@/components/TransactionsPageClient";
+import { AppShell } from "@/components/AppShell";
 import type { Metadata } from "next";
 import type {
   CategoryForClient,
@@ -170,13 +170,12 @@ export default async function TransactionsPage({
   );
 
   return (
-    <div className="p-6 bg-background min-h-screen">
-      <div className="mb-6">
-        <Link href="/" className="text-primary hover:underline">
-          ← Back to Home
-        </Link>
-      </div>
-
+    <AppShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Transactions" },
+      ]}
+    >
       <TransactionsPageClient
         transactions={transactionsWithFlatTags}
         categories={categories}
@@ -184,6 +183,6 @@ export default async function TransactionsPage({
         accounts={accounts}
         initialFilters={initialFilters}
       />
-    </div>
+    </AppShell>
   );
 }

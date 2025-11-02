@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TransactionDetailView } from "@/components/TransactionDetailView";
-import { headers } from "next/headers";
+import { AppShell } from "@/components/AppShell";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -48,8 +47,6 @@ export default async function TransactionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const headersList = await headers();
-  const referer = headersList.get("referer") || "";
 
   const txResult = await prisma.transaction.findUnique({
     where: { id },
@@ -209,26 +206,19 @@ export default async function TransactionDetailPage({
     }) as TagForClient[],
   ]);
 
-  // Determine which page to go back to based on referrer
-  const isFromAnalytics = referer.includes("/analytics");
-  const backUrl = isFromAnalytics ? "/analytics" : "/transactions";
-  const backText = isFromAnalytics
-    ? "← Back to Analytics"
-    : "← Back to Transactions";
-
   return (
-    <div className="p-6 bg-background min-h-screen">
-      <div className="mb-6">
-        <Link href={backUrl} className="text-primary hover:underline">
-          {backText}
-        </Link>
-      </div>
-
+    <AppShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Transactions", href: "/transactions" },
+        { label: transaction.name },
+      ]}
+    >
       <TransactionDetailView
         transaction={transaction}
         categories={categories}
         tags={tags}
       />
-    </div>
+    </AppShell>
   );
 }

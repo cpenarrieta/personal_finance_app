@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import type { TransactionForClient, CategoryForClient } from '@/types'
 
 export function useBulkTransactionOperations() {
@@ -22,6 +23,7 @@ export function useBulkTransactionOperations() {
   // Select all transactions
   const selectAll = (transactions: TransactionForClient[]) => {
     setSelectedTransactions(new Set(transactions.map((t) => t.id)))
+    toast.success(`Selected ${transactions.length} transactions`)
   }
 
   // Deselect all
@@ -36,6 +38,8 @@ export function useBulkTransactionOperations() {
     }
 
     setIsBulkUpdating(true)
+    const toastId = toast.loading(`Updating ${selectedTransactions.size} transactions...`)
+
     try {
       const response = await fetch('/api/transactions/bulk-update', {
         method: 'PATCH',
@@ -53,11 +57,13 @@ export function useBulkTransactionOperations() {
         throw new Error('Failed to bulk update transactions')
       }
 
+      toast.success(`Updated ${selectedTransactions.size} transactions!`, { id: toastId })
+
       // Refresh the page to show updated data
       window.location.reload()
     } catch (error) {
       console.error('Error bulk updating transactions:', error)
-      alert('Failed to update transactions. Please try again.')
+      toast.error('Failed to update transactions', { id: toastId })
     } finally {
       setIsBulkUpdating(false)
     }

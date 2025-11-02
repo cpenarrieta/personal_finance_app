@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { formatAmount } from "@/lib/utils";
 import type { EditTransactionModalProps } from "@/types";
 import {
@@ -54,6 +55,8 @@ export function EditTransactionModal({
     e.preventDefault();
     setIsSubmitting(true);
 
+    const toastId = toast.loading("Updating transaction...");
+
     try {
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: "PATCH",
@@ -73,12 +76,14 @@ export function EditTransactionModal({
         throw new Error("Failed to update transaction");
       }
 
+      toast.success("Transaction updated!", { id: toastId });
+
       // Refresh the page to show updated data
       router.refresh();
       onClose();
     } catch (error) {
       console.error("Error updating transaction:", error);
-      alert("Failed to update transaction. Please try again.");
+      toast.error("Failed to update transaction", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
