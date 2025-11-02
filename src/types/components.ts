@@ -12,6 +12,7 @@ import type {
   HoldingForClient,
   InvestmentTransactionForClient,
 } from "./client";
+import type { TransactionFiltersFromUrl } from "@/lib/transactionUrlParams";
 
 // ============================================================================
 // TRANSACTION COMPONENT TYPES
@@ -52,6 +53,7 @@ export interface SearchableTransactionListProps {
     type: string;
     mask?: string | null;
   }>;
+  initialFilters?: TransactionFiltersFromUrl;
 }
 
 // ============================================================================

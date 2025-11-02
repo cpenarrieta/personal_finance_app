@@ -93,6 +93,7 @@ export interface CategoryForClient {
   imageUrl: string | null
   groupType: CategoryGroupType | null
   displayOrder: number | null
+  isTransferCategory: boolean
   created_at_string: string // Generated from createdAt
   updated_at_string: string // Generated from updatedAt
   subcategories?: SubcategoryForClient[]

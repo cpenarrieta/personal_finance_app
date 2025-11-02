@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, RefObject } from "react";
 import { format } from "date-fns";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { EditTransactionModal } from "./EditTransactionModal";
 import { TransactionItem } from "./TransactionItem";
 import {
@@ -36,6 +37,7 @@ import {
 import { useTransactionSort } from "@/hooks/useTransactionSort";
 import { useBulkTransactionOperations } from "@/hooks/useBulkTransactionOperations";
 import { useCategoryToggle } from "@/hooks/useCategoryToggle";
+import { transactionFiltersToUrlParams } from "@/lib/transactionUrlParams";
 
 export function SearchableTransactionList({
   transactions,
@@ -43,7 +45,12 @@ export function SearchableTransactionList({
   categories,
   tags,
   accounts = [],
+  initialFilters,
 }: SearchableTransactionListProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [editingTransaction, setEditingTransaction] =
     useState<TransactionForClient | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -52,24 +59,33 @@ export function SearchableTransactionList({
     (account) => account.type !== "investment"
   );
 
-  // Use hooks
+  // Use hooks with initial values from URL
   const filters = useTransactionFilters({
     categories,
     tags,
     accounts: nonInvestmentAccounts,
-    defaultDateRange: "all",
-    defaultShowIncome: true,
-    defaultShowExpenses: true,
-    excludeTransfersByDefault: true,
+    defaultDateRange: initialFilters?.dateRange ?? "all",
+    defaultShowIncome: initialFilters?.showIncome ?? true,
+    defaultShowExpenses: initialFilters?.showExpenses ?? true,
+    excludeTransfersByDefault: false, // No longer exclude transfers by default
     enableSearch: true,
     enableTagFilter: true,
     enableUncategorizedFilter: true,
     enableAccountFilter: true,
+    initialSelectedCategoryIds: initialFilters?.selectedCategoryIds,
+    initialSelectedSubcategoryIds: initialFilters?.selectedSubcategoryIds,
+    initialExcludedCategoryIds: initialFilters?.excludedCategoryIds,
+    initialCustomStartDate: initialFilters?.customStartDate,
+    initialCustomEndDate: initialFilters?.customEndDate,
+    initialSearchQuery: initialFilters?.searchQuery,
+    initialSelectedTagIds: initialFilters?.selectedTagIds,
+    initialShowOnlyUncategorized: initialFilters?.showOnlyUncategorized,
+    initialSelectedAccountIds: initialFilters?.selectedAccountIds,
   });
 
   const sort = useTransactionSort({
-    defaultSortBy: "date",
-    defaultSortDirection: "desc",
+    defaultSortBy: (initialFilters?.sortBy as any) ?? "date",
+    defaultSortDirection: initialFilters?.sortDirection ?? "desc",
   });
 
   const bulk = useBulkTransactionOperations();
@@ -82,16 +98,60 @@ export function SearchableTransactionList({
     [categories]
   );
 
-  // Set default exclusions (exclude Transfers by default) on mount
+  // No longer need default transfer exclusions - using showTransfers checkbox instead
+
+  // Sync filters to URL
   useEffect(() => {
-    const transfersCategory = categories.find(
-      (cat) => cat.name === "🔁 Transfers"
-    );
-    if (transfersCategory) {
-      filters.setExcludedCategoryIds(new Set([transfersCategory.id]));
+    const params = transactionFiltersToUrlParams({
+      dateRange: filters.dateRange,
+      customStartDate: filters.customStartDate,
+      customEndDate: filters.customEndDate,
+      selectedCategoryIds: filters.selectedCategoryIds,
+      selectedSubcategoryIds: filters.selectedSubcategoryIds,
+      excludedCategoryIds: filters.excludedCategoryIds,
+      showIncome: filters.showIncome,
+      showExpenses: filters.showExpenses,
+      showTransfers: filters.showTransfers,
+      searchQuery: filters.searchQuery,
+      selectedTagIds: filters.selectedTagIds,
+      showOnlyUncategorized: filters.showOnlyUncategorized,
+      selectedAccountIds: filters.selectedAccountIds,
+      sortBy: sort.sortBy,
+      sortDirection: sort.sortDirection,
+    });
+
+    const newUrl = params.toString()
+      ? `${pathname}?${params.toString()}`
+      : pathname;
+
+    // Only update if the URL actually changed
+    const currentUrl = searchParams.toString()
+      ? `${pathname}?${searchParams.toString()}`
+      : pathname;
+
+    if (newUrl !== currentUrl) {
+      router.replace(newUrl, { scroll: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categories]);
+  }, [
+    filters.dateRange,
+    filters.customStartDate,
+    filters.customEndDate,
+    filters.selectedCategoryIds,
+    filters.selectedSubcategoryIds,
+    filters.excludedCategoryIds,
+    filters.showIncome,
+    filters.showExpenses,
+    filters.showTransfers,
+    filters.searchQuery,
+    filters.selectedTagIds,
+    filters.showOnlyUncategorized,
+    filters.selectedAccountIds,
+    sort.sortBy,
+    sort.sortDirection,
+    pathname,
+    router,
+    searchParams,
+  ]);
 
   // Filter and sort transactions
   const filteredTransactions = useMemo(() => {
@@ -107,6 +167,7 @@ export function SearchableTransactionList({
     filters.excludedCategoryIds,
     filters.showIncome,
     filters.showExpenses,
+    filters.showTransfers,
     filters.searchQuery,
     filters.selectedTagIds,
     filters.showOnlyUncategorized,
@@ -558,7 +619,7 @@ export function SearchableTransactionList({
 
         {/* Secondary Filters Row - Type, Tags, Uncategorized */}
         <div className="flex flex-wrap items-center gap-4 pt-3 border-t">
-          {/* Income/Expense Toggles */}
+          {/* Income/Expense/Transfer Toggles */}
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
@@ -578,6 +639,16 @@ export function SearchableTransactionList({
                 }
               />
               <span className="text-sm text-muted-foreground">Expenses</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={filters.showTransfers}
+                onCheckedChange={(checked) =>
+                  filters.setShowTransfers(checked === true)
+                }
+              />
+              <span className="text-sm text-muted-foreground">Transfers</span>
             </label>
           </div>
 

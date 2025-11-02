@@ -10,12 +10,14 @@ import type {
   TagForClient,
   PlaidAccountForClient,
 } from "@/types";
+import type { TransactionFiltersFromUrl } from "@/lib/transactionUrlParams";
 
 interface TransactionsPageClientProps{
   transactions: TransactionForClient[];
   categories: CategoryForClient[];
   tags: TagForClient[];
   accounts: PlaidAccountForClient[];
+  initialFilters?: TransactionFiltersFromUrl;
 }
 
 export function TransactionsPageClient({
@@ -23,6 +25,7 @@ export function TransactionsPageClient({
   categories,
   tags,
   accounts,
+  initialFilters,
 }: TransactionsPageClientProps) {
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -43,6 +46,7 @@ export function TransactionsPageClient({
         categories={categories}
         tags={tags}
         accounts={accounts}
+        initialFilters={initialFilters}
       />
 
       {showAddModal && (

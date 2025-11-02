@@ -16,7 +16,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function TransactionsPage() {
+import { parseTransactionFiltersFromUrl } from "@/lib/transactionUrlParams";
+
+interface TransactionsPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function TransactionsPage({
+  searchParams,
+}: TransactionsPageProps) {
+  const params = await searchParams;
+  const initialFilters = parseTransactionFiltersFromUrl(params);
   const [transactions, categories, tags, accounts] = await Promise.all([
     prisma.transaction.findMany({
       where: {
@@ -61,6 +71,7 @@ export default async function TransactionsPage() {
             id: true,
             name: true,
             imageUrl: true,
+            isTransferCategory: true,
             created_at_string: true, // Generated column
             updated_at_string: true, // Generated column
           },
@@ -97,6 +108,7 @@ export default async function TransactionsPage() {
         imageUrl: true,
         groupType: true,
         displayOrder: true,
+        isTransferCategory: true,
         created_at_string: true, // Generated column
         updated_at_string: true, // Generated column
         subcategories: {
@@ -170,6 +182,7 @@ export default async function TransactionsPage() {
         categories={categories}
         tags={tags}
         accounts={accounts}
+        initialFilters={initialFilters}
       />
     </div>
   );

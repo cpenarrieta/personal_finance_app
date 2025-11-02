@@ -7,8 +7,14 @@ import { getCategoryImage } from "@/lib/categoryImages";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Metadata } from "next";
-import { CategoryWithSubcategories } from "@/types";
+import { TransferCategoryToggle } from "@/components/TransferCategoryToggle";
+import type { Prisma } from "@prisma/client";
+
+type CategoryWithSubs = Prisma.CategoryGetPayload<{
+  include: { subcategories: true };
+}>;
 
 export const metadata: Metadata = {
   title: "Manage Categories",
@@ -23,9 +29,26 @@ async function createCategory(formData: FormData) {
   "use server";
   const name = formData.get("name") as string;
   const imageUrl = formData.get("imageUrl") as string;
+  const isTransferCategory = formData.get("isTransferCategory") === "true";
 
   await prisma.category.create({
-    data: { name, imageUrl: imageUrl || null },
+    data: {
+      name,
+      imageUrl: imageUrl || null,
+      isTransferCategory,
+    },
+  });
+  revalidatePath("/settings/manage-categories");
+}
+
+async function updateCategory(formData: FormData) {
+  "use server";
+  const id = formData.get("id") as string;
+  const isTransferCategory = formData.get("isTransferCategory") === "true";
+
+  await prisma.category.update({
+    where: { id },
+    data: { isTransferCategory },
   });
   revalidatePath("/settings/manage-categories");
 }
@@ -57,10 +80,10 @@ async function deleteSubcategory(formData: FormData) {
 }
 
 export default async function ManageCategoriesPage() {
-  const categories = (await prisma.category.findMany({
+  const categories = await prisma.category.findMany({
     include: { subcategories: true },
     orderBy: { name: "asc" },
-  })) as CategoryWithSubcategories[];
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,6 +133,20 @@ export default async function ManageCategoriesPage() {
                 />
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="is-transfer-category"
+                name="isTransferCategory"
+                value="true"
+              />
+              <Label
+                htmlFor="is-transfer-category"
+                className="text-sm font-normal cursor-pointer"
+              >
+                This is a transfer category (transactions moving money between
+                accounts)
+              </Label>
+            </div>
             <Button type="submit">+ Add Category</Button>
           </form>
         </div>
@@ -128,7 +165,7 @@ export default async function ManageCategoriesPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {categories.map((cat) => (
+              {categories.map((cat: CategoryWithSubs) => (
                 <div
                   key={cat.id}
                   className="bg-card rounded-lg shadow-md overflow-hidden"
@@ -158,6 +195,13 @@ export default async function ManageCategoriesPage() {
                                 cat.subcategories.length > 1 ? "ies" : ""
                               }`}
                         </p>
+                        <div className="mt-2">
+                          <TransferCategoryToggle
+                            categoryId={cat.id}
+                            isTransferCategory={cat.isTransferCategory}
+                            updateAction={updateCategory}
+                          />
+                        </div>
                       </div>
                       <DeleteButton
                         id={cat.id}
@@ -179,7 +223,7 @@ export default async function ManageCategoriesPage() {
                   <div className="p-4">
                     {cat.subcategories.length > 0 && (
                       <div className="mb-4 space-y-2">
-                        {cat.subcategories.map((sub) => (
+                        {cat.subcategories.map((sub: Prisma.SubcategoryGetPayload<{}>) => (
                           <div
                             key={sub.id}
                             className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"

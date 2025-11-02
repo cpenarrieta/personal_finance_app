@@ -258,7 +258,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    const result = await TransactionsPage();
+    const result = await TransactionsPage({ searchParams: Promise.resolve({}) });
     render(result);
 
     // Assert - Verify page structure
@@ -283,7 +283,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    const result = await TransactionsPage();
+    const result = await TransactionsPage({ searchParams: Promise.resolve({}) });
     render(result);
 
     // Assert
@@ -306,7 +306,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    const result = await TransactionsPage();
+    const result = await TransactionsPage({ searchParams: Promise.resolve({}) });
     render(result);
 
     // Assert
@@ -341,7 +341,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    const result = await TransactionsPage();
+    const result = await TransactionsPage({ searchParams: Promise.resolve({}) });
     render(result);
 
     // Assert - Tags should be flattened from tags.tag to tags
@@ -366,7 +366,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    const result = await TransactionsPage();
+    const result = await TransactionsPage({ searchParams: Promise.resolve({}) });
     render(result);
 
     // Assert
@@ -391,7 +391,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    await TransactionsPage();
+    await TransactionsPage({ searchParams: Promise.resolve({}) });
 
     // Assert
     expect(prismaModule.prisma.transaction.findMany).toHaveBeenCalledWith(
@@ -420,7 +420,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    await TransactionsPage();
+    await TransactionsPage({ searchParams: Promise.resolve({}) });
 
     // Assert
     expect(prismaModule.prisma.transaction.findMany).toHaveBeenCalledWith(
@@ -446,7 +446,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    const result = await TransactionsPage();
+    const result = await TransactionsPage({ searchParams: Promise.resolve({}) });
     render(result);
 
     // Assert
@@ -469,7 +469,7 @@ describe("TransactionsPage - Happy Path", () => {
     ]);
 
     // Act
-    const result = await TransactionsPage();
+    const result = await TransactionsPage({ searchParams: Promise.resolve({}) });
     render(result);
 
     // Assert

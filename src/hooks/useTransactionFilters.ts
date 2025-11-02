@@ -16,6 +16,16 @@ interface UseTransactionFiltersConfig {
   enableTagFilter?: boolean
   enableUncategorizedFilter?: boolean
   enableAccountFilter?: boolean
+  // Initial state from URL
+  initialSelectedCategoryIds?: Set<string>
+  initialSelectedSubcategoryIds?: Set<string>
+  initialExcludedCategoryIds?: Set<string>
+  initialCustomStartDate?: string
+  initialCustomEndDate?: string
+  initialSearchQuery?: string
+  initialSelectedTagIds?: Set<string>
+  initialShowOnlyUncategorized?: boolean
+  initialSelectedAccountIds?: Set<string>
 }
 
 export function useTransactionFilters({
@@ -30,44 +40,61 @@ export function useTransactionFilters({
   enableTagFilter = false,
   enableUncategorizedFilter = false,
   enableAccountFilter = false,
+  initialSelectedCategoryIds,
+  initialSelectedSubcategoryIds,
+  initialExcludedCategoryIds,
+  initialCustomStartDate,
+  initialCustomEndDate,
+  initialSearchQuery,
+  initialSelectedTagIds,
+  initialShowOnlyUncategorized,
+  initialSelectedAccountIds,
 }: UseTransactionFiltersConfig) {
   // Date filters
   const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange)
-  const [customStartDate, setCustomStartDate] = useState('')
-  const [customEndDate, setCustomEndDate] = useState('')
+  const [customStartDate, setCustomStartDate] = useState(initialCustomStartDate ?? '')
+  const [customEndDate, setCustomEndDate] = useState(initialCustomEndDate ?? '')
 
   // Category filters
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set())
-  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<Set<string>>(new Set())
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(
+    initialSelectedCategoryIds ?? new Set()
+  )
+  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<Set<string>>(
+    initialSelectedSubcategoryIds ?? new Set()
+  )
   const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(() => {
+    if (initialExcludedCategoryIds) return initialExcludedCategoryIds
     if (!excludeTransfersByDefault) return new Set()
     const transfersCategory = categories.find((cat) => cat.name === '🔁 Transfers')
     return transfersCategory ? new Set([transfersCategory.id]) : new Set()
   })
 
-  // Income/Expense toggles
+  // Income/Expense/Transfer toggles
   const [showIncome, setShowIncome] = useState(defaultShowIncome)
   const [showExpenses, setShowExpenses] = useState(defaultShowExpenses)
+  const [showTransfers, setShowTransfers] = useState(false)
 
   // Category dropdown visibility
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
 
   // Optional: Search
-  const [searchQuery, setSearchQuery] = useState(enableSearch ? '' : undefined)
+  const [searchQuery, setSearchQuery] = useState(
+    enableSearch ? (initialSearchQuery ?? '') : undefined
+  )
 
   // Optional: Tags
   const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(
-    enableTagFilter ? new Set() : (undefined as never)
+    enableTagFilter ? (initialSelectedTagIds ?? new Set()) : (undefined as never)
   )
 
   // Optional: Uncategorized
   const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(
-    enableUncategorizedFilter ? false : undefined
+    enableUncategorizedFilter ? (initialShowOnlyUncategorized ?? false) : undefined
   )
 
   // Optional: Account
   const [selectedAccountIds, setSelectedAccountIds] = useState<Set<string>>(
-    enableAccountFilter ? new Set() : (undefined as never)
+    enableAccountFilter ? (initialSelectedAccountIds ?? new Set()) : (undefined as never)
   )
 
   // Get date range interval
@@ -115,11 +142,17 @@ export function useTransactionFilters({
         if (!isWithinInterval(txDate, dateInterval)) return false
       }
 
-      // Income/Expense filter
-      const amount = t.amount_number
-      if (!showIncome && !showExpenses) return false
-      if (showIncome && !showExpenses && amount >= 0) return false
-      if (!showIncome && showExpenses && amount < 0) return false
+      // Transfer filter (check first - if it's a transfer and showTransfers is false, exclude)
+      const isTransfer = t.category?.isTransferCategory === true
+      if (isTransfer && !showTransfers) return false
+
+      // Income/Expense filter (skip if it's a transfer, already handled above)
+      if (!isTransfer) {
+        const amount = t.amount_number
+        if (!showIncome && !showExpenses) return false
+        if (showIncome && !showExpenses && amount >= 0) return false
+        if (!showIncome && showExpenses && amount < 0) return false
+      }
 
       // Uncategorized filter
       if (showOnlyUncategorized !== undefined && showOnlyUncategorized) {
@@ -183,45 +216,26 @@ export function useTransactionFilters({
     setSelectedSubcategoryIds(new Set())
     setShowIncome(defaultShowIncome)
     setShowExpenses(defaultShowExpenses)
+    setShowTransfers(false) // Reset transfers to false (hidden by default)
+    setExcludedCategoryIds(new Set()) // No longer using excludedCategories for transfers
 
     // Optional filters
     if (searchQuery !== undefined) setSearchQuery('')
     if (selectedTagIds !== undefined) setSelectedTagIds(new Set())
     if (showOnlyUncategorized !== undefined) setShowOnlyUncategorized(false)
     if (selectedAccountIds !== undefined) setSelectedAccountIds(new Set())
-
-    // Reset to default exclusions
-    if (excludeTransfersByDefault) {
-      const transfersCategory = categories.find((c) => c.name === '🔁 Transfers')
-      if (transfersCategory) {
-        setExcludedCategoryIds(new Set([transfersCategory.id]))
-      } else {
-        setExcludedCategoryIds(new Set())
-      }
-    } else {
-      setExcludedCategoryIds(new Set())
-    }
   }
 
   // Check if any filters are active
   const hasActiveFilters = useMemo(() => {
-    const defaultExcludedIds = (() => {
-      if (!excludeTransfersByDefault) return new Set()
-      const transfersCategory = categories.find((c) => c.name === '🔁 Transfers')
-      return transfersCategory ? new Set([transfersCategory.id]) : new Set()
-    })()
-
-    const hasNonDefaultExclusions =
-      excludedCategoryIds.size !== defaultExcludedIds.size ||
-      Array.from(excludedCategoryIds).some((id) => !defaultExcludedIds.has(id))
-
     const baseFilters =
       dateRange !== defaultDateRange ||
       selectedCategoryIds.size > 0 ||
       selectedSubcategoryIds.size > 0 ||
-      hasNonDefaultExclusions ||
+      excludedCategoryIds.size > 0 ||
       showIncome !== defaultShowIncome ||
-      showExpenses !== defaultShowExpenses
+      showExpenses !== defaultShowExpenses ||
+      showTransfers !== false // showTransfers is active if true
 
     const optionalFilters =
       (searchQuery !== undefined && searchQuery.trim() !== '') ||
@@ -237,14 +251,14 @@ export function useTransactionFilters({
     excludedCategoryIds,
     showIncome,
     showExpenses,
+    showTransfers,
     searchQuery,
     selectedTagIds,
     showOnlyUncategorized,
-    categories,
+    selectedAccountIds,
     defaultDateRange,
     defaultShowIncome,
     defaultShowExpenses,
-    excludeTransfersByDefault,
   ])
 
   return {
@@ -257,6 +271,7 @@ export function useTransactionFilters({
     excludedCategoryIds,
     showIncome,
     showExpenses,
+    showTransfers,
     showCategoryDropdown,
     dateInterval,
     hasActiveFilters,
@@ -270,6 +285,7 @@ export function useTransactionFilters({
     setExcludedCategoryIds,
     setShowIncome,
     setShowExpenses,
+    setShowTransfers,
     setShowCategoryDropdown,
 
     // Optional state (conditional returns)

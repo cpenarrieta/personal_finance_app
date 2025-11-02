@@ -256,17 +256,18 @@ enum CategoryGroupType {
 }
 
 model Category {
-  id                String             @id @default(cuid())
-  name              String
-  imageUrl          String?
-  groupType         CategoryGroupType?
-  displayOrder      Int?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  created_at_string String?            @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
-  updated_at_string String?            @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
-  subcategories     Subcategory[]
-  transactions      Transaction[]
+  id                  String             @id @default(cuid())
+  name                String
+  imageUrl            String?
+  groupType           CategoryGroupType?
+  displayOrder        Int?
+  isTransferCategory  Boolean            @default(false)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  created_at_string   String?            @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string   String?            @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  subcategories       Subcategory[]
+  transactions        Transaction[]
 }
 
 model Subcategory {
