@@ -253,160 +253,151 @@ export function SearchableTransactionList({
       </div>
 
       {/* Filters Section */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4">
+        {/* Primary Filters Row */}
+        <div className="flex flex-wrap items-center gap-3">
           {/* Date Range */}
-          <div className="flex-shrink-0">
-            <Select
-              value={filters.dateRange}
-              onValueChange={(value) =>
-                filters.setDateRange(value as DateRange)
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select date range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="last30">Last 30 Days</SelectItem>
-                <SelectItem value="last90">Last 90 Days</SelectItem>
-                <SelectItem value="thisMonth">This Month</SelectItem>
-                <SelectItem value="lastMonth">Last Month</SelectItem>
-                <SelectItem value="custom">Custom Range</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            value={filters.dateRange}
+            onValueChange={(value) => filters.setDateRange(value as DateRange)}
+          >
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Select date range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="last30">Last 30 Days</SelectItem>
+              <SelectItem value="last90">Last 90 Days</SelectItem>
+              <SelectItem value="thisMonth">This Month</SelectItem>
+              <SelectItem value="lastMonth">Last Month</SelectItem>
+              <SelectItem value="custom">Custom Range</SelectItem>
+            </SelectContent>
+          </Select>
 
           {/* Custom Date Range */}
           {filters.dateRange === "custom" && (
             <>
-              <div className="flex-shrink-0">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-[180px] justify-start text-left font-normal"
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[160px] justify-start text-left font-normal"
+                  >
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      {filters.customStartDate
-                        ? format(new Date(filters.customStartDate), "PPP")
-                        : "Start date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={
-                        filters.customStartDate
-                          ? new Date(filters.customStartDate)
-                          : undefined
-                      }
-                      onSelect={(date) =>
-                        filters.setCustomStartDate(
-                          date ? format(date, "yyyy-MM-dd") : ""
-                        )
-                      }
-                      weekStartsOn={1}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="flex-shrink-0">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-[180px] justify-start text-left font-normal"
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    {filters.customStartDate
+                      ? format(new Date(filters.customStartDate), "PP")
+                      : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={
+                      filters.customStartDate
+                        ? new Date(filters.customStartDate)
+                        : undefined
+                    }
+                    onSelect={(date) =>
+                      filters.setCustomStartDate(
+                        date ? format(date, "yyyy-MM-dd") : ""
+                      )
+                    }
+                    weekStartsOn={1}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[160px] justify-start text-left font-normal"
+                  >
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      {filters.customEndDate
-                        ? format(new Date(filters.customEndDate), "PPP")
-                        : "End date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={
-                        filters.customEndDate
-                          ? new Date(filters.customEndDate)
-                          : undefined
-                      }
-                      onSelect={(date) =>
-                        filters.setCustomEndDate(
-                          date ? format(date, "yyyy-MM-dd") : ""
-                        )
-                      }
-                      weekStartsOn={1}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    {filters.customEndDate
+                      ? format(new Date(filters.customEndDate), "PP")
+                      : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={
+                      filters.customEndDate
+                        ? new Date(filters.customEndDate)
+                        : undefined
+                    }
+                    onSelect={(date) =>
+                      filters.setCustomEndDate(
+                        date ? format(date, "yyyy-MM-dd") : ""
+                      )
+                    }
+                    weekStartsOn={1}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </>
           )}
 
           {/* Account Filter */}
           {nonInvestmentAccounts.length > 0 && (
-            <div className="flex-shrink-0">
-              <Select
-                value={
-                  filters.selectedAccountIds &&
-                  filters.selectedAccountIds.size === 1
-                    ? Array.from(filters.selectedAccountIds)[0]
-                    : "all"
+            <Select
+              value={
+                filters.selectedAccountIds &&
+                filters.selectedAccountIds.size === 1
+                  ? Array.from(filters.selectedAccountIds)[0]
+                  : "all"
+              }
+              onValueChange={(value) => {
+                if (value === "all") {
+                  filters.setSelectedAccountIds?.(new Set());
+                } else {
+                  filters.setSelectedAccountIds?.(new Set([value]));
                 }
-                onValueChange={(value) => {
-                  if (value === "all") {
-                    filters.setSelectedAccountIds?.(new Set());
-                  } else {
-                    filters.setSelectedAccountIds?.(new Set([value]));
-                  }
-                }}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="All Accounts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Accounts</SelectItem>
-                  {nonInvestmentAccounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.name}{" "}
-                      {account.mask ? `(•••${account.mask})` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Accounts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Accounts</SelectItem>
+                {nonInvestmentAccounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}{" "}
+                    {account.mask ? `(•••${account.mask})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
 
           {/* Category/Subcategory Multi-select */}
-          <div className="flex-shrink-0 relative" ref={dropdownRef}>
+          <div className="relative" ref={dropdownRef}>
             <Button
               variant="outline"
               onClick={() =>
@@ -504,68 +495,19 @@ export function SearchableTransactionList({
             )}
           </div>
 
-          {/* Income Toggle */}
-          <label className="flex items-center cursor-pointer flex-shrink-0">
-            <input
-              type="checkbox"
-              checked={filters.showIncome}
-              onChange={(e) => filters.setShowIncome(e.target.checked)}
-              className="w-4 h-4 text-success border-gray-300 rounded focus:ring-green-500"
-            />
-            <span className="ml-2 text-sm text-muted-foreground">Income</span>
-          </label>
-
-          {/* Expenses Toggle */}
-          <label className="flex items-center cursor-pointer flex-shrink-0">
-            <input
-              type="checkbox"
-              checked={filters.showExpenses}
-              onChange={(e) => filters.setShowExpenses(e.target.checked)}
-              className="w-4 h-4 text-destructive border-gray-300 rounded focus:ring-red-500"
-            />
-            <span className="ml-2 text-sm text-muted-foreground">Expenses</span>
-          </label>
-
-          {/* Tag Filter */}
-          {tags.length > 0 && (
-            <div className="flex-shrink-0 flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Tags:</span>
-              <div className="flex flex-wrap gap-1">
-                <TagSelector
-                  tags={tags}
-                  selectedTagIds={Array.from(filters.selectedTagIds || [])}
-                  onToggleTag={toggleTag}
-                  label=""
-                  showManageLink={false}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Uncategorized Checkbox */}
-          <label className="flex items-center cursor-pointer flex-shrink-0 gap-2">
-            <Checkbox
-              checked={filters.showOnlyUncategorized || false}
-              onCheckedChange={(checked) =>
-                filters.setShowOnlyUncategorized?.(checked === true)
-              }
-            />
-            <span className="text-sm text-muted-foreground">Uncategorized</span>
-          </label>
-
-          {/* Order By Dropdown */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-sm text-muted-foreground">Sort by:</span>
+          {/* Sort Controls */}
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Sort:</span>
             <Select
               value={sort.sortBy}
               onValueChange={(value) => sort.setSortBy(value as any)}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="createdAt">Creation Date</SelectItem>
                 <SelectItem value="date">Transaction Date</SelectItem>
+                <SelectItem value="createdAt">Creation Date</SelectItem>
                 <SelectItem value="amount">Amount</SelectItem>
                 <SelectItem value="name">Name</SelectItem>
                 <SelectItem value="merchant">Merchant</SelectItem>
@@ -612,23 +554,79 @@ export function SearchableTransactionList({
               )}
             </Button>
           </div>
+        </div>
+
+        {/* Secondary Filters Row - Type, Tags, Uncategorized */}
+        <div className="flex flex-wrap items-center gap-4 pt-3 border-t">
+          {/* Income/Expense Toggles */}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={filters.showIncome}
+                onCheckedChange={(checked) =>
+                  filters.setShowIncome(checked === true)
+                }
+              />
+              <span className="text-sm text-muted-foreground">Income</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={filters.showExpenses}
+                onCheckedChange={(checked) =>
+                  filters.setShowExpenses(checked === true)
+                }
+              />
+              <span className="text-sm text-muted-foreground">Expenses</span>
+            </label>
+          </div>
+
+          {/* Tag Filter */}
+          {tags.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Tags:</span>
+              <TagSelector
+                tags={tags}
+                selectedTagIds={Array.from(filters.selectedTagIds || [])}
+                onToggleTag={toggleTag}
+                label=""
+                showManageLink={false}
+              />
+            </div>
+          )}
+
+          {/* Uncategorized Checkbox */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={filters.showOnlyUncategorized || false}
+              onCheckedChange={(checked) =>
+                filters.setShowOnlyUncategorized?.(checked === true)
+              }
+            />
+            <span className="text-sm text-muted-foreground">Uncategorized</span>
+          </label>
 
           {/* Clear Filters */}
           {filters.hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={filters.clearAllFilters}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={filters.clearAllFilters}
+              className="ml-auto"
+            >
               Clear Filters
             </Button>
           )}
         </div>
 
-        {/* Selected Filter Chips */}
+        {/* Active Filter Chips */}
         {(filters.selectedCategoryIds.size > 0 ||
           filters.selectedSubcategoryIds.size > 0 ||
           filters.excludedCategoryIds.size > 0 ||
           (filters.selectedTagIds && filters.selectedTagIds.size > 0) ||
           (filters.selectedAccountIds &&
             filters.selectedAccountIds.size > 0)) && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-3 border-t">
             {Array.from(filters.selectedCategoryIds).map((catId) => {
               const category = categories.find((c) => c.id === catId);
               if (!category) return null;
