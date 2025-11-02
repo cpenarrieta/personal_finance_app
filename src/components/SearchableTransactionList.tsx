@@ -58,7 +58,7 @@ export function SearchableTransactionList({
     tags,
     accounts: nonInvestmentAccounts,
     defaultDateRange: "all",
-    defaultShowIncome: false,
+    defaultShowIncome: true,
     defaultShowExpenses: true,
     excludeTransfersByDefault: true,
     enableSearch: true,
