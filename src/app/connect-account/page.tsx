@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function ConnectAccountPage() {
   return (
     <AppShell breadcrumbs={[{ label: "Connect Account" }]}>
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         <div className="space-y-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Connect Account</h1>

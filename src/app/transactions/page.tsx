@@ -176,7 +176,7 @@ export default async function TransactionsPage({
         { label: "Transactions" },
       ]}
     >
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         <TransactionsPageClient
           transactions={transactionsWithFlatTags}
           categories={categories}

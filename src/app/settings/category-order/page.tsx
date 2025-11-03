@@ -49,7 +49,7 @@ export default async function CategoryOrderPage() {
         { label: "Category Order" },
       ]}
     >
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Manage Category Order</h1>
           <p className="text-muted-foreground mt-1">

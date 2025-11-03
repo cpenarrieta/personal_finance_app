@@ -90,7 +90,7 @@ export default async function ManageTagsPage() {
         { label: "Tags" },
       ]}
     >
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         <h1 className="text-2xl font-semibold mb-6">Manage Tags</h1>
 
       <div className="border rounded-lg p-4">

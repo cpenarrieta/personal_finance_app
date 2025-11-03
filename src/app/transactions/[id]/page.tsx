@@ -214,7 +214,7 @@ export default async function TransactionDetailPage({
         { label: transaction.name },
       ]}
     >
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         <TransactionDetailView
           transaction={transaction}
           categories={categories}

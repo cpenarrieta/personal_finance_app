@@ -49,7 +49,7 @@ export default async function MoveTransactionsPage() {
         { label: "Move Transactions" },
       ]}
     >
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         <h1 className="text-2xl font-semibold mb-6">
           Move Transactions Between Categories
         </h1>

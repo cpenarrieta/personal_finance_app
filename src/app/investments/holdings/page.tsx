@@ -70,7 +70,7 @@ export default async function HoldingsPage() {
         { label: "Holdings" },
       ]}
     >
-      <div className="max-w-7xl overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto overflow-hidden">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">

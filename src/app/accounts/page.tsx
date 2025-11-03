@@ -42,7 +42,7 @@ export default async function AccountsPage() {
 
   return (
     <AppShell breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Accounts" }]}>
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         <h2 className="text-2xl font-semibold mb-4">Accounts</h2>
         {accounts.length === 0 ? (
           <p className="text-muted-foreground">

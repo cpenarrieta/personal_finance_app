@@ -193,7 +193,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         { label: `${account.name}${account.mask ? ` • ${account.mask}` : ''}` },
       ]}
     >
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         {/* Account Header */}
         <div className="mb-6 p-6 border rounded-lg bg-card shadow-md">
         <h2 className="text-2xl font-semibold mb-4">

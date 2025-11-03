@@ -24,7 +24,7 @@ export default async function InvTxPage() {
         { label: "Transactions" },
       ]}
     >
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Investment Transactions</h1>
         </div>

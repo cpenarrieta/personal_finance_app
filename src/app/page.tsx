@@ -260,7 +260,7 @@ export default async function Page() {
 
   return (
     <AppShell breadcrumbs={[{ label: "Dashboard" }]}>
-      <div className="max-w-7xl space-y-6">
+      <div className="w-full max-w-7xl mx-auto space-y-6">
         {/* Metrics Section */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard

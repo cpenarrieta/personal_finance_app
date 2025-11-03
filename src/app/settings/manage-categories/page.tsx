@@ -93,7 +93,7 @@ export default async function ManageCategoriesPage() {
         { label: "Categories" },
       ]}
     >
-      <div className="max-w-7xl">
+      <div className="w-full max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">
