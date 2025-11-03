@@ -79,8 +79,8 @@ export function SpendingByCategoryChart({ data }: SpendingByCategoryChartProps) 
             <Tooltip
               formatter={(value: number) => `$${value.toFixed(2)}`}
               contentStyle={{
-                backgroundColor: "hsl(var(--background))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "var(--background)",
+                border: "1px solid var(--border)",
                 borderRadius: "6px",
               }}
             />

@@ -69,12 +69,12 @@ export default async function Page() {
     0
   );
 
-  // Fetch recent 50 transactions
+  // Fetch recent 20 transactions
   const recentTransactions = await prisma.transaction.findMany({
     where: {
       isSplit: false, // Filter out parent transactions that have been split
     },
-    take: 50,
+    take: 20,
     orderBy: { date: "desc" },
     include: {
       account: true,
@@ -172,11 +172,11 @@ export default async function Page() {
     }, {} as Record<string, number>);
 
   const CHART_COLORS = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    "var(--chart-1)",
+    "var(--chart-2)",
+    "var(--chart-3)",
+    "var(--chart-4)",
+    "var(--chart-5)",
   ];
 
   const spendingByCategory = Object.entries(categorySpending)
@@ -392,7 +392,7 @@ export default async function Page() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-semibold">Recent Transactions</h2>
-              <p className="text-muted-foreground">Last 50 transactions</p>
+              <p className="text-muted-foreground">Last 20 transactions</p>
             </div>
             <Button variant="outline" asChild>
               <Link href="/transactions">View All</Link>

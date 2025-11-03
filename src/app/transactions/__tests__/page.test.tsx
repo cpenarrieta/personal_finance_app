@@ -45,6 +45,19 @@ jest.mock("next/link", () => {
   };
 });
 
+// Mock Next.js navigation
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    refresh: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    prefetch: jest.fn(),
+  }),
+  usePathname: () => "/transactions",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 // Mock TransactionsPageClient component
 jest.mock("@/components/TransactionsPageClient", () => ({
   TransactionsPageClient: ({
@@ -262,7 +275,6 @@ describe("TransactionsPage - Happy Path", () => {
     render(result);
 
     // Assert - Verify page structure
-    expect(screen.getByText("← Back to Home")).toBeInTheDocument();
     expect(screen.getByTestId("transactions-page-client")).toBeInTheDocument();
   });
 

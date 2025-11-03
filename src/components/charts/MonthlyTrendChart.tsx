@@ -44,22 +44,22 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="month"
-              stroke="hsl(var(--muted-foreground))"
+              stroke="var(--muted-foreground)"
               fontSize={12}
             />
             <YAxis
-              stroke="hsl(var(--muted-foreground))"
+              stroke="var(--muted-foreground)"
               fontSize={12}
               tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
               formatter={(value: number) => `$${value.toFixed(2)}`}
               contentStyle={{
-                backgroundColor: "hsl(var(--background))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "var(--background)",
+                border: "1px solid var(--border)",
                 borderRadius: "6px",
               }}
             />
@@ -67,14 +67,14 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
             <Line
               type="monotone"
               dataKey="spending"
-              stroke="hsl(var(--destructive))"
+              stroke="var(--destructive)"
               strokeWidth={2}
               name="Spending"
             />
             <Line
               type="monotone"
               dataKey="income"
-              stroke="hsl(var(--chart-1))"
+              stroke="var(--chart-1)"
               strokeWidth={2}
               name="Income"
             />
