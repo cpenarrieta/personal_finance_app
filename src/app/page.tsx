@@ -323,12 +323,12 @@ export default async function Page() {
                     <TableCell className="text-right font-medium">
                       <span
                         className={
-                          transaction.amount.toNumber() >= 0
-                            ? "text-success"
-                            : "text-foreground"
+                          transaction.amount.toNumber() > 0
+                            ? "text-destructive"
+                            : "text-success"
                         }
                       >
-                        {transaction.amount.toNumber() >= 0 ? "+" : ""}$
+                        {transaction.amount.toNumber() > 0 ? "-" : "+"}$
                         {formatAmount(Math.abs(transaction.amount.toNumber()))}
                       </span>
                     </TableCell>
@@ -421,12 +421,12 @@ export default async function Page() {
                   <TableCell className="text-right font-medium">
                     <span
                       className={
-                        transaction.amount.toNumber() >= 0
-                          ? "text-success"
-                          : "text-foreground"
+                        transaction.amount.toNumber() > 0
+                          ? "text-destructive"
+                          : "text-success"
                       }
                     >
-                      {transaction.amount.toNumber() >= 0 ? "+" : ""}$
+                      {transaction.amount.toNumber() > 0 ? "-" : "+"}$
                       {formatAmount(Math.abs(transaction.amount.toNumber()))}
                     </span>
                   </TableCell>
