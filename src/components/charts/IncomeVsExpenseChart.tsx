@@ -21,7 +21,9 @@ interface IncomeVsExpenseChartProps {
 }
 
 export function IncomeVsExpenseChart({ data }: IncomeVsExpenseChartProps) {
-  if (data.length === 0) {
+  const hasData = data.length > 0 && data.some(d => d.income > 0 || d.expenses > 0)
+
+  if (!hasData) {
     return (
       <Card>
         <CardHeader>

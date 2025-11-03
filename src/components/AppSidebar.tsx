@@ -295,7 +295,7 @@ export function AppSidebar() {
           <SyncDropdown />
           <ThemeToggle />
           <form action="/api/auth/sign-out" method="POST">
-            <Button type="submit" variant="outline" className="w-full">
+            <Button type="submit" variant="link" className="w-full text-destructive">
               Logout
             </Button>
           </form>

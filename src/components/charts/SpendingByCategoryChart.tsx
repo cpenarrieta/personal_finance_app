@@ -39,7 +39,9 @@ const renderCustomizedLabel = ({
 }
 
 export function SpendingByCategoryChart({ data }: SpendingByCategoryChartProps) {
-  if (data.length === 0) {
+  const hasData = data.length > 0 && data.some(d => d.value > 0)
+
+  if (!hasData) {
     return (
       <Card>
         <CardHeader>

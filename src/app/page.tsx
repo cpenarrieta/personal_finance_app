@@ -2,17 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatAmount } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
-import { format, startOfMonth as dateStartOfMonth, subMonths, eachMonthOfInterval } from "date-fns";
+import {
+  format,
+  startOfMonth as dateStartOfMonth,
+  subMonths,
+  eachMonthOfInterval,
+} from "date-fns";
 import type { Metadata } from "next";
 import { Holding, PlaidAccount } from "@prisma/client";
 import { AppShell } from "@/components/AppShell";
 import { MetricCard } from "@/components/MetricCard";
-import {
-  Wallet,
-  TrendingUp,
-  AlertCircle,
-  DollarSign,
-} from "lucide-react";
+import { Wallet, TrendingUp, AlertCircle, DollarSign } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -116,16 +116,16 @@ export default async function Page() {
         })
       : [];
 
-  // Calculate monthly spending (current month)
+  // Calculate spending for last 30 days
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const monthlySpending = await prisma.transaction.aggregate({
     where: {
       date: {
-        gte: startOfMonth,
+        gte: thirtyDaysAgo,
       },
       amount: {
-        lt: 0, // Negative amounts are expenses
+        gt: 0, // Positive amounts are expenses
       },
       isSplit: false, // Filter out parent transactions that have been split
     },
@@ -134,7 +134,7 @@ export default async function Page() {
     },
   });
 
-  const totalMonthlySpending = Math.abs(
+  const total30DaysSpending = Math.abs(
     monthlySpending._sum.amount?.toNumber() || 0
   );
 
@@ -155,15 +155,11 @@ export default async function Page() {
     },
   });
 
-  // Spending by Category (current month, exclude transfers)
+  // Spending by Category
   const categorySpending = chartTransactions
     .filter((t: (typeof chartTransactions)[0]) => {
-      const transactionDate = new Date(t.date);
       return (
-        transactionDate >= startOfMonth &&
-        t.amount.toNumber() < 0 &&
-        t.category &&
-        t.category.name !== "🔁 Transfers"
+        t.amount.toNumber() > 0 && t.category && !t.category.isTransferCategory
       );
     })
     .reduce((acc: Record<string, number>, t: (typeof chartTransactions)[0]) => {
@@ -197,18 +193,28 @@ export default async function Page() {
     const monthStart = dateStartOfMonth(month);
     const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
 
-    const monthTransactions = chartTransactions.filter((t: (typeof chartTransactions)[0]) => {
-      const transactionDate = new Date(t.date);
-      return transactionDate >= monthStart && transactionDate <= monthEnd;
-    });
+    const monthTransactions = chartTransactions.filter(
+      (t: (typeof chartTransactions)[0]) => {
+        const transactionDate = new Date(t.date);
+        return transactionDate >= monthStart && transactionDate <= monthEnd;
+      }
+    );
 
     const spending = monthTransactions
-      .filter((t: (typeof chartTransactions)[0]) => t.amount.toNumber() < 0)
-      .reduce((sum: number, t: (typeof chartTransactions)[0]) => sum + Math.abs(t.amount.toNumber()), 0);
+      .filter((t: (typeof chartTransactions)[0]) => t.amount.toNumber() > 0)
+      .reduce(
+        (sum: number, t: (typeof chartTransactions)[0]) =>
+          sum + Math.abs(t.amount.toNumber()),
+        0
+      );
 
     const income = monthTransactions
-      .filter((t: (typeof chartTransactions)[0]) => t.amount.toNumber() > 0)
-      .reduce((sum: number, t: (typeof chartTransactions)[0]) => sum + t.amount.toNumber(), 0);
+      .filter((t: (typeof chartTransactions)[0]) => t.amount.toNumber() < 0)
+      .reduce(
+        (sum: number, t: (typeof chartTransactions)[0]) =>
+          sum + Math.abs(t.amount.toNumber()),
+        0
+      );
 
     return {
       month: format(month, "MMM yy"),
@@ -222,18 +228,28 @@ export default async function Page() {
     const monthStart = dateStartOfMonth(month);
     const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0);
 
-    const monthTransactions = chartTransactions.filter((t: (typeof chartTransactions)[0]) => {
-      const transactionDate = new Date(t.date);
-      return transactionDate >= monthStart && transactionDate <= monthEnd;
-    });
+    const monthTransactions = chartTransactions.filter(
+      (t: (typeof chartTransactions)[0]) => {
+        const transactionDate = new Date(t.date);
+        return transactionDate >= monthStart && transactionDate <= monthEnd;
+      }
+    );
 
     const expenses = monthTransactions
-      .filter((t: (typeof chartTransactions)[0]) => t.amount.toNumber() < 0)
-      .reduce((sum: number, t: (typeof chartTransactions)[0]) => sum + Math.abs(t.amount.toNumber()), 0);
+      .filter((t: (typeof chartTransactions)[0]) => t.amount.toNumber() > 0)
+      .reduce(
+        (sum: number, t: (typeof chartTransactions)[0]) =>
+          sum + Math.abs(t.amount.toNumber()),
+        0
+      );
 
     const income = monthTransactions
-      .filter((t: (typeof chartTransactions)[0]) => t.amount.toNumber() > 0)
-      .reduce((sum: number, t: (typeof chartTransactions)[0]) => sum + t.amount.toNumber(), 0);
+      .filter((t: (typeof chartTransactions)[0]) => t.amount.toNumber() < 0)
+      .reduce(
+        (sum: number, t: (typeof chartTransactions)[0]) =>
+          sum + Math.abs(t.amount.toNumber()),
+        0
+      );
 
     return {
       month: format(month, "MMM yy"),
@@ -247,50 +263,139 @@ export default async function Page() {
       <div className="max-w-7xl space-y-6">
         {/* Metrics Section */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Total Balance"
-          value={`$${formatAmount(totalCurrent)}`}
-          subtitle={`${accounts.length} account${accounts.length !== 1 ? "s" : ""}`}
-          icon={Wallet}
-        />
-        <MetricCard
-          title="Investment Value"
-          value={`$${formatAmount(totalInvestmentValue)}`}
-          subtitle={`${holdings.length} holding${holdings.length !== 1 ? "s" : ""}`}
-          icon={TrendingUp}
-        />
-        <MetricCard
-          title="Monthly Spending"
-          value={`$${formatAmount(totalMonthlySpending)}`}
-          subtitle={format(startOfMonth, "MMMM yyyy")}
-          icon={DollarSign}
-        />
-        <MetricCard
-          title="Uncategorized"
-          value={uncategorizedCount}
-          subtitle="Transactions need review"
-          icon={AlertCircle}
-          href={uncategorizedCount > 0 ? "/transactions?uncategorized=true" : undefined}
-        />
-      </div>
+          <MetricCard
+            title="Total Balance"
+            value={`$${formatAmount(totalCurrent)}`}
+            subtitle={`${accounts.length} account${
+              accounts.length !== 1 ? "s" : ""
+            }`}
+            icon={Wallet}
+          />
+          <MetricCard
+            title="Investment Value"
+            value={`$${formatAmount(totalInvestmentValue)}`}
+            subtitle={`${holdings.length} holding${
+              holdings.length !== 1 ? "s" : ""
+            }`}
+            icon={TrendingUp}
+          />
+          <MetricCard
+            title="Last 30d Spending"
+            value={`$${formatAmount(total30DaysSpending)}`}
+            subtitle={format(thirtyDaysAgo, "MMMM yyyy")}
+            icon={DollarSign}
+          />
+          <MetricCard
+            title="Uncategorized"
+            value={uncategorizedCount}
+            subtitle="Transactions need review"
+            icon={AlertCircle}
+            href={
+              uncategorizedCount > 0
+                ? "/transactions?uncategorized=true"
+                : undefined
+            }
+          />
+        </div>
 
-      {/* Uncategorized Transactions Section */}
-      {uncategorizedCount > 0 && (
+        {/* Uncategorized Transactions Section */}
+        {uncategorizedCount > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold">
+                  Uncategorized Transactions
+                </h2>
+                <p className="text-muted-foreground">
+                  {uncategorizedCount} transaction
+                  {uncategorizedCount !== 1 ? "s" : ""} need categorization
+                </p>
+              </div>
+              <Button asChild>
+                <Link href="/transactions?uncategorized=true">
+                  Categorize All
+                </Link>
+              </Button>
+            </div>
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Account</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {uncategorizedTransactions
+                    .slice(0, 10)
+                    .map(
+                      (transaction: (typeof uncategorizedTransactions)[0]) => (
+                        <TableRow
+                          key={transaction.id}
+                          className="hover:bg-muted/50"
+                        >
+                          <TableCell className="whitespace-nowrap">
+                            {format(new Date(transaction.date), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell>
+                            <Link
+                              href={`/transactions/${transaction.id}`}
+                              className="block hover:underline"
+                            >
+                              <div className="font-medium">
+                                {transaction.name}
+                              </div>
+                              {transaction.merchantName && (
+                                <div className="text-sm text-muted-foreground">
+                                  {transaction.merchantName}
+                                </div>
+                              )}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{transaction.account.name}</TableCell>
+                          <TableCell className="text-right font-medium">
+                            <span
+                              className={
+                                transaction.amount.toNumber() > 0
+                                  ? "text-destructive"
+                                  : "text-success"
+                              }
+                            >
+                              {transaction.amount.toNumber() > 0 ? "-" : "+"}$
+                              {formatAmount(
+                                Math.abs(transaction.amount.toNumber())
+                              )}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )}
+                </TableBody>
+              </Table>
+            </div>
+            {uncategorizedCount > 10 && (
+              <div className="text-center">
+                <Button variant="outline" asChild>
+                  <Link href="/transactions?uncategorized=true">
+                    View All {uncategorizedCount} Uncategorized Transactions
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Recent Transactions Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-semibold">
-                Uncategorized Transactions
-              </h2>
-              <p className="text-muted-foreground">
-                {uncategorizedCount} transaction
-                {uncategorizedCount !== 1 ? "s" : ""} need categorization
-              </p>
+              <h2 className="text-2xl font-semibold">Recent Transactions</h2>
+              <p className="text-muted-foreground">Last 50 transactions</p>
             </div>
-            <Button asChild>
-              <Link href="/transactions?uncategorized=true">
-                Categorize All
-              </Link>
+            <Button variant="outline" asChild>
+              <Link href="/transactions">View All</Link>
             </Button>
           </div>
           <div className="rounded-lg border">
@@ -299,152 +404,97 @@ export default async function Page() {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Account</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {uncategorizedTransactions.slice(0, 10).map((transaction: (typeof uncategorizedTransactions)[0]) => (
-                  <TableRow key={transaction.id} className="hover:bg-muted/50">
-                    <TableCell className="whitespace-nowrap">
-                      {format(new Date(transaction.date), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/transactions/${transaction.id}`} className="block hover:underline">
-                        <div className="font-medium">{transaction.name}</div>
-                        {transaction.merchantName && (
-                          <div className="text-sm text-muted-foreground">
-                            {transaction.merchantName}
+                {recentTransactions.map(
+                  (transaction: (typeof recentTransactions)[0]) => (
+                    <TableRow
+                      key={transaction.id}
+                      className="hover:bg-muted/50"
+                    >
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(transaction.date), "MMM d, yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/transactions/${transaction.id}`}
+                          className="block hover:underline"
+                        >
+                          <div className="font-medium">{transaction.name}</div>
+                          {transaction.merchantName && (
+                            <div className="text-sm text-muted-foreground">
+                              {transaction.merchantName}
+                            </div>
+                          )}
+                          {transaction.tags.length > 0 && (
+                            <div className="flex gap-1 mt-1">
+                              {transaction.tags.map(
+                                (tt: (typeof transaction.tags)[0]) => (
+                                  <Badge
+                                    key={tt.tagId}
+                                    variant="secondary"
+                                    style={{ backgroundColor: tt.tag.color }}
+                                    className="text-xs text-white"
+                                  >
+                                    {tt.tag.name}
+                                  </Badge>
+                                )
+                              )}
+                            </div>
+                          )}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        {transaction.category ? (
+                          <div>
+                            <div className="font-medium">
+                              {transaction.category.name}
+                            </div>
+                            {transaction.subcategory && (
+                              <div className="text-sm text-muted-foreground">
+                                {transaction.subcategory.name}
+                              </div>
+                            )}
                           </div>
+                        ) : (
+                          <Badge variant="outline">Uncategorized</Badge>
                         )}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{transaction.account.name}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      <span
-                        className={
-                          transaction.amount.toNumber() > 0
-                            ? "text-destructive"
-                            : "text-success"
-                        }
-                      >
-                        {transaction.amount.toNumber() > 0 ? "-" : "+"}$
-                        {formatAmount(Math.abs(transaction.amount.toNumber()))}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>{transaction.account.name}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        <span
+                          className={
+                            transaction.amount.toNumber() > 0
+                              ? "text-destructive"
+                              : "text-success"
+                          }
+                        >
+                          {transaction.amount.toNumber() > 0 ? "-" : "+"}$
+                          {formatAmount(
+                            Math.abs(transaction.amount.toNumber())
+                          )}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
               </TableBody>
             </Table>
           </div>
-          {uncategorizedCount > 10 && (
-            <div className="text-center">
-              <Button variant="outline" asChild>
-                <Link href="/transactions?uncategorized=true">
-                  View All {uncategorizedCount} Uncategorized Transactions
-                </Link>
-              </Button>
-            </div>
-          )}
         </div>
-      )}
 
-      {/* Recent Transactions Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold">Recent Transactions</h2>
-            <p className="text-muted-foreground">Last 50 transactions</p>
+        {/* Charts Section */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold">Financial Overview</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <SpendingByCategoryChart data={spendingByCategory} />
+            <MonthlyTrendChart data={monthlyTrendData} />
+            <IncomeVsExpenseChart data={incomeVsExpenseData} />
           </div>
-          <Button variant="outline" asChild>
-            <Link href="/transactions">View All</Link>
-          </Button>
-        </div>
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Account</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentTransactions.map((transaction: (typeof recentTransactions)[0]) => (
-                <TableRow key={transaction.id} className="hover:bg-muted/50">
-                  <TableCell className="whitespace-nowrap">
-                    {format(new Date(transaction.date), "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/transactions/${transaction.id}`} className="block hover:underline">
-                      <div className="font-medium">{transaction.name}</div>
-                      {transaction.merchantName && (
-                        <div className="text-sm text-muted-foreground">
-                          {transaction.merchantName}
-                        </div>
-                      )}
-                      {transaction.tags.length > 0 && (
-                        <div className="flex gap-1 mt-1">
-                          {transaction.tags.map((tt: (typeof transaction.tags)[0]) => (
-                            <Badge
-                              key={tt.tagId}
-                              variant="secondary"
-                              style={{ backgroundColor: tt.tag.color }}
-                              className="text-xs text-white"
-                            >
-                              {tt.tag.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    {transaction.category ? (
-                      <div>
-                        <div className="font-medium">
-                          {transaction.category.name}
-                        </div>
-                        {transaction.subcategory && (
-                          <div className="text-sm text-muted-foreground">
-                            {transaction.subcategory.name}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <Badge variant="outline">Uncategorized</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>{transaction.account.name}</TableCell>
-                  <TableCell className="text-right font-medium">
-                    <span
-                      className={
-                        transaction.amount.toNumber() > 0
-                          ? "text-destructive"
-                          : "text-success"
-                      }
-                    >
-                      {transaction.amount.toNumber() > 0 ? "-" : "+"}$
-                      {formatAmount(Math.abs(transaction.amount.toNumber()))}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Financial Overview</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <SpendingByCategoryChart data={spendingByCategory} />
-          <MonthlyTrendChart data={monthlyTrendData} />
-          <IncomeVsExpenseChart data={incomeVsExpenseData} />
-        </div>
         </div>
       </div>
     </AppShell>

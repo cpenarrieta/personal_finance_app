@@ -21,7 +21,9 @@ interface MonthlyTrendChartProps {
 }
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
-  if (data.length === 0) {
+  const hasData = data.length > 0 && data.some(d => d.spending > 0 || d.income > 0)
+
+  if (!hasData) {
     return (
       <Card>
         <CardHeader>
