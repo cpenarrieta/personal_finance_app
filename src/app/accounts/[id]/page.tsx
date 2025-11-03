@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SearchableTransactionList } from '@/components/SearchableTransactionList'
 import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
@@ -7,6 +6,7 @@ import { HoldingList } from '@/components/HoldingList'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
 import type { InvestmentTransactionWithRelations, HoldingWithRelations, TransactionForClient, CategoryForClient, TagForClient } from '@/types'
+import { AppShell } from '@/components/AppShell'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -186,15 +186,16 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   ])
 
   return (
-    <div className="p-6 min-h-screen bg-background">
-      <div className="mb-4">
-        <Link href="/accounts" className="text-primary hover:underline">
-          ← Back to Accounts
-        </Link>
-      </div>
-
-      {/* Account Header */}
-      <div className="mb-6 p-6 border rounded-lg bg-card shadow-md">
+    <AppShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Accounts", href: "/accounts" },
+        { label: `${account.name}${account.mask ? ` • ${account.mask}` : ''}` },
+      ]}
+    >
+      <div className="max-w-7xl">
+        {/* Account Header */}
+        <div className="mb-6 p-6 border rounded-lg bg-card shadow-md">
         <h2 className="text-2xl font-semibold mb-4">
           {account.name} {account.mask ? `• ${account.mask}` : ''}
         </h2>
@@ -267,6 +268,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
           />
         </div>
       )}
-    </div>
+      </div>
+    </AppShell>
   )
 }

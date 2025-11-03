@@ -214,11 +214,13 @@ export default async function TransactionDetailPage({
         { label: transaction.name },
       ]}
     >
-      <TransactionDetailView
-        transaction={transaction}
-        categories={categories}
-        tags={tags}
-      />
+      <div className="max-w-7xl">
+        <TransactionDetailView
+          transaction={transaction}
+          categories={categories}
+          tags={tags}
+        />
+      </div>
     </AppShell>
   );
 }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { MoveTransactionsClient } from "@/components/MoveTransactionsClient";
 import type { Metadata } from "next";
 import type { CategoryForClient } from "@/types";
+import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Move Transactions",
@@ -40,5 +41,22 @@ export default async function MoveTransactionsPage() {
     ],
   })) as CategoryForClient[];
 
-  return <MoveTransactionsClient categories={categories} />;
+  return (
+    <AppShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Settings" },
+        { label: "Move Transactions" },
+      ]}
+    >
+      <div className="max-w-7xl">
+        <h1 className="text-2xl font-semibold mb-6">
+          Move Transactions Between Categories
+        </h1>
+        <div className="border rounded-lg p-4">
+          <MoveTransactionsClient categories={categories} />
+        </div>
+      </div>
+    </AppShell>
+  );
 }

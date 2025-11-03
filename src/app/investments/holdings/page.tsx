@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { syncStockPrices } from "@/lib/syncPrices";
 import { syncHoldingsLogos } from "@/lib/syncHoldingsLogos";
 import { revalidatePath } from "next/cache";
@@ -7,6 +6,7 @@ import { SyncPricesButton } from "@/components/SyncPricesButton";
 import { SyncHoldingsLogosButton } from "@/components/SyncHoldingsLogosButton";
 import { HoldingsPortfolio } from "@/components/HoldingsPortfolio";
 import type { Metadata } from "next";
+import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Investment Holdings",
@@ -63,27 +63,31 @@ export default async function HoldingsPage() {
   });
 
   return (
-    <div className="p-6 bg-background min-h-screen">
-      <div className="mb-6 flex items-center justify-between">
-        <Link href="/" className="text-primary hover:underline">
-          ← Back to Home
-        </Link>
-        <div className="flex gap-2">
-          <SyncPricesButton action={doSyncPrices} />
-          <SyncHoldingsLogosButton action={doSyncHoldingsLogos} />
+    <AppShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Investments" },
+        { label: "Holdings" },
+      ]}
+    >
+      <div className="max-w-7xl overflow-hidden">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Investment Holdings
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Track your portfolio performance and allocation
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <SyncPricesButton action={doSyncPrices} />
+            <SyncHoldingsLogosButton action={doSyncHoldingsLogos} />
+          </div>
         </div>
-      </div>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">
-          Investment Holdings
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Track your portfolio performance and allocation
-        </p>
+        <HoldingsPortfolio holdings={holdings} />
       </div>
-
-      <HoldingsPortfolio holdings={holdings} />
-    </div>
+    </AppShell>
   );
 }

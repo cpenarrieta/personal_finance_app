@@ -244,8 +244,9 @@ export default async function Page() {
 
   return (
     <AppShell breadcrumbs={[{ label: "Dashboard" }]}>
-      {/* Metrics Section */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="max-w-7xl space-y-6">
+        {/* Metrics Section */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Total Balance"
           value={`$${formatAmount(totalCurrent)}`}
@@ -443,6 +444,7 @@ export default async function Page() {
           <SpendingByCategoryChart data={spendingByCategory} />
           <MonthlyTrendChart data={monthlyTrendData} />
           <IncomeVsExpenseChart data={incomeVsExpenseData} />
+        </div>
         </div>
       </div>
     </AppShell>

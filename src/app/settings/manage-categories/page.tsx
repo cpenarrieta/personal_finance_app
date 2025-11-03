@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import Image from "next/image";
 import { revalidatePath } from "next/cache";
 import { DeleteButton } from "@/components/DeleteButton";
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Metadata } from "next";
 import { TransferCategoryToggle } from "@/components/TransferCategoryToggle";
+import { AppShell } from "@/components/AppShell";
 import type { Prisma } from "@prisma/client";
 
 type CategoryWithSubs = Prisma.CategoryGetPayload<{
@@ -86,18 +86,16 @@ export default async function ManageCategoriesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto p-6">
+    <AppShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Settings" },
+        { label: "Categories" },
+      ]}
+    >
+      <div className="max-w-7xl">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <Link
-              href="/"
-              className="text-primary hover:text-primary/80 font-medium"
-            >
-              ← Back to Home
-            </Link>
-          </div>
           <h1 className="text-3xl font-bold text-foreground">
             Manage Categories
           </h1>
@@ -288,6 +286,6 @@ export default async function ManageCategoriesPage() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

@@ -1,6 +1,6 @@
 import PlaidLinkButton from '@/components/PlaidLinkButton'
-import Link from 'next/link'
 import type { Metadata } from 'next'
+import { AppShell } from '@/components/AppShell'
 
 export const metadata: Metadata = {
   title: 'Connect Account',
@@ -12,20 +12,21 @@ export const metadata: Metadata = {
 
 export default function ConnectAccountPage() {
   return (
-    <div className="p-6 space-y-4 min-h-screen bg-background">
-      <h1 className="text-2xl font-semibold">Connect Account</h1>
-      <p className="text-muted-foreground">
-        Connect your Wealthsimple account to sync your financial data.
-      </p>
-      <div className="space-y-4">
-        <PlaidLinkButton />
+    <AppShell breadcrumbs={[{ label: "Connect Account" }]}>
+      <div className="max-w-7xl">
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Connect Account</h1>
+            <p className="text-muted-foreground mt-1">
+              Connect your Wealthsimple account to sync your financial data.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <PlaidLinkButton />
+          </div>
+        </div>
       </div>
-      <div className="mt-6">
-        <Link className="underline hover:text-primary" href="/">
-          ← Back to Home
-        </Link>
-      </div>
-    </div>
+    </AppShell>
   )
 }
 

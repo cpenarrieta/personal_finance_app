@@ -42,13 +42,14 @@ export default async function AccountsPage() {
 
   return (
     <AppShell breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Accounts" }]}>
-      <h2 className="text-2xl font-semibold mb-4">Accounts</h2>
-      {accounts.length === 0 ? (
-        <p className="text-muted-foreground">
-          No accounts found. Connect your bank and run sync.
-        </p>
-      ) : (
-        <div className="space-y-6">
+      <div className="max-w-7xl">
+        <h2 className="text-2xl font-semibold mb-4">Accounts</h2>
+        {accounts.length === 0 ? (
+          <p className="text-muted-foreground">
+            No accounts found. Connect your bank and run sync.
+          </p>
+        ) : (
+          <div className="space-y-6">
           {institutionNames.map((institutionName) => {
             const institution = accountsByInstitution[institutionName];
             if (!institution) return null;
@@ -106,8 +107,9 @@ export default async function AccountsPage() {
               </div>
             );
           })}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }

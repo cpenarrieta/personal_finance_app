@@ -254,10 +254,10 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 overflow-hidden">
       {/* Controls */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h2 className="text-lg font-semibold mb-4">Filters & Controls</h2>
+      <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
+        <h2 className="text-lg font-semibold mb-3">Filters & Controls</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
@@ -329,19 +329,19 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
       </div>
 
       {/* Portfolio Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 overflow-hidden">
+        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Portfolio Value</div>
-          <div className="text-3xl font-bold text-foreground">
+          <div className="text-2xl font-bold text-foreground">
             $
             {formatAmount(portfolioStats.totalValue)}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Total Gain/Loss</div>
           <div
-            className={`text-3xl font-bold ${
+            className={`text-2xl font-bold ${
               portfolioStats.totalGainLoss >= 0
                 ? "text-success"
                 : "text-destructive"
@@ -362,11 +362,11 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Best Performer</div>
           {portfolioStats.bestPerformer ? (
             <>
-              <div className="text-xl font-bold text-success">
+              <div className="text-lg font-bold text-success">
                 {portfolioStats.bestPerformer.security.tickerSymbol}
               </div>
               <div className="text-sm text-success">
@@ -378,11 +378,11 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Worst Performer</div>
           {portfolioStats.worstPerformer ? (
             <>
-              <div className="text-xl font-bold text-destructive">
+              <div className="text-lg font-bold text-destructive">
                 {portfolioStats.worstPerformer.security.tickerSymbol}
               </div>
               <div className="text-sm text-destructive">
@@ -397,37 +397,37 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
       {/* Allocation Chart */}
       {allocationData.length > 0 && (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold mb-4">Portfolio Allocation</h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={allocationData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name}: ${(percent as number).toFixed(1)}%`
-                  }
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {allocationData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number) =>
-                    `$${formatAmount(value)}`
-                  }
-                />
-              </PieChart>
-            </ResponsiveContainer>
+        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
+          <h3 className="text-lg font-semibold mb-3">Portfolio Allocation</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div className="flex justify-center">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={allocationData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={false}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {allocationData.map((_, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) =>
+                      `$${formatAmount(value)}`
+                    }
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
 
             <div className="space-y-2">
               {allocationData.map((item, index) => (
@@ -460,7 +460,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
       {/* Holdings Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="p-6 border-b">
+        <div className="p-4 border-b">
           <h3 className="text-lg font-semibold">Holdings</h3>
           <p className="text-sm text-muted-foreground mt-1">
             Showing {sortedHoldings.length}{" "}
@@ -473,46 +473,46 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           <table className="w-full">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Security
                 </th>
                 <th
                   onClick={() => toggleSort("quantity")}
-                  className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
+                  className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Quantity{" "}
                   {sortBy === "quantity" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Avg Price
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Avg Cost
                 </th>
                 <th
                   onClick={() => toggleSort("value")}
-                  className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
+                  className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Market Value{" "}
                   {sortBy === "value" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 <th
                   onClick={() => toggleSort("gainLoss")}
-                  className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
+                  className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Gain/Loss{" "}
                   {sortBy === "gainLoss" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 <th
                   onClick={() => toggleSort("gainLossPercent")}
-                  className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
+                  className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
                   Return{" "}
                   {sortBy === "gainLossPercent" &&
                     (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 {groupBy === "none" && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Account
                   </th>
                 )}
@@ -521,46 +521,46 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
             <tbody className="bg-white divide-y divide-border">
               {sortedHoldings.map((holding) => (
                 <tr key={holding.id} className="hover:bg-muted/50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
+                  <td className="px-3 py-3">
+                    <div className="flex items-center gap-2 min-w-0">
                       {holding.security?.logoUrl && (
                         <Image
                           src={holding.security.logoUrl}
                           alt={holding.security?.tickerSymbol || ""}
-                          width={32}
-                          height={32}
-                          className="w-8 h-8 rounded object-cover flex-shrink-0"
+                          width={24}
+                          height={24}
+                          className="w-6 h-6 rounded object-cover flex-shrink-0"
                         />
                       )}
-                      <div>
-                        <div className="font-medium text-foreground">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-foreground text-sm">
                           {holding.security?.tickerSymbol || "N/A"}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-xs text-muted-foreground truncate">
                           {holding.security?.name}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-foreground">
+                  <td className="px-3 py-3 whitespace-nowrap text-right text-sm text-foreground">
                     {holding.calculatedQuantity.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 6,
                     })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-foreground">
+                  <td className="px-3 py-3 whitespace-nowrap text-right text-sm text-foreground">
                     $
                     {formatAmount(holding.calculatedPrice)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-muted-foreground">
+                  <td className="px-3 py-3 whitespace-nowrap text-right text-sm text-muted-foreground">
                     $
                     {formatAmount(holding.calculatedCostBasis)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-foreground">
+                  <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium text-foreground">
                     $
                     {formatAmount(holding.marketValue)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <td className="px-3 py-3 whitespace-nowrap text-right text-sm">
                     <span
                       className={
                         holding.gainLoss >= 0
@@ -572,7 +572,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                       {formatAmount(Math.abs(holding.gainLoss))}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <td className="px-3 py-3 whitespace-nowrap text-right text-sm">
                     <span
                       className={
                         holding.gainLossPercent >= 0
@@ -585,7 +585,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                     </span>
                   </td>
                   {groupBy === "none" && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    <td className="px-3 py-3 text-sm text-muted-foreground max-w-[150px] truncate">
                       {holding.account?.name}
                     </td>
                   )}

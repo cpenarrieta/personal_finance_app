@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { TransactionItem } from "@/components/TransactionItem";
 import { CategorySelect } from "@/components/ui/category-select";
 import { SubcategorySelect } from "@/components/ui/subcategory-select";
@@ -151,17 +150,7 @@ export function MoveTransactionsClient({
   const toCategory = categories.find((c) => c.id === toCategoryId);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-4">
-        <Link href="/" className="text-primary hover:underline">
-          ← Back to Home
-        </Link>
-      </div>
-
-      <h1 className="text-2xl font-semibold mb-6">
-        Move Transactions Between Categories
-      </h1>
-
+    <div>
       {moveComplete && (
         <div className="mb-4 p-4 bg-success/10 text-success-foreground rounded">
           Successfully moved {movedCount} transaction(s)!

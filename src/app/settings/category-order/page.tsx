@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { CategoryOrderClient } from "@/components/CategoryOrderClient";
-import Link from "next/link";
 import type { Metadata } from "next";
 import type { CategoryForClient } from "@/types";
+import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Manage Category Order",
@@ -42,21 +42,23 @@ export default async function CategoryOrderPage() {
   })) as CategoryForClient[];
 
   return (
-    <div className="p-6 bg-background min-h-screen">
-      <div className="mb-6">
-        <Link href="/settings/manage-categories" className="text-primary hover:underline">
-          ← Back to Settings
-        </Link>
-      </div>
+    <AppShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Settings" },
+        { label: "Category Order" },
+      ]}
+    >
+      <div className="max-w-7xl">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground">Manage Category Order</h1>
+          <p className="text-muted-foreground mt-1">
+            Organize how categories appear in dropdown lists
+          </p>
+        </div>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Manage Category Order</h1>
-        <p className="text-muted-foreground mt-1">
-          Organize how categories appear in dropdown lists
-        </p>
+        <CategoryOrderClient categories={categories} />
       </div>
-
-      <CategoryOrderClient categories={categories} />
-    </div>
+    </AppShell>
   );
 }

@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { DeleteButton } from "@/components/DeleteButton";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 import { PrismaTagWithCount } from "@/types";
+import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Manage Tags",
@@ -83,14 +83,15 @@ export default async function ManageTagsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto min-h-screen bg-background">
-      <div className="mb-4">
-        <Link href="/" className="text-primary hover:underline">
-          ← Back to Home
-        </Link>
-      </div>
-
-      <h1 className="text-2xl font-semibold mb-6">Manage Tags</h1>
+    <AppShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Settings" },
+        { label: "Tags" },
+      ]}
+    >
+      <div className="max-w-7xl">
+        <h1 className="text-2xl font-semibold mb-6">Manage Tags</h1>
 
       <div className="border rounded-lg p-4">
         {/* Add Tag Form */}
@@ -215,6 +216,7 @@ export default async function ManageTagsPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </AppShell>
   );
 }

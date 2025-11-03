@@ -176,13 +176,15 @@ export default async function TransactionsPage({
         { label: "Transactions" },
       ]}
     >
-      <TransactionsPageClient
-        transactions={transactionsWithFlatTags}
-        categories={categories}
-        tags={tags}
-        accounts={accounts}
-        initialFilters={initialFilters}
-      />
+      <div className="max-w-7xl">
+        <TransactionsPageClient
+          transactions={transactionsWithFlatTags}
+          categories={categories}
+          tags={tags}
+          accounts={accounts}
+          initialFilters={initialFilters}
+        />
+      </div>
     </AppShell>
   );
 }
