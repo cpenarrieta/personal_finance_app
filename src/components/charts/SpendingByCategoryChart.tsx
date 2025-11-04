@@ -1,7 +1,15 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts"
 
 interface SpendingByCategoryChartProps {
   data: {
@@ -9,33 +17,6 @@ interface SpendingByCategoryChartProps {
     value: number
     color: string
   }[]
-}
-
-const RADIAN = Math.PI / 180
-const renderCustomizedLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
-}: any) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
-
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="white"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      className="text-xs font-medium"
-    >
-      {percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ""}
-    </text>
-  )
 }
 
 export function SpendingByCategoryChart({ data }: SpendingByCategoryChartProps) {
@@ -61,21 +42,21 @@ export function SpendingByCategoryChart({ data }: SpendingByCategoryChartProps) 
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={renderCustomizedLabel}
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
+          <BarChart data={data} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis
+              type="number"
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              tickFormatter={(value) => `$${value}`}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              stroke="var(--muted-foreground)"
+              fontSize={12}
+              width={100}
+            />
             <Tooltip
               formatter={(value: number) => `$${value.toFixed(2)}`}
               contentStyle={{
@@ -84,8 +65,8 @@ export function SpendingByCategoryChart({ data }: SpendingByCategoryChartProps) 
                 borderRadius: "6px",
               }}
             />
-            <Legend />
-          </PieChart>
+            <Bar dataKey="value" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

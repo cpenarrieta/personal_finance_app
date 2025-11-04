@@ -13,6 +13,7 @@ interface MetricCardProps {
     positive?: boolean
   }
   href?: string
+  valueClassName?: string
 }
 
 export function MetricCard({
@@ -22,6 +23,7 @@ export function MetricCard({
   icon: Icon,
   trend,
   href,
+  valueClassName,
 }: MetricCardProps) {
   const content = (
     <>
@@ -32,7 +34,7 @@ export function MetricCard({
         {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className={`text-2xl font-bold ${valueClassName || ""}`}>{value}</div>
         {subtitle && (
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         )}

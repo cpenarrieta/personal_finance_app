@@ -127,7 +127,7 @@ export default async function Page() {
     where: {
       date: {
         gte: lastMonthStart,
-        lte: lastMonthEnd,
+        lt: lastMonthEnd,
       },
       amount: {
         gt: 0, // Positive amounts are expenses
@@ -151,7 +151,7 @@ export default async function Page() {
     where: {
       date: {
         gte: lastMonthStart,
-        lte: lastMonthEnd,
+        lt: lastMonthEnd,
       },
       amount: {
         lt: 0, // Negative amounts are income
@@ -170,15 +170,12 @@ export default async function Page() {
     lastMonthIncome._sum.amount?.toNumber() || 0
   );
 
-  // Calculate net income (Income - Spending)
-  const netIncome = totalLastMonthIncome - totalLastMonthSpending;
-
   // Fetch transactions for last month for charts
   const lastMonthTransactions = await prisma.transaction.findMany({
     where: {
       date: {
         gte: lastMonthStart,
-        lte: lastMonthEnd,
+        lt: lastMonthEnd,
       },
       isSplit: false, // Filter out parent transactions that have been split
     },
@@ -219,7 +216,7 @@ export default async function Page() {
       color: CHART_COLORS[index % CHART_COLORS.length] as string,
     }))
     .sort((a, b) => (b.value as number) - (a.value as number))
-    .slice(0, 5); // Top 5 categories
+    .slice(0, 10); // Top 10 categories
 
   // Spending by Subcategory (last month)
   const subcategorySpending = lastMonthTransactions
@@ -290,7 +287,7 @@ export default async function Page() {
     where: {
       date: {
         gte: lastMonthStart,
-        lte: lastMonthEnd,
+        lt: lastMonthEnd,
       },
       amount: {
         gt: 0, // Only expenses
@@ -341,12 +338,14 @@ export default async function Page() {
             value={`$${formatAmount(totalLastMonthSpending)}`}
             subtitle={format(lastMonthStart, "MMMM yyyy")}
             icon={DollarSign}
+            valueClassName="text-destructive"
           />
           <MetricCard
-            title="Net Income"
-            value={`${netIncome >= 0 ? '+' : '-'}$${formatAmount(Math.abs(netIncome))}`}
-            subtitle={`${format(lastMonthStart, "MMM yyyy")} (Income - Spending)`}
-            icon={AlertCircle}
+            title="Last Month Income"
+            value={`$${formatAmount(totalLastMonthIncome)}`}
+            subtitle={format(lastMonthStart, "MMMM yyyy")}
+            icon={DollarSign}
+            valueClassName="text-success"
           />
         </div>
 
