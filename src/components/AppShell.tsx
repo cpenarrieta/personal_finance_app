@@ -1,6 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { usePathname } from "next/navigation"
+import Cookies from "js-cookie"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { Separator } from "@/components/ui/separator"
@@ -16,13 +18,21 @@ import { generateBreadcrumbs } from "@/lib/breadcrumbs"
 
 interface AppShellProps {
   children: React.ReactNode
+  defaultOpen?: boolean
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, defaultOpen = true }: AppShellProps) {
   const pathname = usePathname()
   const breadcrumbs = generateBreadcrumbs(pathname)
+  const [open, setOpen] = useState(defaultOpen)
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
+    Cookies.set("sidebar-open", String(newOpen), { expires: 365 })
+  }
+
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider open={open} onOpenChange={handleOpenChange}>
       <AppSidebar />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
