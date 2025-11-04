@@ -6,7 +6,6 @@ import { SyncPricesButton } from "@/components/SyncPricesButton";
 import { SyncHoldingsLogosButton } from "@/components/SyncHoldingsLogosButton";
 import { HoldingsPortfolio } from "@/components/HoldingsPortfolio";
 import type { Metadata } from "next";
-import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Investment Holdings",
@@ -63,14 +62,8 @@ export default async function HoldingsPage() {
   });
 
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Investments" },
-        { label: "Holdings" },
-      ]}
-    >
-      <div className="w-full max-w-7xl mx-auto overflow-hidden">
+    <>
+      <div className="overflow-hidden">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
@@ -88,6 +81,6 @@ export default async function HoldingsPage() {
 
         <HoldingsPortfolio holdings={holdings} />
       </div>
-    </AppShell>
+    </>
   );
 }

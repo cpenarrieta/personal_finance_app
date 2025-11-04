@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { TransactionDetailView } from "@/components/TransactionDetailView";
-import { AppShell } from "@/components/AppShell";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -207,20 +206,14 @@ export default async function TransactionDetailPage({
   ]);
 
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Transactions", href: "/transactions" },
-        { label: transaction.name },
-      ]}
-    >
-      <div className="w-full max-w-7xl mx-auto">
+    <>
+      <div>
         <TransactionDetailView
           transaction={transaction}
           categories={categories}
           tags={tags}
         />
       </div>
-    </AppShell>
+    </>
   );
 }

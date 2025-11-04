@@ -3,7 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { PlaidAccountWithRelations } from "@/types/prisma";
-import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Accounts",
@@ -41,9 +40,8 @@ export default async function AccountsPage() {
   const institutionNames = Object.keys(accountsByInstitution).sort();
 
   return (
-    <AppShell breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Accounts" }]}>
-      <div className="w-full max-w-7xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-4">Accounts</h2>
+    <>
+      <h2 className="text-2xl font-semibold mb-4">Accounts</h2>
         {accounts.length === 0 ? (
           <p className="text-muted-foreground">
             No accounts found. Connect your bank and run sync.
@@ -109,7 +107,6 @@ export default async function AccountsPage() {
           })}
           </div>
         )}
-      </div>
-    </AppShell>
+    </>
   );
 }

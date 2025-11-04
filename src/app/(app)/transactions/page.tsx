@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { TransactionsPageClient } from "@/components/TransactionsPageClient";
-import { AppShell } from "@/components/AppShell";
 import type { Metadata } from "next";
 import type {
   CategoryForClient,
@@ -170,21 +169,12 @@ export default async function TransactionsPage({
   );
 
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Transactions" },
-      ]}
-    >
-      <div className="w-full max-w-7xl mx-auto">
-        <TransactionsPageClient
-          transactions={transactionsWithFlatTags}
-          categories={categories}
-          tags={tags}
-          accounts={accounts}
-          initialFilters={initialFilters}
-        />
-      </div>
-    </AppShell>
+    <TransactionsPageClient
+      transactions={transactionsWithFlatTags}
+      categories={categories}
+      tags={tags}
+      accounts={accounts}
+      initialFilters={initialFilters}
+    />
   );
 }

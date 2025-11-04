@@ -10,7 +10,6 @@ import {
 } from "date-fns";
 import type { Metadata } from "next";
 import { Holding, PlaidAccount } from "@prisma/client";
-import { AppShell } from "@/components/AppShell";
 import { MetricCard } from "@/components/MetricCard";
 import { Wallet, TrendingUp, AlertCircle, DollarSign } from "lucide-react";
 import {
@@ -259,8 +258,7 @@ export default async function Page() {
   });
 
   return (
-    <AppShell breadcrumbs={[{ label: "Dashboard" }]}>
-      <div className="w-full max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
         {/* Metrics Section */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
@@ -496,7 +494,6 @@ export default async function Page() {
             <IncomeVsExpenseChart data={incomeVsExpenseData} />
           </div>
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }

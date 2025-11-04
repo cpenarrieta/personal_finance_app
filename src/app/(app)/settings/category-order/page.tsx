@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { CategoryOrderClient } from "@/components/CategoryOrderClient";
 import type { Metadata } from "next";
 import type { CategoryForClient } from "@/types";
-import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Manage Category Order",
@@ -42,14 +41,8 @@ export default async function CategoryOrderPage() {
   })) as CategoryForClient[];
 
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Settings" },
-        { label: "Category Order" },
-      ]}
-    >
-      <div className="w-full max-w-7xl mx-auto">
+    <>
+      <div>
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Manage Category Order</h1>
           <p className="text-muted-foreground mt-1">
@@ -59,6 +52,6 @@ export default async function CategoryOrderPage() {
 
         <CategoryOrderClient categories={categories} />
       </div>
-    </AppShell>
+    </>
   );
 }

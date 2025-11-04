@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 import { PrismaTagWithCount } from "@/types";
-import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Manage Tags",
@@ -83,14 +82,8 @@ export default async function ManageTagsPage() {
   ];
 
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Settings" },
-        { label: "Tags" },
-      ]}
-    >
-      <div className="w-full max-w-7xl mx-auto">
+    <>
+      <div>
         <h1 className="text-2xl font-semibold mb-6">Manage Tags</h1>
 
       <div className="border rounded-lg p-4">
@@ -217,6 +210,6 @@ export default async function ManageTagsPage() {
         </div>
       </div>
       </div>
-    </AppShell>
+    </>
   );
 }

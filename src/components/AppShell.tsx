@@ -1,5 +1,6 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
 import { Separator } from "@/components/ui/separator"
@@ -11,13 +12,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { generateBreadcrumbs } from "@/lib/breadcrumbs"
 
 interface AppShellProps {
   children: React.ReactNode
-  breadcrumbs?: { label: string; href?: string }[]
 }
 
-export function AppShell({ children, breadcrumbs }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
+  const pathname = usePathname()
+  const breadcrumbs = generateBreadcrumbs(pathname)
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar />

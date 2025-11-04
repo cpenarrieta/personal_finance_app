@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Metadata } from "next";
 import { TransferCategoryToggle } from "@/components/TransferCategoryToggle";
-import { AppShell } from "@/components/AppShell";
 import type { Prisma } from "@prisma/client";
 
 type CategoryWithSubs = Prisma.CategoryGetPayload<{
@@ -86,14 +85,8 @@ export default async function ManageCategoriesPage() {
   });
 
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Settings" },
-        { label: "Categories" },
-      ]}
-    >
-      <div className="w-full max-w-7xl mx-auto">
+    <>
+      <div>
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">
@@ -286,6 +279,6 @@ export default async function ManageCategoriesPage() {
           )}
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

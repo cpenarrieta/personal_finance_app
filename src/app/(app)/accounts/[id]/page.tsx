@@ -6,7 +6,6 @@ import { HoldingList } from '@/components/HoldingList'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
 import type { InvestmentTransactionWithRelations, HoldingWithRelations, TransactionForClient, CategoryForClient, TagForClient } from '@/types'
-import { AppShell } from '@/components/AppShell'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -186,14 +185,8 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   ])
 
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Accounts", href: "/accounts" },
-        { label: `${account.name}${account.mask ? ` • ${account.mask}` : ''}` },
-      ]}
-    >
-      <div className="w-full max-w-7xl mx-auto">
+    <>
+      <div>
         {/* Account Header */}
         <div className="mb-6 p-6 border rounded-lg bg-card shadow-md">
         <h2 className="text-2xl font-semibold mb-4">
@@ -269,6 +262,6 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         </div>
       )}
       </div>
-    </AppShell>
+    </>
   )
 }

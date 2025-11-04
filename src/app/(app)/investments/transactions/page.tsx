@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { InvestmentTransactionList } from "@/components/InvestmentTransactionList";
 import type { Metadata } from 'next';
-import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: 'Investment Transactions',
@@ -17,19 +16,13 @@ export default async function InvTxPage() {
     include: { account: true, security: true },
   });
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Investments" },
-        { label: "Transactions" },
-      ]}
-    >
-      <div className="w-full max-w-7xl mx-auto">
+    <>
+      <div>
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Investment Transactions</h1>
         </div>
         <InvestmentTransactionList transactions={txs} showAccount={true} />
       </div>
-    </AppShell>
+    </>
   );
 }

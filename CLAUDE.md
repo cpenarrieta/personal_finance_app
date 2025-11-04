@@ -143,12 +143,32 @@ Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Sw
 
 ## Common Tasks
 
-### Adding a New Page with Reference Data
+### Adding a New Page
 
-1. ✅ Fetch categories/tags in Server Component (page.tsx)
-3. ✅ Pass as props to Client Components
-4. ✅ Update TypeScript interfaces in `types/components.ts`
-5. ❌ Never fetch categories/tags in client components with useEffect
+1. ✅ Create page.tsx inside `app/(app)/` route group (gets AppShell automatically)
+2. ✅ Fetch data in Server Component - NO AppShell wrapper needed
+3. ✅ Add breadcrumb config to `lib/breadcrumbs.ts` if custom label needed
+4. ✅ Pass categories/tags as props to Client Components
+5. ✅ Update TypeScript interfaces in `types/components.ts`
+6. ❌ Never wrap in AppShell - layout handles it
+7. ❌ Never fetch categories/tags in client components with useEffect
+
+**Example:**
+```typescript
+// app/(app)/new-feature/page.tsx
+export default async function NewFeaturePage() {
+  const data = await prisma.someModel.findMany()
+
+  // No AppShell wrapper needed - layout handles it
+  return <ClientComponent data={data} />
+}
+```
+
+**Update breadcrumbs config:**
+```typescript
+// lib/breadcrumbs.ts
+'/new-feature': { label: 'New Feature' },
+```
 
 ### Creating a Form
 
@@ -167,22 +187,37 @@ Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Sw
 
 ```
 src/
-├── app/                    # Next.js App Router pages
+├── app/                    # Next.js App Router
+│   ├── (app)/              # Route group with AppShell layout
+│   │   ├── layout.tsx      # AppShell wrapper with auto-generated breadcrumbs
+│   │   ├── page.tsx        # Dashboard
+│   │   ├── transactions/   # Transaction pages
+│   │   ├── accounts/       # Account pages
+│   │   ├── investments/    # Investment pages
+│   │   └── settings/       # Settings pages
 │   ├── api/                # API routes
-│   ├── transactions/       # Transaction pages
-│   ├── accounts/           # Account pages
-│   ├── investments/        # Investment pages
-│   └── settings/           # Settings pages
+│   ├── login/              # Login page (no AppShell)
+│   └── layout.tsx          # Root layout (auth, theme)
 ├── components/             # React components
 │   ├── ui/                 # shadcn/ui components
+│   ├── AppShell.tsx        # Main layout wrapper (sidebar + header + breadcrumbs)
 │   └── ...                 # Feature components
 ├── lib/                    # Utilities
 │   ├── auth.ts             # Better Auth config
+│   ├── breadcrumbs.ts      # Breadcrumb config & generation
 │   ├── plaid.ts            # Plaid client
 │   ├── sync.ts             # Sync logic
 │   └── prisma.ts           # Prisma client
 └── types/                  # TypeScript types
 ```
+
+### Route Groups & Layout
+
+**All authenticated pages** are in the `(app)` route group with shared layout:
+- `(app)/layout.tsx` wraps pages with AppShell (sidebar, header, breadcrumbs)
+- Breadcrumbs auto-generated from pathname via `lib/breadcrumbs.ts`
+- Login page outside route group (no AppShell wrapper)
+- No need to wrap pages in AppShell manually - handled by layout
 
 ## UI Components Strategy
 
