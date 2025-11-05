@@ -1,11 +1,11 @@
-import { prisma } from "@/lib/prisma";
 import { syncStockPrices } from "@/lib/syncPrices";
 import { syncHoldingsLogos } from "@/lib/syncHoldingsLogos";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { SyncPricesButton } from "@/components/SyncPricesButton";
 import { SyncHoldingsLogosButton } from "@/components/SyncHoldingsLogosButton";
 import { HoldingsPortfolio } from "@/components/HoldingsPortfolio";
 import type { Metadata } from "next";
+import { getAllHoldings } from "@/lib/cached-queries";
 
 export const metadata: Metadata = {
   title: "Investment Holdings",
@@ -19,47 +19,47 @@ async function doSyncPrices() {
   "use server";
   await syncStockPrices();
   revalidatePath("/investments/holdings");
+  revalidateTag("holdings");
+  revalidateTag("dashboard");
 }
 
 async function doSyncHoldingsLogos() {
   "use server";
   await syncHoldingsLogos();
   revalidatePath("/investments/holdings");
+  revalidateTag("holdings");
 }
 
 export default async function HoldingsPage() {
-  const holdings = await prisma.holding.findMany({
-    select: {
-      id: true,
-      accountId: true,
-      securityId: true,
-      quantity_number: true, // Generated column
-      cost_basis_number: true, // Generated column
-      institution_price_number: true, // Generated column
-      institution_price_as_of_string: true, // Generated column
-      isoCurrencyCode: true,
-      created_at_string: true, // Generated column
-      updated_at_string: true, // Generated column
-      account: {
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          subtype: true,
-        },
-      },
-      security: {
-        select: {
-          id: true,
-          name: true,
-          tickerSymbol: true,
-          type: true,
-          isoCurrencyCode: true,
-          logoUrl: true,
-        },
-      },
+  const allHoldings = await getAllHoldings();
+
+  // Map to the select structure expected by HoldingsPortfolio
+  const holdings = allHoldings.map((h) => ({
+    id: h.id,
+    accountId: h.accountId,
+    securityId: h.securityId,
+    quantity_number: h.quantity.toNumber(),
+    cost_basis_number: h.costBasis ? h.costBasis.toNumber() : null,
+    institution_price_number: h.institutionPrice ? h.institutionPrice.toNumber() : null,
+    institution_price_as_of_string: h.institutionPriceAsOf ? h.institutionPriceAsOf.toISOString() : null,
+    isoCurrencyCode: h.isoCurrencyCode,
+    created_at_string: h.createdAt.toISOString(),
+    updated_at_string: h.updatedAt.toISOString(),
+    account: {
+      id: h.account.id,
+      name: h.account.name,
+      type: h.account.type,
+      subtype: h.account.subtype,
     },
-  });
+    security: {
+      id: h.security.id,
+      name: h.security.name,
+      tickerSymbol: h.security.tickerSymbol,
+      type: h.security.type,
+      isoCurrencyCode: h.security.isoCurrencyCode,
+      logoUrl: h.security.logoUrl,
+    },
+  }));
 
   return (
     <>

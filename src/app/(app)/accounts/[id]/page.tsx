@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { SearchableTransactionList } from '@/components/SearchableTransactionList'
 import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
@@ -6,13 +5,19 @@ import { HoldingList } from '@/components/HoldingList'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
 import type { InvestmentTransactionWithRelations, HoldingWithRelations, TransactionForClient, CategoryForClient, TagForClient } from '@/types'
+import {
+  getAccountById,
+  getTransactionsForAccount,
+  getHoldingsForAccount,
+  getInvestmentTransactionsForAccount,
+  getAllCategories,
+  getAllTags,
+} from '@/lib/cached-queries'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const account = await prisma.plaidAccount.findUnique({
-    where: { id },
-  })
-  
+  const account = await getAccountById(id)
+
   if (!account) {
     return {
       title: 'Account Not Found',
@@ -22,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       },
     }
   }
-  
+
   return {
     title: `${account.name}${account.mask ? ` • ${account.mask}` : ''}`,
     robots: {
@@ -34,10 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const account = await prisma.plaidAccount.findUnique({
-    where: { id },
-    include: { item: true },
-  })
+  const account = await getAccountById(id)
 
   if (!account) {
     notFound()
@@ -46,99 +48,20 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   // Check if this is an investment account
   const isInvestmentAccount = account.type === 'investment' || account.subtype?.includes('brokerage')
 
-  // Fetch transactions or investment data based on account type
+  // Fetch transactions or investment data based on account type using cached queries
   let transactions: TransactionForClient[] = []
   let investmentTransactions: InvestmentTransactionWithRelations[] = []
   let holdings: HoldingWithRelations[] = []
 
   if (isInvestmentAccount) {
-    // Fetch investment transactions
-    investmentTransactions = await prisma.investmentTransaction.findMany({
-      where: { accountId: account.id },
-      include: { security: true, account: true },
-      orderBy: { date: 'desc' },
-    })
-
-    // Fetch holdings
-    holdings = await prisma.holding.findMany({
-      where: { accountId: account.id },
-      include: { security: true, account: true },
-    })
+    // Fetch investment data using cached queries
+    [investmentTransactions, holdings] = await Promise.all([
+      getInvestmentTransactionsForAccount(account.id),
+      getHoldingsForAccount(account.id),
+    ])
   } else {
-    // Fetch regular banking transactions
-    const txs = await prisma.transaction.findMany({
-      where: {
-        accountId: account.id,
-        isSplit: false, // Filter out parent transactions that have been split
-      },
-      orderBy: { date: 'desc' },
-      select: {
-        id: true,
-        plaidTransactionId: true,
-        accountId: true,
-        amount_number: true, // Generated column
-        isoCurrencyCode: true,
-        date_string: true, // Generated column
-        authorized_date_string: true, // Generated column
-        pending: true,
-        merchantName: true,
-        name: true,
-        plaidCategory: true,
-        plaidSubcategory: true,
-        paymentChannel: true,
-        pendingTransactionId: true,
-        logoUrl: true,
-        categoryIconUrl: true,
-        categoryId: true,
-        subcategoryId: true,
-        notes: true,
-        isSplit: true,
-        parentTransactionId: true,
-        originalTransactionId: true,
-        created_at_string: true, // Generated column
-        updated_at_string: true, // Generated column
-        account: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            mask: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-            created_at_string: true, // Generated column
-            updated_at_string: true, // Generated column
-          },
-        },
-        subcategory: {
-          select: {
-            id: true,
-            categoryId: true,
-            name: true,
-            imageUrl: true,
-            created_at_string: true, // Generated column
-            updated_at_string: true, // Generated column
-          },
-        },
-        tags: {
-          select: {
-            tag: {
-              select: {
-                id: true,
-                name: true,
-                color: true,
-                created_at_string: true, // Generated column
-                updated_at_string: true, // Generated column
-              },
-            },
-          },
-        },
-      },
-    })
+    // Fetch regular banking transactions using cached queries
+    const txs = await getTransactionsForAccount(account.id)
 
     // Flatten tags structure
     transactions = txs.map((t: typeof txs[0]) => ({
@@ -147,41 +70,10 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
     }))
   }
 
-  // Fetch categories and tags (needed for transaction editing)
+  // Fetch categories and tags using cached queries (needed for transaction editing)
   const [categories, tags] = await Promise.all([
-    prisma.category.findMany({
-      select: {
-        id: true,
-        name: true,
-        imageUrl: true,
-        groupType: true,
-        displayOrder: true,
-        created_at_string: true, // Generated column
-        updated_at_string: true, // Generated column
-        subcategories: {
-          select: {
-            id: true,
-            categoryId: true,
-            name: true,
-            imageUrl: true,
-            created_at_string: true, // Generated column
-            updated_at_string: true, // Generated column
-          },
-          orderBy: { name: 'asc' },
-        },
-      },
-      orderBy: { name: 'asc' },
-    }) as CategoryForClient[],
-    prisma.tag.findMany({
-      select: {
-        id: true,
-        name: true,
-        color: true,
-        created_at_string: true, // Generated column
-        updated_at_string: true, // Generated column
-      },
-      orderBy: { name: 'asc' },
-    }) as TagForClient[],
+    getAllCategories(),
+    getAllTags(),
   ])
 
   return (

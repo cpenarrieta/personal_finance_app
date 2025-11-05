@@ -4,12 +4,17 @@ import {
   endOfMonth,
   subMonths,
 } from "date-fns";
+import { cacheTag, cacheLife } from "next/cache";
 
 /**
  * Get dashboard metrics (accounts and holdings)
  * Fetches accounts with balances and all holdings in parallel
  */
 export async function getDashboardMetrics() {
+  "use cache";
+  cacheLife("24h");
+  cacheTag("accounts", "holdings", "dashboard");
+
   const [accounts, holdings] = await Promise.all([
     prisma.plaidAccount.findMany({
       include: { item: { include: { institution: true } } },
@@ -27,6 +32,10 @@ export async function getDashboardMetrics() {
  * Get uncategorized transactions count and data
  */
 export async function getUncategorizedTransactions() {
+  "use cache";
+  cacheLife("24h");
+  cacheTag("transactions", "dashboard");
+
   const uncategorizedCount = await prisma.transaction.count({
     where: {
       categoryId: null,
@@ -60,6 +69,10 @@ export async function getUncategorizedTransactions() {
  * Get recent transactions
  */
 export async function getRecentTransactions(limit = 20) {
+  "use cache";
+  cacheLife("24h");
+  cacheTag("transactions", "dashboard");
+
   return prisma.transaction.findMany({
     where: {
       isSplit: false,
@@ -96,6 +109,10 @@ export function getLastMonthDateRange() {
  * Uses a single optimized raw SQL query for spending and income
  */
 export async function getLastMonthStats() {
+  "use cache";
+  cacheLife("24h");
+  cacheTag("transactions", "dashboard");
+
   const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange();
 
   // Optimized: Single raw SQL query to get both spending and income
@@ -147,6 +164,10 @@ export async function getLastMonthStats() {
  * Get top expensive transactions from last month
  */
 export async function getTopExpensiveTransactions(limit = 25) {
+  "use cache";
+  cacheLife("24h");
+  cacheTag("transactions", "dashboard");
+
   const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange();
 
   return prisma.transaction.findMany({
@@ -184,6 +205,10 @@ export async function getTopExpensiveTransactions(limit = 25) {
  * Check if user has any connected Plaid items
  */
 export async function hasConnectedAccounts() {
+  "use cache";
+  cacheLife("24h");
+  cacheTag("accounts");
+
   const itemsCount = await prisma.item.count();
   return itemsCount > 0;
 }

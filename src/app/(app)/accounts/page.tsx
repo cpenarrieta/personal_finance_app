@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { PlaidAccountWithRelations } from "@/types/prisma";
+import { getAllAccountsWithInstitution } from "@/lib/cached-queries";
 
 export const metadata: Metadata = {
   title: "Accounts",
@@ -13,15 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AccountsPage() {
-  const accounts = (await prisma.plaidAccount.findMany({
-    include: {
-      item: {
-        include: {
-          institution: true,
-        },
-      },
-    },
-  })) as PlaidAccountWithRelations[];
+  const accounts = (await getAllAccountsWithInstitution()) as PlaidAccountWithRelations[];
 
   // Group accounts by institution
   const accountsByInstitution = accounts.reduce((acc, account) => {

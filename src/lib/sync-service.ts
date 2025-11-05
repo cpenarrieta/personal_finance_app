@@ -5,6 +5,7 @@ import { PlaidAccountWithRelations } from "@/types";
 import { getPlaidClient } from "./plaid";
 import { prisma } from "./prisma";
 import { Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 
 export interface TransactionSyncStats {
   accountsUpdated: number;
@@ -625,6 +626,22 @@ export async function syncItems(
         `     • Investment transactions added: ${itemStats.investmentTransactionsAdded}`
       );
     }
+  }
+
+  // Invalidate caches based on what was synced
+  console.log("\n🔄 Invalidating caches...");
+  if (options.syncTransactions) {
+    revalidateTag("transactions");
+    revalidateTag("accounts");
+    revalidateTag("dashboard");
+    console.log("  ✓ Invalidated: transactions, accounts, dashboard");
+  }
+  if (options.syncInvestments) {
+    revalidateTag("holdings");
+    revalidateTag("investments");
+    revalidateTag("accounts");
+    revalidateTag("dashboard");
+    console.log("  ✓ Invalidated: holdings, investments, accounts, dashboard");
   }
 
   // Print total summary

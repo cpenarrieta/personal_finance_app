@@ -4,6 +4,7 @@ import { createTransactionSchema } from "@/types/api";
 import { safeParseRequestBody } from "@/types/api";
 import { Prisma } from "@prisma/client";
 import { nanoid } from "nanoid";
+import { revalidateTag } from "next/cache";
 
 export async function POST(req: NextRequest) {
   try {
@@ -100,6 +101,10 @@ export async function POST(req: NextRequest) {
         })),
       });
     }
+
+    // Invalidate transaction and dashboard caches
+    revalidateTag("transactions");
+    revalidateTag("dashboard");
 
     return NextResponse.json(newTransaction, { status: 201 });
   } catch (error) {
