@@ -5,7 +5,6 @@ import { SearchableTransactionList } from "./SearchableTransactionList";
 import { TransactionChartsView } from "./TransactionChartsView";
 import { AddTransactionModal } from "./AddTransactionModal";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -33,7 +32,7 @@ export function TransactionsPageClient({
 
   return (
     <>
-      <div className="mb-4 flex justify-between items-center">
+      <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Banking Transactions</h1>
           <p className="text-muted-foreground mt-1">View and search all your banking transactions</p>
@@ -43,27 +42,22 @@ export function TransactionsPageClient({
         </Button>
       </div>
 
-      <Tabs defaultValue="table" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="table">Table</TabsTrigger>
-          <TabsTrigger value="charts">Charts</TabsTrigger>
-        </TabsList>
-        <TabsContent value="table">
-          <SearchableTransactionList
-            transactions={transactions}
-            categories={categories}
-            tags={tags}
-            accounts={accounts}
-            initialFilters={initialFilters}
-          />
-        </TabsContent>
-        <TabsContent value="charts">
-          <TransactionChartsView
-            transactions={transactions}
-            categories={categories}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Charts Section */}
+      <div className="mb-6">
+        <TransactionChartsView
+          transactions={transactions}
+          categories={categories}
+        />
+      </div>
+
+      {/* Transactions Table with Filters */}
+      <SearchableTransactionList
+        transactions={transactions}
+        categories={categories}
+        tags={tags}
+        accounts={accounts}
+        initialFilters={initialFilters}
+      />
 
       {showAddModal && (
         <AddTransactionModal

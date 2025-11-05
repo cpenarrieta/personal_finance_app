@@ -29,7 +29,7 @@ export function TransactionChartsView({
         const transactionDate = new Date(t.date_string || t.created_at_string)
         return (
           transactionDate >= startOfMonth &&
-          t.amount_number < 0 &&
+          t.amount_number > 0 &&
           t.category &&
           t.category.name !== "🔁 Transfers"
         )
@@ -71,12 +71,12 @@ export function TransactionChartsView({
       })
 
       const spending = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number < 0)
+        .filter((t: TransactionForClient) => t.amount_number > 0)
         .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
 
       const income = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number > 0)
-        .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
+        .filter((t: TransactionForClient) => t.amount_number < 0)
+        .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
 
       return {
         month: format(month, "MMM yy"),
@@ -96,12 +96,12 @@ export function TransactionChartsView({
       })
 
       const expenses = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number < 0)
+        .filter((t: TransactionForClient) => t.amount_number > 0)
         .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
 
       const income = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number > 0)
-        .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
+        .filter((t: TransactionForClient) => t.amount_number < 0)
+        .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
 
       return {
         month: format(month, "MMM yy"),
@@ -114,7 +114,7 @@ export function TransactionChartsView({
     const accountSpending = transactions
       .filter((t: TransactionForClient) => {
         const transactionDate = new Date(t.date_string || t.created_at_string)
-        return transactionDate >= startOfMonth && t.amount_number < 0
+        return transactionDate >= startOfMonth && t.amount_number > 0
       })
       .reduce((acc: Record<string, number>, t: TransactionForClient) => {
         const accountName = t.account?.name || "Unknown"
