@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   Receipt,
@@ -15,8 +15,8 @@ import {
   Sun,
   Plus,
   Building2,
-} from "lucide-react"
-import { toast } from "sonner"
+} from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Sidebar,
@@ -33,65 +33,72 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarSeparator,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { useTheme } from "next-themes"
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
 
 // Base nav items without accounts (accounts will be dynamically generated)
-const getNavItems = (accounts: Array<{
-  id: string
-  name: string
-  item: {
-    institution: {
-      id: string
-      name: string
-      logoUrl: string | null
-    } | null
-  }
-}>) => {
+const getNavItems = (
+  accounts: Array<{
+    id: string;
+    name: string;
+    item: {
+      institution: {
+        id: string;
+        name: string;
+        logoUrl: string | null;
+      } | null;
+    };
+  }>
+) => {
   // Group accounts by institution
   const accountsByInstitution = accounts.reduce((acc, account) => {
-    const institutionName = account.item.institution?.name || "Unknown Bank"
+    const institutionName = account.item.institution?.name || "Unknown Bank";
     if (!acc[institutionName]) {
-      acc[institutionName] = []
+      acc[institutionName] = [];
     }
-    acc[institutionName].push(account)
-    return acc
-  }, {} as Record<string, typeof accounts>)
+    acc[institutionName].push(account);
+    return acc;
+  }, {} as Record<string, typeof accounts>);
 
-  // Build accounts submenu items
-  const accountsItems: Array<{ title: string; href?: string; icon?: any; isGroup?: boolean }> = [
+  // Build accounts submenu items with collapsible institutions
+  const accountsItems: Array<{
+    title: string;
+    href?: string;
+    icon?: any;
+    isCollapsible?: boolean;
+    items?: Array<{
+      title: string;
+      href: string;
+    }>;
+  }> = [
     {
       title: "Connect Account",
       href: "/connect-account",
       icon: Plus,
     },
-  ]
+  ];
 
-  // Add each institution as a group with its accounts
+  // Add each institution as a collapsible group with its accounts
   Object.entries(accountsByInstitution)
     .sort(([a], [b]) => a.localeCompare(b))
     .forEach(([institutionName, institutionAccounts]) => {
-      // Add institution as a non-clickable group label
       accountsItems.push({
         title: institutionName,
         icon: Building2,
-        isGroup: true,
-      })
-      // Add accounts under this institution
-      institutionAccounts.forEach((account) => {
-        accountsItems.push({
+        isCollapsible: true,
+        items: institutionAccounts.map((account) => ({
           title: account.name,
           href: `/accounts/${account.id}`,
-        })
-      })
-    })
+        })),
+      });
+    });
 
   return [
     {
@@ -145,32 +152,32 @@ const getNavItems = (accounts: Array<{
         },
       ],
     },
-  ]
-}
+  ];
+};
 
 function SyncDropdown() {
-  const router = useRouter()
-  const [syncing, setSyncing] = React.useState(false)
+  const router = useRouter();
+  const [syncing, setSyncing] = useState(false);
 
   const handleSync = async (endpoint: string, label: string) => {
-    setSyncing(true)
-    const toastId = toast.loading(`${label}...`)
+    setSyncing(true);
+    const toastId = toast.loading(`${label}...`);
 
     try {
-      const response = await fetch(endpoint, { method: "POST" })
+      const response = await fetch(endpoint, { method: "POST" });
 
       if (response.ok) {
-        toast.success(`${label} completed!`, { id: toastId })
-        router.refresh()
+        toast.success(`${label} completed!`, { id: toastId });
+        router.refresh();
       } else {
-        toast.error(`${label} failed`, { id: toastId })
+        toast.error(`${label} failed`, { id: toastId });
       }
     } catch (error) {
-      toast.error(`${label} failed`, { id: toastId })
+      toast.error(`${label} failed`, { id: toastId });
     } finally {
-      setSyncing(false)
+      setSyncing(false);
     }
-  }
+  };
 
   return (
     <DropdownMenu>
@@ -181,7 +188,7 @@ function SyncDropdown() {
           disabled={syncing}
         >
           <span className="flex items-center gap-2">
-            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
             <span className="group-data-[collapsible=icon]:hidden">Sync</span>
           </span>
           <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
@@ -195,19 +202,25 @@ function SyncDropdown() {
           Sync All
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => handleSync("/api/plaid/sync-transactions", "Syncing transactions")}
+          onClick={() =>
+            handleSync("/api/plaid/sync-transactions", "Syncing transactions")
+          }
           disabled={syncing}
         >
           Sync Transactions Only
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => handleSync("/api/plaid/sync-investments", "Syncing investments")}
+          onClick={() =>
+            handleSync("/api/plaid/sync-investments", "Syncing investments")
+          }
           disabled={syncing}
         >
           Sync Investments Only
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")}
+          onClick={() =>
+            handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")
+          }
           disabled={syncing}
           className="text-destructive"
         >
@@ -215,23 +228,23 @@ function SyncDropdown() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
 
 function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
     return (
       <Button variant="outline" size="icon" className="w-full">
         <Sun className="h-4 w-4" />
       </Button>
-    )
+    );
   }
 
   return (
@@ -248,45 +261,82 @@ function ThemeToggle() {
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>
-  )
+  );
 }
 
 interface AppSidebarProps {
   accounts: Array<{
-    id: string
-    name: string
+    id: string;
+    name: string;
     item: {
       institution: {
-        id: string
-        name: string
-        logoUrl: string | null
-      } | null
-    }
-  }>
+        id: string;
+        name: string;
+        logoUrl: string | null;
+      } | null;
+    };
+  }>;
 }
 
 export function AppSidebar({ accounts }: AppSidebarProps) {
-  const pathname = usePathname()
-  const [openMenus, setOpenMenus] = React.useState<Record<string, boolean>>({})
-  const navItems = React.useMemo(() => getNavItems(accounts), [accounts])
+  const pathname = usePathname();
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const [openInstitutions, setOpenInstitutions] = useState<
+    Record<string, boolean>
+  >({});
+  const navItems = useMemo(() => getNavItems(accounts), [accounts]);
 
-  // Auto-expand menu if current path matches
-  React.useEffect(() => {
-    const newOpenMenus: Record<string, boolean> = {}
+  // Auto-expand menu and institutions if current path matches
+  useEffect(() => {
+    const newOpenMenus: Record<string, boolean> = {};
+    const newOpenInstitutions: Record<string, boolean> = {};
+
     navItems.forEach((item) => {
       if (item.items) {
-        const isActive = item.items.some((subItem) => pathname === subItem.href)
-        if (isActive) {
-          newOpenMenus[item.title] = true
+        // Check if any direct subitem is active
+        const hasActiveSubItem = item.items.some(
+          (subItem) => pathname === subItem.href
+        );
+
+        // Check if any nested item (in collapsible institutions) is active
+        const hasActiveNestedItem = item.items.some((subItem) => {
+          if (subItem.isCollapsible && subItem.items) {
+            return subItem.items.some(
+              (nestedItem) => pathname === nestedItem.href
+            );
+          }
+          return false;
+        });
+
+        if (hasActiveSubItem || hasActiveNestedItem) {
+          newOpenMenus[item.title] = true;
         }
+
+        // Auto-expand institutions if any of their accounts are active
+        item.items.forEach((subItem) => {
+          if (subItem.isCollapsible && subItem.items) {
+            const isInstitutionActive = subItem.items.some(
+              (nestedItem) => pathname === nestedItem.href
+            );
+            if (isInstitutionActive) {
+              newOpenInstitutions[subItem.title] = true;
+            }
+          }
+        });
       }
-    })
-    setOpenMenus(newOpenMenus)
-  }, [pathname, navItems])
+    });
+
+    setOpenMenus(newOpenMenus);
+    setOpenInstitutions(newOpenInstitutions);
+  }, [pathname, navItems]);
 
   const toggleMenu = (title: string) => {
-    setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }))
-  }
+    setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const toggleInstitution = (title: string) => {
+    setOpenInstitutions((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -306,7 +356,7 @@ export function AppSidebar({ accounts }: AppSidebarProps) {
               {navItems.map((item) => {
                 const isActive = item.href
                   ? pathname === item.href
-                  : item.items?.some((subItem) => pathname === subItem.href)
+                  : item.items?.some((subItem) => pathname === subItem.href);
 
                 if (item.items) {
                   return (
@@ -327,50 +377,103 @@ export function AppSidebar({ accounts }: AppSidebarProps) {
                       {openMenus[item.title] && (
                         <SidebarMenuSub>
                           {item.items.map((subItem, index) => {
-                            // Handle institution group labels
-                            if (subItem.isGroup) {
+                            // Handle collapsible institution groups
+                            if (subItem.isCollapsible && subItem.items) {
+                              const isInstitutionActive = subItem.items.some(
+                                (account) => pathname === account.href
+                              );
                               return (
-                                <div
+                                <SidebarMenuSubItem
                                   key={`${subItem.title}-${index}`}
-                                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-muted-foreground"
                                 >
-                                  {subItem.icon && <subItem.icon className="h-3 w-3" />}
-                                  <span>{subItem.title}</span>
-                                </div>
-                              )
+                                  <SidebarMenuSubButton
+                                    onClick={() =>
+                                      toggleInstitution(subItem.title)
+                                    }
+                                    isActive={isInstitutionActive}
+                                  >
+                                    {subItem.icon && (
+                                      <subItem.icon className="h-4 w-4" />
+                                    )}
+                                    <span>{subItem.title}</span>
+                                    <ChevronDown
+                                      className={`ml-auto h-3 w-3 transition-transform ${
+                                        openInstitutions[subItem.title]
+                                          ? "rotate-180"
+                                          : ""
+                                      }`}
+                                    />
+                                  </SidebarMenuSubButton>
+                                  {openInstitutions[subItem.title] && (
+                                    <SidebarMenuSub>
+                                      {subItem.items.map(
+                                        (account, accountIndex) => (
+                                          <SidebarMenuSubItem
+                                            key={
+                                              account.href ||
+                                              `${account.title}-${accountIndex}`
+                                            }
+                                          >
+                                            <SidebarMenuSubButton
+                                              asChild
+                                              isActive={
+                                                pathname === account.href
+                                              }
+                                            >
+                                              <Link href={account.href}>
+                                                <span>{account.title}</span>
+                                              </Link>
+                                            </SidebarMenuSubButton>
+                                          </SidebarMenuSubItem>
+                                        )
+                                      )}
+                                    </SidebarMenuSub>
+                                  )}
+                                </SidebarMenuSubItem>
+                              );
                             }
 
-                            // Handle regular submenu items with optional icons
+                            // Handle regular submenu items (like "Connect Account")
                             return (
-                              <SidebarMenuSubItem key={subItem.href || `${subItem.title}-${index}`}>
+                              <SidebarMenuSubItem
+                                key={
+                                  subItem.href || `${subItem.title}-${index}`
+                                }
+                              >
                                 <SidebarMenuSubButton
                                   asChild
                                   isActive={pathname === subItem.href}
                                 >
                                   <Link href={subItem.href!}>
-                                    {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                                    {subItem.icon && (
+                                      <subItem.icon className="h-4 w-4" />
+                                    )}
                                     <span>{subItem.title}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
-                            )
+                            );
                           })}
                         </SidebarMenuSub>
                       )}
                     </SidebarMenuItem>
-                  )
+                  );
                 }
 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                    >
                       <Link href={item.href!}>
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                );
               })}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -382,12 +485,16 @@ export function AppSidebar({ accounts }: AppSidebarProps) {
           <SyncDropdown />
           <ThemeToggle />
           <form action="/api/auth/sign-out" method="POST">
-            <Button type="submit" variant="link" className="w-full text-destructive">
+            <Button
+              type="submit"
+              variant="link"
+              className="w-full text-destructive"
+            >
               Logout
             </Button>
           </form>
         </div>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

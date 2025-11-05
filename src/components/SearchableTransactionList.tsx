@@ -337,92 +337,67 @@ export function SearchableTransactionList({
 
           {/* Custom Date Range */}
           {filters.dateRange === "custom" && (
-            <>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-[160px] justify-start text-left font-normal"
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-[280px] justify-start text-left font-normal"
+                >
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className="mr-2 h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    {filters.customStartDate
-                      ? format(new Date(filters.customStartDate), "PP")
-                      : "Start date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={
-                      filters.customStartDate
-                        ? new Date(filters.customStartDate)
-                        : undefined
-                    }
-                    onSelect={(date) =>
-                      filters.setCustomStartDate(
-                        date ? format(date, "yyyy-MM-dd") : ""
-                      )
-                    }
-                    weekStartsOn={1}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-[160px] justify-start text-left font-normal"
-                  >
-                    <svg
-                      className="mr-2 h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    {filters.customEndDate
-                      ? format(new Date(filters.customEndDate), "PP")
-                      : "End date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={
-                      filters.customEndDate
-                        ? new Date(filters.customEndDate)
-                        : undefined
-                    }
-                    onSelect={(date) =>
-                      filters.setCustomEndDate(
-                        date ? format(date, "yyyy-MM-dd") : ""
-                      )
-                    }
-                    weekStartsOn={1}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  {filters.customStartDate && filters.customEndDate
+                    ? `${format(
+                        new Date(filters.customStartDate),
+                        "PP"
+                      )} - ${format(new Date(filters.customEndDate), "PP")}`
+                    : filters.customStartDate
+                    ? `${format(
+                        new Date(filters.customStartDate),
+                        "PP"
+                      )} - End date`
+                    : "Select date range"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  selected={
+                    filters.customStartDate || filters.customEndDate
+                      ? {
+                          from: filters.customStartDate
+                            ? new Date(filters.customStartDate)
+                            : undefined,
+                          to: filters.customEndDate
+                            ? new Date(filters.customEndDate)
+                            : undefined,
+                        }
+                      : undefined
+                  }
+                  onSelect={(range) => {
+                    filters.setCustomStartDate(
+                      range?.from ? format(range.from, "yyyy-MM-dd") : ""
+                    );
+                    filters.setCustomEndDate(
+                      range?.to ? format(range.to, "yyyy-MM-dd") : ""
+                    );
+                  }}
+                  numberOfMonths={2}
+                  weekStartsOn={1}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           )}
 
           {/* Account Filter */}
@@ -449,8 +424,7 @@ export function SearchableTransactionList({
                 <SelectItem value="all">All Accounts</SelectItem>
                 {nonInvestmentAccounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
-                    {account.name}{" "}
-                    {account.mask ? `(•••${account.mask})` : ""}
+                    {account.name} {account.mask ? `(•••${account.mask})` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
