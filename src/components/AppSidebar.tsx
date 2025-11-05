@@ -13,6 +13,8 @@ import {
   RefreshCw,
   Moon,
   Sun,
+  Plus,
+  Building2,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -41,59 +43,110 @@ import {
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
 
-const navItems = [
-  {
-    title: "Dashboard",
-    href: "/",
-    icon: Home,
-  },
-  {
-    title: "Transactions",
-    href: "/transactions",
-    icon: Receipt,
-  },
-  {
-    title: "Accounts",
-    href: "/accounts",
-    icon: Wallet,
-  },
-  {
-    title: "Investments",
-    icon: TrendingUp,
-    items: [
-      {
-        title: "Holdings",
-        href: "/investments/holdings",
-      },
-      {
-        title: "Transactions",
-        href: "/investments/transactions",
-      },
-    ],
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    items: [
-      {
-        title: "Categories",
-        href: "/settings/manage-categories",
-      },
-      {
-        title: "Category Order",
-        href: "/settings/category-order",
-      },
-      {
-        title: "Tags",
-        href: "/settings/manage-tags",
-      },
-      {
-        title: "Move Transactions",
-        href: "/settings/move-transactions",
-      },
-    ],
-  },
-]
+// Base nav items without accounts (accounts will be dynamically generated)
+const getNavItems = (accounts: Array<{
+  id: string
+  name: string
+  item: {
+    institution: {
+      id: string
+      name: string
+      logoUrl: string | null
+    } | null
+  }
+}>) => {
+  // Group accounts by institution
+  const accountsByInstitution = accounts.reduce((acc, account) => {
+    const institutionName = account.item.institution?.name || "Unknown Bank"
+    if (!acc[institutionName]) {
+      acc[institutionName] = []
+    }
+    acc[institutionName].push(account)
+    return acc
+  }, {} as Record<string, typeof accounts>)
+
+  // Build accounts submenu items
+  const accountsItems: Array<{ title: string; href?: string; icon?: any; isGroup?: boolean }> = [
+    {
+      title: "Connect Account",
+      href: "/connect-account",
+      icon: Plus,
+    },
+  ]
+
+  // Add each institution as a group with its accounts
+  Object.entries(accountsByInstitution)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([institutionName, institutionAccounts]) => {
+      // Add institution as a non-clickable group label
+      accountsItems.push({
+        title: institutionName,
+        icon: Building2,
+        isGroup: true,
+      })
+      // Add accounts under this institution
+      institutionAccounts.forEach((account) => {
+        accountsItems.push({
+          title: account.name,
+          href: `/accounts/${account.id}`,
+        })
+      })
+    })
+
+  return [
+    {
+      title: "Dashboard",
+      href: "/",
+      icon: Home,
+    },
+    {
+      title: "Transactions",
+      href: "/transactions",
+      icon: Receipt,
+    },
+    {
+      title: "Accounts",
+      icon: Wallet,
+      items: accountsItems,
+    },
+    {
+      title: "Investments",
+      icon: TrendingUp,
+      items: [
+        {
+          title: "Holdings",
+          href: "/investments/holdings",
+        },
+        {
+          title: "Transactions",
+          href: "/investments/transactions",
+        },
+      ],
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      items: [
+        {
+          title: "Categories",
+          href: "/settings/manage-categories",
+        },
+        {
+          title: "Category Order",
+          href: "/settings/category-order",
+        },
+        {
+          title: "Tags",
+          href: "/settings/manage-tags",
+        },
+        {
+          title: "Move Transactions",
+          href: "/settings/move-transactions",
+        },
+      ],
+    },
+  ]
+}
 
 function SyncDropdown() {
   const router = useRouter()
@@ -198,9 +251,24 @@ function ThemeToggle() {
   )
 }
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  accounts: Array<{
+    id: string
+    name: string
+    item: {
+      institution: {
+        id: string
+        name: string
+        logoUrl: string | null
+      } | null
+    }
+  }>
+}
+
+export function AppSidebar({ accounts }: AppSidebarProps) {
   const pathname = usePathname()
   const [openMenus, setOpenMenus] = React.useState<Record<string, boolean>>({})
+  const navItems = React.useMemo(() => getNavItems(accounts), [accounts])
 
   // Auto-expand menu if current path matches
   React.useEffect(() => {
@@ -214,7 +282,7 @@ export function AppSidebar() {
       }
     })
     setOpenMenus(newOpenMenus)
-  }, [pathname])
+  }, [pathname, navItems])
 
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }))
@@ -258,16 +326,35 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                       {openMenus[item.title] && (
                         <SidebarMenuSub>
-                          {item.items.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.href}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === subItem.href}
-                              >
-                                <Link href={subItem.href}>{subItem.title}</Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
+                          {item.items.map((subItem, index) => {
+                            // Handle institution group labels
+                            if (subItem.isGroup) {
+                              return (
+                                <div
+                                  key={`${subItem.title}-${index}`}
+                                  className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-muted-foreground"
+                                >
+                                  {subItem.icon && <subItem.icon className="h-3 w-3" />}
+                                  <span>{subItem.title}</span>
+                                </div>
+                              )
+                            }
+
+                            // Handle regular submenu items with optional icons
+                            return (
+                              <SidebarMenuSubItem key={subItem.href || `${subItem.title}-${index}`}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === subItem.href}
+                                >
+                                  <Link href={subItem.href!}>
+                                    {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            )
+                          })}
                         </SidebarMenuSub>
                       )}
                     </SidebarMenuItem>

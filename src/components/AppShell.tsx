@@ -19,9 +19,20 @@ import { generateBreadcrumbs } from "@/lib/breadcrumbs"
 interface AppShellProps {
   children: React.ReactNode
   defaultOpen?: boolean
+  accounts: Array<{
+    id: string
+    name: string
+    item: {
+      institution: {
+        id: string
+        name: string
+        logoUrl: string | null
+      } | null
+    }
+  }>
 }
 
-export function AppShell({ children, defaultOpen = true }: AppShellProps) {
+export function AppShell({ children, defaultOpen = true, accounts }: AppShellProps) {
   const pathname = usePathname()
   const breadcrumbs = generateBreadcrumbs(pathname)
   const [open, setOpen] = useState(defaultOpen)
@@ -33,7 +44,7 @@ export function AppShell({ children, defaultOpen = true }: AppShellProps) {
 
   return (
     <SidebarProvider open={open} onOpenChange={handleOpenChange}>
-      <AppSidebar />
+      <AppSidebar accounts={accounts} />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
           <SidebarTrigger />
