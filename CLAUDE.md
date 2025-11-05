@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 📖 **Detailed Documentation:**
 - [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, props pattern, generated columns
+- [Caching Strategy](docs/CACHING.md) - Next.js 16+ caching with 24h expiration and tag-based invalidation
 - [Theming Guidelines](docs/THEMING.md) - shadcn/ui theme variables, NO hardcoded colors
 - [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
 - [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup, testing
@@ -31,15 +32,17 @@ A personal finance application built with Next.js 15 (App Router) that integrate
 
 ### 1. Data Fetching Pattern ⭐️ MOST IMPORTANT
 
-**ALWAYS fetch reference data (categories, tags) in Server Components and pass as props.**
+**ALWAYS fetch reference data (categories, tags) in Server Components and pass as props. Use cached query functions for better performance.**
 
 ```typescript
-// ✅ DO: Server Component fetches data
+// ✅ DO: Server Component with cached queries
+import { getAllTransactions, getAllCategories, getAllTags } from "@/lib/cached-queries"
+
 export default async function Page() {
   const [transactions, categories, tags] = await Promise.all([
-    prisma.transaction.findMany(...),
-    prisma.category.findMany({ include: { subcategories: true } }),
-    prisma.tag.findMany(),
+    getAllTransactions(),    // Cached 24h, auto-invalidates on changes
+    getAllCategories(),      // Cached 24h, auto-invalidates on changes
+    getAllTags(),           // Cached 24h, auto-invalidates on changes
   ])
 
   return <ClientComponent categories={categories} tags={tags} />
@@ -62,6 +65,7 @@ export function ClientComponent() {
 - `TransactionDetailView`
 
 👉 See [DATA_FETCHING.md](docs/DATA_FETCHING.md) for complete patterns
+👉 See [CACHING.md](docs/CACHING.md) for caching strategy
 
 ### 2. Theming ⭐️ NO HARDCODED COLORS
 
