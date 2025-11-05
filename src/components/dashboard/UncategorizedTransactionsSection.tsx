@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Transaction, PlaidAccount } from "@prisma/client";
 
@@ -46,9 +45,7 @@ export function UncategorizedTransactionsSection({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">
-            Uncategorized Transactions
-          </h2>
+          <h2 className="text-2xl font-semibold">Uncategorized Transactions</h2>
           <p className="text-muted-foreground">
             {count} transaction{count !== 1 ? "s" : ""} need categorization
           </p>
