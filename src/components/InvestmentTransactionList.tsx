@@ -32,7 +32,7 @@ export function InvestmentTransactionList({ transactions, showAccount = false }:
                 {t.name || t.type} — {t.security?.tickerSymbol || 'N/A'}
               </div>
               <div className="text-sm text-muted-foreground">
-                {format(new Date(t.date_string), 'MMM d yyyy')} · Type: {t.type}
+                {t.date_string ? format(new Date(t.date_string), 'MMM d yyyy') : 'N/A'} · Type: {t.type}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
               {t.quantity_number != null && <div className="text-sm">Quantity: {t.quantity_number.toLocaleString("en-US", {

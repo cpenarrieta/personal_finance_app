@@ -511,6 +511,14 @@ export async function getHoldingsForAccount(accountId: string) {
           updated_at_string: true,
         },
       },
+      account: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          mask: true,
+        },
+      },
     },
   });
 }
@@ -541,6 +549,14 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
       name: true,
       created_at_string: true,
       updated_at_string: true,
+      account: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          mask: true,
+        },
+      },
       security: {
         select: {
           id: true,

@@ -1,38 +1,35 @@
 import { format } from "date-fns";
-import { SpendingByCategoryChart } from "@/components/charts/SpendingByCategoryChart";
-import { SubcategoryChart } from "@/components/charts/SubcategoryChart";
-import { DailySpendingChart } from "@/components/charts/DailySpendingChart";
+import { Suspense } from "react";
 import { getLastMonthStats } from "@/lib/dashboard/data";
-import {
-  prepareSpendingByCategory,
-  prepareSpendingBySubcategory,
-  prepareDailySpendingData,
-} from "@/lib/dashboard/calculations";
+import { SpendingByCategoryChartAsync } from "@/components/dashboard/charts/SpendingByCategoryChartAsync";
+import { SubcategoryChartAsync } from "@/components/dashboard/charts/SubcategoryChartAsync";
+import { DailySpendingChartAsync } from "@/components/dashboard/charts/DailySpendingChartAsync";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
- * Async Server Component for Last Month Overview
- * Fetches last month stats and prepares chart data independently with "use cache"
+ * Skeleton for individual chart
+ */
+function ChartSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-32" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-64 w-full" />
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Server Component for Last Month Overview section header
+ * Shows header immediately while charts stream in independently
  */
 export async function DashboardLastMonthSection() {
-  const {
-    lastMonthTransactions,
-    lastMonthStart,
-    lastMonthEnd,
-  } = await getLastMonthStats();
-
-  const spendingByCategory = prepareSpendingByCategory(
-    lastMonthTransactions,
-    10
-  );
-  const spendingBySubcategory = prepareSpendingBySubcategory(
-    lastMonthTransactions,
-    10
-  );
-  const dailySpendingData = prepareDailySpendingData(
-    lastMonthTransactions,
-    lastMonthStart,
-    lastMonthEnd
-  );
+  const { lastMonthStart } = await getLastMonthStats();
 
   return (
     <div className="space-y-4">
@@ -43,9 +40,15 @@ export async function DashboardLastMonthSection() {
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <SpendingByCategoryChart data={spendingByCategory} />
-        <SubcategoryChart data={spendingBySubcategory} />
-        <DailySpendingChart data={dailySpendingData} />
+        <Suspense fallback={<ChartSkeleton />}>
+          <SpendingByCategoryChartAsync />
+        </Suspense>
+        <Suspense fallback={<ChartSkeleton />}>
+          <SubcategoryChartAsync />
+        </Suspense>
+        <Suspense fallback={<ChartSkeleton />}>
+          <DailySpendingChartAsync />
+        </Suspense>
       </div>
     </div>
   );

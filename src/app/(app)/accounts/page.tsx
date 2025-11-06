@@ -14,19 +14,24 @@ export const metadata: Metadata = {
 export default async function AccountsPage() {
   const accounts = await getAllAccountsWithInstitution();
 
+  type AccountWithInstitution = typeof accounts[number];
+
   // Group accounts by institution
-  const accountsByInstitution = accounts.reduce((acc, account) => {
-    const institutionName =
-      account.item?.institution?.name || "Unknown Institution";
-    if (!acc[institutionName]) {
-      acc[institutionName] = {
-        accounts: [],
-        logoUrl: account.item?.institution?.logoUrl || null,
-      };
-    }
-    acc[institutionName].accounts.push(account);
-    return acc;
-  }, {} as Record<string, { accounts: typeof accounts; logoUrl: string | null }>);
+  const accountsByInstitution = accounts.reduce(
+    (acc: Record<string, { accounts: AccountWithInstitution[]; logoUrl: string | null }>, account: AccountWithInstitution) => {
+      const institutionName =
+        account.item?.institution?.name || "Unknown Institution";
+      if (!acc[institutionName]) {
+        acc[institutionName] = {
+          accounts: [],
+          logoUrl: account.item?.institution?.logoUrl || null,
+        };
+      }
+      acc[institutionName].accounts.push(account);
+      return acc;
+    },
+    {} as Record<string, { accounts: AccountWithInstitution[]; logoUrl: string | null }>
+  );
 
   const institutionNames = Object.keys(accountsByInstitution).sort();
 
@@ -60,7 +65,7 @@ export default async function AccountsPage() {
                   </h3>
                 </div>
                 <ul className="space-y-2 pl-2">
-                  {institution.accounts.map((a) => (
+                  {institution.accounts.map((a: AccountWithInstitution) => (
                     <li key={a.id}>
                       <Link
                         href={`/accounts/${a.id}`}
