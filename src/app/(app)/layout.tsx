@@ -1,38 +1,15 @@
-import { cookies } from "next/headers";
 import { AppShell } from "@/components/AppShell";
-import { prisma } from "@/lib/prisma";
+import { getAllAccountsWithInstitution } from "@/lib/cached-queries";
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const sidebarCookie = cookieStore.get("sidebar-open");
-  const defaultOpen = sidebarCookie ? sidebarCookie.value === "true" : true;
-
-  // Fetch accounts with their institutions for the sidebar
-  const accounts = await prisma.plaidAccount.findMany({
-    select: {
-      id: true,
-      name: true,
-      item: {
-        select: {
-          institution: {
-            select: {
-              id: true,
-              name: true,
-              logoUrl: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: [{ item: { institution: { name: "asc" } } }, { name: "asc" }],
-  });
+  const accounts = await getAllAccountsWithInstitution();
 
   return (
-    <AppShell defaultOpen={defaultOpen} accounts={accounts}>
+    <AppShell accounts={accounts}>
       <div className="w-full max-w-7xl mx-auto">{children}</div>
     </AppShell>
   );

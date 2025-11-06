@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import Cookies from "js-cookie"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
@@ -18,7 +18,6 @@ import { generateBreadcrumbs } from "@/lib/breadcrumbs"
 
 interface AppShellProps {
   children: React.ReactNode
-  defaultOpen?: boolean
   accounts: Array<{
     id: string
     name: string
@@ -32,10 +31,19 @@ interface AppShellProps {
   }>
 }
 
-export function AppShell({ children, defaultOpen = true, accounts }: AppShellProps) {
+export function AppShell({ children, accounts }: AppShellProps) {
   const pathname = usePathname()
   const breadcrumbs = generateBreadcrumbs(pathname)
-  const [open, setOpen] = useState(defaultOpen)
+
+  // Read sidebar state from cookie on client-side (default true)
+  const [open, setOpen] = useState(true)
+
+  useEffect(() => {
+    const sidebarCookie = Cookies.get("sidebar-open")
+    if (sidebarCookie !== undefined) {
+      setOpen(sidebarCookie === "true")
+    }
+  }, [])
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen)
