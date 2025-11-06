@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ManageCategoriesAsync } from "@/components/settings/ManageCategoriesAsync";
-import { SettingsPageSkeleton } from "@/components/settings/SettingsPageSkeleton";
+import { ManageCategoriesSkeleton } from "@/components/settings/ManageCategoriesSkeleton";
 
 export const metadata: Metadata = {
   title: "Manage Categories",
@@ -24,7 +24,7 @@ export default async function ManageCategoriesPage() {
         </p>
       </div>
 
-      <Suspense fallback={<SettingsPageSkeleton />}>
+      <Suspense fallback={<ManageCategoriesSkeleton />}>
         <ManageCategoriesAsync />
       </Suspense>
     </div>

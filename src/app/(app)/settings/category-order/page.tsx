@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { CategoryOrderAsync } from "@/components/settings/CategoryOrderAsync";
-import { SettingsPageSkeleton } from "@/components/settings/SettingsPageSkeleton";
+import { CategoryOrderSkeleton } from "@/components/settings/CategoryOrderSkeleton";
 
 export const metadata: Metadata = {
   title: "Manage Category Order",
@@ -21,7 +21,7 @@ export default async function CategoryOrderPage() {
         </p>
       </div>
 
-      <Suspense fallback={<SettingsPageSkeleton />}>
+      <Suspense fallback={<CategoryOrderSkeleton />}>
         <CategoryOrderAsync />
       </Suspense>
     </div>

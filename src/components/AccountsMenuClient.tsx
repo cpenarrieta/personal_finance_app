@@ -58,7 +58,8 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
         }
       });
     }
-  }, [pathname, accountsByInstitution]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const isAccountsActive =
     pathname.startsWith("/accounts/") || pathname === "/connect-account";

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ManageTagsAsync } from "@/components/settings/ManageTagsAsync";
-import { SettingsPageSkeleton } from "@/components/settings/SettingsPageSkeleton";
+import { ManageTagsSkeleton } from "@/components/settings/ManageTagsSkeleton";
 
 export const metadata: Metadata = {
   title: "Manage Tags",
@@ -21,7 +21,7 @@ export default async function ManageTagsPage() {
         </p>
       </div>
 
-      <Suspense fallback={<SettingsPageSkeleton />}>
+      <Suspense fallback={<ManageTagsSkeleton />}>
         <ManageTagsAsync />
       </Suspense>
     </div>

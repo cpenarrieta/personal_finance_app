@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { MoveTransactionsAsync } from "@/components/settings/MoveTransactionsAsync";
-import { SettingsPageSkeleton } from "@/components/settings/SettingsPageSkeleton";
+import { MoveTransactionsSkeleton } from "@/components/settings/MoveTransactionsSkeleton";
 
 export const metadata: Metadata = {
   title: "Move Transactions",
@@ -24,7 +24,7 @@ export default async function MoveTransactionsPage() {
       </div>
 
       <div className="border rounded-lg p-4">
-        <Suspense fallback={<SettingsPageSkeleton />}>
+        <Suspense fallback={<MoveTransactionsSkeleton />}>
           <MoveTransactionsAsync />
         </Suspense>
       </div>
