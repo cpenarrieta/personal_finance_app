@@ -1,11 +1,7 @@
-import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
-import { TransactionDetailView } from "@/components/TransactionDetailView";
-import type {
-  TransactionForClient,
-  CategoryForClient,
-  TagForClient,
-} from "@/types";
+import { Suspense } from "react";
+import { getTransactionById } from "@/lib/cached-queries-transaction";
+import { TransactionDetailAsync } from "@/components/transactions/TransactionDetailAsync";
+import { TransactionDetailSkeleton } from "@/components/transactions/TransactionDetailSkeleton";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -14,12 +10,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const transaction = await prisma.transaction.findUnique({
-    where: { id },
-    select: {
-      name: true,
-    },
-  });
+  const transaction = await getTransactionById(id);
 
   if (!transaction) {
     return {
@@ -47,173 +38,9 @@ export default async function TransactionDetailPage({
 }) {
   const { id } = await params;
 
-  const txResult = await prisma.transaction.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      plaidTransactionId: true,
-      accountId: true,
-      amount_number: true, // Generated column
-      isoCurrencyCode: true,
-      date_string: true, // Generated column
-      authorized_date_string: true, // Generated column
-      pending: true,
-      merchantName: true,
-      name: true,
-      plaidCategory: true,
-      plaidSubcategory: true,
-      paymentChannel: true,
-      pendingTransactionId: true,
-      logoUrl: true,
-      categoryIconUrl: true,
-      categoryId: true,
-      subcategoryId: true,
-      notes: true,
-      isSplit: true,
-      parentTransactionId: true,
-      originalTransactionId: true,
-      created_at_string: true, // Generated column
-      updated_at_string: true, // Generated column
-      account: {
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          mask: true,
-        },
-      },
-      category: {
-        select: {
-          id: true,
-          name: true,
-          imageUrl: true,
-          created_at_string: true, // Generated column
-          updated_at_string: true, // Generated column
-        },
-      },
-      subcategory: {
-        select: {
-          id: true,
-          categoryId: true,
-          name: true,
-          imageUrl: true,
-          created_at_string: true, // Generated column
-          updated_at_string: true, // Generated column
-        },
-      },
-      tags: {
-        select: {
-          tag: {
-            select: {
-              id: true,
-              name: true,
-              color: true,
-              created_at_string: true, // Generated column
-              updated_at_string: true, // Generated column
-            },
-          },
-        },
-      },
-      parentTransaction: {
-        select: {
-          id: true,
-          name: true,
-          amount_number: true, // Generated column
-          date_string: true, // Generated column
-          category: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      childTransactions: {
-        select: {
-          id: true,
-          name: true,
-          amount_number: true, // Generated column
-          date_string: true, // Generated column
-          category: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          subcategory: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      },
-    },
-  });
-
-  if (!txResult) {
-    notFound();
-  }
-
-  // Flatten tags structure
-  const transaction: TransactionForClient = {
-    ...txResult,
-    tags: txResult.tags.map((tt: typeof txResult.tags[0]) => tt.tag),
-  };
-
-  // Fetch categories and tags (needed for transaction editing)
-  const [categories, tags] = await Promise.all([
-    prisma.category.findMany({
-      select: {
-        id: true,
-        name: true,
-        imageUrl: true,
-        groupType: true,
-        displayOrder: true,
-        created_at_string: true, // Generated column
-        updated_at_string: true, // Generated column
-        subcategories: {
-          select: {
-            id: true,
-            categoryId: true,
-            name: true,
-            imageUrl: true,
-            created_at_string: true, // Generated column
-            updated_at_string: true, // Generated column
-          },
-          orderBy: { name: "asc" },
-        },
-      },
-      orderBy: [
-        { groupType: "asc" },
-        { displayOrder: "asc" },
-        { name: "asc" },
-      ],
-    }) as CategoryForClient[],
-    prisma.tag.findMany({
-      select: {
-        id: true,
-        name: true,
-        color: true,
-        created_at_string: true, // Generated column
-        updated_at_string: true, // Generated column
-      },
-      orderBy: { name: "asc" },
-    }) as TagForClient[],
-  ]);
-
   return (
-    <>
-      <div>
-        <TransactionDetailView
-          transaction={transaction}
-          categories={categories}
-          tags={tags}
-        />
-      </div>
-    </>
+    <Suspense fallback={<TransactionDetailSkeleton />}>
+      <TransactionDetailAsync id={id} />
+    </Suspense>
   );
 }
