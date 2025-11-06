@@ -23,20 +23,10 @@ import { generateBreadcrumbs } from "@/lib/breadcrumbs";
 
 interface AppShellProps {
   children: React.ReactNode;
-  accounts: Array<{
-    id: string;
-    name: string;
-    item: {
-      institution: {
-        id: string;
-        name: string;
-        logoUrl: string | null;
-      } | null;
-    };
-  }>;
+  accountsSlot: React.ReactNode;
 }
 
-export function AppShell({ children, accounts }: AppShellProps) {
+export function AppShell({ children, accountsSlot }: AppShellProps) {
   const pathname = usePathname();
   const breadcrumbs = generateBreadcrumbs(pathname);
   const [open, setOpen] = useState(true);
@@ -56,7 +46,7 @@ export function AppShell({ children, accounts }: AppShellProps) {
 
   return (
     <SidebarProvider open={open} onOpenChange={handleOpenChange}>
-      <AppSidebar accounts={accounts} />
+      <AppSidebar accountsSlot={accountsSlot} />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
           <SidebarTrigger />

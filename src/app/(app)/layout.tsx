@@ -1,16 +1,22 @@
-import { AppShell } from "@/components/AppShell";
-import { getAllAccountsWithInstitution } from "@/lib/cached-queries";
+import { Suspense } from "react";
+import { AppShellWrapper } from "@/components/AppShellWrapper";
+import { AccountsMenuAsync } from "@/components/AccountsMenuAsync";
+import { AccountsMenuSkeleton } from "@/components/AccountsMenuSkeleton";
 
-export default async function AppLayout({
+export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const accounts = await getAllAccountsWithInstitution();
-
   return (
-    <AppShell accounts={accounts}>
+    <AppShellWrapper
+      accountsSlot={
+        <Suspense fallback={<AccountsMenuSkeleton />}>
+          <AccountsMenuAsync />
+        </Suspense>
+      }
+    >
       <div className="w-full max-w-7xl mx-auto">{children}</div>
-    </AppShell>
+    </AppShellWrapper>
   );
 }

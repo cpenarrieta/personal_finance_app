@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   Receipt,
-  Wallet,
   TrendingUp,
   Settings,
   ChevronDown,
   RefreshCw,
   Moon,
   Sun,
-  Plus,
-  Building2,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,63 +41,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 
-// Base nav items without accounts (accounts will be dynamically generated)
-const getNavItems = (
-  accounts: Array<{
-    id: string;
-    name: string;
-    item: {
-      institution: {
-        id: string;
-        name: string;
-        logoUrl: string | null;
-      } | null;
-    };
-  }>
-) => {
-  // Group accounts by institution
-  const accountsByInstitution = accounts.reduce((acc, account) => {
-    const institutionName = account.item.institution?.name || "Unknown Bank";
-    if (!acc[institutionName]) {
-      acc[institutionName] = [];
-    }
-    acc[institutionName].push(account);
-    return acc;
-  }, {} as Record<string, typeof accounts>);
-
-  // Build accounts submenu items with collapsible institutions
-  const accountsItems: Array<{
-    title: string;
-    href?: string;
-    icon?: any;
-    isCollapsible?: boolean;
-    items?: Array<{
-      title: string;
-      href: string;
-    }>;
-  }> = [
-    {
-      title: "Connect Account",
-      href: "/connect-account",
-      icon: Plus,
-    },
-  ];
-
-  // Add each institution as a collapsible group with its accounts
-  Object.entries(accountsByInstitution)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([institutionName, institutionAccounts]) => {
-      accountsItems.push({
-        title: institutionName,
-        icon: Building2,
-        isCollapsible: true,
-        items: institutionAccounts.map((account) => ({
-          title: account.name,
-          href: `/accounts/${account.id}`,
-        })),
-      });
-    });
-
+// Static nav items (accounts section will be passed as slot)
+const getStaticNavItems = () => {
   return [
     {
       title: "Dashboard",
@@ -110,11 +53,6 @@ const getNavItems = (
       title: "Transactions",
       href: "/transactions",
       icon: Receipt,
-    },
-    {
-      title: "Accounts",
-      icon: Wallet,
-      items: accountsItems,
     },
     {
       title: "Investments",
@@ -266,77 +204,39 @@ function ThemeToggle() {
 }
 
 interface AppSidebarProps {
-  accounts: Array<{
-    id: string;
-    name: string;
-    item: {
-      institution: {
-        id: string;
-        name: string;
-        logoUrl: string | null;
-      } | null;
-    };
-  }>;
+  accountsSlot: React.ReactNode;
 }
 
-export function AppSidebar({ accounts }: AppSidebarProps) {
+export function AppSidebar({ accountsSlot }: AppSidebarProps) {
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
-  const [openInstitutions, setOpenInstitutions] = useState<
-    Record<string, boolean>
-  >({});
-  const navItems = useMemo(() => getNavItems(accounts), [accounts]);
+  const navItems = useMemo(() => getStaticNavItems(), []);
 
-  // Auto-expand menu and institutions if current path matches
+  // Auto-expand menu if current path matches
   useEffect(() => {
     const newOpenMenus: Record<string, boolean> = {};
-    const newOpenInstitutions: Record<string, boolean> = {};
 
     navItems.forEach((item) => {
       if (item.items) {
-        // Check if any direct subitem is active
         const hasActiveSubItem = item.items.some(
           (subItem) => pathname === subItem.href
         );
-
-        // Check if any nested item (in collapsible institutions) is active
-        const hasActiveNestedItem = item.items.some((subItem) => {
-          if (subItem.isCollapsible && subItem.items) {
-            return subItem.items.some(
-              (nestedItem) => pathname === nestedItem.href
-            );
-          }
-          return false;
-        });
-
-        if (hasActiveSubItem || hasActiveNestedItem) {
+        if (hasActiveSubItem) {
           newOpenMenus[item.title] = true;
         }
-
-        // Auto-expand institutions if any of their accounts are active
-        item.items.forEach((subItem) => {
-          if (subItem.isCollapsible && subItem.items) {
-            const isInstitutionActive = subItem.items.some(
-              (nestedItem) => pathname === nestedItem.href
-            );
-            if (isInstitutionActive) {
-              newOpenInstitutions[subItem.title] = true;
-            }
-          }
-        });
       }
     });
 
+    // Auto-expand Accounts menu if on an account page
+    if (pathname.startsWith("/accounts/") || pathname === "/connect-account") {
+      newOpenMenus["Accounts"] = true;
+    }
+
     setOpenMenus(newOpenMenus);
-    setOpenInstitutions(newOpenInstitutions);
   }, [pathname, navItems]);
 
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }));
-  };
-
-  const toggleInstitution = (title: string) => {
-    setOpenInstitutions((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
   return (
@@ -354,114 +254,46 @@ export function AppSidebar({ accounts }: AppSidebarProps) {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {navItems.map((item, idx) => {
                 const isActive = item.href
                   ? pathname === item.href
                   : item.items?.some((subItem) => pathname === subItem.href);
 
-                if (item.items) {
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        onClick={() => toggleMenu(item.title)}
-                        isActive={isActive}
-                        tooltip={item.title}
-                      >
-                        {item.icon && <item.icon />}
-                        <span>{item.title}</span>
-                        <ChevronDown
-                          className={`ml-auto h-4 w-4 transition-transform ${
-                            openMenus[item.title] ? "rotate-180" : ""
-                          }`}
-                        />
-                      </SidebarMenuButton>
-                      {openMenus[item.title] && (
-                        <SidebarMenuSub>
-                          {item.items.map((subItem, index) => {
-                            // Handle collapsible institution groups
-                            if (subItem.isCollapsible && subItem.items) {
-                              const isInstitutionActive = subItem.items.some(
-                                (account) => pathname === account.href
-                              );
-                              return (
-                                <SidebarMenuSubItem
-                                  key={`${subItem.title}-${index}`}
-                                >
-                                  <SidebarMenuSubButton
-                                    onClick={() =>
-                                      toggleInstitution(subItem.title)
-                                    }
-                                    isActive={isInstitutionActive}
-                                  >
-                                    {subItem.icon && (
-                                      <subItem.icon className="h-4 w-4" />
-                                    )}
-                                    <span>{subItem.title}</span>
-                                    <ChevronDown
-                                      className={`ml-auto h-3 w-3 transition-transform ${
-                                        openInstitutions[subItem.title]
-                                          ? "rotate-180"
-                                          : ""
-                                      }`}
-                                    />
-                                  </SidebarMenuSubButton>
-                                  {openInstitutions[subItem.title] && (
-                                    <SidebarMenuSub>
-                                      {subItem.items.map(
-                                        (account, accountIndex) => (
-                                          <SidebarMenuSubItem
-                                            key={
-                                              account.href ||
-                                              `${account.title}-${accountIndex}`
-                                            }
-                                          >
-                                            <SidebarMenuSubButton
-                                              asChild
-                                              isActive={
-                                                pathname === account.href
-                                              }
-                                            >
-                                              <Link href={account.href}>
-                                                <span>{account.title}</span>
-                                              </Link>
-                                            </SidebarMenuSubButton>
-                                          </SidebarMenuSubItem>
-                                        )
-                                      )}
-                                    </SidebarMenuSub>
-                                  )}
-                                </SidebarMenuSubItem>
-                              );
-                            }
-
-                            // Handle regular submenu items (like "Connect Account")
-                            return (
-                              <SidebarMenuSubItem
-                                key={
-                                  subItem.href || `${subItem.title}-${index}`
-                                }
-                              >
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={pathname === subItem.href}
-                                >
-                                  <Link href={subItem.href!}>
-                                    {subItem.icon && (
-                                      <subItem.icon className="h-4 w-4" />
-                                    )}
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            );
-                          })}
-                        </SidebarMenuSub>
-                      )}
-                    </SidebarMenuItem>
-                  );
-                }
-
-                return (
+                const menuItem = item.items ? (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      onClick={() => toggleMenu(item.title)}
+                      isActive={isActive}
+                      tooltip={item.title}
+                    >
+                      {item.icon && <item.icon />}
+                      <span>{item.title}</span>
+                      <ChevronDown
+                        className={`ml-auto h-4 w-4 transition-transform ${
+                          openMenus[item.title] ? "rotate-180" : ""
+                        }`}
+                      />
+                    </SidebarMenuButton>
+                    {openMenus[item.title] && (
+                      <SidebarMenuSub>
+                        {item.items.map((subItem, index) => (
+                          <SidebarMenuSubItem
+                            key={subItem.href || `${subItem.title}-${index}`}
+                          >
+                            <SidebarMenuSubButton
+                              asChild
+                              isActive={pathname === subItem.href}
+                            >
+                              <Link href={subItem.href!}>
+                                <span>{subItem.title}</span>
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    )}
+                  </SidebarMenuItem>
+                ) : (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
@@ -474,6 +306,14 @@ export function AppSidebar({ accounts }: AppSidebarProps) {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                );
+
+                // Insert accounts slot after Transactions (idx === 1)
+                return (
+                  <React.Fragment key={item.title}>
+                    {menuItem}
+                    {idx === 1 && accountsSlot}
+                  </React.Fragment>
                 );
               })}
             </SidebarMenu>
