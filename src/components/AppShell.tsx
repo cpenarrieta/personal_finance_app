@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 import {
   SidebarProvider,
@@ -9,26 +8,15 @@ import {
   SidebarTrigger,
   SIDEBAR_COOKIE_NAME,
 } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { generateBreadcrumbs } from "@/lib/breadcrumbs";
 
 interface AppShellProps {
   children: React.ReactNode;
-  accountsSlot: React.ReactNode;
+  sidebarSlot: React.ReactNode;
+  breadcrumbsSlot: React.ReactNode;
 }
 
-export function AppShell({ children, accountsSlot }: AppShellProps) {
-  const pathname = usePathname();
-  const breadcrumbs = generateBreadcrumbs(pathname);
+export function AppShell({ children, sidebarSlot, breadcrumbsSlot }: AppShellProps) {
   const [open, setOpen] = useState(true);
 
   // Read sidebar state from cookie after mount
@@ -46,31 +34,12 @@ export function AppShell({ children, accountsSlot }: AppShellProps) {
 
   return (
     <SidebarProvider open={open} onOpenChange={handleOpenChange}>
-      <AppSidebar accountsSlot={accountsSlot} />
+      {sidebarSlot}
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
           <SidebarTrigger />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          {breadcrumbs && breadcrumbs.length > 0 && (
-            <Breadcrumb>
-              <BreadcrumbList>
-                {breadcrumbs.map((crumb, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    {index > 0 && <BreadcrumbSeparator />}
-                    <BreadcrumbItem>
-                      {crumb.href ? (
-                        <BreadcrumbLink href={crumb.href}>
-                          {crumb.label}
-                        </BreadcrumbLink>
-                      ) : (
-                        <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                      )}
-                    </BreadcrumbItem>
-                  </div>
-                ))}
-              </BreadcrumbList>
-            </Breadcrumb>
-          )}
+          {breadcrumbsSlot}
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Home,
   Receipt,
@@ -205,10 +205,10 @@ function ThemeToggle() {
 
 interface AppSidebarProps {
   accountsSlot: React.ReactNode;
+  pathname: string;
 }
 
-export function AppSidebar({ accountsSlot }: AppSidebarProps) {
-  const pathname = usePathname();
+export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const navItems = useMemo(() => getStaticNavItems(), []);
 
