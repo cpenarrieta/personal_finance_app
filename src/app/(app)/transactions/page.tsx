@@ -1,11 +1,14 @@
 import { TransactionsPageClient } from "@/components/TransactionsPageClient";
+import { TransactionsPageSkeleton } from "@/components/TransactionsPageSkeleton";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import {
   getAllTransactions,
   getAllCategories,
   getAllTags,
   getAllAccounts,
 } from "@/lib/cached-queries";
+import { parseTransactionFiltersFromUrl } from "@/lib/transactionUrlParams";
 
 export const metadata: Metadata = {
   title: "Banking Transactions",
@@ -15,18 +18,18 @@ export const metadata: Metadata = {
   },
 };
 
-import { parseTransactionFiltersFromUrl } from "@/lib/transactionUrlParams";
-
 interface TransactionsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function TransactionsPage({
-  searchParams,
-}: TransactionsPageProps) {
-  const params = await searchParams;
-  const initialFilters = parseTransactionFiltersFromUrl(params);
-
+/**
+ * Async component that fetches all transaction data
+ */
+async function TransactionsData({
+  initialFilters,
+}: {
+  initialFilters: ReturnType<typeof parseTransactionFiltersFromUrl>;
+}) {
   // Use cached queries for all data fetching
   const [transactions, categories, tags, accounts] = await Promise.all([
     getAllTransactions(),
@@ -51,5 +54,18 @@ export default async function TransactionsPage({
       accounts={accounts}
       initialFilters={initialFilters}
     />
+  );
+}
+
+export default async function TransactionsPage({
+  searchParams,
+}: TransactionsPageProps) {
+  const params = await searchParams;
+  const initialFilters = parseTransactionFiltersFromUrl(params);
+
+  return (
+    <Suspense fallback={<TransactionsPageSkeleton />}>
+      <TransactionsData initialFilters={initialFilters} />
+    </Suspense>
   );
 }
