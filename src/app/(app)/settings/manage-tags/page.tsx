@@ -25,7 +25,7 @@ async function createTag(formData: FormData) {
     data: { name, color },
   });
   revalidatePath("/settings/manage-tags");
-  revalidateTag("tags");
+  revalidateTag("tags", "max");
 }
 
 async function deleteTag(formData: FormData) {
@@ -33,7 +33,7 @@ async function deleteTag(formData: FormData) {
   const id = formData.get("id") as string;
   await prisma.tag.delete({ where: { id } });
   revalidatePath("/settings/manage-tags");
-  revalidateTag("tags");
+  revalidateTag("tags", "max");
 }
 
 async function updateTag(formData: FormData) {
@@ -47,7 +47,7 @@ async function updateTag(formData: FormData) {
     data: { name, color },
   });
   revalidatePath("/settings/manage-tags");
-  revalidateTag("tags");
+  revalidateTag("tags", "max");
 }
 
 export default async function ManageTagsPage() {

@@ -631,16 +631,16 @@ export async function syncItems(
   // Invalidate caches based on what was synced
   console.log("\n🔄 Invalidating caches...");
   if (options.syncTransactions) {
-    revalidateTag("transactions");
-    revalidateTag("accounts");
-    revalidateTag("dashboard");
+    revalidateTag("transactions", "max");
+    revalidateTag("accounts", "max");
+    revalidateTag("dashboard", "max");
     console.log("  ✓ Invalidated: transactions, accounts, dashboard");
   }
   if (options.syncInvestments) {
-    revalidateTag("holdings");
-    revalidateTag("investments");
-    revalidateTag("accounts");
-    revalidateTag("dashboard");
+    revalidateTag("holdings", "max");
+    revalidateTag("investments", "max");
+    revalidateTag("accounts", "max");
+    revalidateTag("dashboard", "max");
     console.log("  ✓ Invalidated: holdings, investments, accounts, dashboard");
   }
 

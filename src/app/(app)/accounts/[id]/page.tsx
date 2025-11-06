@@ -4,7 +4,7 @@ import { InvestmentTransactionList } from '@/components/InvestmentTransactionLis
 import { HoldingList } from '@/components/HoldingList'
 import { format } from 'date-fns'
 import type { Metadata } from 'next'
-import type { InvestmentTransactionWithRelations, HoldingWithRelations, TransactionForClient, CategoryForClient, TagForClient } from '@/types'
+import type { InvestmentTransactionWithRelations, HoldingWithRelations, TransactionForClient } from '@/types'
 import {
   getAccountById,
   getTransactionsForAccount,

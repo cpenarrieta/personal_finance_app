@@ -139,8 +139,8 @@ export async function POST(
     );
 
     // Invalidate transaction and dashboard caches
-    revalidateTag("transactions");
-    revalidateTag("dashboard");
+    revalidateTag("transactions", "max");
+    revalidateTag("dashboard", "max");
 
     return NextResponse.json({
       success: true,

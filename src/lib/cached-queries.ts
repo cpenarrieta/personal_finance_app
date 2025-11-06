@@ -17,7 +17,7 @@ import type {
  */
 export async function getAllTransactions() {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("transactions");
 
   return prisma.transaction.findMany({
@@ -101,7 +101,7 @@ export async function getAllTransactions() {
  */
 export async function getAllCategories() {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("categories");
 
   return prisma.category.findMany({
@@ -140,7 +140,7 @@ export async function getAllCategories() {
  */
 export async function getAllTags() {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("tags");
 
   return prisma.tag.findMany({
@@ -161,7 +161,7 @@ export async function getAllTags() {
  */
 export async function getAllAccounts() {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("accounts");
 
   return prisma.plaidAccount.findMany({
@@ -192,17 +192,49 @@ export async function getAllAccounts() {
  */
 export async function getAllAccountsWithInstitution() {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("accounts");
 
   return prisma.plaidAccount.findMany({
-    include: {
+    select: {
+      id: true,
+      plaidAccountId: true,
+      itemId: true,
+      name: true,
+      officialName: true,
+      mask: true,
+      type: true,
+      subtype: true,
+      currency: true,
+      current_balance_number: true,
+      available_balance_number: true,
+      credit_limit_number: true,
+      balance_updated_at_string: true,
+      created_at_string: true,
+      updated_at_string: true,
       item: {
-        include: {
-          institution: true,
+        select: {
+          id: true,
+          plaidItemId: true,
+          accessToken: true,
+          lastTransactionsCursor: true,
+          lastInvestmentsCursor: true,
+          status: true,
+          created_at_string: true,
+          updated_at_string: true,
+          institution: {
+            select: {
+              id: true,
+              name: true,
+              logoUrl: true,
+              shortName: true,
+              created_at_string: true,
+            },
+          },
         },
       },
     },
+    orderBy: { name: "asc" },
   });
 }
 
@@ -212,13 +244,44 @@ export async function getAllAccountsWithInstitution() {
  */
 export async function getAllHoldings() {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("holdings");
 
   return prisma.holding.findMany({
-    include: {
-      security: true,
-      account: true,
+    select: {
+      id: true,
+      accountId: true,
+      securityId: true,
+      quantity_number: true,
+      cost_basis_number: true,
+      institution_price_number: true,
+      institution_price_as_of_string: true,
+      isoCurrencyCode: true,
+      created_at_string: true,
+      updated_at_string: true,
+      security: {
+        select: {
+          id: true,
+          plaidSecurityId: true,
+          name: true,
+          tickerSymbol: true,
+          type: true,
+          isoCurrencyCode: true,
+          logoUrl: true,
+          created_at_string: true,
+          updated_at_string: true,
+        },
+      },
+      account: {
+        select: {
+          id: true,
+          plaidAccountId: true,
+          name: true,
+          type: true,
+          subtype: true,
+          mask: true,
+        },
+      },
     },
   });
 }
@@ -229,13 +292,48 @@ export async function getAllHoldings() {
  */
 export async function getAllInvestmentTransactions() {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("investments");
 
   return prisma.investmentTransaction.findMany({
-    include: {
-      account: true,
-      security: true,
+    select: {
+      id: true,
+      plaidInvestmentTransactionId: true,
+      accountId: true,
+      securityId: true,
+      type: true,
+      amount_number: true,
+      price_number: true,
+      quantity_number: true,
+      fees_number: true,
+      isoCurrencyCode: true,
+      date_string: true,
+      name: true,
+      created_at_string: true,
+      updated_at_string: true,
+      account: {
+        select: {
+          id: true,
+          plaidAccountId: true,
+          name: true,
+          type: true,
+          subtype: true,
+          mask: true,
+        },
+      },
+      security: {
+        select: {
+          id: true,
+          plaidSecurityId: true,
+          name: true,
+          tickerSymbol: true,
+          type: true,
+          isoCurrencyCode: true,
+          logoUrl: true,
+          created_at_string: true,
+          updated_at_string: true,
+        },
+      },
     },
     orderBy: { date: "desc" },
   });
@@ -247,15 +345,46 @@ export async function getAllInvestmentTransactions() {
  */
 export async function getAccountById(accountId: string) {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("accounts");
 
   return prisma.plaidAccount.findUnique({
     where: { id: accountId },
-    include: {
+    select: {
+      id: true,
+      plaidAccountId: true,
+      itemId: true,
+      name: true,
+      officialName: true,
+      mask: true,
+      type: true,
+      subtype: true,
+      currency: true,
+      current_balance_number: true,
+      available_balance_number: true,
+      credit_limit_number: true,
+      balance_updated_at_string: true,
+      created_at_string: true,
+      updated_at_string: true,
       item: {
-        include: {
-          institution: true,
+        select: {
+          id: true,
+          plaidItemId: true,
+          accessToken: true,
+          lastTransactionsCursor: true,
+          lastInvestmentsCursor: true,
+          status: true,
+          created_at_string: true,
+          updated_at_string: true,
+          institution: {
+            select: {
+              id: true,
+              name: true,
+              logoUrl: true,
+              shortName: true,
+              created_at_string: true,
+            },
+          },
         },
       },
     },
@@ -268,7 +397,7 @@ export async function getAccountById(accountId: string) {
  */
 export async function getTransactionsForAccount(accountId: string) {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("transactions");
 
   return prisma.transaction.findMany({
@@ -353,13 +482,35 @@ export async function getTransactionsForAccount(accountId: string) {
  */
 export async function getHoldingsForAccount(accountId: string) {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("holdings");
 
   return prisma.holding.findMany({
     where: { accountId },
-    include: {
-      security: true,
+    select: {
+      id: true,
+      accountId: true,
+      securityId: true,
+      quantity_number: true,
+      cost_basis_number: true,
+      institution_price_number: true,
+      institution_price_as_of_string: true,
+      isoCurrencyCode: true,
+      created_at_string: true,
+      updated_at_string: true,
+      security: {
+        select: {
+          id: true,
+          plaidSecurityId: true,
+          name: true,
+          tickerSymbol: true,
+          type: true,
+          isoCurrencyCode: true,
+          logoUrl: true,
+          created_at_string: true,
+          updated_at_string: true,
+        },
+      },
     },
   });
 }
@@ -370,13 +521,39 @@ export async function getHoldingsForAccount(accountId: string) {
  */
 export async function getInvestmentTransactionsForAccount(accountId: string) {
   "use cache";
-  cacheLife("24h");
+  cacheLife({ stale: 60 * 60 * 24 });
   cacheTag("investments");
 
   return prisma.investmentTransaction.findMany({
     where: { accountId },
-    include: {
-      security: true,
+    select: {
+      id: true,
+      plaidInvestmentTransactionId: true,
+      accountId: true,
+      securityId: true,
+      type: true,
+      amount_number: true,
+      price_number: true,
+      quantity_number: true,
+      fees_number: true,
+      isoCurrencyCode: true,
+      date_string: true,
+      name: true,
+      created_at_string: true,
+      updated_at_string: true,
+      security: {
+        select: {
+          id: true,
+          plaidSecurityId: true,
+          name: true,
+          tickerSymbol: true,
+          type: true,
+          isoCurrencyCode: true,
+          logoUrl: true,
+          created_at_string: true,
+          updated_at_string: true,
+        },
+      },
     },
     orderBy: { date: "desc" },
   });

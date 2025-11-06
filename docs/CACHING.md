@@ -6,6 +6,72 @@ This document explains the caching implementation using Next.js 16+ cache featur
 
 The application uses Next.js 16+ caching features (`use cache` directive, `cacheTag`, `cacheLife`) to cache Prisma database queries for 24 hours. Caches are automatically invalidated when data changes through sync operations or user actions.
 
+## Serialization Requirements ⭐️
+
+**CRITICAL:** All cached query functions MUST use Prisma `select` instead of `include` to ensure only serializable data is returned.
+
+### Why This Matters
+
+1. Next.js Server Components can only pass plain objects to Client Components
+2. Prisma `Decimal` and `Date` objects are NOT serializable
+3. Using `include` returns ALL fields, including Decimal/Date types, causing errors
+4. We use PostgreSQL generated columns (`_number` and `_string` suffixes) for serialization
+
+### Correct Pattern ✅
+
+```typescript
+// Use select with generated columns
+export async function getTransactions() {
+  "use cache";
+  cacheLife({ stale: 60 * 60 * 24 });
+  cacheTag("transactions");
+
+  return prisma.transaction.findMany({
+    select: {
+      id: true,
+      amount_number: true,        // ✅ number (not Decimal)
+      date_string: true,           // ✅ string (not DateTime)
+      account: {
+        select: {
+          id: true,
+          name: true,
+          current_balance_number: true,  // ✅ number
+        },
+      },
+    },
+  });
+}
+```
+
+### Wrong Pattern ❌
+
+```typescript
+// DON'T use include - returns non-serializable Decimals
+export async function getTransactions() {
+  "use cache";
+  cacheLife({ stale: 60 * 60 * 24 });
+  cacheTag("transactions");
+
+  return prisma.transaction.findMany({
+    include: {
+      account: true,  // ❌ Returns amount (Decimal), date (DateTime), etc.
+    },
+  });
+}
+```
+
+### Field Mapping Reference
+
+| Database Type | Original Field | Generated Column | Type |
+|--------------|----------------|------------------|------|
+| `Decimal` | `amount` | `amount_number` | `number` |
+| `Decimal` | `currentBalance` | `current_balance_number` | `number` |
+| `Decimal` | `quantity` | `quantity_number` | `number` |
+| `DateTime` | `date` | `date_string` | `string` |
+| `DateTime` | `createdAt` | `created_at_string` | `string` |
+
+See [GENERATED_COLUMNS.md](GENERATED_COLUMNS.md) for complete reference.
+
 ## Configuration
 
 ### Enable Caching
@@ -218,7 +284,7 @@ import { cacheTag, cacheLife } from "next/cache"
  */
 export async function getYourData() {
   "use cache"
-  cacheLife("24h")
+  cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("your-tag")
 
   return prisma.yourModel.findMany({
@@ -269,7 +335,7 @@ async function updateData(formData: FormData) {
 All queries are cached for **24 hours** by default:
 
 ```typescript
-cacheLife("24h")  // Cache expires after 24 hours
+cacheLife({ stale: 60 * 60 * 24 })  // Cache expires after 24 hours
 ```
 
 After 24 hours, the cache naturally expires and the next request will fetch fresh data from the database.
@@ -417,7 +483,7 @@ When adding caching to existing queries:
 
 - [ ] Move query to `src/lib/cached-queries.ts` (or use existing cached query)
 - [ ] Add `"use cache"` directive
-- [ ] Add `cacheLife("24h")`
+- [ ] Add `cacheLife({ stale: 60 * 60 * 24 })`
 - [ ] Add appropriate `cacheTag()` calls
 - [ ] Update page to use cached query function
 - [ ] Add `revalidateTag()` to mutation operations

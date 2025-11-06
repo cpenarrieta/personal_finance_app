@@ -19,22 +19,22 @@ async function doSyncPrices() {
   "use server";
   await syncStockPrices();
   revalidatePath("/investments/holdings");
-  revalidateTag("holdings");
-  revalidateTag("dashboard");
+  revalidateTag("holdings", "max");
+  revalidateTag("dashboard", "max");
 }
 
 async function doSyncHoldingsLogos() {
   "use server";
   await syncHoldingsLogos();
   revalidatePath("/investments/holdings");
-  revalidateTag("holdings");
+  revalidateTag("holdings", "max");
 }
 
 export default async function HoldingsPage() {
   const allHoldings = await getAllHoldings();
 
   // Map to the select structure expected by HoldingsPortfolio
-  const holdings = allHoldings.map((h) => ({
+  const holdings = allHoldings.map((h: (typeof allHoldings)[number]) => ({
     id: h.id,
     accountId: h.accountId,
     securityId: h.securityId,

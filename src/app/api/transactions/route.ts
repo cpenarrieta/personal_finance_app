@@ -103,8 +103,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Invalidate transaction and dashboard caches
-    revalidateTag("transactions");
-    revalidateTag("dashboard");
+    revalidateTag("transactions", "max");
+    revalidateTag("dashboard", "max");
 
     return NextResponse.json(newTransaction, { status: 201 });
   } catch (error) {

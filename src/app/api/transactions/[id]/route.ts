@@ -86,8 +86,8 @@ export async function PATCH(
     })
 
     // Invalidate transaction and dashboard caches
-    revalidateTag("transactions");
-    revalidateTag("dashboard");
+    revalidateTag("transactions", "max");
+    revalidateTag("dashboard", "max");
 
     return NextResponse.json(updatedTransaction)
   } catch (error) {
@@ -139,8 +139,8 @@ export async function DELETE(
     })
 
     // Invalidate transaction and dashboard caches
-    revalidateTag("transactions");
-    revalidateTag("dashboard");
+    revalidateTag("transactions", "max");
+    revalidateTag("dashboard", "max");
 
     return NextResponse.json({ success: true })
   } catch (error) {
