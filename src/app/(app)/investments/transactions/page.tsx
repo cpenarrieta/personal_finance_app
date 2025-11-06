@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getAllInvestmentTransactions } from "@/lib/cached-queries";
 import { InvestmentTransactionList } from "@/components/InvestmentTransactionList";
 import type { Metadata } from 'next';
 
@@ -11,10 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function InvTxPage() {
-  const txs = await prisma.investmentTransaction.findMany({
-    orderBy: { date: "desc" },
-    include: { account: true, security: true },
-  });
+  const txs = await getAllInvestmentTransactions();
   return (
     <>
       <div>

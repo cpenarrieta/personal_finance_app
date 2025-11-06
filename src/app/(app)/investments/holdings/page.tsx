@@ -31,35 +31,7 @@ async function doSyncHoldingsLogos() {
 }
 
 export default async function HoldingsPage() {
-  const allHoldings = await getAllHoldings();
-
-  // Map to the select structure expected by HoldingsPortfolio
-  const holdings = allHoldings.map((h: (typeof allHoldings)[number]) => ({
-    id: h.id,
-    accountId: h.accountId,
-    securityId: h.securityId,
-    quantity_number: h.quantity.toNumber(),
-    cost_basis_number: h.costBasis ? h.costBasis.toNumber() : null,
-    institution_price_number: h.institutionPrice ? h.institutionPrice.toNumber() : null,
-    institution_price_as_of_string: h.institutionPriceAsOf ? h.institutionPriceAsOf.toISOString() : null,
-    isoCurrencyCode: h.isoCurrencyCode,
-    created_at_string: h.createdAt.toISOString(),
-    updated_at_string: h.updatedAt.toISOString(),
-    account: {
-      id: h.account.id,
-      name: h.account.name,
-      type: h.account.type,
-      subtype: h.account.subtype,
-    },
-    security: {
-      id: h.security.id,
-      name: h.security.name,
-      tickerSymbol: h.security.tickerSymbol,
-      type: h.security.type,
-      isoCurrencyCode: h.security.isoCurrencyCode,
-      logoUrl: h.security.logoUrl,
-    },
-  }));
+  const holdings = await getAllHoldings();
 
   return (
     <>

@@ -58,7 +58,7 @@ export function UncategorizedTransactionsSection({
           </p>
         </div>
         <Button asChild>
-          <Link href="/transactions?uncategorized=true">Categorize All</Link>
+          <Link href="/transactions?showIncome=true&showExpenses=true&uncategorized=true">Categorize All</Link>
         </Button>
       </div>
       <div className="rounded-lg border">
@@ -114,7 +114,7 @@ export function UncategorizedTransactionsSection({
       {count > displayLimit && (
         <div className="text-center">
           <Button variant="outline" asChild>
-            <Link href="/transactions?uncategorized=true">
+            <Link href="/transactions?showIncome=true&showExpenses=true&uncategorized=true">
               View All {count} Uncategorized Transactions
             </Link>
           </Button>

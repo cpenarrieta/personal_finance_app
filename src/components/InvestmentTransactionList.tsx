@@ -1,16 +1,16 @@
-import type { InvestmentTransactionWithRelations } from '@/types'
+import type { InvestmentTransactionForClient } from '@/types'
 import Image from 'next/image'
 import { format } from 'date-fns'
 import { formatAmount } from '@/lib/utils'
 
 interface InvestmentTransactionListProps {
-  transactions: InvestmentTransactionWithRelations[]
+  transactions: InvestmentTransactionForClient[]
   showAccount?: boolean
 }
 
 export function InvestmentTransactionList({ transactions, showAccount = false }: InvestmentTransactionListProps) {
   if (transactions.length === 0) {
-    return <p className="text-gray-500">No investment transactions found.</p>
+    return <p className="text-muted-foreground">No investment transactions found.</p>
   }
 
   return (
@@ -31,16 +31,16 @@ export function InvestmentTransactionList({ transactions, showAccount = false }:
               <div className="font-medium">
                 {t.name || t.type} — {t.security?.tickerSymbol || 'N/A'}
               </div>
-              <div className="text-sm text-gray-600">
-                {format(t.date, 'MMM d yyyy')} · Type: {t.type}
+              <div className="text-sm text-muted-foreground">
+                {format(new Date(t.date_string), 'MMM d yyyy')} · Type: {t.type}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
-              {t.quantity && <div className="text-sm">Quantity: {t.quantity.toNumber().toLocaleString("en-US", {
+              {t.quantity_number != null && <div className="text-sm">Quantity: {t.quantity_number.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 6,
               })}</div>}
-              {t.amount && <div className="text-sm">Amount: {formatAmount(t.amount.toNumber())}</div>}
-              {t.price && <div className="text-sm">Price: {formatAmount(t.price.toNumber())}</div>}
+              {t.amount_number != null && <div className="text-sm">Amount: {formatAmount(t.amount_number)}</div>}
+              {t.price_number != null && <div className="text-sm">Price: {formatAmount(t.price_number)}</div>}
             </div>
           </div>
         </li>

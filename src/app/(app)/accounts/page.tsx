@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { PlaidAccountWithRelations } from "@/types/prisma";
 import { getAllAccountsWithInstitution } from "@/lib/cached-queries";
 
 export const metadata: Metadata = {
@@ -13,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AccountsPage() {
-  const accounts = (await getAllAccountsWithInstitution()) as PlaidAccountWithRelations[];
+  const accounts = await getAllAccountsWithInstitution();
 
   // Group accounts by institution
   const accountsByInstitution = accounts.reduce((acc, account) => {
@@ -74,18 +73,17 @@ export default async function AccountsPage() {
                           {a.type}
                           {a.subtype ? ` / ${a.subtype}` : ""} · {a.currency}
                         </div>
-                        {(a.currentBalance || a.availableBalance) && (
+                        {(a.current_balance_number != null || a.available_balance_number != null) && (
                           <div className="text-sm text-foreground mt-1">
-                            {a.currentBalance && (
+                            {a.current_balance_number != null && (
                               <span>
-                                Balance: ${Number(a.currentBalance).toFixed(2)}
+                                Balance: ${a.current_balance_number.toFixed(2)}
                               </span>
                             )}
-                            {a.availableBalance && a.currentBalance && " · "}
-                            {a.availableBalance && (
+                            {a.available_balance_number != null && a.current_balance_number != null && " · "}
+                            {a.available_balance_number != null && (
                               <span>
-                                Available: $
-                                {Number(a.availableBalance).toFixed(2)}
+                                Available: ${a.available_balance_number.toFixed(2)}
                               </span>
                             )}
                           </div>
