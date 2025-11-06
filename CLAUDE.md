@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Quick Reference
 
 📖 **Detailed Documentation:**
+
 - [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, props pattern, generated columns
-- [Caching Strategy](docs/CACHING.md) - Next.js 16+ caching with 24h expiration and tag-based invalidation
 - [Theming Guidelines](docs/THEMING.md) - shadcn/ui theme variables, NO hardcoded colors
 - [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
 - [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup, testing
@@ -59,13 +59,13 @@ export function ClientComponent() {
 ```
 
 **Components that require categories/tags as props:**
+
 - `SearchableTransactionList`
 - `EditTransactionModal`
 - `SplitTransactionModal`
 - `TransactionDetailView`
 
 👉 See [DATA_FETCHING.md](docs/DATA_FETCHING.md) for complete patterns
-👉 See [CACHING.md](docs/CACHING.md) for caching strategy
 
 ### 2. Theming ⭐️ NO HARDCODED COLORS
 
@@ -90,6 +90,7 @@ export function ClientComponent() {
 ```
 
 **Quick reference:**
+
 - `text-gray-900` → `text-foreground`
 - `text-gray-600` → `text-muted-foreground`
 - `bg-gray-50` → `bg-background`
@@ -127,6 +128,7 @@ Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Sw
 **Exception:** Native `<select>` with `<optgroup>` is allowed (shadcn doesn't support optgroups yet)
 
 **When building new features:**
+
 1. Check if shadcn component exists before creating custom UI
 2. Install if missing: `npx shadcn@latest add [component-name]`
 3. Keep styling minimal - design overhaul is planned
@@ -158,17 +160,19 @@ Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Sw
 7. ❌ Never fetch categories/tags in client components with useEffect
 
 **Example:**
+
 ```typescript
 // app/(app)/new-feature/page.tsx
 export default async function NewFeaturePage() {
-  const data = await prisma.someModel.findMany()
+  const data = await prisma.someModel.findMany();
 
   // No AppShell wrapper needed - layout handles it
-  return <ClientComponent data={data} />
+  return <ClientComponent data={data} />;
 }
 ```
 
 **Update breadcrumbs config:**
+
 ```typescript
 // lib/breadcrumbs.ts
 '/new-feature': { label: 'New Feature' },
@@ -218,6 +222,7 @@ src/
 ### Route Groups & Layout
 
 **All authenticated pages** are in the `(app)` route group with shared layout:
+
 - `(app)/layout.tsx` wraps pages with AppShell (sidebar, header, breadcrumbs)
 - Breadcrumbs auto-generated from pathname via `lib/breadcrumbs.ts`
 - Login page outside route group (no AppShell wrapper)
@@ -232,6 +237,7 @@ src/
 #### Available Components
 
 All shadcn/ui components are in `src/components/ui/`:
+
 - `Input` - Text inputs, date inputs, number inputs
 - `Select` - Dropdowns with SelectTrigger, SelectContent, SelectItem
 - `Label` - Form labels (always pair with inputs)
@@ -253,6 +259,7 @@ All shadcn/ui components are in `src/components/ui/`:
 #### Component Usage Rules
 
 **Forms:**
+
 ```typescript
 // ✅ DO: Use shadcn/ui components with Label
 import { Input } from "@/components/ui/input"
@@ -268,6 +275,7 @@ import { Label } from "@/components/ui/label"
 ```
 
 **Select Dropdowns:**
+
 ```typescript
 // ✅ DO: Use shadcn Select component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -296,6 +304,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 ```
 
 **Status Indicators:**
+
 ```typescript
 // ✅ DO: Use Badge component
 import { Badge } from "@/components/ui/badge"
@@ -309,6 +318,7 @@ import { Badge } from "@/components/ui/badge"
 ```
 
 **Alerts and Messages:**
+
 ```typescript
 // ✅ DO: Use Alert component
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -327,12 +337,14 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 1. **Keep components unopinionated**: Avoid adding too many custom styles. The app will undergo a design overhaul in the future.
 
 2. **Use Tailwind for customization**: Apply Tailwind classes via `className` prop
+
    ```typescript
    <Input className="w-full" />
    <Badge className="bg-blue-100 text-blue-800">Custom</Badge>
    ```
 
 3. **Dynamic styles with inline styles**: For user-defined colors (tags, etc.)
+
    ```typescript
    <Badge style={{ backgroundColor: tag.color }} className="text-white">
      {tag.name}
@@ -340,10 +352,11 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
    ```
 
 4. **Use cn() utility for conditional classes**:
-   ```typescript
-   import { cn } from "@/lib/utils"
 
-   <Button className={cn("px-4 py-2", isActive && "bg-blue-600")} />
+   ```typescript
+   import { cn } from "@/lib/utils";
+
+   <Button className={cn("px-4 py-2", isActive && "bg-blue-600")} />;
    ```
 
 #### Theme Customization
@@ -364,6 +377,7 @@ To change the entire app theme, modify these CSS variables or use tools like [tw
 #### Migration Status
 
 **Completed (Major Components):**
+
 - ✅ **ChartsView.tsx** - All filters (Select, Input, Button, Checkbox, Switch), Tables, Tab buttons, Badge filter chips
 - ✅ **SearchableTransactionList.tsx** - All filters, selects, buttons, badges, bulk update panel
 - ✅ **EditTransactionModal.tsx** - Forms (Input, Textarea, Label), Buttons, Badge for tags
@@ -373,12 +387,14 @@ To change the entire app theme, modify these CSS variables or use tools like [tw
 - ✅ **login/page.tsx** - Alert component for error messages
 
 **Remaining to Migrate (Optional - for consistency):**
+
 - ⏳ **SplitTransactionModal.tsx** - Buttons, Input fields, Textarea, Alert, Select (11 instances)
 - ⏳ **TransactionDetailView.tsx** - Buttons for "Split" and "Edit" actions (2 instances)
 - ⏳ **DeleteButton.tsx** - Native button element (1 instance)
 - ⏳ **move-transactions/page.tsx** - Buttons and Select dropdowns (5+ instances)
 
 **Exceptions (Intentionally Kept as Native HTML):**
+
 - ✅ Category/subcategory selects with `<optgroup>` (shadcn Select doesn't support optgroups) - EditTransactionModal.tsx line 132-145
 - ✅ Native `<input type="color">` for color picker (no shadcn alternative) - manage-tags/page.tsx
 - ✅ Hidden `<input type="hidden">` in server action forms (standard practice)
