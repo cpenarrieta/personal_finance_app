@@ -91,37 +91,37 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
 
         {/* Balance Information */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          {account.currentBalance !== null && (
+          {account.current_balance_number != null && (
             <div className="bg-primary/10 rounded-lg p-4 border border-primary/30">
               <div className="text-sm text-primary mb-1">Current Balance</div>
               <div className="text-2xl font-bold text-foreground">
-                ${account.currentBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${account.current_balance_number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           )}
 
-          {account.availableBalance !== null && (
+          {account.available_balance_number != null && (
             <div className="bg-success/10 rounded-lg p-4 border border-success/30">
               <div className="text-sm text-success mb-1">Available Balance</div>
               <div className="text-2xl font-bold text-foreground">
-                ${account.availableBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${account.available_balance_number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           )}
 
-          {account.creditLimit !== null && (
+          {account.credit_limit_number != null && (
             <div className="bg-secondary/10 rounded-lg p-4 border border-secondary/30">
               <div className="text-sm text-secondary mb-1">Credit Limit</div>
               <div className="text-2xl font-bold text-foreground">
-                ${account.creditLimit.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${account.credit_limit_number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           )}
         </div>
 
-        {account.balanceUpdatedAt && (
+        {account.balance_updated_at_string && (
           <div className="text-xs text-muted-foreground mt-4">
-            Balance last updated: {format(new Date(account.balanceUpdatedAt), 'MMM d yyyy h:mm a')}
+            Balance last updated: {format(new Date(account.balance_updated_at_string), 'MMM d yyyy h:mm a')}
           </div>
         )}
       </div>
