@@ -71,7 +71,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
   // Calculate enhanced holding data
   const enhancedHoldings = useMemo(() => {
     return filteredHoldings.map((h) => {
-      const quantity = h.quantity_number;
+      const quantity = h.quantity_number ?? 0;
       const price = h.institution_price_number || 0;
       const costBasis = h.cost_basis_number || 0; // Total cost basis (already the total amount spent)
       const marketValue = quantity * price;

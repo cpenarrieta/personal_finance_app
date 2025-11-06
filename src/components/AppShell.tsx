@@ -1,11 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { usePathname } from "next/navigation"
-import Cookies from "js-cookie"
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/AppSidebar"
-import { Separator } from "@/components/ui/separator"
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import Cookies from "js-cookie";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+  SIDEBAR_COOKIE_NAME,
+} from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,34 +18,41 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { generateBreadcrumbs } from "@/lib/breadcrumbs"
+} from "@/components/ui/breadcrumb";
+import { generateBreadcrumbs } from "@/lib/breadcrumbs";
 
 interface AppShellProps {
-  children: React.ReactNode
-  defaultOpen?: boolean
+  children: React.ReactNode;
   accounts: Array<{
-    id: string
-    name: string
+    id: string;
+    name: string;
     item: {
       institution: {
-        id: string
-        name: string
-        logoUrl: string | null
-      } | null
-    }
-  }>
+        id: string;
+        name: string;
+        logoUrl: string | null;
+      } | null;
+    };
+  }>;
 }
 
-export function AppShell({ children, defaultOpen = true, accounts }: AppShellProps) {
-  const pathname = usePathname()
-  const breadcrumbs = generateBreadcrumbs(pathname)
-  const [open, setOpen] = useState(defaultOpen)
+export function AppShell({ children, accounts }: AppShellProps) {
+  const pathname = usePathname();
+  const breadcrumbs = generateBreadcrumbs(pathname);
+  const [open, setOpen] = useState(true);
+
+  // Read sidebar state from cookie after mount
+  useEffect(() => {
+    const sidebarCookie = Cookies.get(SIDEBAR_COOKIE_NAME);
+    if (sidebarCookie !== undefined) {
+      setOpen(sidebarCookie === "true");
+    }
+  }, []);
 
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen)
-    Cookies.set("sidebar-open", String(newOpen), { expires: 365 })
-  }
+    setOpen(newOpen);
+    Cookies.set(SIDEBAR_COOKIE_NAME, String(newOpen), { expires: 365 });
+  };
 
   return (
     <SidebarProvider open={open} onOpenChange={handleOpenChange}>
@@ -73,5 +85,5 @@ export function AppShell({ children, defaultOpen = true, accounts }: AppShellPro
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

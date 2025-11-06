@@ -4,6 +4,7 @@ import { z } from "zod";
 import { safeParseRequestBody } from "@/types/api";
 import { Decimal } from "@prisma/client/runtime/library";
 import { Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 
 // Schema for split transaction request
 const splitTransactionSchema = z.object({
@@ -136,6 +137,10 @@ export async function POST(
         };
       }
     );
+
+    // Invalidate transaction and dashboard caches
+    revalidateTag("transactions", "max");
+    revalidateTag("dashboard", "max");
 
     return NextResponse.json({
       success: true,

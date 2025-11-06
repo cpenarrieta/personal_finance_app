@@ -3,6 +3,7 @@ import { getPlaidClient } from '@/lib/plaid'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { CountryCode } from 'plaid'
+import { revalidateTag } from 'next/cache'
 
 export async function POST(req: NextRequest) {
   const { public_token } = await req.json()
@@ -72,6 +73,9 @@ export async function POST(req: NextRequest) {
       },
     })
   }
+
+  // Invalidate accounts cache so sidebar updates immediately
+  revalidateTag("accounts", "max")
 
   return NextResponse.json({ ok: true })
 }

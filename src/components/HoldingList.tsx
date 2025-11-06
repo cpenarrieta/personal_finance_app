@@ -1,9 +1,9 @@
-import type { HoldingWithRelations } from "@/types";
+import type { HoldingForClient } from "@/types";
 import Image from "next/image";
 import { formatAmount } from "@/lib/utils";
 
 interface HoldingListProps {
-  holdings: HoldingWithRelations[];
+  holdings: HoldingForClient[];
   showAccount?: boolean;
 }
 
@@ -19,8 +19,8 @@ export function HoldingList({
   const totalsByCurrency: Record<string, number> = {};
 
   holdings.forEach((h) => {
-    if (h.institutionPrice && h.isoCurrencyCode) {
-      const value = h.quantity.toNumber() * h.institutionPrice.toNumber();
+    if (h.institution_price_number != null && h.quantity_number != null && h.isoCurrencyCode) {
+      const value = h.quantity_number * h.institution_price_number;
       const currency = h.isoCurrencyCode;
       totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + value;
     }
@@ -63,23 +63,23 @@ export function HoldingList({
               <div className="flex-1 min-w-0">
                 <div className="font-medium">
                   {h.security.tickerSymbol || h.security.name} —{" "}
-                  {h.quantity.toNumber().toLocaleString("en-US", {
+                  {h.quantity_number != null ? h.quantity_number.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 6,
-                  })} shares
+                  }) : "0"} shares
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {showAccount && h.account && `${h.account.name} · `}
                   {h.isoCurrencyCode}
                 </div>
-                {h.costBasis && (
+                {h.cost_basis_number != null && (
                   <div className="text-sm">
-                    Cost Basis: {formatAmount(h.costBasis.toNumber())}
+                    Cost Basis: {formatAmount(h.cost_basis_number)}
                   </div>
                 )}
-                {h.institutionPrice && (
+                {h.institution_price_number != null && (
                   <div className="text-sm">
-                    Price: {formatAmount(h.institutionPrice.toNumber())}
+                    Price: {formatAmount(h.institution_price_number)}
                   </div>
                 )}
               </div>

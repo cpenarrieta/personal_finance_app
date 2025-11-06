@@ -181,11 +181,12 @@ function SyncDropdown() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild suppressHydrationWarning>
         <Button
           variant="outline"
           className="w-full justify-between group-data-[collapsible=icon]:justify-center"
           disabled={syncing}
+          suppressHydrationWarning
         >
           <span className="flex items-center gap-2">
             <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />

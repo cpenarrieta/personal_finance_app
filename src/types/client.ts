@@ -157,13 +157,13 @@ export interface HoldingForClient {
   id: string
   accountId: string
   securityId: string
-  quantity_number: number // Generated from quantity
+  quantity_number: number | null // Generated from quantity
   cost_basis_number: number | null // Generated from costBasis
   institution_price_number: number | null // Generated from institutionPrice
   institution_price_as_of_string: string | null // Generated from institutionPriceAsOf
   isoCurrencyCode: string | null
-  created_at_string: string // Generated from createdAt
-  updated_at_string: string // Generated from updatedAt
+  created_at_string: string | null // Generated from createdAt
+  updated_at_string: string | null // Generated from updatedAt
 
   security: {
     id: string
@@ -197,10 +197,10 @@ export interface InvestmentTransactionForClient {
   quantity_number: number | null // Generated from quantity
   fees_number: number | null // Generated from fees
   isoCurrencyCode: string | null
-  date_string: string // Generated from date
+  date_string: string | null // Generated from date
   name: string | null
-  created_at_string: string // Generated from createdAt
-  updated_at_string: string // Generated from updatedAt
+  created_at_string: string | null // Generated from createdAt
+  updated_at_string: string | null // Generated from updatedAt
 
   account: {
     id: string

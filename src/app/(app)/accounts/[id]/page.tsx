@@ -1,18 +1,13 @@
-import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
-import { SearchableTransactionList } from '@/components/SearchableTransactionList'
-import { InvestmentTransactionList } from '@/components/InvestmentTransactionList'
-import { HoldingList } from '@/components/HoldingList'
-import { format } from 'date-fns'
-import type { Metadata } from 'next'
-import type { InvestmentTransactionWithRelations, HoldingWithRelations, TransactionForClient, CategoryForClient, TagForClient } from '@/types'
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import { getAccountById } from "@/lib/cached-queries";
+import { AccountDetailAsync } from "@/components/accounts/AccountDetailAsync";
+import { AccountDetailSkeleton } from "@/components/accounts/AccountDetailSkeleton";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const account = await prisma.plaidAccount.findUnique({
-    where: { id },
-  })
-  
+  const account = await getAccountById(id)
+
   if (!account) {
     return {
       title: 'Account Not Found',
@@ -22,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       },
     }
   }
-  
+
   return {
     title: `${account.name}${account.mask ? ` • ${account.mask}` : ''}`,
     robots: {
@@ -33,235 +28,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const account = await prisma.plaidAccount.findUnique({
-    where: { id },
-    include: { item: true },
-  })
-
-  if (!account) {
-    notFound()
-  }
-
-  // Check if this is an investment account
-  const isInvestmentAccount = account.type === 'investment' || account.subtype?.includes('brokerage')
-
-  // Fetch transactions or investment data based on account type
-  let transactions: TransactionForClient[] = []
-  let investmentTransactions: InvestmentTransactionWithRelations[] = []
-  let holdings: HoldingWithRelations[] = []
-
-  if (isInvestmentAccount) {
-    // Fetch investment transactions
-    investmentTransactions = await prisma.investmentTransaction.findMany({
-      where: { accountId: account.id },
-      include: { security: true, account: true },
-      orderBy: { date: 'desc' },
-    })
-
-    // Fetch holdings
-    holdings = await prisma.holding.findMany({
-      where: { accountId: account.id },
-      include: { security: true, account: true },
-    })
-  } else {
-    // Fetch regular banking transactions
-    const txs = await prisma.transaction.findMany({
-      where: {
-        accountId: account.id,
-        isSplit: false, // Filter out parent transactions that have been split
-      },
-      orderBy: { date: 'desc' },
-      select: {
-        id: true,
-        plaidTransactionId: true,
-        accountId: true,
-        amount_number: true, // Generated column
-        isoCurrencyCode: true,
-        date_string: true, // Generated column
-        authorized_date_string: true, // Generated column
-        pending: true,
-        merchantName: true,
-        name: true,
-        plaidCategory: true,
-        plaidSubcategory: true,
-        paymentChannel: true,
-        pendingTransactionId: true,
-        logoUrl: true,
-        categoryIconUrl: true,
-        categoryId: true,
-        subcategoryId: true,
-        notes: true,
-        isSplit: true,
-        parentTransactionId: true,
-        originalTransactionId: true,
-        created_at_string: true, // Generated column
-        updated_at_string: true, // Generated column
-        account: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            mask: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-            created_at_string: true, // Generated column
-            updated_at_string: true, // Generated column
-          },
-        },
-        subcategory: {
-          select: {
-            id: true,
-            categoryId: true,
-            name: true,
-            imageUrl: true,
-            created_at_string: true, // Generated column
-            updated_at_string: true, // Generated column
-          },
-        },
-        tags: {
-          select: {
-            tag: {
-              select: {
-                id: true,
-                name: true,
-                color: true,
-                created_at_string: true, // Generated column
-                updated_at_string: true, // Generated column
-              },
-            },
-          },
-        },
-      },
-    })
-
-    // Flatten tags structure
-    transactions = txs.map((t: typeof txs[0]) => ({
-      ...t,
-      tags: t.tags.map((tt: typeof t.tags[0]) => tt.tag),
-    }))
-  }
-
-  // Fetch categories and tags (needed for transaction editing)
-  const [categories, tags] = await Promise.all([
-    prisma.category.findMany({
-      select: {
-        id: true,
-        name: true,
-        imageUrl: true,
-        groupType: true,
-        displayOrder: true,
-        created_at_string: true, // Generated column
-        updated_at_string: true, // Generated column
-        subcategories: {
-          select: {
-            id: true,
-            categoryId: true,
-            name: true,
-            imageUrl: true,
-            created_at_string: true, // Generated column
-            updated_at_string: true, // Generated column
-          },
-          orderBy: { name: 'asc' },
-        },
-      },
-      orderBy: { name: 'asc' },
-    }) as CategoryForClient[],
-    prisma.tag.findMany({
-      select: {
-        id: true,
-        name: true,
-        color: true,
-        created_at_string: true, // Generated column
-        updated_at_string: true, // Generated column
-      },
-      orderBy: { name: 'asc' },
-    }) as TagForClient[],
-  ])
+  const { id } = await params;
 
   return (
-    <>
-      <div>
-        {/* Account Header */}
-        <div className="mb-6 p-6 border rounded-lg bg-card shadow-md">
-        <h2 className="text-2xl font-semibold mb-4">
-          {account.name} {account.mask ? `• ${account.mask}` : ''}
-        </h2>
-        <div className="text-sm text-muted-foreground mb-4">
-          {account.type}
-          {account.subtype ? ` / ${account.subtype}` : ''} · {account.currency}
-        </div>
-
-        {/* Balance Information */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          {account.currentBalance !== null && (
-            <div className="bg-primary/10 rounded-lg p-4 border border-primary/30">
-              <div className="text-sm text-primary mb-1">Current Balance</div>
-              <div className="text-2xl font-bold text-foreground">
-                ${account.currentBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-          )}
-
-          {account.availableBalance !== null && (
-            <div className="bg-success/10 rounded-lg p-4 border border-success/30">
-              <div className="text-sm text-success mb-1">Available Balance</div>
-              <div className="text-2xl font-bold text-foreground">
-                ${account.availableBalance.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-          )}
-
-          {account.creditLimit !== null && (
-            <div className="bg-secondary/10 rounded-lg p-4 border border-secondary/30">
-              <div className="text-sm text-secondary mb-1">Credit Limit</div>
-              <div className="text-2xl font-bold text-foreground">
-                ${account.creditLimit.toNumber().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {account.balanceUpdatedAt && (
-          <div className="text-xs text-muted-foreground mt-4">
-            Balance last updated: {format(new Date(account.balanceUpdatedAt), 'MMM d yyyy h:mm a')}
-          </div>
-        )}
-      </div>
-
-      {/* Display content based on account type */}
-      {isInvestmentAccount ? (
-        <div className="space-y-6">
-          {/* Holdings Section */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Holdings</h3>
-            <HoldingList holdings={holdings} />
-          </div>
-
-          {/* Investment Transactions Section */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Investment Transactions</h3>
-            <InvestmentTransactionList transactions={investmentTransactions} />
-          </div>
-        </div>
-      ) : (
-        /* Banking Transactions Section */
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Transactions</h3>
-          <SearchableTransactionList
-            transactions={transactions}
-            showAccount={false}
-            categories={categories}
-            tags={tags}
-          />
-        </div>
-      )}
-      </div>
-    </>
-  )
+    <Suspense fallback={<AccountDetailSkeleton />}>
+      <AccountDetailAsync id={id} />
+    </Suspense>
+  );
 }

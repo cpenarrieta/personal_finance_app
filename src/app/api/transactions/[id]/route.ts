@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { updateTransactionSchema } from '@/types/api'
 import { safeParseRequestBody } from '@/types/api'
 import type { Prisma } from '@prisma/client'
+import { revalidateTag } from 'next/cache'
 
 export async function PATCH(
   req: NextRequest,
@@ -84,6 +85,10 @@ export async function PATCH(
       data: updateData,
     })
 
+    // Invalidate transaction and dashboard caches
+    revalidateTag("transactions", "max");
+    revalidateTag("dashboard", "max");
+
     return NextResponse.json(updatedTransaction)
   } catch (error) {
     console.error('Error updating transaction:', error)
@@ -132,6 +137,10 @@ export async function DELETE(
     await prisma.transaction.delete({
       where: { id },
     })
+
+    // Invalidate transaction and dashboard caches
+    revalidateTag("transactions", "max");
+    revalidateTag("dashboard", "max");
 
     return NextResponse.json({ success: true })
   } catch (error) {

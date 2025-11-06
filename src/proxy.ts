@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { auth } from "./lib/auth";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,16 +15,35 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for session cookie
-  const sessionToken = request.cookies.get("better-auth.session_token");
+  // Check for session using Better Auth
+  try {
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
 
-  if (!sessionToken) {
-    // No session, redirect to login
+    if (!session?.user?.email) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    // Validate allowed email
+    const allowedEmail = process.env.ALLOWED_EMAIL?.toLowerCase().trim();
+    const userEmail = session.user.email.toLowerCase().trim();
+
+    if (!allowedEmail) {
+      console.error("ALLOWED_EMAIL not configured");
+      return NextResponse.redirect(new URL("/login?error=unauthorized", request.url));
+    }
+
+    if (userEmail !== allowedEmail) {
+      return NextResponse.redirect(new URL("/login?error=unauthorized", request.url));
+    }
+
+    // All checks passed
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Proxy auth error:", error);
     return NextResponse.redirect(new URL("/login", request.url));
   }
-
-  // Session exists, allow access
-  return NextResponse.next();
 }
 
 export const config = {
@@ -38,4 +58,3 @@ export const config = {
     "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
   ],
 };
-

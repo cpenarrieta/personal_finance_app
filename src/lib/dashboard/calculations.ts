@@ -1,4 +1,3 @@
-import { PlaidAccount, Holding, Transaction, Category, Subcategory } from "@prisma/client";
 import { format, eachDayOfInterval } from "date-fns";
 
 const CHART_COLORS = [
@@ -9,50 +8,79 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
+// Types matching our serializable query results
+type SerializableAccount = {
+  current_balance_number: number | null;
+};
+
+type SerializableHolding = {
+  quantity_number: number | null;
+  institution_price_number: number | null;
+};
+
+type SerializableCategory = {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  isTransferCategory: boolean;
+  created_at_string: string | null;
+  updated_at_string: string | null;
+};
+
+type SerializableSubcategory = {
+  id: string;
+  categoryId: string;
+  name: string;
+  imageUrl: string | null;
+  created_at_string: string | null;
+  updated_at_string: string | null;
+};
+
+type SerializableTransaction = {
+  amount_number: number | null;
+  date_string: string | null;
+  category: SerializableCategory | null;
+  subcategory: SerializableSubcategory | null;
+};
+
 /**
  * Calculate total balance across all accounts
  */
-export function calculateTotalBalance(accounts: PlaidAccount[]): number {
-  return accounts.reduce((sum: number, acc: PlaidAccount) => {
-    return sum + (acc.currentBalance?.toNumber() || 0);
+export function calculateTotalBalance(accounts: SerializableAccount[]): number {
+  return accounts.reduce((sum: number, acc) => {
+    return sum + (acc.current_balance_number || 0);
   }, 0);
 }
 
 /**
  * Calculate total investment value from holdings
  */
-export function calculateInvestmentValue(holdings: Holding[]): number {
-  return holdings.reduce((sum: number, holding: Holding) => {
-    const quantity = holding.quantity.toNumber();
-    const price = holding.institutionPrice?.toNumber() || 0;
+export function calculateInvestmentValue(holdings: SerializableHolding[]): number {
+  return holdings.reduce((sum: number, holding) => {
+    const quantity = holding.quantity_number || 0;
+    const price = holding.institution_price_number || 0;
     return sum + quantity * price;
   }, 0);
 }
-
-type TransactionWithCategory = Transaction & {
-  category: Category | null;
-  subcategory: Subcategory | null;
-};
 
 /**
  * Prepare spending by category data for charts
  */
 export function prepareSpendingByCategory(
-  transactions: TransactionWithCategory[],
+  transactions: SerializableTransaction[],
   topN = 10
 ) {
   const categorySpending = transactions
     .filter((t) => {
-      return (
-        t.amount.toNumber() > 0 && t.category && !t.category.isTransferCategory
-      );
+      const amount = t.amount_number || 0;
+      return amount > 0 && t.category && !t.category.isTransferCategory;
     })
     .reduce((acc: Record<string, number>, t) => {
       const categoryName = t.category?.name || "Uncategorized";
       if (!acc[categoryName]) {
         acc[categoryName] = 0;
       }
-      acc[categoryName] += Math.abs(t.amount.toNumber());
+      acc[categoryName] += Math.abs(t.amount_number || 0);
       return acc;
     }, {} as Record<string, number>);
 
@@ -70,13 +98,14 @@ export function prepareSpendingByCategory(
  * Prepare spending by subcategory data for charts
  */
 export function prepareSpendingBySubcategory(
-  transactions: TransactionWithCategory[],
+  transactions: SerializableTransaction[],
   topN = 10
 ) {
   const subcategorySpending = transactions
     .filter((t) => {
+      const amount = t.amount_number || 0;
       return (
-        t.amount.toNumber() > 0 &&
+        amount > 0 &&
         t.subcategory &&
         t.category &&
         !t.category.isTransferCategory
@@ -87,7 +116,7 @@ export function prepareSpendingBySubcategory(
       if (!acc[subcategoryName]) {
         acc[subcategoryName] = 0;
       }
-      acc[subcategoryName] += Math.abs(t.amount.toNumber());
+      acc[subcategoryName] += Math.abs(t.amount_number || 0);
       return acc;
     }, {} as Record<string, number>);
 
@@ -105,7 +134,7 @@ export function prepareSpendingBySubcategory(
  * Prepare daily spending data for charts
  */
 export function prepareDailySpendingData(
-  transactions: TransactionWithCategory[],
+  transactions: SerializableTransaction[],
   startDate: Date,
   endDate: Date
 ) {
@@ -116,7 +145,8 @@ export function prepareDailySpendingData(
 
   return daysInRange.map((day) => {
     const dayTransactions = transactions.filter((t) => {
-      const transactionDate = new Date(t.date);
+      if (!t.date_string) return false;
+      const transactionDate = new Date(t.date_string);
       return (
         transactionDate.getDate() === day.getDate() &&
         transactionDate.getMonth() === day.getMonth() &&
@@ -125,13 +155,11 @@ export function prepareDailySpendingData(
     });
 
     const spending = dayTransactions
-      .filter(
-        (t) =>
-          t.amount.toNumber() > 0 &&
-          t.category &&
-          !t.category.isTransferCategory
-      )
-      .reduce((sum: number, t) => sum + Math.abs(t.amount.toNumber()), 0);
+      .filter((t) => {
+        const amount = t.amount_number || 0;
+        return amount > 0 && t.category && !t.category.isTransferCategory;
+      })
+      .reduce((sum: number, t) => sum + Math.abs(t.amount_number || 0), 0);
 
     return {
       day: format(day, "MMM d"),

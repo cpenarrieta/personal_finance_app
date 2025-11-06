@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { DeleteButton } from "@/components/DeleteButton";
 import { getCategoryImage } from "@/lib/categoryImages";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ async function createCategory(formData: FormData) {
     },
   });
   revalidatePath("/settings/manage-categories");
+  revalidateTag("categories", "max");
 }
 
 async function updateCategory(formData: FormData) {
@@ -50,6 +51,7 @@ async function updateCategory(formData: FormData) {
     data: { isTransferCategory },
   });
   revalidatePath("/settings/manage-categories");
+  revalidateTag("categories", "max");
 }
 
 async function deleteCategory(formData: FormData) {
@@ -57,6 +59,7 @@ async function deleteCategory(formData: FormData) {
   const id = formData.get("id") as string;
   await prisma.category.delete({ where: { id } });
   revalidatePath("/settings/manage-categories");
+  revalidateTag("categories", "max");
 }
 
 async function createSubcategory(formData: FormData) {
@@ -69,6 +72,7 @@ async function createSubcategory(formData: FormData) {
     data: { categoryId, name, imageUrl: imageUrl || null },
   });
   revalidatePath("/settings/manage-categories");
+  revalidateTag("categories", "max");
 }
 
 async function deleteSubcategory(formData: FormData) {
@@ -76,6 +80,7 @@ async function deleteSubcategory(formData: FormData) {
   const id = formData.get("id") as string;
   await prisma.subcategory.delete({ where: { id } });
   revalidatePath("/settings/manage-categories");
+  revalidateTag("categories", "max");
 }
 
 export default async function ManageCategoriesPage() {

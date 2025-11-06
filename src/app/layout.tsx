@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AuthGuard } from "@/components/AuthGuard";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -14,8 +13,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: "Personal Finance",
@@ -45,7 +42,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthGuard>{children}</AuthGuard>
+          {children}
           <Toaster />
         </ThemeProvider>
       </body>

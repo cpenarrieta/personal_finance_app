@@ -1,10 +1,10 @@
 import { format } from 'date-fns'
 import Image from 'next/image'
 import { formatAmount } from '@/lib/utils'
-import type { TransactionWithAccount } from '@/types/prisma'
+import type { TransactionForClient } from '@/types'
 
 interface TransactionListProps {
-  transactions: TransactionWithAccount[]
+  transactions: TransactionForClient[]
   showAccount?: boolean
 }
 
@@ -29,11 +29,11 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
             )}
             <div className="flex-1 min-w-0">
               <div className="font-medium">
-                {t.name} — {formatAmount(t.amount.toNumber())} {t.isoCurrencyCode}
+                {t.name} — {formatAmount(t.amount_number)} {t.isoCurrencyCode}
                 {t.pending && <span className="ml-2 text-xs bg-warning/10 text-warning-foreground px-2 py-1 rounded">Pending</span>}
               </div>
               <div className="text-sm text-muted-foreground">
-                {format(t.date, 'MMM d yyyy')}
+                {format(new Date(t.date_string), 'MMM d yyyy')}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
               {t.merchantName && <div className="text-sm">Merchant: {t.merchantName}</div>}
