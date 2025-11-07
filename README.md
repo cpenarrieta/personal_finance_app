@@ -98,7 +98,7 @@ This application provides a comprehensive solution for managing your personal fi
    BETTER_AUTH_URL="http://localhost:3000"
 
    # Allowed User Email (REQUIRED - only this email can access the app)
-   ALLOWED_EMAIL="your-email@gmail.com"
+   ALLOWED_EMAILS="your-email@gmail.com"
 
    # Google OAuth Credentials
    GOOGLE_CLIENT_ID="your-google-client-id"

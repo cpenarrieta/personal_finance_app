@@ -428,7 +428,7 @@ npm run sync             # Sync financial data
 
 ## Authentication
 
-- Single-user app: Only `ALLOWED_EMAIL` can access
+- Single-user app: Only `ALLOWED_EMAILS` emails can access
 - Better Auth with OAuth (Google/GitHub)
 - Email validation in `src/lib/auth-helpers.ts`
 - All pages require auth except `/login` and `/api/auth/*`

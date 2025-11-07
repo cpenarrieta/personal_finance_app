@@ -24,17 +24,54 @@ export async function requireAuth() {
   return session;
 }
 
+/**
+ * Parses ALLOWED_EMAILS environment variable into an array of allowed emails.
+ * Supports both single email and comma-separated list of emails.
+ * @returns Array of normalized (lowercased, trimmed) email addresses
+ */
+export function getAllowedEmails(): string[] {
+  const allowedEmailEnv = process.env.ALLOWED_EMAILS;
+  
+  if (!allowedEmailEnv) {
+    return [];
+  }
+
+  return allowedEmailEnv
+    .split(",")
+    .map((email) => email.toLowerCase().trim())
+    .filter((email) => email.length > 0);
+}
+
+/**
+ * Checks if the given email is in the list of allowed emails.
+ * @param userEmail The email to check
+ * @returns true if the email is allowed, false otherwise
+ */
+export function isEmailAllowed(userEmail: string | null | undefined): boolean {
+  const allowedEmails = getAllowedEmails();
+  
+  if (allowedEmails.length === 0) {
+    return false;
+  }
+
+  if (!userEmail) {
+    return false;
+  }
+
+  const normalizedUserEmail = userEmail.toLowerCase().trim();
+  return allowedEmails.includes(normalizedUserEmail);
+}
+
 export async function validateAllowedEmail() {
   const session = await requireAuth();
 
-  const allowedEmail = process.env.ALLOWED_EMAIL?.toLowerCase().trim();
-  const userEmail = session.user.email?.toLowerCase().trim();
+  const allowedEmails = getAllowedEmails();
 
-  if (!allowedEmail) {
-    throw new Error("ALLOWED_EMAIL not configured");
+  if (allowedEmails.length === 0) {
+    throw new Error("ALLOWED_EMAILS not configured");
   }
 
-  if (userEmail !== allowedEmail) {
+  if (!isEmailAllowed(session.user.email)) {
     // User is not authorized - sign them out and redirect
     redirect("/login?error=unauthorized");
   }

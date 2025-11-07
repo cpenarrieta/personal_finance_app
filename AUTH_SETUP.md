@@ -22,8 +22,8 @@ You need to add these variables to your `.env` file:
 BETTER_AUTH_SECRET=your-random-secret-key-min-32-chars
 BETTER_AUTH_URL=http://localhost:3000
 
-# Allowed User Email (REQUIRED)
-ALLOWED_EMAIL=your-email@gmail.com
+# Allowed User Emails (REQUIRED)
+ALLOWED_EMAILS=your-email@gmail.com
 
 # Google OAuth Credentials
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -48,10 +48,10 @@ Copy the output and add it to your `.env` file.
 
 ### 2. Set Your Allowed Email
 
-Update `ALLOWED_EMAIL` in `.env` with your personal email address:
+Update `ALLOWED_EMAILS` in `.env` with your personal email address:
 
 ```bash
-ALLOWED_EMAIL=yourname@gmail.com
+ALLOWED_EMAILS=yourname@gmail.com
 ```
 
 **Important:** This email MUST match the email from your Google or GitHub OAuth account.
@@ -104,7 +104,7 @@ npx prisma generate
 
 4. Sign in with your Google/GitHub account
 
-5. If your email matches `ALLOWED_EMAIL`, you'll be redirected to the dashboard
+5. If your email matches `ALLOWED_EMAILS`, you'll be redirected to the dashboard
 
 6. If your email doesn't match, you'll see "Access Denied" error
 
@@ -123,7 +123,7 @@ The app uses a two-layer security approach:
 #### Layer 2: AuthGuard (Email Validation)
 - Server component in root layout (`src/app/layout.tsx`)
 - Runs for ALL pages automatically
-- Validates email matches `ALLOWED_EMAIL`
+- Validates email matches `ALLOWED_EMAILS`
 - If email doesn't match → redirects to `/login?error=unauthorized`
 - Single source of truth - no need to add validation to individual pages
 
@@ -257,7 +257,7 @@ When deploying to production:
 ## 🆘 Troubleshooting
 
 ### "Access denied" error when logging in
-- Verify your `ALLOWED_EMAIL` matches exactly (comparison is case-insensitive)
+- Verify your `ALLOWED_EMAILS` matches exactly (comparison is case-insensitive)
 - Check that you're signing in with the correct Google/GitHub account
 - Look at server logs for the actual email that was used
 
@@ -329,7 +329,7 @@ Better Auth was chosen for this project because:
 You now have a fully functional authentication system with:
 
 - ✅ OAuth login (Google + GitHub)
-- ✅ Single-email restriction via `ALLOWED_EMAIL`
+- ✅ Multiple-email restriction via `ALLOWED_EMAILS`
 - ✅ Application-wide protection via AuthGuard in root layout
 - ✅ Automatic route protection (no need to add auth to each page)
 - ✅ Type-safe database models

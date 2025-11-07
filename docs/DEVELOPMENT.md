@@ -35,7 +35,7 @@ Copy `.env.example` to `.env` and configure:
 - `DATABASE_URL`: PostgreSQL connection string
 - `BETTER_AUTH_SECRET`: Random secret for auth
 - `BETTER_AUTH_URL`: App URL (e.g., http://localhost:3000)
-- `ALLOWED_EMAIL`: Single email address allowed to access the app (email-gated access)
+- `ALLOWED_EMAILS`: Multiple email addresses allowed to access the app (email-gated access)
 - OAuth credentials (Google and/or GitHub)
 - Plaid API credentials (`PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`)
 
@@ -52,7 +52,7 @@ Copy `.env.example` to `.env` and configure:
 
 ## Authentication & Security
 
-- Single-user app: Only `ALLOWED_EMAIL` can access (configured in .env)
+- Single-user app: Only `ALLOWED_EMAILS` emails can access (configured in .env)
 - Email validation happens in `src/lib/auth-helpers.ts` during auth callbacks
 - Session-based auth with cookies (`better-auth.session_token`)
 - All pages except `/login` and `/api/auth/*` require authentication

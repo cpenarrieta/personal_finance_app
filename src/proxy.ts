@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "./lib/auth";
+import { isEmailAllowed, getAllowedEmails } from "./lib/auth-helpers";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -26,15 +27,14 @@ export async function proxy(request: NextRequest) {
     }
 
     // Validate allowed email
-    const allowedEmail = process.env.ALLOWED_EMAIL?.toLowerCase().trim();
-    const userEmail = session.user.email.toLowerCase().trim();
+    const allowedEmails = getAllowedEmails();
 
-    if (!allowedEmail) {
-      console.error("ALLOWED_EMAIL not configured");
+    if (allowedEmails.length === 0) {
+      console.error("ALLOWED_EMAILS not configured");
       return NextResponse.redirect(new URL("/login?error=unauthorized", request.url));
     }
 
-    if (userEmail !== allowedEmail) {
+    if (!isEmailAllowed(session.user.email)) {
       return NextResponse.redirect(new URL("/login?error=unauthorized", request.url));
     }
 

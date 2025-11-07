@@ -13,7 +13,7 @@
 
 2. **Authentication** (`src/lib/auth.ts`, `src/middleware.ts`):
    - Better Auth handles OAuth (Google/GitHub)
-   - Email-gated: Only `ALLOWED_EMAIL` can access (enforced in `src/lib/auth-helpers.ts`)
+   - Email-gated: Only `ALLOWED_EMAILS` emails can access (enforced in `src/lib/auth-helpers.ts`)
    - Middleware redirects unauthenticated users to `/login`
    - Protected routes: All except `/login` and `/api/auth/*`
 
