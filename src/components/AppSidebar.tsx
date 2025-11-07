@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
+import { LogoutButton } from "@/components/LogoutButton";
 
 // Static nav items (accounts section will be passed as slot)
 const getStaticNavItems = () => {
@@ -325,15 +326,10 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
         <div className="space-y-2 p-2">
           <SyncDropdown />
           <ThemeToggle />
-          <form action="/api/auth/sign-out" method="POST">
-            <Button
-              type="submit"
-              variant="link"
-              className="w-full text-destructive"
-            >
-              Logout
-            </Button>
-          </form>
+          <LogoutButton
+            variant="ghost"
+            className="w-full text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+          />
         </div>
       </SidebarFooter>
     </Sidebar>
