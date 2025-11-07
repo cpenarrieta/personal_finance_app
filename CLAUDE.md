@@ -6,438 +6,198 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 📖 **Detailed Documentation:**
 
-- [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, props pattern, generated columns
+- [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, "use cache" directive, generated columns
 - [Theming Guidelines](docs/THEMING.md) - shadcn/ui theme variables, NO hardcoded colors
 - [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
-- [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup, testing
-- [Generated Columns](docs/GENERATED_COLUMNS.md) - PostgreSQL generated columns for passing data to client components
-- [Migrations Guide](docs/MIGRATIONS.md) - Prisma migration best practices and workflows
+- [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup
+- [Migrations Guide](docs/MIGRATIONS.md) - Prisma migration best practices
 
 ## Project Overview
 
-A personal finance application built with Next.js 15 (App Router) that integrates with Plaid API to sync financial data (transactions, accounts, investments). Features include transaction categorization (including AI-powered categorization with OpenAI), investment portfolio tracking, custom tags, split transactions, and analytics visualization.
+Personal finance app built with Next.js 16 that syncs financial data via Plaid API. Features: transaction categorization (AI-powered with OpenAI), investment tracking, custom tags, split transactions, and analytics.
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router and Turbopack
-- **Language**: TypeScript (strict mode with comprehensive type checking enabled)
-- **Database**: PostgreSQL via Prisma ORM
+- **Framework**: Next.js 16 with App Router and Turbopack (stable)
+- **Language**: TypeScript (strict mode)
+- **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Better Auth with OAuth (Google, GitHub)
-- **Financial Data**: Plaid API for banking/investment data
+- **Financial Data**: Plaid API
 - **AI**: OpenAI GPT-4o-mini for transaction categorization
-- **UI**: React 19, Tailwind CSS 4, shadcn/ui components, Recharts for visualization
-- **Stock Data**: Alpha Vantage API for pricing
+- **UI**: React 19.2, Tailwind CSS 4, shadcn/ui, Recharts
+- **Stock Data**: Alpha Vantage API
 
 ## Critical Development Rules
 
 ### 1. Data Fetching Pattern ⭐️ MOST IMPORTANT
 
-**ALWAYS fetch reference data (categories, tags) in Server Components and pass as props. Use cached query functions for better performance.**
+**Fetch data in Server Components using cached queries from `@/lib/db/queries`. Pass data as props to Client Components.**
 
 ```typescript
-// ✅ DO: Server Component with cached queries
+// ✅ DO: Server Component with Next.js 16 "use cache" directive
 import { getAllTransactions, getAllCategories, getAllTags } from "@/lib/db/queries"
 
 export default async function Page() {
   const [transactions, categories, tags] = await Promise.all([
-    getAllTransactions(),    // Cached 24h, auto-invalidates on changes
-    getAllCategories(),      // Cached 24h, auto-invalidates on changes
-    getAllTags(),           // Cached 24h, auto-invalidates on changes
+    getAllTransactions(),    // Cached 24h with cacheTag
+    getAllCategories(),      // Cached 24h with cacheTag
+    getAllTags(),           // Cached 24h with cacheTag
   ])
 
-  return <ClientComponent categories={categories} tags={tags} />
+  return <ClientComponent transactions={transactions} categories={categories} tags={tags} />
 }
 
-// ❌ DON'T: Client components fetching reference data
+// ❌ DON'T: Client-side fetching for reference data
 'use client'
 export function ClientComponent() {
-  const [categories, setCategories] = useState([])
   useEffect(() => {
-    fetch('/api/categories').then(...)  // ❌ NO!
+    fetch('/api/categories')  // ❌ NO!
   }, [])
 }
 ```
 
-**Components that require categories/tags as props:**
+**Next.js 16 Caching**: All query functions use `"use cache"` directive with `cacheLife()` and `cacheTag()` for automatic invalidation.
 
-- `SearchableTransactionList`
-- `EditTransactionModal`
-- `SplitTransactionModal`
-- `TransactionDetailView`
-
-👉 See [DATA_FETCHING.md](docs/DATA_FETCHING.md) for complete patterns
+👉 See [DATA_FETCHING.md](docs/DATA_FETCHING.md) for details
 
 ### 2. Theming ⭐️ NO HARDCODED COLORS
 
-**NEVER use hardcoded Tailwind colors (e.g., `text-gray-600`, `bg-blue-500`). ALWAYS use shadcn/ui theme variables.**
-
-👉 See [THEMING.md](docs/THEMING.md) for complete guide
+**Use shadcn/ui theme variables exclusively. Never hardcode Tailwind colors.**
 
 ```typescript
-// ✅ DO: Use theme variables
+// ✅ DO
 <div className="bg-background text-foreground">
-  <h1 className="text-2xl text-foreground">Title</h1>
   <p className="text-muted-foreground">Description</p>
-  <Button className="bg-primary hover:bg-primary/90">Action</Button>
+  <Button variant="default">Action</Button>
 </div>
 
-// ❌ DON'T: Use hardcoded colors
+// ❌ DON'T
 <div className="bg-gray-50 text-gray-900">
-  <h1 className="text-2xl text-gray-900">Title</h1>
   <p className="text-gray-600">Description</p>
-  <button className="bg-blue-600 hover:bg-blue-700">Action</button>
+  <button className="bg-blue-600">Action</button>
 </div>
 ```
 
-**Quick reference:**
+**Quick reference:** `text-gray-900` → `text-foreground` | `text-gray-600` → `text-muted-foreground` | `bg-gray-50` → `bg-background` | `text-blue-600` → `text-primary`
 
-- `text-gray-900` → `text-foreground`
-- `text-gray-600` → `text-muted-foreground`
-- `bg-gray-50` → `bg-background`
-- `text-blue-600` → `text-primary`
-- `text-green-600` → `text-success`
-- `text-red-600` → `text-destructive`
+**Exceptions:** User-defined colors (tags), chart colors only.
 
-**Exceptions:** User-defined colors (tags), chart data visualization only.
+👉 See [THEMING.md](docs/THEMING.md) for full guide
 
-### 3. UI Components ⭐️ ALWAYS USE shadcn/ui
+### 3. UI Components ⭐️ USE shadcn/ui
 
-**Never create custom form inputs, selects, badges, or alerts. Use shadcn/ui components.**
+**Use shadcn/ui components for all UI elements.**
 
 ```typescript
-// ✅ DO: Use shadcn components
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+// ✅ DO
+import { Input, Label } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 <div className="space-y-2">
   <Label htmlFor="email">Email</Label>
   <Input id="email" type="email" />
 </div>
 
-// ❌ DON'T: Use native HTML
-<input type="text" className="..." />
-<span className="badge">Status</span>
+// ❌ DON'T
+<input type="text" />
 ```
 
-**Available shadcn/ui components:**
-Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Switch, Tabs, Table, Popover, Separator, RadioGroup, ScrollArea
+**Available:** Input, Select, Label, Textarea, Button, Badge, Alert, Card, Dialog, Checkbox, Switch, Tabs, Table, Popover, Separator, RadioGroup, ScrollArea
 
-**Exception:** Native `<select>` with `<optgroup>` is allowed (shadcn doesn't support optgroups yet)
+**Exception:** Native `<select>` with `<optgroup>` (shadcn doesn't support optgroups)
 
-**When building new features:**
+**Install missing:** `npx shadcn@latest add [component-name]`
 
-1. Check if shadcn component exists before creating custom UI
-2. Install if missing: `npx shadcn@latest add [component-name]`
-3. Keep styling minimal - design overhaul is planned
-4. Always pair Label with form inputs for accessibility
+### 4. Next.js 16 Patterns
 
-### 4. Component Patterns
+- **Async params**: Route `params` and `searchParams` are now `Promise` types - always `await` them
+- **Server Components by default**: Use `'use client'` only for interactivity
+- **"use cache" directive**: All data queries use Next.js 16 caching with `cacheLife()` and `cacheTag()`
+- **proxy.ts**: Replaces middleware.ts (Edge runtime removed in Next.js 16)
 
-- **Server Components by default** - Use `'use client'` only when needed
-- **Client components**: Forms, interactive elements, Plaid Link, modals
-- **All UI components** in `src/components/ui/` (shadcn/ui)
-- **Use cn() utility** from `src/lib/utils.ts` for conditional Tailwind classes
+```typescript
+// Next.js 16: params are async
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params  // Must await
+}
+```
 
 ### 5. Type Safety
 
-- Strict TypeScript mode enabled
-- Use `@/*` path alias for imports
-- Use `Prisma.Decimal` for monetary amounts
+- Strict TypeScript mode
+- Use `@/*` path alias
+- Generated columns for client data: `amount_number` (Float), `date_string` (String), etc.
 
 ## Common Tasks
 
 ### Adding a New Page
 
-1. ✅ Create page.tsx inside `app/(app)/` route group (gets AppShell automatically)
-2. ✅ Fetch data in Server Component - NO AppShell wrapper needed
-3. ✅ Add breadcrumb config to `lib/breadcrumbs.ts` if custom label needed
-4. ✅ Pass categories/tags as props to Client Components
-5. ✅ Update TypeScript interfaces in `types/components.ts`
-6. ❌ Never wrap in AppShell - layout handles it
-7. ❌ Never fetch categories/tags in client components with useEffect
-
-**Example:**
-
 ```typescript
-// app/(app)/new-feature/page.tsx
-export default async function NewFeaturePage() {
-  const data = await prisma.someModel.findMany();
+// app/(app)/feature/page.tsx
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params  // Async in Next.js 16
+  const data = await getAllSomeData()  // Cached query
 
-  // No AppShell wrapper needed - layout handles it
-  return <ClientComponent data={data} />;
+  return <ClientComponent data={data} />  // AppShell from layout
 }
 ```
 
-**Update breadcrumbs config:**
-
-```typescript
-// lib/breadcrumbs.ts
-'/new-feature': { label: 'New Feature' },
-```
-
-### Creating a Form
-
-1. ✅ Use shadcn Input, Label, Select, Textarea components
-2. ✅ Wrap in `<div className="space-y-2">` for spacing
-3. ✅ Pair Label with input using `htmlFor` and `id`
-4. ✅ Use Select for dropdowns (except optgroups)
-
-### Displaying Status/Tags
-
-1. ✅ Use Badge component for all status indicators
-2. ✅ Use variants: `default`, `secondary`, `destructive`, `outline`
-3. ✅ For custom colors: `<Badge style={{ backgroundColor: color }}>`
+1. Create in `app/(app)/` - AppShell applied automatically via layout
+2. Fetch data with cached queries from `@/lib/db/queries`
+3. Await `params` and `searchParams` (Next.js 16 requirement)
+4. Pass data as props to Client Components
+5. Add breadcrumb to `lib/breadcrumbs.ts` if needed
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── (app)/              # Route group with AppShell layout
-│   │   ├── layout.tsx      # AppShell wrapper with auto-generated breadcrumbs
-│   │   ├── page.tsx        # Dashboard
-│   │   ├── transactions/   # Transaction pages
-│   │   ├── accounts/       # Account pages
-│   │   ├── investments/    # Investment pages
-│   │   └── settings/       # Settings pages
-│   ├── api/                # API routes
-│   ├── login/              # Login page (no AppShell)
-│   └── layout.tsx          # Root layout (auth, theme)
-├── components/             # React components
-│   ├── ui/                 # shadcn/ui components
-│   ├── AppShell.tsx        # Main layout wrapper (sidebar + header + breadcrumbs)
-│   └── ...                 # Feature components
-├── lib/                    # Utilities
-│   ├── auth.ts             # Better Auth config
-│   ├── breadcrumbs.ts      # Breadcrumb config & generation
-│   ├── plaid.ts            # Plaid client
-│   ├── sync.ts             # Sync logic
-│   └── prisma.ts           # Prisma client
-└── types/                  # TypeScript types
+├── app/
+│   ├── (app)/             # Authenticated pages (AppShell layout)
+│   │   ├── layout.tsx     # Applies AppShell + breadcrumbs
+│   │   ├── page.tsx       # Dashboard
+│   │   ├── transactions/, accounts/, investments/, settings/
+│   ├── api/               # API routes (Server Actions preferred)
+│   ├── login/             # Public login page
+│   └── layout.tsx         # Root layout (auth, theme)
+├── components/
+│   ├── ui/                # shadcn/ui components
+│   └── ...                # Feature components
+├── lib/
+│   ├── db/
+│   │   ├── queries.ts     # Cached queries with "use cache"
+│   │   └── prisma.ts      # Prisma client
+│   ├── auth/              # Better Auth
+│   └── plaid.ts, sync.ts
+└── types/
 ```
 
-### Route Groups & Layout
-
-**All authenticated pages** are in the `(app)` route group with shared layout:
-
-- `(app)/layout.tsx` wraps pages with AppShell (sidebar, header, breadcrumbs)
-- Breadcrumbs auto-generated from pathname via `lib/breadcrumbs.ts`
-- Login page outside route group (no AppShell wrapper)
-- No need to wrap pages in AppShell manually - handled by layout
-
-## UI Components Strategy
-
-### shadcn/ui Component Usage
-
-**Always use shadcn/ui components** for all UI elements. This app has migrated to shadcn/ui for consistent theming and design.
-
-#### Available Components
-
-All shadcn/ui components are in `src/components/ui/`:
-
-- `Input` - Text inputs, date inputs, number inputs
-- `Select` - Dropdowns with SelectTrigger, SelectContent, SelectItem
-- `Label` - Form labels (always pair with inputs)
-- `Textarea` - Multi-line text inputs
-- `Button` - Already in use throughout the app
-- `Badge` - Status indicators, tags, filter chips
-- `Alert` - Error messages, warnings, info boxes
-- `Card` - Container components (already in use)
-- `Dialog` - Modals and dialogs (already in use)
-- `Checkbox` - Boolean inputs
-- `Switch` - Toggle switches
-- `Tabs` - Tabbed navigation
-- `Table` - Data tables
-- `Popover` - Dropdown menus and popovers
-- `Separator` - Visual dividers
-- `RadioGroup` - Radio button groups
-- `ScrollArea` - Scrollable areas
-
-#### Component Usage Rules
-
-**Forms:**
-
-```typescript
-// ✅ DO: Use shadcn/ui components with Label
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-
-<div className="space-y-2">
-  <Label htmlFor="email">Email</Label>
-  <Input id="email" type="email" placeholder="Enter email" />
-</div>
-
-// ❌ DON'T: Use native HTML inputs
-<input type="text" className="..." />
-```
-
-**Select Dropdowns:**
-
-```typescript
-// ✅ DO: Use shadcn Select component
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-<Select value={value} onValueChange={setValue}>
-  <SelectTrigger>
-    <SelectValue placeholder="Select option" />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectItem value="option1">Option 1</SelectItem>
-    <SelectItem value="option2">Option 2</SelectItem>
-  </SelectContent>
-</Select>
-
-// ❌ DON'T: Use native select (except for optgroups - shadcn doesn't support them yet)
-<select className="...">
-  <option>Option 1</option>
-</select>
-
-// ⚠️ EXCEPTION: Native select is OK for optgroups
-<select>
-  <optgroup label="Group 1">
-    <option>Option 1</option>
-  </optgroup>
-</select>
-```
-
-**Status Indicators:**
-
-```typescript
-// ✅ DO: Use Badge component
-import { Badge } from "@/components/ui/badge"
-
-<Badge variant="secondary">Pending</Badge>
-<Badge variant="destructive">Error</Badge>
-<Badge className="bg-custom-color">Custom</Badge>
-
-// ❌ DON'T: Use custom spans
-<span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Pending</span>
-```
-
-**Alerts and Messages:**
-
-```typescript
-// ✅ DO: Use Alert component
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-
-<Alert variant="destructive">
-  <AlertTitle>Error</AlertTitle>
-  <AlertDescription>Something went wrong</AlertDescription>
-</Alert>
-
-// ❌ DON'T: Use custom divs
-<div className="bg-red-50 border border-red-200 p-4">Error message</div>
-```
-
-#### Styling Guidelines
-
-1. **Keep components unopinionated**: Avoid adding too many custom styles. The app will undergo a design overhaul in the future.
-
-2. **Use Tailwind for customization**: Apply Tailwind classes via `className` prop
-
-   ```typescript
-   <Input className="w-full" />
-   <Badge className="bg-blue-100 text-blue-800">Custom</Badge>
-   ```
-
-3. **Dynamic styles with inline styles**: For user-defined colors (tags, etc.)
-
-   ```typescript
-   <Badge style={{ backgroundColor: tag.color }} className="text-white">
-     {tag.name}
-   </Badge>
-   ```
-
-4. **Use cn() utility for conditional classes**:
-
-   ```typescript
-   import { cn } from "@/lib/utils";
-
-   <Button className={cn("px-4 py-2", isActive && "bg-blue-600")} />;
-   ```
-
-#### Theme Customization
-
-The app uses CSS variables for theming (defined in `globals.css`). All shadcn components respect these variables:
-
-```css
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  /* ... more variables */
-}
-```
-
-To change the entire app theme, modify these CSS variables or use tools like [tweakcn.com](https://tweakcn.com/).
-
-#### Migration Status
-
-**Completed (Major Components):**
-
-- ✅ **ChartsView.tsx** - All filters (Select, Input, Button, Checkbox, Switch), Tables, Tab buttons, Badge filter chips
-- ✅ **SearchableTransactionList.tsx** - All filters, selects, buttons, badges, bulk update panel
-- ✅ **EditTransactionModal.tsx** - Forms (Input, Textarea, Label), Buttons, Badge for tags
-- ✅ **TransactionItem.tsx** - Checkbox for bulk select, Button for details link
-- ✅ **manage-categories/page.tsx** - Button components for add/update actions
-- ✅ **manage-tags/page.tsx** - Button components for add/update actions
-- ✅ **login/page.tsx** - Alert component for error messages
-
-**Remaining to Migrate (Optional - for consistency):**
-
-- ⏳ **SplitTransactionModal.tsx** - Buttons, Input fields, Textarea, Alert, Select (11 instances)
-- ⏳ **TransactionDetailView.tsx** - Buttons for "Split" and "Edit" actions (2 instances)
-- ⏳ **DeleteButton.tsx** - Native button element (1 instance)
-- ⏳ **move-transactions/page.tsx** - Buttons and Select dropdowns (5+ instances)
-
-**Exceptions (Intentionally Kept as Native HTML):**
-
-- ✅ Category/subcategory selects with `<optgroup>` (shadcn Select doesn't support optgroups) - EditTransactionModal.tsx line 132-145
-- ✅ Native `<input type="color">` for color picker (no shadcn alternative) - manage-tags/page.tsx
-- ✅ Hidden `<input type="hidden">` in server action forms (standard practice)
-
-#### When Building New Features
-
-1. **Always check if a shadcn component exists** before creating custom UI
-2. **Install missing components**: `npx shadcn@latest add [component-name]`
-3. **Follow the patterns** in existing migrated components (see EditTransactionModal, SearchableTransactionList)
-4. **Pair Labels with inputs** for accessibility
-5. **Keep styling minimal** - major design changes are planned
+**Route groups:** `(app)` applies AppShell layout automatically. Don't wrap pages manually.
 
 ## Quick Commands
 
 ```bash
-# Development
-npm run dev              # Start dev server (never run - always running locally)
-npm run build            # Build for production
+# Development (dev server always running locally - never run npm run dev)
+npm run build              # Production build with Turbopack
 
-# Database Migrations ⭐️ ALWAYS use migrate dev, NEVER db push
-npx prisma migrate dev --name change_description  # Create & apply migration
-npx prisma generate      # Generate Prisma Client
-npx prisma studio        # Open database GUI
-npx prisma migrate status  # Check migration status
+# Database - ALWAYS use migrate dev, NEVER db push
+npx prisma migrate dev --name description  # Create & apply migration
+npx prisma generate        # Generate Prisma Client
+npx prisma studio          # Database GUI
 
 # Plaid Sync
-npm run sync             # Sync financial data
+npm run sync               # Sync financial data (incremental)
 ```
 
-👉 See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for complete setup and commands
+👉 See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for full details
 
 ## Authentication
 
-- Single-user app: Only `ALLOWED_EMAILS` emails can access
-- Better Auth with OAuth (Google/GitHub)
-- Email validation in `src/lib/auth-helpers.ts`
-- All pages require auth except `/login` and `/api/auth/*`
+Single-user app with email-gating. Only `ALLOWED_EMAILS` (env var) can access. Better Auth with OAuth (Google/GitHub). Auth enforced in `src/proxy.ts` (Next.js 16 - replaces middleware.ts).
 
-## Important Notes
+## Important Rules
 
-- **Never run** `npm run dev` (always running locally)
-- **Never run** `npm run categorize:gpt` (AI categorization)
-- **Never use** `npx prisma db push` on databases with real data (use `migrate dev` instead)
-- **Always commit** migration files to git (never delete them)
-- **Sync preserves** user customizations (renamed accounts, custom prices)
-- **TypeScript strict mode** enabled - full type safety required
+- **Never run** `npm run dev` or `npm run categorize:gpt`
+- **Migrations**: Use `migrate dev`, never `db push`. Always commit migration files
+- **Caching**: Queries use Next.js 16 `"use cache"` with `cacheTag()` for invalidation
+- **Async params**: Always `await params` in Next.js 16 pages
