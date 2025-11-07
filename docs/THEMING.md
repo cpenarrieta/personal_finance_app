@@ -1,13 +1,11 @@
 # Theming Guidelines
 
-## Overview
-
-This app uses **shadcn/ui theme variables exclusively**. Never use hardcoded Tailwind color classes (e.g., `bg-blue-500`, `text-gray-600`). All colors must reference CSS variables from `globals.css` to enable instant theme switching.
+**Use shadcn/ui theme variables exclusively.** Never hardcode Tailwind colors. All colors reference CSS variables from `globals.css` for instant theme switching.
 
 ## Core Principle
 
-✅ **DO:** Use shadcn semantic color tokens
-❌ **DON'T:** Use hardcoded Tailwind colors
+✅ Use shadcn semantic tokens
+❌ Never hardcode Tailwind colors
 
 ## Color Token Reference
 

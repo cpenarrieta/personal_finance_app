@@ -1,113 +1,93 @@
 # Architecture
 
-## Database Schema
+## Data Flow
 
-### Data Flow
+### 1. Plaid Integration
+- **Endpoints**: `/transactions/sync` for incremental updates, `/investments/*` for holdings
+- **First sync**: Historical data from 2024-01-01
+- **Incremental**: Uses cursors (`lastTransactionsCursor`, `lastInvestmentsCursor`)
+- **Preservation**: User-renamed accounts, custom holding prices
+- **Location**: `src/lib/plaid.ts`, `src/lib/sync.ts`
 
-1. **Plaid Integration** (`src/lib/plaid.ts`, `src/lib/sync.ts`):
-   - Items (bank connections) → Accounts → Transactions/Holdings
-   - Uses Plaid's `/transactions/sync` endpoint for incremental banking transaction updates
-   - First sync fetches historical data from 2024-01-01
-   - Investment data: Holdings snapshot + Investment transactions from 2024-01-01
-   - Sync preserves user customizations (account names, custom prices)
+### 2. Authentication (Next.js 16)
+- **Better Auth** with OAuth (Google/GitHub)
+- **Email-gating**: `ALLOWED_EMAILS` env var enforced in `src/proxy.ts` (replaces middleware.ts)
+- **Protected**: All routes except `/login` and `/api/auth/*`
 
-2. **Authentication** (`src/lib/auth.ts`, `src/middleware.ts`):
-   - Better Auth handles OAuth (Google/GitHub)
-   - Email-gated: Only `ALLOWED_EMAILS` emails can access (enforced in `src/lib/auth-helpers.ts`)
-   - Middleware redirects unauthenticated users to `/login`
-   - Protected routes: All except `/login` and `/api/auth/*`
+### 3. Database Schema
+- **Plaid**: Institution → Item → PlaidAccount → Transaction
+- **Investments**: Security, Holding, InvestmentTransaction
+- **Categorization**: Category ↔ Subcategory ← Transaction
+- **Tags**: Many-to-many with transactions
+- **Split transactions**: Parent-child via `isSplit`, `parentTransactionId`, `originalTransactionId`
+- **Auth**: User, Session, Account, Verification (Better Auth)
 
-3. **Database Schema** (`prisma/schema.prisma`):
-   - **Plaid entities**: Institution → Item → PlaidAccount → Transaction
-   - **Investment entities**: Security, Holding, InvestmentTransaction
-   - **Categorization**: Category ↔ Subcategory ← Transaction
-   - **Organization**: Tag (many-to-many with transactions)
-   - **Split transactions**: Parent-child relationship with `isSplit`, `parentTransactionId`, `originalTransactionId`
-   - **Auth models**: User, Session, Account, Verification (Better Auth)
-
-4. **Transaction Categorization**:
-   - Plaid provides base categories (`plaidCategory`, `plaidSubcategory` fields). Only saved for reference not used anywhere.
-   - ategories (`categoryId`, `subcategoryId`)
-   - Rule-based auto-categorization: `scripts/auto-categorize.ts`
-   - AI-powered categorization: `scripts/auto-categorize-gpt.ts` (batches of 20, uses GPT-4o-mini, considers notes/merchant/Plaid categories)
+### 4. Transaction Categorization
+- **Plaid categories**: Stored in `plaidCategory`, `plaidSubcategory` (reference only, not used)
+- **Custom**: User assigns via `categoryId`, `subcategoryId`
+- **AI**: `scripts/auto-categorize-gpt.ts` (GPT-4o-mini, batches of 20)
 
 ## Key Features
 
-### Split Transactions
-A transaction can be split into multiple child transactions with different categories. Parent is marked `isSplit: true` and hidden from normal views. Children reference `parentTransactionId` and `originalTransactionId`.
-
-### Investment Tracking
-Holdings show current quantity, cost basis, institution price. Investment transactions track buys/sells/dividends.
-
-### Custom Account Names
-Sync preserves user-renamed accounts (doesn't overwrite `name` field).
-
-### Custom Prices
-Sync preserves manually-set holding prices if Plaid returns 0 or null.
-
-### Tags
-Many-to-many relationship for flexible transaction labeling.
+- **Split Transactions**: Parent marked `isSplit: true`, children reference `parentTransactionId`
+- **Investment Tracking**: Holdings (quantity, cost basis, price), investment transactions (buys/sells/dividends)
+- **Custom Account Names**: Sync preserves user renames
+- **Custom Prices**: Sync preserves manual prices when Plaid returns 0/null
+- **Tags**: Many-to-many for flexible labeling
 
 ## Project Structure
 
 ```
 src/
-├── app/                          # Next.js App Router pages
-│   ├── api/                      # API routes
-│   │   ├── auth/[...all]/        # Better Auth catch-all
-│   │   ├── plaid/                # Plaid integration (create link token, sync, exchange token)
-│   │   ├── transactions/         # CRUD, bulk update, split
-│   │   ├── categorize/           # Single transaction categorization
-│   │   ├── categorize-all/       # Bulk categorization
-│   │   ├── tags/                 # Tag management
-│   │   └── categories/           # Category CRUD
-│   ├── accounts/                 # Account list and detail pages
-│   ├── transactions/             # Transaction list and detail pages
-│   ├── investments/              # Holdings and investment transactions
-│   ├── analytics/                # Analytics dashboard
-│   ├── charts/                   # Data visualization
-│   ├── settings/                 # Category/tag management, move transactions
+├── app/
+│   ├── (app)/                    # Authenticated pages
+│   │   ├── page.tsx              # Dashboard
+│   │   ├── transactions/         # Transaction pages
+│   │   ├── accounts/             # Account pages
+│   │   ├── investments/          # Holdings, investment transactions
+│   │   └── settings/             # Category/tag management
+│   ├── api/                      # API routes (prefer Server Actions)
+│   │   ├── auth/[...all]/        # Better Auth
+│   │   ├── plaid/                # Plaid integration
+│   │   ├── transactions/         # CRUD, bulk update
+│   │   └── categories/, tags/    # Management
 │   └── login/                    # Login page
-├── components/                   # React components (UI, forms, lists)
-├── lib/                          # Utilities and core logic
-│   ├── auth.ts                   # Better Auth configuration
-│   ├── auth-helpers.ts           # Email gating logic
-│   ├── plaid.ts                  # Plaid client initialization
-│   ├── sync.ts                   # Core sync logic
-│   ├── syncPrices.ts             # Stock price updates via Alpha Vantage
-│   ├── prisma.ts                 # Prisma client singleton
-│   └── utils.ts                  # Utility functions (cn, etc.)
-├── types/                        # TypeScript type definitions
-└── middleware.ts                 # Auth middleware
-scripts/                          # Standalone scripts (sync, categorization)
-prisma/                           # Prisma schema and migrations
+├── components/                   # UI components
+├── lib/
+│   ├── db/
+│   │   ├── queries.ts            # Cached queries ("use cache")
+│   │   └── prisma.ts             # Prisma client
+│   ├── auth/                     # Better Auth
+│   ├── plaid.ts, sync.ts         # Plaid integration
+│   └── syncPrices.ts             # Alpha Vantage
+├── types/                        # TypeScript types
+└── proxy.ts                      # Auth proxy (Next.js 16)
+scripts/                          # Sync, categorization scripts
+prisma/                           # Schema and migrations
 ```
 
-## Important Patterns
+## Technical Details
 
-### API Routes
-- All API routes use Next.js App Router conventions (route.ts files)
-- Use `prisma` from `src/lib/prisma.ts` (singleton pattern)
-- Auth checking: Import from `src/lib/auth-helpers.ts`, use `requireAuth()` helper
-- Return `NextResponse.json()` for JSON responses
+### Caching (Next.js 16)
+- All queries use `"use cache"` directive with `cacheLife()` and `cacheTag()`
+- Cached 24h, invalidated with `revalidateTag()`
+- Location: `src/lib/db/queries.ts`
 
 ### Type Safety
-- Strict TypeScript config with all strict flags enabled
-- Use `@/*` path alias for imports (configured in tsconfig.json)
-- Prisma types: Import from `@prisma/client` or use types from `src/types/prisma.ts`
-- Use `Prisma.Decimal` for monetary amounts (not `number`)
+- Strict TypeScript, `@/*` path alias
+- Generated columns for client data: `amount_number` (Float), `date_string` (String)
+- Server calculations use source: `amount` (Decimal), `date` (Date)
 
 ### Sync Behavior
-- Incremental sync uses cursors (`lastTransactionsCursor`, `lastInvestmentsCursor`)
-- Historical data fetched on first sync (when no cursor exists)
-- Account balances updated on every sync
-- Holdings are snapshot-based (deleted if no longer in Plaid response)
-- Sync preserves: user-renamed accounts, custom holding prices (when Plaid returns 0)
+- **Incremental**: Cursors (`lastTransactionsCursor`, `lastInvestmentsCursor`)
+- **Historical**: First sync from 2024-01-01
+- **Balances**: Updated every sync
+- **Holdings**: Snapshot-based (deleted if not in Plaid response)
+- **Preserves**: User renames, custom prices (when Plaid = 0)
 
-## AI Categorization Details
-
-- Uses OpenAI GPT-4o-mini with JSON response format
-- Processes transactions in batches of 20 (to avoid token limits)
-- Considers: transaction name, merchant, amount (income vs expense), Plaid categories, user notes
-- Only assigns categories with >50% confidence
-- Preserves existing user categorizations unless re-run with `recategorize:all`
+### AI Categorization
+- **Model**: OpenAI GPT-4o-mini (JSON mode)
+- **Batches**: 20 transactions per batch
+- **Input**: Name, merchant, amount, Plaid categories, notes
+- **Confidence**: >50% to assign
+- **Script**: `scripts/auto-categorize-gpt.ts`
