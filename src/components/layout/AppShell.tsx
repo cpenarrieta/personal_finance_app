@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Cookies from "js-cookie";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-  SIDEBAR_COOKIE_NAME,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+
+const SIDEBAR_OPEN_STATE_KEY = "sidebar-open";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -19,17 +19,17 @@ interface AppShellProps {
 export function AppShell({ children, sidebarSlot, breadcrumbsSlot }: AppShellProps) {
   const [open, setOpen] = useState(true);
 
-  // Read sidebar state from cookie after mount
+  // Read sidebar open/closed state from localStorage after mount
   useEffect(() => {
-    const sidebarCookie = Cookies.get(SIDEBAR_COOKIE_NAME);
-    if (sidebarCookie !== undefined) {
-      setOpen(sidebarCookie === "true");
+    const storedState = localStorage.getItem(SIDEBAR_OPEN_STATE_KEY);
+    if (storedState !== null) {
+      setOpen(storedState === "true");
     }
   }, []);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
-    Cookies.set(SIDEBAR_COOKIE_NAME, String(newOpen), { expires: 365 });
+    localStorage.setItem(SIDEBAR_OPEN_STATE_KEY, String(newOpen));
   };
 
   return (
