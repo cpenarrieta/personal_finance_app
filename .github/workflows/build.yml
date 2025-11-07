@@ -10,6 +10,7 @@ on:
 jobs:
   type-check-and-build:
     runs-on: ubuntu-latest
+    environment: production  # This allows access to environment secrets
 
     steps:
       # Step 1: Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
