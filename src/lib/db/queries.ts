@@ -3,7 +3,7 @@
  * All queries are cached for 24 hours and tagged for invalidation
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { cacheTag, cacheLife } from "next/cache";
 import type {
   CategoryForClient,

@@ -1,4 +1,4 @@
-import PlaidLinkButton from '@/components/PlaidLinkButton'
+import PlaidLinkButton from '@/components/sync/PlaidLinkButton'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {

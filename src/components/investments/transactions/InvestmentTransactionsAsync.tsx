@@ -1,6 +1,6 @@
-import { InvestmentTransactionList } from "@/components/InvestmentTransactionList";
-import { getAllInvestmentTransactions } from "@/lib/cached-queries";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { InvestmentTransactionList } from "@/components/investments/transactions/InvestmentTransactionList";
+import { getAllInvestmentTransactions } from "@/lib/db/queries";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 export async function InvestmentTransactionsAsync() {
   try {

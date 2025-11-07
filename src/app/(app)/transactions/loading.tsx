@@ -1,4 +1,4 @@
-import { TransactionsPageSkeleton } from "@/components/TransactionsPageSkeleton";
+import { TransactionsPageSkeleton } from "@/components/transactions/list/TransactionsPageSkeleton";
 
 /**
  * Route-level loading state for transactions page

@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { SearchableTransactionList } from "@/components/SearchableTransactionList";
-import { InvestmentTransactionList } from "@/components/InvestmentTransactionList";
-import { HoldingList } from "@/components/HoldingList";
+import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
+import { InvestmentTransactionList } from "@/components/investments/transactions/InvestmentTransactionList";
+import { HoldingList } from "@/components/investments/holdings/HoldingList";
 import { format } from "date-fns";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 import {
   getAccountById,
   getTransactionsForAccount,
@@ -11,7 +11,7 @@ import {
   getInvestmentTransactionsForAccount,
   getAllCategories,
   getAllTags,
-} from "@/lib/cached-queries";
+} from "@/lib/db/queries";
 
 export async function AccountDetailAsync({ id }: { id: string }) {
   try {

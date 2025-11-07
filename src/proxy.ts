@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "./lib/auth";
-import { isEmailAllowed, getAllowedEmails } from "./lib/auth-helpers";
+import { auth } from "./lib/auth/auth";
+import { isEmailAllowed, getAllowedEmails } from "./lib/auth/auth-helpers";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

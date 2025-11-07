@@ -1,5 +1,5 @@
 // lib/syncPrices.ts
-import { prisma } from './prisma'
+import { prisma } from '../db/prisma'
 import { Prisma } from '@prisma/client'
 
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || ''

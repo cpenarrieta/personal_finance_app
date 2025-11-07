@@ -1,11 +1,11 @@
 import { revalidatePath, revalidateTag } from "next/cache";
-import { DeleteButton } from "@/components/DeleteButton";
+import { DeleteButton } from "@/components/shared/DeleteButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { getAllTagsWithCounts } from "@/lib/cached-queries-settings";
-import { ErrorFallback } from "@/components/ErrorFallback";
-import { prisma } from "@/lib/prisma";
+import { getAllTagsWithCounts } from "@/lib/db/queries-settings";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
+import { prisma } from "@/lib/db/prisma";
 import type { PrismaTagWithCount } from "@/types";
 
 // Server Actions

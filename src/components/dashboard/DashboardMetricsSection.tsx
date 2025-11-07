@@ -1,13 +1,13 @@
 import { formatAmount } from "@/lib/utils";
 import { Wallet, TrendingUp, DollarSign } from "lucide-react";
-import { MetricCard } from "@/components/MetricCard";
+import { MetricCard } from "@/components/shared/MetricCard";
 import { getDashboardMetrics, getLastMonthStats } from "@/lib/dashboard/data";
 import {
   calculateTotalBalance,
   calculateInvestmentValue,
 } from "@/lib/dashboard/calculations";
 import { format } from "date-fns";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 /**
  * Async Server Component for Dashboard Metrics

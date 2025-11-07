@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getPlaidClient } from '@/lib/plaid'
+import { getPlaidClient } from '@/lib/api/plaid'
 import { Products, CountryCode } from 'plaid'
 
 export async function POST() {

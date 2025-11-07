@@ -8,14 +8,14 @@
  * 4. Invalid data handling
  */
 
-import { syncItemTransactions, syncItemInvestments } from "../sync-service";
-import * as plaidModule from "../plaid";
-import * as prismaModule from "../prisma";
+import { syncItemTransactions, syncItemInvestments } from "../sync/sync-service";
+import * as plaidModule from "../api/plaid";
+import * as prismaModule from "../db/prisma";
 import { mockPlaidAccount, mockInvestmentsHoldingsResponse } from "./__mocks__/test-data";
 
 // Mock modules
-jest.mock("../plaid");
-jest.mock("../prisma", () => ({
+jest.mock("../api/plaid");
+jest.mock("../db/prisma", () => ({
   prisma: {
     transaction: {
       findUnique: jest.fn(),

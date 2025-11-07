@@ -2,8 +2,8 @@
 // Run with: npx tsx scripts/sync-from-scratch.ts
 // This script clears the cursor and re-syncs all data from scratch
 
-import { syncAllItems } from '../src/lib/sync'
-import { prisma } from '../src/lib/prisma'
+import { syncAllItems } from '../src/lib/sync/sync'
+import { prisma } from '../src/lib/db/prisma'
 
 async function main() {
   console.log('🔄 Starting fresh sync from scratch...')

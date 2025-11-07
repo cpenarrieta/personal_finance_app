@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import { updateTransactionSchema } from '@/types/api'
 import { safeParseRequestBody } from '@/types/api'
 import type { Prisma } from '@prisma/client'

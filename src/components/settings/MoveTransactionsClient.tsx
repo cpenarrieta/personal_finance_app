@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TransactionItem } from "@/components/TransactionItem";
+import { TransactionItem } from "@/components/transactions/list/TransactionItem";
 import { CategorySelect } from "@/components/ui/category-select";
 import { SubcategorySelect } from "@/components/ui/subcategory-select";
 import type { TransactionForClient, CategoryForClient } from "@/types";

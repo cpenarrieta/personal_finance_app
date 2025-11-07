@@ -1,4 +1,4 @@
-import { HoldingsPortfolioSkeleton } from "@/components/investments/HoldingsPortfolioSkeleton";
+import { HoldingsPortfolioSkeleton } from "@/components/investments/holdings/HoldingsPortfolioSkeleton";
 
 export default function Loading() {
   return (

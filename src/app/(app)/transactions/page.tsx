@@ -1,5 +1,5 @@
-import { TransactionsPageClient } from "@/components/TransactionsPageClient";
-import { TransactionsPageSkeleton } from "@/components/TransactionsPageSkeleton";
+import { TransactionsPageClient } from "@/components/transactions/list/TransactionsPageClient";
+import { TransactionsPageSkeleton } from "@/components/transactions/list/TransactionsPageSkeleton";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import {
@@ -7,8 +7,8 @@ import {
   getAllCategories,
   getAllTags,
   getAllAccounts,
-} from "@/lib/cached-queries";
-import { parseTransactionFiltersFromUrl } from "@/lib/transactionUrlParams";
+} from "@/lib/db/queries";
+import { parseTransactionFiltersFromUrl } from "@/lib/transactions/url-params";
 
 export const metadata: Metadata = {
   title: "Banking Transactions",

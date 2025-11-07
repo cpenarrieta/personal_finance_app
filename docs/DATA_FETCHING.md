@@ -16,7 +16,7 @@ This app uses **Next.js 15 Server Components** for data fetching, following a "f
 ### Server Component (Page)
 ```typescript
 // app/some-page/page.tsx
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 
 export default async function SomePage() {
   // Fetch all data in parallel on the server

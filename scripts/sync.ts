@@ -1,7 +1,7 @@
 // scripts/sync.ts
 // Run with: npx tsx scripts/sync.ts
 
-import { syncAllItems } from '../src/lib/sync'
+import { syncAllItems } from '../src/lib/sync/sync'
 
 async function main() {
   console.log('Starting Plaid sync...')

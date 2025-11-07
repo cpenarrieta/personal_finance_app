@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { SearchableTransactionList } from "./SearchableTransactionList";
-import { TransactionChartsView } from "./TransactionChartsView";
-import { AddTransactionModal } from "./AddTransactionModal";
+import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
+import { TransactionChartsView } from "@/components/transactions/analytics/TransactionChartsView";
+import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
@@ -12,7 +12,7 @@ import type {
   TagForClient,
   PlaidAccountForClient,
 } from "@/types";
-import type { TransactionFiltersFromUrl } from "@/lib/transactionUrlParams";
+import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params";
 
 interface TransactionsPageClientProps{
   transactions: TransactionForClient[];

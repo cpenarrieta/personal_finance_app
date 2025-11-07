@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CategorySelect } from "@/components/ui/category-select";
 import { Button } from "@/components/ui/button";
-import { TagSelector } from "@/components/TagSelector";
+import { TagSelector } from "@/components/transactions/filters/TagSelector";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

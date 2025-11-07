@@ -36,7 +36,7 @@ A personal finance application built with Next.js 15 (App Router) that integrate
 
 ```typescript
 // ✅ DO: Server Component with cached queries
-import { getAllTransactions, getAllCategories, getAllTags } from "@/lib/cached-queries"
+import { getAllTransactions, getAllCategories, getAllTags } from "@/lib/db/queries"
 
 export default async function Page() {
   const [transactions, categories, tags] = await Promise.all([

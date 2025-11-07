@@ -1,6 +1,6 @@
 import { UncategorizedTransactionsSection } from "@/components/dashboard/UncategorizedTransactionsSection";
 import { getUncategorizedTransactions } from "@/lib/dashboard/data";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 /**
  * Async Server Component for Uncategorized Transactions

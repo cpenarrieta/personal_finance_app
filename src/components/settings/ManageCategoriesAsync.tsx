@@ -1,15 +1,15 @@
 import Image from "next/image";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { DeleteButton } from "@/components/DeleteButton";
-import { getCategoryImage } from "@/lib/categoryImages";
+import { DeleteButton } from "@/components/shared/DeleteButton";
+import { getCategoryImage } from "@/lib/categories/images";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TransferCategoryToggle } from "@/components/TransferCategoryToggle";
-import { getAllCategoriesForManagement } from "@/lib/cached-queries-settings";
-import { ErrorFallback } from "@/components/ErrorFallback";
-import { prisma } from "@/lib/prisma";
+import { TransferCategoryToggle } from "@/components/transactions/filters/TransferCategoryToggle";
+import { getAllCategoriesForManagement } from "@/lib/db/queries-settings";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
+import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@prisma/client";
 
 type CategoryWithSubs = Prisma.CategoryGetPayload<{

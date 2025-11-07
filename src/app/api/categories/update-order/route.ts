@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { CategoryGroupType } from "@prisma/client";
 
 export async function PUT(request: Request) {

@@ -2,7 +2,7 @@
 // Run with: npx tsx scripts/sync-transactions.ts
 // This script syncs ONLY banking transactions (no investments)
 
-import { syncTransactionsOnly } from '../src/lib/sync'
+import { syncTransactionsOnly } from '../src/lib/sync/sync'
 
 async function main() {
   console.log('Starting Plaid transaction sync...')

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { getTransactionById } from "@/lib/cached-queries-transaction";
-import { TransactionDetailAsync } from "@/components/transactions/TransactionDetailAsync";
-import { TransactionDetailSkeleton } from "@/components/transactions/TransactionDetailSkeleton";
+import { getTransactionById } from "@/lib/db/queries-transactions";
+import { TransactionDetailAsync } from "@/components/transactions/detail/TransactionDetailAsync";
+import { TransactionDetailSkeleton } from "@/components/transactions/detail/TransactionDetailSkeleton";
 import type { Metadata } from "next";
 
 export async function generateMetadata({

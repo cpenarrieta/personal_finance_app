@@ -1,7 +1,7 @@
 import { SpendingByCategoryChart } from "@/components/charts/SpendingByCategoryChart";
 import { getLastMonthStats } from "@/lib/dashboard/data";
 import { prepareSpendingByCategory } from "@/lib/dashboard/calculations";
-import { ChartErrorFallback } from "@/components/ErrorFallback";
+import { ChartErrorFallback } from "@/components/shared/ErrorFallback";
 
 /**
  * Async Server Component for Spending by Category Chart

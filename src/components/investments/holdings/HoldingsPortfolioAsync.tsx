@@ -1,6 +1,6 @@
-import { HoldingsPortfolio } from "@/components/HoldingsPortfolio";
-import { getAllHoldings } from "@/lib/cached-queries";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { HoldingsPortfolio } from "@/components/investments/holdings/HoldingsPortfolio";
+import { getAllHoldings } from "@/lib/db/queries";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 export async function HoldingsPortfolioAsync() {
   try {

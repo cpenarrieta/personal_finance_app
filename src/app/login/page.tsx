@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { LoginButtons } from "@/components/LoginButtons";
+import { LoginButtons } from "@/components/auth/LoginButtons";
 import { Skeleton } from "@/components/ui/skeleton";
 
 async function LoginContent({

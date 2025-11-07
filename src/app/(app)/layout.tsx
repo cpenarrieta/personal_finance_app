@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { AppShell } from "@/components/AppShell";
-import { AppSidebarWithPathname } from "@/components/AppSidebarWithPathname";
-import { AppSidebarSkeleton } from "@/components/AppSidebarSkeleton";
-import { BreadcrumbsAsync } from "@/components/BreadcrumbsAsync";
-import { BreadcrumbsSkeleton } from "@/components/BreadcrumbsSkeleton";
-import { AccountsMenuAsync } from "@/components/AccountsMenuAsync";
-import { AccountsMenuSkeleton } from "@/components/AccountsMenuSkeleton";
+import { AppShell } from "@/components/layout/AppShell";
+import { AppSidebarWithPathname } from "@/components/layout/AppSidebarWithPathname";
+import { AppSidebarSkeleton } from "@/components/layout/AppSidebarSkeleton";
+import { BreadcrumbsAsync } from "@/components/layout/BreadcrumbsAsync";
+import { BreadcrumbsSkeleton } from "@/components/layout/BreadcrumbsSkeleton";
+import { AccountsMenuAsync } from "@/components/layout/AccountsMenuAsync";
+import { AccountsMenuSkeleton } from "@/components/layout/AccountsMenuSkeleton";
 
 export default function AppLayout({
   children,

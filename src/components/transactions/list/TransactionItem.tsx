@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
-import { getCategoryImage } from "@/lib/categoryImages";
+import { getCategoryImage } from "@/lib/categories/images";
 import { formatAmount } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";

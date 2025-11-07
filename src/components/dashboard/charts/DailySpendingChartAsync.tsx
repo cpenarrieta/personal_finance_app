@@ -1,7 +1,7 @@
 import { DailySpendingChart } from "@/components/charts/DailySpendingChart";
 import { getLastMonthStats } from "@/lib/dashboard/data";
 import { prepareDailySpendingData } from "@/lib/dashboard/calculations";
-import { ChartErrorFallback } from "@/components/ErrorFallback";
+import { ChartErrorFallback } from "@/components/shared/ErrorFallback";
 
 /**
  * Async Server Component for Daily Spending Chart

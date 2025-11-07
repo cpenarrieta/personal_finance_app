@@ -1,7 +1,7 @@
-import { TransactionDetailView } from "@/components/TransactionDetailView";
-import { getTransactionById } from "@/lib/cached-queries-transaction";
-import { getAllCategories, getAllTags } from "@/lib/cached-queries";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { TransactionDetailView } from "@/components/transactions/detail/TransactionDetailView";
+import { getTransactionById } from "@/lib/db/queries-transactions";
+import { getAllCategories, getAllTags } from "@/lib/db/queries";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 import type { TransactionForClient } from "@/types";
 
 /**

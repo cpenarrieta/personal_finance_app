@@ -6,10 +6,10 @@
  * For comprehensive testing, use E2E tests with Playwright.
  */
 
-import * as cachedQueries from "@/lib/cached-queries";
+import * as cachedQueries from "@/lib/db/queries";
 
 // Mock cached queries module
-jest.mock("@/lib/cached-queries", () => ({
+jest.mock("@/lib/db/queries", () => ({
   getAllTransactions: jest.fn(),
   getAllCategories: jest.fn(),
   getAllTags: jest.fn(),

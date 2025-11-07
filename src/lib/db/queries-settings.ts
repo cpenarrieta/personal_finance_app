@@ -2,7 +2,7 @@
  * Cached queries for settings pages
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { cacheTag, cacheLife } from "next/cache";
 
 /**

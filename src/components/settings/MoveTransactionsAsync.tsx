@@ -1,6 +1,6 @@
-import { MoveTransactionsClient } from "@/components/MoveTransactionsClient";
-import { getAllCategoriesForMoveTransactions } from "@/lib/cached-queries-settings";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { MoveTransactionsClient } from "@/components/settings/MoveTransactionsClient";
+import { getAllCategoriesForMoveTransactions } from "@/lib/db/queries-settings";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 import type { CategoryForClient } from "@/types";
 
 export async function MoveTransactionsAsync() {

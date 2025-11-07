@@ -9,9 +9,9 @@
  */
 
 import { Prisma } from "@prisma/client";
-import { syncItemInvestments } from "../sync-service";
-import * as plaidModule from "../plaid";
-import * as prismaModule from "../prisma";
+import { syncItemInvestments } from "../sync/sync-service";
+import * as plaidModule from "../api/plaid";
+import * as prismaModule from "../db/prisma";
 import {
   mockPlaidSecurity,
   mockPlaidHolding,
@@ -24,8 +24,8 @@ import {
 } from "./__mocks__/test-data";
 
 // Mock modules
-jest.mock("../plaid");
-jest.mock("../prisma", () => ({
+jest.mock("../api/plaid");
+jest.mock("../db/prisma", () => ({
   prisma: {
     plaidAccount: {
       findMany: jest.fn(),

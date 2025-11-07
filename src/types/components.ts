@@ -12,7 +12,7 @@ import type {
   HoldingForClient,
   InvestmentTransactionForClient,
 } from "./client";
-import type { TransactionFiltersFromUrl } from "@/lib/transactionUrlParams";
+import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params";
 
 // ============================================================================
 // TRANSACTION COMPONENT TYPES

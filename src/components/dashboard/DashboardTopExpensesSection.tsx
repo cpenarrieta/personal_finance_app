@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { TransactionTable } from "@/components/dashboard/TransactionTable";
 import { getTopExpensiveTransactions, getLastMonthStats } from "@/lib/dashboard/data";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 /**
  * Async Server Component for Top Expenses

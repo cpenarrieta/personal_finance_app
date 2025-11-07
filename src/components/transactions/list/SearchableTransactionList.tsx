@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect, useRef, RefObject } from "react";
 import { format } from "date-fns";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { EditTransactionModal } from "./EditTransactionModal";
-import { TransactionItem } from "./TransactionItem";
+import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal";
+import { TransactionItem } from "@/components/transactions/list/TransactionItem";
 import {
   Select,
   SelectContent,
@@ -29,7 +29,7 @@ import type {
 } from "@/types";
 import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import { TagSelector } from "@/components/TagSelector";
+import { TagSelector } from "@/components/transactions/filters/TagSelector";
 import {
   useTransactionFilters,
   DateRange,
@@ -37,7 +37,7 @@ import {
 import { useTransactionSort } from "@/hooks/useTransactionSort";
 import { useBulkTransactionOperations } from "@/hooks/useBulkTransactionOperations";
 import { useCategoryToggle } from "@/hooks/useCategoryToggle";
-import { transactionFiltersToUrlParams } from "@/lib/transactionUrlParams";
+import { transactionFiltersToUrlParams } from "@/lib/transactions/url-params";
 
 export function SearchableTransactionList({
   transactions,

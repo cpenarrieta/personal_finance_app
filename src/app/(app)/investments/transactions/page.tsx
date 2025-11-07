@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { InvestmentTransactionsAsync } from "@/components/investments/InvestmentTransactionsAsync";
-import { InvestmentTransactionsSkeleton } from "@/components/investments/HoldingsPortfolioSkeleton";
+import { InvestmentTransactionsAsync } from "@/components/investments/transactions/InvestmentTransactionsAsync";
+import { InvestmentTransactionsSkeleton } from "@/components/investments/holdings/HoldingsPortfolioSkeleton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

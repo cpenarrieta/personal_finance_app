@@ -1,4 +1,4 @@
-import { getAllAccountsWithInstitution } from "@/lib/cached-queries";
+import { getAllAccountsWithInstitution } from "@/lib/db/queries";
 import { AccountsMenuClient } from "./AccountsMenuClient";
 
 export async function AccountsMenuAsync() {

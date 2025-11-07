@@ -2,7 +2,7 @@
 // Run with: npx tsx scripts/sync-investments.ts
 // This script syncs ONLY investments (holdings, securities, investment transactions)
 
-import { syncInvestmentsOnly } from '../src/lib/sync'
+import { syncInvestmentsOnly } from '../src/lib/sync/sync'
 
 async function main() {
   console.log('Starting Plaid investment sync...')

@@ -29,7 +29,7 @@ import { TransactionWithRelations, CategoryWithSubcategories } from '@/types'
 #### 1. Fetching Data from Database (Server-Side)
 
 ```typescript
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import { PrismaIncludes } from '@/types'
 
 // Use the predefined include pattern
@@ -298,7 +298,7 @@ type MyFormData = z.infer<typeof myFormSchema>
 
 ```typescript
 // Server Component or API Route
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 
 // Use select with generated columns for client components
 const transactions = await prisma.transaction.findMany({
@@ -327,7 +327,7 @@ return <TransactionList transactions={transactions} />
 ### Pattern: Server-Side Calculations
 
 ```typescript
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import { Prisma } from '@prisma/client'
 
 // Use source columns for precise calculations

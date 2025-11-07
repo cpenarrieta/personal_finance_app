@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { syncInvestmentsOnly } from '@/lib/sync'
+import { syncInvestmentsOnly } from '@/lib/sync/sync'
 
 export async function POST() {
   await syncInvestmentsOnly()

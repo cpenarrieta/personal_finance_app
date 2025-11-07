@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import { LogoutButton } from "@/components/LogoutButton";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 // Static nav items (accounts section will be passed as slot)
 const getStaticNavItems = () => {

@@ -1,5 +1,5 @@
 // lib/syncHoldingsLogos.ts
-import { prisma } from './prisma'
+import { prisma } from '../db/prisma'
 
 const LOGO_DEV_TOKEN = process.env.LOGO_DEV_TOKEN || 'pk_A4XxtLBuSvWdGiAYJMzjTA'
 

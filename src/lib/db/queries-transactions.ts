@@ -3,7 +3,7 @@
  * Separate file to avoid circular dependencies
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { cacheTag, cacheLife } from "next/cache";
 
 /**

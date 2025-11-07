@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { syncStockPrices } from "@/lib/syncPrices";
-import { syncHoldingsLogos } from "@/lib/syncHoldingsLogos";
+import { syncStockPrices } from "@/lib/sync/sync-prices";
+import { syncHoldingsLogos } from "@/lib/sync/sync-holdings-logos";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { SyncPricesButton } from "@/components/SyncPricesButton";
-import { SyncHoldingsLogosButton } from "@/components/SyncHoldingsLogosButton";
-import { HoldingsPortfolioAsync } from "@/components/investments/HoldingsPortfolioAsync";
-import { HoldingsPortfolioSkeleton } from "@/components/investments/HoldingsPortfolioSkeleton";
+import { SyncPricesButton } from "@/components/sync/SyncPricesButton";
+import { SyncHoldingsLogosButton } from "@/components/sync/SyncHoldingsLogosButton";
+import { HoldingsPortfolioAsync } from "@/components/investments/holdings/HoldingsPortfolioAsync";
+import { HoldingsPortfolioSkeleton } from "@/components/investments/holdings/HoldingsPortfolioSkeleton";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

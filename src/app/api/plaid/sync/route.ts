@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { syncAllItems } from '@/lib/sync'
+import { syncAllItems } from '@/lib/sync/sync'
 
 export async function POST() {
   await syncAllItems()

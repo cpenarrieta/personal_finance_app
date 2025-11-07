@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CategorySelect } from "@/components/ui/category-select";
 import { SubcategorySelect } from "@/components/ui/subcategory-select";
 import { Button } from "@/components/ui/button";
-import { TagSelector } from "@/components/TagSelector";
+import { TagSelector } from "@/components/transactions/filters/TagSelector";
 
 export function EditTransactionModal({
   transaction,

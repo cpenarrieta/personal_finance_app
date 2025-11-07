@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { getAccountById } from "@/lib/cached-queries";
+import { getAccountById } from "@/lib/db/queries";
 import { AccountDetailAsync } from "@/components/accounts/AccountDetailAsync";
 import { AccountDetailSkeleton } from "@/components/accounts/AccountDetailSkeleton";
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getAllAccountsWithInstitution } from "@/lib/cached-queries";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { getAllAccountsWithInstitution } from "@/lib/db/queries";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 /**
  * Async Server Component for accounts list

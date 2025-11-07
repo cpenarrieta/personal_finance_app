@@ -11,9 +11,9 @@
  */
 
 import { Prisma } from "@prisma/client";
-import { syncItemTransactions } from "../sync-service";
-import * as plaidModule from "../plaid";
-import * as prismaModule from "../prisma";
+import { syncItemTransactions } from "../sync/sync-service";
+import * as plaidModule from "../api/plaid";
+import * as prismaModule from "../db/prisma";
 import {
   mockPlaidAccount,
   mockPlaidTransaction,
@@ -25,8 +25,8 @@ import {
 } from "./__mocks__/test-data";
 
 // Mock modules
-jest.mock("../plaid");
-jest.mock("../prisma", () => ({
+jest.mock("../api/plaid");
+jest.mock("../db/prisma", () => ({
   prisma: {
     transaction: {
       findUnique: jest.fn(),

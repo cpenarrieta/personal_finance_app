@@ -1,6 +1,6 @@
-import { CategoryOrderClient } from "@/components/CategoryOrderClient";
-import { getAllCategories } from "@/lib/cached-queries";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { CategoryOrderClient } from "@/components/settings/CategoryOrderClient";
+import { getAllCategories } from "@/lib/db/queries";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 export async function CategoryOrderAsync() {
   try {

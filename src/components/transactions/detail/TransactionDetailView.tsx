@@ -6,9 +6,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatAmount } from "@/lib/utils";
-import { EditTransactionModal } from "./EditTransactionModal";
-import { SplitTransactionModal } from "./SplitTransactionModal";
-import { Button } from "./ui/button";
+import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal";
+import { SplitTransactionModal } from "@/components/transactions/modals/SplitTransactionModal";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "@/components/ui/dialog";
 import type {
   TransactionForClient,
   CategoryForClient,

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 
 interface AppSidebarWithPathnameProps {
   accountsSlot: React.ReactNode;

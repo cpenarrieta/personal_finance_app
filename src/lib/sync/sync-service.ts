@@ -2,8 +2,8 @@
 // Modular sync service that can sync transactions and/or investments separately
 
 import { PlaidAccountWithRelations } from "@/types";
-import { getPlaidClient } from "./plaid";
-import { prisma } from "./prisma";
+import { getPlaidClient } from "../api/plaid";
+import { prisma } from "../db/prisma";
 import { Prisma } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 

@@ -1,7 +1,7 @@
 import { TransactionTable } from "@/components/dashboard/TransactionTable";
 import { getRecentTransactions } from "@/lib/dashboard/data";
-import { TransitionLink } from "@/components/TransitionLink";
-import { ErrorFallback } from "@/components/ErrorFallback";
+import { TransitionLink } from "@/components/shared/TransitionLink";
+import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 /**
  * Async Server Component for Recent Transactions
