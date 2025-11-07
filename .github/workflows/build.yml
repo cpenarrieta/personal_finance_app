@@ -11,6 +11,8 @@ jobs:
   type-check-and-build:
     runs-on: ubuntu-latest
     environment: production  # This allows access to environment secrets
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
       # Step 1: Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
