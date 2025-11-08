@@ -11,8 +11,6 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
-    // Disable optimization for local images to avoid 400 errors
-    unoptimized: true,
   },
 };
 
