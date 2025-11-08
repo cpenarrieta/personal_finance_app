@@ -156,9 +156,6 @@ test.describe('Transaction Filters', () => {
   });
 
   test('filters persist in URL', async ({ page }) => {
-    // Get initial URL
-    const initialUrl = page.url();
-
     // Try to interact with a filter if available
     const selects = page.locator('select').first();
 
