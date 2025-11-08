@@ -157,6 +157,7 @@ export async function ManageCategoriesAsync() {
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-lg object-cover border"
+                            unoptimized={getCategoryImage(cat.name, cat.imageUrl)!.startsWith('/images/')}
                           />
                         </div>
                       )}
@@ -211,6 +212,7 @@ export async function ManageCategoriesAsync() {
                                 width={32}
                                 height={32}
                                 className="w-8 h-8 rounded object-cover border"
+                                unoptimized={getCategoryImage(sub.name, sub.imageUrl)!.startsWith('/images/')}
                               />
                             )}
                             <span className="flex-1 text-foreground font-medium">

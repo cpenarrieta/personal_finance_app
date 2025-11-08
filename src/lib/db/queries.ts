@@ -574,3 +574,41 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
     orderBy: { date: "desc" },
   });
 }
+
+/**
+ * Get all connected Plaid items with institution info
+ * Cached with 24h expiration, tagged with "items"
+ */
+export async function getAllConnectedItems() {
+  "use cache";
+  cacheLife({ stale: 60 * 60 * 24 });
+  cacheTag("items");
+
+  return prisma.item.findMany({
+    select: {
+      id: true,
+      plaidItemId: true,
+      accessToken: true,
+      status: true,
+      created_at_string: true,
+      updated_at_string: true,
+      institution: {
+        select: {
+          id: true,
+          name: true,
+          logoUrl: true,
+          shortName: true,
+        },
+      },
+      accounts: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          subtype: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}

@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
     create: { id: instId, name: institutionName },
   })
 
-  // Upsert Item
+  // Upsert Item - reset status to null on successful reauth
   const dbItem = await prisma.item.upsert({
     where: { plaidItemId: itemId },
-    update: { accessToken, institutionId: institution.id },
-    create: { plaidItemId: itemId, accessToken, institutionId: institution.id },
+    update: { accessToken, institutionId: institution.id, status: null },
+    create: { plaidItemId: itemId, accessToken, institutionId: institution.id, status: null },
   })
 
   // Accounts
@@ -74,8 +74,9 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // Invalidate accounts cache so sidebar updates immediately
+  // Invalidate caches so UI updates immediately
   revalidateTag("accounts", "max")
+  revalidateTag("items", "max")
 
   return NextResponse.json({ ok: true })
 }

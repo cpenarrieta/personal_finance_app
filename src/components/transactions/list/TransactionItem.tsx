@@ -56,6 +56,7 @@ export function TransactionItem({
             height={40}
             className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
             onClick={() => !showBulkUpdate && onEdit?.(t)}
+            unoptimized={displayImage.startsWith('/images/')}
           />
         )}
 

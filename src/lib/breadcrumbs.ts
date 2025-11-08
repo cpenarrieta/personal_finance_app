@@ -19,6 +19,7 @@ const breadcrumbConfig: Record<string, string> = {
   '/investments/holdings': 'Holdings',
   '/investments/transactions': 'Transactions',
   '/settings': 'Settings',
+  '/settings/connections': 'Connections',
   '/settings/manage-categories': 'Categories',
   '/settings/category-order': 'Category Order',
   '/settings/manage-tags': 'Tags',

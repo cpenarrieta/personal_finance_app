@@ -38,6 +38,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -74,6 +84,10 @@ const getStaticNavItems = () => {
       icon: Settings,
       items: [
         {
+          title: "Connections",
+          href: "/settings/connections",
+        },
+        {
           title: "Categories",
           href: "/settings/manage-categories",
         },
@@ -97,6 +111,7 @@ const getStaticNavItems = () => {
 function SyncDropdown() {
   const router = useRouter();
   const [syncing, setSyncing] = useState(false);
+  const [showReauthModal, setShowReauthModal] = useState(false);
 
   const handleSync = async (endpoint: string, label: string) => {
     setSyncing(true);
@@ -109,6 +124,13 @@ function SyncDropdown() {
         toast.success(`${label} completed!`, { id: toastId });
         router.refresh();
       } else {
+        // Check if it's a reauth error
+        const errorData = await response.json().catch(() => null);
+        if (errorData?.errorCode === "ITEM_LOGIN_REQUIRED") {
+          toast.dismiss(toastId);
+          setShowReauthModal(true);
+          return;
+        }
         toast.error(`${label} failed`, { id: toastId });
       }
     } catch (error) {
@@ -116,6 +138,11 @@ function SyncDropdown() {
     } finally {
       setSyncing(false);
     }
+  };
+
+  const handleReauthClick = () => {
+    setShowReauthModal(false);
+    router.push("/settings/connections");
   };
 
   return (
@@ -167,6 +194,22 @@ function SyncDropdown() {
           Fresh Sync (Emergency)
         </DropdownMenuItem>
       </DropdownMenuContent>
+      <AlertDialog open={showReauthModal} onOpenChange={setShowReauthModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reauthorization Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your financial institution requires you to sign in again. This is normal and happens when your login credentials or session expires.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReauthClick}>
+              Go to Connections
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DropdownMenu>
   );
 }

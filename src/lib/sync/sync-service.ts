@@ -143,11 +143,32 @@ export async function syncItemTransactions(
   let hasMore = true;
 
   while (hasMore) {
-    const resp = await plaid.transactionsSync({
-      access_token: accessToken,
-      cursor: cursor,
-      count: 500,
-    });
+    let resp;
+    try {
+      resp = await plaid.transactionsSync({
+        access_token: accessToken,
+        cursor: cursor,
+        count: 500,
+      });
+    } catch (error: any) {
+      console.error("  ❌ Plaid transactionsSync error:");
+      console.error("  Error code:", error.response?.data?.error_code);
+      console.error("  Error message:", error.response?.data?.error_message);
+      console.error("  Cursor value:", cursor);
+
+      // Update item status if login required
+      if (error.response?.data?.error_code === "ITEM_LOGIN_REQUIRED") {
+        await prisma.item.update({
+          where: { id: itemId },
+          data: { status: "ITEM_LOGIN_REQUIRED" },
+        });
+        revalidateTag("items", "max");
+        console.error("  ℹ️  Item status updated to ITEM_LOGIN_REQUIRED");
+        console.error("  ℹ️  Visit /settings/connections to reauthorize");
+      }
+
+      throw error;
+    }
 
     // Upsert accounts (in case of new/changed)
     for (const a of resp.data.accounts) {
