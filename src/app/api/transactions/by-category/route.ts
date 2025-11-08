@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@prisma/client";
 
-// Force dynamic rendering since we use searchParams
-export const dynamic = 'force-dynamic';
-
+/**
+ * Get transactions by category and optional subcategory
+ *
+ * Note: This route is automatically dynamic in Next.js 16 with cacheComponents
+ * because it uses request.nextUrl.searchParams
+ */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-// Force dynamic rendering to prevent build-time errors
-export const dynamic = 'force-dynamic';
-
 /**
  * Example API route to test Sentry server-side error tracking
  * This route is created by the Sentry installation wizard
+ *
+ * Note: This route is automatically dynamic in Next.js 16 with cacheComponents
+ * because it throws an error intentionally
  */
 export async function GET() {
   // This will trigger a server-side error that Sentry will capture
