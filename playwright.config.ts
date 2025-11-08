@@ -6,6 +6,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 // require('dotenv').config();
 
+// Set E2E_TEST_MODE environment variable for test runs
+process.env.E2E_TEST_MODE = 'true';
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */

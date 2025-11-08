@@ -4,15 +4,70 @@ This directory contains end-to-end tests for the Personal Finance App using Play
 
 ## Overview
 
-The E2E tests verify basic read-only flows without mocking the database. Tests run against a real database (typically a test database) to ensure the entire application stack works correctly.
+The E2E tests verify both read-only flows and database-modifying operations without mocking the database. Tests run against a real database (typically a test database) to ensure the entire application stack works correctly.
+
+**Important**: Database-modifying tests create and clean up their own test data using unique identifiers (e.g., `E2E Test ${Date.now()}`). Plaid API calls are not mocked in E2E tests - tests focus on UI operations that interact with the database.
 
 ## Test Coverage
 
+### Read-Only Tests (Original)
 - **Pages Load**: Verify all pages load without errors and have proper SEO metadata
 - **Dashboard**: Verify dashboard sections render correctly
 - **Transactions**: Test transaction list, filtering, and sorting
 - **Transaction Detail**: Test individual transaction pages
 - **Modals**: Test add/edit transaction modals
+
+### Database-Modifying Tests (New)
+
+#### Transaction Operations
+- **transaction-crud.spec.ts** - Transaction CRUD operations
+  - Create new transaction
+  - Edit transaction (name, category, notes, tags)
+  - Delete transaction
+  - Add tags to transaction
+  - Change transaction category
+  - Form validation
+
+- **transaction-split.spec.ts** - Split transaction workflow
+  - Split transaction into multiple parts
+  - Validate split amounts sum to original
+  - Prevent splitting already split transactions
+  - Assign different categories to split parts
+
+- **transaction-bulk.spec.ts** - Bulk transaction operations
+  - Select multiple transactions
+  - Bulk update category
+  - Bulk add tags
+  - Deselect transactions
+  - Validation (cannot update with no selection)
+
+#### Category Management
+- **category-management.spec.ts** - Category CRUD operations
+  - Create new category
+  - Create transfer category
+  - Delete category
+  - Create subcategory
+  - Delete subcategory
+  - Toggle transfer category setting
+  - Reorder categories
+  - Form validation
+
+#### Tag Management
+- **tag-management.spec.ts** - Tag CRUD operations
+  - Create new tag
+  - Create tag with custom color
+  - Update tag name
+  - Update tag color
+  - Delete tag
+  - Create multiple tags
+  - Form validation
+
+#### Settings
+- **settings-operations.spec.ts** - Settings operations
+  - Move transactions between categories
+  - View connected accounts
+  - Navigate settings sections
+  - Validation (cannot move to same category)
 
 ## Setup
 
@@ -181,14 +236,25 @@ DATABASE_URL="postgresql://testuser:testpass@localhost:5433/finance_test" npx pr
 ```
 e2e/
 ├── fixtures/
-│   └── authenticated-page.ts    # Auth bypass fixture
+│   └── authenticated-page.ts         # Auth bypass fixture
 ├── utils/
-│   └── test-helpers.ts          # Common test utilities
-├── pages-load.spec.ts           # Page load and SEO tests
-├── dashboard.spec.ts            # Dashboard tests
-├── transactions.spec.ts         # Transaction list tests
-├── transaction-detail.spec.ts   # Transaction detail tests
-└── README.md                    # This file
+│   └── test-helpers.ts               # Common test utilities
+│
+├── Read-Only Tests:
+├── pages-load.spec.ts                # Page load and SEO tests
+├── dashboard.spec.ts                 # Dashboard tests
+├── transactions.spec.ts              # Transaction list tests
+├── transaction-detail.spec.ts        # Transaction detail tests
+│
+├── Database-Modifying Tests:
+├── transaction-crud.spec.ts          # Transaction CRUD operations
+├── transaction-split.spec.ts         # Split transaction workflow
+├── transaction-bulk.spec.ts          # Bulk transaction operations
+├── category-management.spec.ts       # Category CRUD operations
+├── tag-management.spec.ts            # Tag CRUD operations
+├── settings-operations.spec.ts       # Settings operations
+│
+└── README.md                         # This file
 ```
 
 ### Test Fixtures
@@ -253,13 +319,21 @@ E2E_TEST_MODE=true npx playwright test --debug
 
 ## Best Practices
 
+### General
 1. **Use the authenticated fixture**: Always import from `./fixtures/authenticated-page`
 2. **Wait for page loads**: Use `waitForPageLoad()` after navigation
-3. **Use waitForTimeout sparingly**: Prefer waiting for specific elements
-4. **Test data independence**: Tests should work regardless of database state
-5. **Read-only tests**: Don't modify data that other tests depend on
-6. **Descriptive test names**: Use clear, descriptive test names
-7. **Group related tests**: Use `test.describe()` blocks
+3. **Use waitForTimeout sparingly**: Prefer waiting for specific elements when possible
+4. **Descriptive test names**: Use clear, descriptive test names
+5. **Group related tests**: Use `test.describe()` blocks
+
+### Database-Modifying Tests
+6. **Use unique test data**: Always use timestamps in test data names (e.g., `E2E Test ${Date.now()}`)
+7. **Wait for mutations**: Use `page.waitForTimeout()` after database operations to allow for revalidation
+8. **Verify persistence**: Always check that changes appear in the UI after mutations
+9. **Clean up test data**: Delete created items when possible to avoid polluting the database
+10. **Skip gracefully**: Use `test.skip()` when preconditions aren't met instead of failing
+11. **Check element existence**: Use conditional checks before interacting with elements
+12. **Test real workflows**: Simulate actual user flows, not just API calls
 
 ## Troubleshooting
 
