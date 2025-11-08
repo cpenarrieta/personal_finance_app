@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
-import { TransactionChartsView } from "@/components/transactions/analytics/TransactionChartsView";
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -43,27 +41,13 @@ export function TransactionsPageClient({
         </Button>
       </div>
 
-      <Tabs defaultValue="table" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="table">Table</TabsTrigger>
-          <TabsTrigger value="charts">Charts</TabsTrigger>
-        </TabsList>
-        <TabsContent value="table">
-          <SearchableTransactionList
-            transactions={transactions}
-            categories={categories}
-            tags={tags}
-            accounts={accounts}
-            initialFilters={initialFilters}
-          />
-        </TabsContent>
-        <TabsContent value="charts">
-          <TransactionChartsView
-            transactions={transactions}
-            categories={categories}
-          />
-        </TabsContent>
-      </Tabs>
+      <SearchableTransactionList
+        transactions={transactions}
+        categories={categories}
+        tags={tags}
+        accounts={accounts}
+        initialFilters={initialFilters}
+      />
 
       {showAddModal && (
         <AddTransactionModal

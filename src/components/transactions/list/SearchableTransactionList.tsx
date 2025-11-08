@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal";
 import { TransactionItem } from "@/components/transactions/list/TransactionItem";
+import { TransactionChartsView } from "@/components/transactions/analytics/TransactionChartsView";
+import { TransactionActionBar } from "@/components/transactions/list/TransactionActionBar";
 import {
   Select,
   SelectContent,
@@ -23,6 +25,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   SearchableTransactionListProps,
   TransactionForClient,
@@ -883,137 +886,65 @@ export function SearchableTransactionList({
         </div>
       </div>
 
-      {/* Action Bar */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Showing {filteredTransactions.length} of {transactions.length}{" "}
-            transactions
-          </div>
-          {filteredTransactions.length > 0 && (
-            <Button
-              onClick={() => bulk.setShowBulkUpdate(!bulk.showBulkUpdate)}
-              className="bg-primary hover:bg-primary/90"
-            >
-              {bulk.showBulkUpdate ? "Hide Bulk Update" : "Bulk Update"}
-            </Button>
-          )}
-        </div>
-      </div>
+      {/* Tabs: Table / Charts */}
+      <Tabs defaultValue="table" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="table">Table</TabsTrigger>
+          <TabsTrigger value="charts">Charts</TabsTrigger>
+        </TabsList>
 
-      {/* Bulk Update Panel */}
-      {bulk.showBulkUpdate && (
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-primary">
-              Bulk Update Categories
-            </h3>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => bulk.selectAll(filteredTransactions)}
-                className="bg-primary hover:bg-primary/90"
-              >
-                Select All ({filteredTransactions.length})
-              </Button>
-              <Button size="sm" onClick={bulk.deselectAll} variant="secondary">
-                Deselect All
-              </Button>
-            </div>
-          </div>
+        <TabsContent value="table" className="space-y-4">
+          <TransactionActionBar
+            filteredTransactions={filteredTransactions}
+            totalTransactions={transactions.length}
+            categories={categories}
+            showBulkUpdate={bulk.showBulkUpdate}
+            onToggleBulkUpdate={() => bulk.setShowBulkUpdate(!bulk.showBulkUpdate)}
+            bulkCategoryId={bulk.bulkCategoryId}
+            bulkSubcategoryId={bulk.bulkSubcategoryId}
+            setBulkCategoryId={bulk.setBulkCategoryId}
+            setBulkSubcategoryId={bulk.setBulkSubcategoryId}
+            selectedTransactions={bulk.selectedTransactions}
+            isBulkUpdating={bulk.isBulkUpdating}
+            onSelectAll={() => bulk.selectAll(filteredTransactions)}
+            onDeselectAll={bulk.deselectAll}
+            onBulkUpdate={bulk.handleBulkUpdate}
+            availableSubcategories={availableBulkSubcategories}
+          />
 
-          {bulk.selectedTransactions.size > 0 && (
-            <div className="bg-white rounded-lg p-4 mb-4">
-              <p className="text-sm text-muted-foreground mb-3">
-                Selected {bulk.selectedTransactions.size} transaction
-                {bulk.selectedTransactions.size !== 1 ? "s" : ""}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="bulk-category">Category</Label>
-                  <Select
-                    value={bulk.bulkCategoryId}
-                    onValueChange={(value) => {
-                      bulk.setBulkCategoryId(value);
-                      bulk.setBulkSubcategoryId("");
-                    }}
-                  >
-                    <SelectTrigger id="bulk-category">
-                      <SelectValue placeholder="Select category..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bulk-subcategory">Subcategory</Label>
-                  <Select
-                    value={bulk.bulkSubcategoryId}
-                    onValueChange={bulk.setBulkSubcategoryId}
-                    disabled={!bulk.bulkCategoryId}
-                  >
-                    <SelectTrigger id="bulk-subcategory">
-                      <SelectValue placeholder="None" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NONE">None</SelectItem>
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {availableBulkSubcategories.map((sub: any) => (
-                        <SelectItem key={sub.id} value={sub.id}>
-                          {sub.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  onClick={bulk.handleBulkUpdate}
-                  disabled={!bulk.bulkCategoryId || bulk.isBulkUpdating}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  {bulk.isBulkUpdating
-                    ? "Updating..."
-                    : `Update ${bulk.selectedTransactions.size} Transaction${
-                        bulk.selectedTransactions.size !== 1 ? "s" : ""
-                      }`}
-                </Button>
+          {/* Transaction List */}
+          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                {filters.searchQuery
+                  ? "No transactions found matching your search."
+                  : "No transactions found."}
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Transaction List */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        {filteredTransactions.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            {filters.searchQuery
-              ? "No transactions found matching your search."
-              : "No transactions found."}
+            ) : (
+              <ul className="divide-y divide-border">
+                {filteredTransactions.map((t) => (
+                  <TransactionItem
+                    key={t.id}
+                    transaction={t}
+                    showBulkUpdate={bulk.showBulkUpdate}
+                    isSelected={bulk.selectedTransactions.has(t.id)}
+                    onToggleSelect={bulk.toggleTransaction}
+                    onEdit={setEditingTransaction}
+                    showAccount={showAccount}
+                  />
+                ))}
+              </ul>
+            )}
           </div>
-        ) : (
-          <ul className="divide-y divide-border">
-            {filteredTransactions.map((t) => (
-              <TransactionItem
-                key={t.id}
-                transaction={t}
-                showBulkUpdate={bulk.showBulkUpdate}
-                isSelected={bulk.selectedTransactions.has(t.id)}
-                onToggleSelect={bulk.toggleTransaction}
-                onEdit={setEditingTransaction}
-                showAccount={showAccount}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="charts">
+          <TransactionChartsView
+            transactions={filteredTransactions}
+            categories={categories}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Edit Transaction Modal */}
       {editingTransaction && (

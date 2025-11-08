@@ -1,8 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { format, startOfMonth as dateStartOfMonth, subMonths, eachMonthOfInterval } from "date-fns"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { format, startOfMonth as dateStartOfMonth, eachMonthOfInterval, min, max } from "date-fns"
 import { SpendingByCategoryChart } from "@/components/charts/SpendingByCategoryChart"
 import { MonthlyTrendChart } from "@/components/charts/MonthlyTrendChart"
 import { IncomeVsExpenseChart } from "@/components/charts/IncomeVsExpenseChart"
@@ -18,18 +17,33 @@ export function TransactionChartsView({
   categories,
 }: TransactionChartsViewProps) {
   const chartData = useMemo(() => {
-    const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const sixMonthsAgo = subMonths(now, 6)
-    const months = eachMonthOfInterval({ start: sixMonthsAgo, end: now })
+    // Use filtered transactions - no additional date filtering
+    if (transactions.length === 0) {
+      return {
+        spendingByCategory: [],
+        monthlyTrendData: [],
+        incomeVsExpenseData: [],
+      }
+    }
 
-    // Spending by Category (current month, exclude transfers)
+    // Get date range from filtered transactions
+    const transactionDates = transactions.map((t) =>
+      new Date(t.date_string || t.created_at_string)
+    )
+    const minDate = min(transactionDates)
+    const maxDate = max(transactionDates)
+
+    // Generate months for the filtered date range
+    const months = eachMonthOfInterval({
+      start: dateStartOfMonth(minDate),
+      end: dateStartOfMonth(maxDate)
+    })
+
+    // Spending by Category (all filtered transactions, exclude transfers)
     const categorySpending = transactions
       .filter((t: TransactionForClient) => {
-        const transactionDate = new Date(t.date_string || t.created_at_string)
         return (
-          transactionDate >= startOfMonth &&
-          t.amount_number < 0 &&
+          t.amount_number > 0 &&
           t.category &&
           t.category.name !== "🔁 Transfers"
         )
@@ -39,7 +53,7 @@ export function TransactionChartsView({
         if (!acc[categoryName]) {
           acc[categoryName] = 0
         }
-        acc[categoryName] += Math.abs(t.amount_number)
+        acc[categoryName] += t.amount_number
         return acc
       }, {} as Record<string, number>)
 
@@ -71,12 +85,12 @@ export function TransactionChartsView({
       })
 
       const spending = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number < 0)
-        .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
-
-      const income = monthTransactions
         .filter((t: TransactionForClient) => t.amount_number > 0)
         .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
+
+      const income = monthTransactions
+        .filter((t: TransactionForClient) => t.amount_number < 0)
+        .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
 
       return {
         month: format(month, "MMM yy"),
@@ -96,12 +110,12 @@ export function TransactionChartsView({
       })
 
       const expenses = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number < 0)
-        .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
-
-      const income = monthTransactions
         .filter((t: TransactionForClient) => t.amount_number > 0)
         .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
+
+      const income = monthTransactions
+        .filter((t: TransactionForClient) => t.amount_number < 0)
+        .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
 
       return {
         month: format(month, "MMM yy"),
@@ -110,59 +124,18 @@ export function TransactionChartsView({
       }
     })
 
-    // Account breakdown
-    const accountSpending = transactions
-      .filter((t: TransactionForClient) => {
-        const transactionDate = new Date(t.date_string || t.created_at_string)
-        return transactionDate >= startOfMonth && t.amount_number < 0
-      })
-      .reduce((acc: Record<string, number>, t: TransactionForClient) => {
-        const accountName = t.account?.name || "Unknown"
-        if (!acc[accountName]) {
-          acc[accountName] = 0
-        }
-        acc[accountName] += Math.abs(t.amount_number)
-        return acc
-      }, {} as Record<string, number>)
-
-    const spendingByAccount = Object.entries(accountSpending)
-      .map(([name, value], index) => ({
-        name,
-        value: value as number,
-        color: CHART_COLORS[index % CHART_COLORS.length] as string,
-      }))
-      .sort((a, b) => (b.value as number) - (a.value as number))
-
     return {
       spendingByCategory,
       monthlyTrendData,
       incomeVsExpenseData,
-      spendingByAccount,
     }
   }, [transactions, categories])
 
   return (
-    <div className="space-y-4">
-      <Tabs defaultValue="category" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="category">By Category</TabsTrigger>
-          <TabsTrigger value="trend">Trend</TabsTrigger>
-          <TabsTrigger value="income-expense">Income vs Expense</TabsTrigger>
-          <TabsTrigger value="account">By Account</TabsTrigger>
-        </TabsList>
-        <TabsContent value="category" className="mt-4">
-          <SpendingByCategoryChart data={chartData.spendingByCategory} />
-        </TabsContent>
-        <TabsContent value="trend" className="mt-4">
-          <MonthlyTrendChart data={chartData.monthlyTrendData} />
-        </TabsContent>
-        <TabsContent value="income-expense" className="mt-4">
-          <IncomeVsExpenseChart data={chartData.incomeVsExpenseData} />
-        </TabsContent>
-        <TabsContent value="account" className="mt-4">
-          <SpendingByCategoryChart data={chartData.spendingByAccount} />
-        </TabsContent>
-      </Tabs>
+    <div className="space-y-6">
+      <SpendingByCategoryChart data={chartData.spendingByCategory} />
+      <MonthlyTrendChart data={chartData.monthlyTrendData} />
+      <IncomeVsExpenseChart data={chartData.incomeVsExpenseData} />
     </div>
   )
 }
