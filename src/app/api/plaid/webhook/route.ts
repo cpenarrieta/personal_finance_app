@@ -22,7 +22,7 @@ interface PlaidWebhook {
  */
 async function verifyPlaidWebhook(
   request: NextRequest,
-  body: string
+  _body: string
 ): Promise<boolean> {
   // Get the verification header from Plaid
   const plaidVerification = request.headers.get('plaid-verification')
