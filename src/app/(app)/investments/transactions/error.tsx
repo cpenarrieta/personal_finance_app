@@ -15,6 +15,13 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error("Investment transactions error:", error);
+
+    // Report error to Sentry
+    import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error, {
+        tags: { page: "investment-transactions" },
+      });
+    });
   }, [error]);
 
   return (
