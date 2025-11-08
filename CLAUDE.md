@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
 - [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup
 - [Migrations Guide](docs/MIGRATIONS.md) - Prisma migration best practices
+- [Webhooks Guide](docs/WEBHOOKS.md) - Plaid webhook setup for real-time transaction sync
 
 ## Project Overview
 
