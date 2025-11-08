@@ -185,7 +185,7 @@ npx prisma studio        # Open database GUI
 # Financial Data Sync
 npm run sync             # Incremental sync (uses cursors)
 npm run sync:fresh       # Full sync from scratch
-
+```
 
 ### Project Structure
 
