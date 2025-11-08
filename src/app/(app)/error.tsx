@@ -20,6 +20,11 @@ export default function Error({
   useEffect(() => {
     // Log error to console in development
     console.error("Error caught by error boundary:", error);
+
+    // Report error to Sentry
+    import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error);
+    });
   }, [error]);
 
   return (

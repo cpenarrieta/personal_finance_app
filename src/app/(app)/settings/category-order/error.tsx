@@ -15,6 +15,13 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error("Category order error:", error);
+
+    // Report error to Sentry
+    import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error, {
+        tags: { page: "category-order" },
+      });
+    });
   }, [error]);
 
   return (

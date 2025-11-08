@@ -15,6 +15,13 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error("Holdings page error:", error);
+
+    // Report error to Sentry
+    import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error, {
+        tags: { page: "holdings" },
+      });
+    });
   }, [error]);
 
   return (
