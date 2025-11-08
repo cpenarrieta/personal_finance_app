@@ -16,18 +16,3 @@ jest.mock('next/cache', () => ({
   cacheTag: jest.fn(),
   cacheLife: jest.fn(),
 }));
-
-// Mock window.matchMedia for components using useIsMobile hook
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: (query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => {},
-  }),
-});
