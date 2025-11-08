@@ -40,8 +40,8 @@ export function TransactionDetailView({
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
-  const amount = transaction.amount_number;
-  const isExpense = amount > 0;
+  const amount = transaction.display_amount_number;
+  const isExpense = amount < 0;
   const absoluteAmount = Math.abs(amount);
 
   const handleDelete = async () => {
@@ -152,7 +152,7 @@ export function TransactionDetailView({
                   </p>
                   <p className="text-sm text-primary">
                     Original: {transaction.parentTransaction.name} • $
-                    {formatAmount(transaction.parentTransaction.amount_number)}
+                    {formatAmount(transaction.parentTransaction.display_amount_number)}
                   </p>
                 </div>
                 <Link
@@ -195,13 +195,13 @@ export function TransactionDetailView({
                         <div className="text-right">
                           <p
                             className={`font-semibold ${
-                              child.amount_number > 0
+                              child.display_amount_number < 0
                                 ? "text-destructive"
                                 : "text-success"
                             }`}
                           >
-                            {child.amount_number > 0 ? "-" : "+"}$
-                            {Math.abs(child.amount_number).toLocaleString(
+                            {child.display_amount_number < 0 ? "-" : "+"}$
+                            {Math.abs(child.display_amount_number).toLocaleString(
                               "en-US",
                               {
                                 minimumFractionDigits: 2,

@@ -17,6 +17,7 @@ type SerializableTransaction = {
   name: string;
   merchantName: string | null;
   amount_number: number | null;
+  display_amount_number: number | null;
   date_string: string | null;
   account: {
     id: string;
@@ -62,7 +63,7 @@ export function TransactionTable({
         </TableHeader>
         <TableBody>
           {transactions.map((transaction) => {
-            const amount = transaction.amount_number || 0;
+            const amount = transaction.display_amount_number || 0;
             return (
               <TableRow key={transaction.id} className="hover:bg-muted/50">
                 <TableCell className="whitespace-nowrap">
@@ -119,11 +120,11 @@ export function TransactionTable({
                 <TableCell className="text-right font-medium">
                   <span
                     className={
-                      amount > 0 ? "text-destructive" : "text-success"
+                      amount < 0 ? "text-destructive" : "text-success"
                     }
                   >
-                    {amount > 0 ? "-" : "+"}$
-                    {formatAmount(Math.abs(amount))}
+                    {amount < 0 ? "-" : "+"}$
+                    {formatAmount(amount)}
                   </span>
                 </TableCell>
               </TableRow>

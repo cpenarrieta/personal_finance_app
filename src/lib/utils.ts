@@ -42,12 +42,12 @@ export function sortCategoriesByGroupAndOrder(categories: CategoryForClient[]): 
 
 /**
  * Format amount as currency with symbol
- * @param amount - Numeric amount to format
+ * @param amount - Numeric amount to format (pass display_amount_number for correct sign)
  * @param currency - Currency code (default: "USD")
  * @returns Formatted currency string (e.g., "$1,234.56")
  */
 export function formatCurrency(amount: number, currency = "USD"): string {
-  return Math.abs(amount).toLocaleString("en-US", {
+  return amount.toLocaleString("en-US", {
     style: 'currency',
     currency: currency,
   });
@@ -55,7 +55,7 @@ export function formatCurrency(amount: number, currency = "USD"): string {
 
 /**
  * Format amount as numeric value with 2 decimal places
- * @param amount - Numeric amount to format
+ * @param amount - Numeric amount to format (pass display_amount_number for correct sign)
  * @returns Formatted numeric string (e.g., "1,234.56")
  */
 export function formatAmount(amount: number): string {

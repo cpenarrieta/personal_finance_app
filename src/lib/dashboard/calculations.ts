@@ -37,7 +37,8 @@ type SerializableSubcategory = {
 };
 
 type SerializableTransaction = {
-  amount_number: number | null;
+  amount_number: number | null; // Plaid format: positive = expense, negative = income
+  display_amount_number?: number | null; // Display format: negative = expense, positive = income
   date_string: string | null;
   category: SerializableCategory | null;
   subcategory: SerializableSubcategory | null;
