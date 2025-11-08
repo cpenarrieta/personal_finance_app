@@ -218,9 +218,9 @@ describe('Dashboard Calculations', () => {
       const result = prepareSpendingByCategory(mockTransactions)
 
       // Assert
-      expect(result[0].value).toBeGreaterThan(result[1].value)
-      expect(result[0].name).toBe('Food')
-      expect(result[1].name).toBe('Transportation')
+      expect(result[0]?.value ?? 0).toBeGreaterThan(result[1]?.value ?? 0)
+      expect(result[0]?.name).toBe('Food')
+      expect(result[1]?.name).toBe('Transportation')
     })
 
     it('should limit results to topN', () => {
@@ -324,7 +324,7 @@ describe('Dashboard Calculations', () => {
 
       // Assert
       expect(result[0]).toHaveProperty('color')
-      expect(result[0].color).toMatch(/var\(--chart-\d\)/)
+      expect(result[0]?.color).toMatch(/var\(--chart-\d\)/)
     })
   })
 

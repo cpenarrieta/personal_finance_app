@@ -8,7 +8,6 @@
  * 4. Proper ordering of tags
  */
 
-import { NextResponse } from 'next/server'
 import { GET } from '../route'
 import * as prismaModule from '@/lib/db/prisma'
 
@@ -68,8 +67,8 @@ describe('Tags API - GET', () => {
       expect(response.status).toBe(200)
       // Dates are serialized to strings in JSON response
       expect(data).toHaveLength(mockTags.length)
-      expect(data[0].name).toBe(mockTags[0].name)
-      expect(data[1].name).toBe(mockTags[1].name)
+      expect(data[0]?.name).toBe(mockTags[0]?.name)
+      expect(data[1]?.name).toBe(mockTags[1]?.name)
       expect(prismaModule.prisma.tag.findMany).toHaveBeenCalledWith({
         orderBy: { name: 'asc' },
       })
@@ -99,7 +98,7 @@ describe('Tags API - GET', () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data[0].name).toBe(singleTag[0].name)
+      expect(data[0]?.name).toBe(singleTag[0]?.name)
       expect(data).toHaveLength(1)
     })
 

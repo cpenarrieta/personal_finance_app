@@ -8,7 +8,6 @@
  * 4. Proper ordering of categories and subcategories
  */
 
-import { NextResponse } from 'next/server'
 import { GET } from '../route'
 import * as prismaModule from '@/lib/db/prisma'
 
@@ -97,8 +96,8 @@ describe('Categories API - GET', () => {
       expect(response.status).toBe(200)
       // Dates are serialized to strings in JSON response, so check structure instead
       expect(data).toHaveLength(mockCategories.length)
-      expect(data[0].name).toBe(mockCategories[0].name)
-      expect(data[0].subcategories).toHaveLength(mockCategories[0].subcategories.length)
+      expect(data[0]?.name).toBe(mockCategories[0]?.name)
+      expect(data[0]?.subcategories).toHaveLength(mockCategories[0]?.subcategories.length ?? 0)
       expect(prismaModule.prisma.category.findMany).toHaveBeenCalledWith({
         include: {
           subcategories: {
@@ -147,8 +146,8 @@ describe('Categories API - GET', () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data[0].name).toBe('Category Without Subcategories')
-      expect(data[0].subcategories).toEqual([])
+      expect(data[0]?.name).toBe('Category Without Subcategories')
+      expect(data[0]?.subcategories).toEqual([])
     })
   })
 

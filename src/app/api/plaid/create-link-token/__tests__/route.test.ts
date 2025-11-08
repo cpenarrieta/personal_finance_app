@@ -109,7 +109,7 @@ describe('Plaid Create Link Token API - POST', () => {
       })
 
       // Act
-      const response = await POST(request)
+      await POST(request)
 
       // Assert
       expect(mockPlaidClient.linkTokenCreate).toHaveBeenCalledWith(
@@ -129,7 +129,7 @@ describe('Plaid Create Link Token API - POST', () => {
       })
 
       // Act
-      const response = await POST(request)
+      await POST(request)
 
       // Assert
       expect(mockPlaidClient.linkTokenCreate).toHaveBeenCalledWith(
