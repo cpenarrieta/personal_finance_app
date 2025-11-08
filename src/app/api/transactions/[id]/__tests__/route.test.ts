@@ -111,7 +111,6 @@ describe('Transaction [id] API', () => {
 
       // Act
       const response = await PATCH(request, { params })
-      const data = await response.json()
 
       // Assert
       expect(response.status).toBe(200)

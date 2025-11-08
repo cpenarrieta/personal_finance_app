@@ -182,7 +182,6 @@ describe('Transactions API - POST', () => {
 
       // Act
       const response = await POST(request)
-      const data = await response.json()
 
       // Assert
       expect(response.status).toBe(201)

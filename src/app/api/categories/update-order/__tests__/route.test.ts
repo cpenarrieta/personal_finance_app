@@ -8,7 +8,6 @@
  * 4. Empty updates array
  */
 
-import { NextResponse } from 'next/server'
 import { PUT } from '../route'
 import * as prismaModule from '@/lib/db/prisma'
 import { CategoryGroupType } from '@prisma/client'
