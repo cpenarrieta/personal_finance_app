@@ -33,27 +33,6 @@ export default function SentryExamplePage() {
     }
   };
 
-  const handleServerError = async () => {
-    setIsLoading(true);
-    setErrorSent(false);
-
-    try {
-      // Call an API route that will throw an error
-      const response = await fetch("/api/sentry-example-api");
-
-      if (!response.ok) {
-        throw new Error("API request failed");
-      }
-
-      setErrorSent(true);
-    } catch (error) {
-      console.error("Server error triggered:", error);
-      setErrorSent(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <Card>
@@ -68,14 +47,14 @@ export default function SentryExamplePage() {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>How to test Sentry</AlertTitle>
             <AlertDescription>
-              Click the buttons below to generate test errors. These errors will be sent to your Sentry project
-              where you can view them in the Issues or Traces sections.
+              Click the button below to generate a test error. This error will be sent to your Sentry project
+              where you can view it in the Issues section.
             </AlertDescription>
           </Alert>
 
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Frontend Error</h3>
+              <h3 className="text-lg font-semibold mb-2">Client-Side Error</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Triggers a client-side error that will be captured by Sentry.
               </p>
@@ -84,21 +63,7 @@ export default function SentryExamplePage() {
                 disabled={isLoading}
                 variant="destructive"
               >
-                {isLoading ? "Throwing error..." : "Throw Frontend Error"}
-              </Button>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Backend Error</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Triggers a server-side error via an API route that will be captured by Sentry.
-              </p>
-              <Button
-                onClick={handleServerError}
-                disabled={isLoading}
-                variant="destructive"
-              >
-                {isLoading ? "Calling API..." : "Throw Backend Error"}
+                {isLoading ? "Throwing error..." : "Throw Test Error"}
               </Button>
             </div>
           </div>
@@ -130,6 +95,7 @@ export default function SentryExamplePage() {
                 <li>Errors in development mode are not sent to Sentry by default</li>
                 <li>You can check the browser console to see error logs</li>
                 <li>In production, all errors are automatically sent to Sentry</li>
+                <li>Server-side errors are automatically captured via instrumentation.ts</li>
               </ul>
             </AlertDescription>
           </Alert>
