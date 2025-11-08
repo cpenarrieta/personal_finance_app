@@ -17,7 +17,8 @@
     "sync:fresh": "tsx scripts/sync-from-scratch.ts",
     "categorize": "tsx scripts/auto-categorize.ts",
     "categorize:gpt": "tsx scripts/auto-categorize-gpt.ts",
-    "recategorize:all": "tsx scripts/recategorize-all.ts"
+    "recategorize:all": "tsx scripts/recategorize-all.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.18.0",
