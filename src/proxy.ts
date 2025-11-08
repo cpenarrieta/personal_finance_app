@@ -6,6 +6,15 @@ import { isEmailAllowed, getAllowedEmails } from "./lib/auth/auth-helpers";
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Allow bypass for E2E tests when E2E_TEST_MODE is enabled
+  // This allows Playwright tests to run without authentication
+  if (process.env.E2E_TEST_MODE === "true") {
+    const bypassHeader = request.headers.get("x-e2e-bypass-auth");
+    if (bypassHeader === "true") {
+      return NextResponse.next();
+    }
+  }
+
   // Allow access to auth API routes, login page, and static assets
   if (
     pathname.startsWith("/api/auth") ||
