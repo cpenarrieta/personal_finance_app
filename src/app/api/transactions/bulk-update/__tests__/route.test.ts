@@ -161,7 +161,6 @@ describe('Transactions Bulk Update API - PATCH', () => {
 
       // Act
       const response = await PATCH(request)
-      const data = await response.json()
 
       // Assert
       expect(response.status).toBe(200)

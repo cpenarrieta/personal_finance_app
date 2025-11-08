@@ -10,34 +10,11 @@
  * 6. Error handling
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import * as prismaModule from '@/lib/db/prisma'
 import * as nextCache from 'next/cache'
 import { POST } from '../route'
 import { Prisma } from '@prisma/client'
-
-// Mock Prisma.Decimal - defined before jest.mock to avoid TDZ
-class MockDecimal {
-  value: number
-  constructor(value: number) {
-    this.value = value
-  }
-  toString() {
-    return this.value.toString()
-  }
-}
-
-// Mock Prisma.PrismaClientKnownRequestError - defined before jest.mock
-class MockPrismaClientKnownRequestError extends Error {
-  code: string
-  clientVersion: string
-  constructor(message: string, options: { code: string; clientVersion: string }) {
-    super(message)
-    this.code = options.code
-    this.clientVersion = options.clientVersion
-    this.name = 'PrismaClientKnownRequestError'
-  }
-}
 
 // Mock the Prisma module - use factory function to avoid TDZ
 jest.mock('@prisma/client', () => {

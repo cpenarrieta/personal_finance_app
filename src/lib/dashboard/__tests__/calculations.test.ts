@@ -378,8 +378,12 @@ describe('Dashboard Calculations', () => {
 
       // Assert
       expect(result).toHaveLength(2)
-      expect(result.find((r) => r.name === 'Restaurants')).toMatchObject({ value: 50 })
-      expect(result.find((r) => r.name === 'Groceries')).toMatchObject({ value: 100 })
+      const restaurants = result.find((r) => r.name === 'Restaurants')
+      const groceries = result.find((r) => r.name === 'Groceries')
+      expect(restaurants).toBeDefined()
+      expect(groceries).toBeDefined()
+      expect(restaurants!.value).toBe(50)
+      expect(groceries!.value).toBe(100)
     })
 
     it('should exclude transactions without subcategories', () => {
@@ -440,7 +444,8 @@ describe('Dashboard Calculations', () => {
 
       // Assert
       expect(result).toHaveLength(2)
-      expect(result.find((r) => r.name === 'Internal Transfer')).toBeUndefined()
+      const internalTransfer = result.find((r) => r.name === 'Internal Transfer')
+      expect(internalTransfer).toBeUndefined()
     })
   })
 
