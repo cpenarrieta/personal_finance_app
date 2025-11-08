@@ -21,6 +21,7 @@ export function TransactionChartsView({
     if (transactions.length === 0) {
       return {
         spendingByCategory: [],
+        spendingBySubcategory: [],
         monthlyTrendData: [],
         incomeVsExpenseData: [],
       }
