@@ -74,6 +74,34 @@ export function TransactionChartsView({
       .sort((a, b) => (b.value as number) - (a.value as number))
       .slice(0, 10) // Top 10 categories
 
+    // Spending by Subcategory (all filtered transactions, exclude transfers)
+    const subcategorySpending = transactions
+      .filter((t: TransactionForClient) => {
+        return (
+          t.amount_number > 0 &&
+          t.subcategory &&
+          t.category &&
+          t.category.name !== "🔁 Transfers"
+        )
+      })
+      .reduce((acc: Record<string, number>, t: TransactionForClient) => {
+        const subcategoryName = t.subcategory?.name || "Uncategorized"
+        if (!acc[subcategoryName]) {
+          acc[subcategoryName] = 0
+        }
+        acc[subcategoryName] += t.amount_number
+        return acc
+      }, {} as Record<string, number>)
+
+    const spendingBySubcategory = Object.entries(subcategorySpending)
+      .map(([name, value], index) => ({
+        name,
+        value: value as number,
+        color: CHART_COLORS[index % CHART_COLORS.length] as string,
+      }))
+      .sort((a, b) => (b.value as number) - (a.value as number))
+      .slice(0, 10) // Top 10 subcategories
+
     // Monthly trend data
     const monthlyTrendData = months.map((month) => {
       const monthStart = dateStartOfMonth(month)
@@ -126,6 +154,7 @@ export function TransactionChartsView({
 
     return {
       spendingByCategory,
+      spendingBySubcategory,
       monthlyTrendData,
       incomeVsExpenseData,
     }
@@ -133,7 +162,14 @@ export function TransactionChartsView({
 
   return (
     <div className="space-y-6">
-      <SpendingByCategoryChart data={chartData.spendingByCategory} />
+      <SpendingByCategoryChart
+        data={chartData.spendingByCategory}
+        title="Spending by Category"
+      />
+      <SpendingByCategoryChart
+        data={chartData.spendingBySubcategory}
+        title="Spending by Sub-Category"
+      />
       <MonthlyTrendChart data={chartData.monthlyTrendData} />
       <IncomeVsExpenseChart data={chartData.incomeVsExpenseData} />
     </div>

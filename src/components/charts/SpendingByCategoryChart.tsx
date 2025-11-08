@@ -17,16 +17,17 @@ interface SpendingByCategoryChartProps {
     value: number
     color: string
   }[]
+  title?: string
 }
 
-export function SpendingByCategoryChart({ data }: SpendingByCategoryChartProps) {
+export function SpendingByCategoryChart({ data, title = "Spending by Category" }: SpendingByCategoryChartProps) {
   const hasData = data.length > 0 && data.some(d => d.value > 0)
 
   if (!hasData) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Spending by Category</CardTitle>
+          <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground text-center py-8">No data available</p>
@@ -38,7 +39,7 @@ export function SpendingByCategoryChart({ data }: SpendingByCategoryChartProps) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Spending by Category</CardTitle>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
