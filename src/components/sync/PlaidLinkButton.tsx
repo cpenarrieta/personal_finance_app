@@ -4,7 +4,15 @@ import { useRouter } from "next/navigation";
 import { usePlaidLink } from "react-plaid-link";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface PlaidLinkButtonProps {
   accessToken?: string;
@@ -20,6 +28,9 @@ export default function PlaidLinkButton({
   const router = useRouter();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSyncDialog, setShowSyncDialog] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const isUpdateMode = !!accessToken;
 
   useEffect(() => {
@@ -43,6 +54,29 @@ export default function PlaidLinkButton({
       });
   }, [accessToken]);
 
+  const handleSync = async () => {
+    setIsSyncing(true);
+    setSyncError(null);
+    try {
+      const response = await fetch("/api/plaid/sync", {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "Sync failed");
+      }
+
+      // Success - close dialog and refresh
+      setShowSyncDialog(false);
+      router.refresh();
+    } catch (err: any) {
+      setSyncError(err.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const onSuccess = useCallback(async (public_token: string) => {
     // Both new and update mode require token exchange
     await fetch("/api/plaid/exchange-public-token", {
@@ -55,7 +89,7 @@ export default function PlaidLinkButton({
       alert("Reauthorized! Syncing should work now.");
       onReauthSuccess?.();
     } else {
-      alert("Linked! Now run a sync.");
+      setShowSyncDialog(true);
     }
 
     // Refresh to get updated data from server
@@ -78,12 +112,46 @@ export default function PlaidLinkButton({
   }
 
   return (
-    <Button
-      disabled={!ready}
-      onClick={() => open?.()}
-      variant={isUpdateMode ? "outline" : "default"}
-    >
-      {ready ? buttonText : "Loading…"}
-    </Button>
+    <>
+      <Button
+        disabled={!ready}
+        onClick={() => open?.()}
+        variant={isUpdateMode ? "outline" : "default"}
+      >
+        {ready ? buttonText : "Loading…"}
+      </Button>
+
+      <Dialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Account Linked Successfully!</DialogTitle>
+            <DialogDescription>
+              Your account has been linked. Would you like to sync your financial data now?
+            </DialogDescription>
+          </DialogHeader>
+
+          {syncError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{syncError}</AlertDescription>
+            </Alert>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowSyncDialog(false)}
+              disabled={isSyncing}
+            >
+              Skip
+            </Button>
+            <Button onClick={handleSync} disabled={isSyncing}>
+              {isSyncing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSyncing ? "Syncing..." : "Sync Now"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
