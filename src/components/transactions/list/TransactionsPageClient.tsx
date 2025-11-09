@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -29,6 +30,11 @@ export function TransactionsPageClient({
 }: TransactionsPageClientProps) {
   const [showAddModal, setShowAddModal] = useState(false);
 
+  const handleDownloadCSV = () => {
+    // Trigger CSV download
+    window.location.href = "/api/transactions/export/csv";
+  };
+
   return (
     <>
       <div className="mb-4 flex justify-between items-center">
@@ -36,9 +42,15 @@ export function TransactionsPageClient({
           <h1 className="text-3xl font-bold text-foreground">Banking Transactions</h1>
           <p className="text-muted-foreground mt-1">View and search all your banking transactions</p>
         </div>
-        <Button onClick={() => setShowAddModal(true)}>
-          Add Transaction
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleDownloadCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            Download CSV
+          </Button>
+          <Button onClick={() => setShowAddModal(true)}>
+            Add Transaction
+          </Button>
+        </div>
       </div>
 
       <SearchableTransactionList
