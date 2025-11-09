@@ -147,10 +147,10 @@ export function TransactionAnalytics({
       return [];
     } else if (showIncome && !showExpenses) {
       // Show only income (positive display amounts)
-      filtered = filtered.filter((t) => t.display_amount_number > 0);
+      filtered = filtered.filter((t) => t.amount_number > 0);
     } else if (!showIncome && showExpenses) {
       // Show only expenses (negative display amounts)
-      filtered = filtered.filter((t) => t.display_amount_number < 0);
+      filtered = filtered.filter((t) => t.amount_number < 0);
     }
     // If both are selected, show both (no filter needed)
 
@@ -188,7 +188,7 @@ export function TransactionAnalytics({
             new Date(b.date_string).getTime();
           break;
         case "amount":
-          comparison = a.display_amount_number - b.display_amount_number;
+          comparison = a.amount_number - b.amount_number;
           break;
         case "category":
           const catA = a.category?.name || "";
@@ -217,14 +217,14 @@ export function TransactionAnalytics({
   // Calculate statistics
   const stats = useMemo(() => {
     const total = filteredTransactions.reduce(
-      (sum, t) => sum + t.display_amount_number,
+      (sum, t) => sum + t.amount_number,
       0
     );
-    const expenses = filteredTransactions.filter((t) => t.display_amount_number < 0);
-    const income = filteredTransactions.filter((t) => t.display_amount_number > 0);
+    const expenses = filteredTransactions.filter((t) => t.amount_number < 0);
+    const income = filteredTransactions.filter((t) => t.amount_number > 0);
 
-    const totalExpenses = Math.abs(expenses.reduce((sum, t) => sum + t.display_amount_number, 0));
-    const totalIncome = income.reduce((sum, t) => sum + t.display_amount_number, 0);
+    const totalExpenses = Math.abs(expenses.reduce((sum, t) => sum + t.amount_number, 0));
+    const totalIncome = income.reduce((sum, t) => sum + t.amount_number, 0);
 
     const avgTransaction =
       filteredTransactions.length > 0 ? total / filteredTransactions.length : 0;
@@ -246,7 +246,7 @@ export function TransactionAnalytics({
     >();
 
     filteredTransactions.forEach((t) => {
-      const amount = Math.abs(t.display_amount_number);
+      const amount = Math.abs(t.amount_number);
       const categoryName = t.category?.name || "Uncategorized";
       const imageUrl = t.category?.imageUrl;
 
@@ -274,7 +274,7 @@ export function TransactionAnalytics({
     >();
 
     filteredTransactions.forEach((t) => {
-      const amount = Math.abs(t.display_amount_number);
+      const amount = Math.abs(t.amount_number);
       const subcategoryName = t.subcategory?.name || "No Subcategory";
       const imageUrl = t.subcategory?.imageUrl;
 
@@ -300,7 +300,7 @@ export function TransactionAnalytics({
 
     filteredTransactions.forEach((t) => {
       const month = format(new Date(t.date_string), "MMM yyyy");
-      const amount = Math.abs(t.display_amount_number);
+      const amount = Math.abs(t.amount_number);
 
       if (monthMap.has(month)) {
         monthMap.set(month, monthMap.get(month)! + amount);
@@ -1049,13 +1049,13 @@ export function TransactionAnalytics({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                     <span
                       className={
-                        transaction.display_amount_number < 0
+                        transaction.amount_number < 0
                           ? "text-destructive font-medium"
                           : "text-success font-medium"
                       }
                     >
-                      {transaction.display_amount_number < 0 ? "-" : "+"}$
-                      {Math.abs(transaction.display_amount_number).toLocaleString(
+                      {transaction.amount_number < 0 ? "-" : "+"}$
+                      {Math.abs(transaction.amount_number).toLocaleString(
                         "en-US",
                         {
                           minimumFractionDigits: 2,

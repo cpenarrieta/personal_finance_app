@@ -22,7 +22,6 @@ export async function getTransactionById(id: string) {
       plaidTransactionId: true,
       accountId: true,
       amount_number: true,
-      display_amount_number: true,
       isoCurrencyCode: true,
       date_string: true,
       authorized_date_string: true,
@@ -88,7 +87,6 @@ export async function getTransactionById(id: string) {
           id: true,
           name: true,
           amount_number: true,
-          display_amount_number: true,
           date_string: true,
           category: {
             select: {
@@ -103,7 +101,6 @@ export async function getTransactionById(id: string) {
           id: true,
           name: true,
           amount_number: true,
-          display_amount_number: true,
           date_string: true,
           category: {
             select: {

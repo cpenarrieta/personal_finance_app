@@ -30,7 +30,6 @@ export async function getAllTransactions() {
       plaidTransactionId: true,
       accountId: true,
       amount_number: true, // Generated column
-      display_amount_number: true, // Generated column (normalized sign)
       isoCurrencyCode: true,
       date_string: true, // Generated column
       authorized_date_string: true, // Generated column
@@ -412,7 +411,6 @@ export async function getTransactionsForAccount(accountId: string) {
       plaidTransactionId: true,
       accountId: true,
       amount_number: true,
-      display_amount_number: true,
       isoCurrencyCode: true,
       date_string: true,
       authorized_date_string: true,

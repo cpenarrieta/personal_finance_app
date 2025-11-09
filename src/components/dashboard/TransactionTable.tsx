@@ -17,7 +17,6 @@ type SerializableTransaction = {
   name: string;
   merchantName: string | null;
   amount_number: number | null;
-  display_amount_number: number | null;
   date_string: string | null;
   account: {
     id: string;
@@ -63,7 +62,7 @@ export function TransactionTable({
         </TableHeader>
         <TableBody>
           {transactions.map((transaction) => {
-            const amount = transaction.display_amount_number || 0;
+            const amount = transaction.amount_number || 0;
             return (
               <TableRow key={transaction.id} className="hover:bg-muted/50">
                 <TableCell className="whitespace-nowrap">
