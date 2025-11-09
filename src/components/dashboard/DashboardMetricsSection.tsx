@@ -1,5 +1,5 @@
 import { formatAmount } from "@/lib/utils";
-import { Wallet, TrendingUp, DollarSign } from "lucide-react";
+import { Wallet, TrendingUp, ArrowUpCircle, ArrowDownCircle, PiggyBank } from "lucide-react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { getDashboardMetrics, getLastMonthStats } from "@/lib/dashboard/data";
 import {
@@ -11,7 +11,7 @@ import { ErrorFallback } from "@/components/shared/ErrorFallback";
 
 /**
  * Async Server Component for Dashboard Metrics
- * Displays all 4 metric cards (balance, investments, spending, income)
+ * Displays all 5 metric cards (balance, investments, spending, income, net)
  * Fetches data independently with "use cache" and error handling
  */
 export async function DashboardMetricsSection() {
@@ -21,9 +21,10 @@ export async function DashboardMetricsSection() {
 
     const totalCurrent = calculateTotalBalance(accounts);
     const totalInvestmentValue = calculateInvestmentValue(holdings);
+    const netIncome = totalLastMonthIncome - totalLastMonthSpending;
 
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <MetricCard
           title="Total Balance"
           value={`$${formatAmount(totalCurrent)}`}
@@ -44,15 +45,22 @@ export async function DashboardMetricsSection() {
           title="Last Month Spending"
           value={`$${formatAmount(totalLastMonthSpending)}`}
           subtitle={format(lastMonthStart, "MMMM yyyy")}
-          icon={DollarSign}
+          icon={ArrowDownCircle}
           valueClassName="text-destructive"
         />
         <MetricCard
           title="Last Month Income"
           value={`$${formatAmount(totalLastMonthIncome)}`}
           subtitle={format(lastMonthStart, "MMMM yyyy")}
-          icon={DollarSign}
+          icon={ArrowUpCircle}
           valueClassName="text-success"
+        />
+        <MetricCard
+          title="Net Income"
+          value={`${netIncome >= 0 ? "+" : ""}$${formatAmount(Math.abs(netIncome))}`}
+          subtitle={format(lastMonthStart, "MMMM yyyy")}
+          icon={PiggyBank}
+          valueClassName={netIncome >= 0 ? "text-success" : "text-destructive"}
         />
       </div>
     );
