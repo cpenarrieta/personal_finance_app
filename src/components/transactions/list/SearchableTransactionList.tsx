@@ -189,15 +189,15 @@ export function SearchableTransactionList({
 
   // Calculate totals for filtered transactions
   const totals = useMemo(() => {
-    const expenses = filteredTransactions
-      .filter((t) => t.amount_number > 0)
-      .reduce((sum, t) => sum + t.amount_number, 0);
-
-    const income = Math.abs(
+    const expenses = Math.abs(
       filteredTransactions
         .filter((t) => t.amount_number < 0)
         .reduce((sum, t) => sum + t.amount_number, 0)
     );
+
+    const income = filteredTransactions
+      .filter((t) => t.amount_number > 0)
+      .reduce((sum, t) => sum + t.amount_number, 0);
 
     const netBalance = income - expenses;
 

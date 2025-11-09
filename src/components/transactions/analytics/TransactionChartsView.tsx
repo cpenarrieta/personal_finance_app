@@ -44,7 +44,7 @@ export function TransactionChartsView({
     const categorySpending = transactions
       .filter((t: TransactionForClient) => {
         return (
-          t.amount_number > 0 &&
+          t.amount_number < 0 &&
           t.category &&
           t.category.name !== "🔁 Transfers"
         )
@@ -54,7 +54,7 @@ export function TransactionChartsView({
         if (!acc[categoryName]) {
           acc[categoryName] = 0
         }
-        acc[categoryName] += t.amount_number
+        acc[categoryName] += Math.abs(t.amount_number)
         return acc
       }, {} as Record<string, number>)
 
@@ -79,7 +79,7 @@ export function TransactionChartsView({
     const subcategorySpending = transactions
       .filter((t: TransactionForClient) => {
         return (
-          t.amount_number > 0 &&
+          t.amount_number < 0 &&
           t.subcategory &&
           t.category &&
           t.category.name !== "🔁 Transfers"
@@ -90,7 +90,7 @@ export function TransactionChartsView({
         if (!acc[subcategoryName]) {
           acc[subcategoryName] = 0
         }
-        acc[subcategoryName] += t.amount_number
+        acc[subcategoryName] += Math.abs(t.amount_number)
         return acc
       }, {} as Record<string, number>)
 
@@ -114,12 +114,12 @@ export function TransactionChartsView({
       })
 
       const spending = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number > 0)
-        .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
-
-      const income = monthTransactions
         .filter((t: TransactionForClient) => t.amount_number < 0)
         .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
+
+      const income = monthTransactions
+        .filter((t: TransactionForClient) => t.amount_number > 0)
+        .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
 
       return {
         month: format(month, "MMM yy"),
@@ -139,12 +139,12 @@ export function TransactionChartsView({
       })
 
       const expenses = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number > 0)
-        .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
-
-      const income = monthTransactions
         .filter((t: TransactionForClient) => t.amount_number < 0)
         .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
+
+      const income = monthTransactions
+        .filter((t: TransactionForClient) => t.amount_number > 0)
+        .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
 
       return {
         month: format(month, "MMM yy"),

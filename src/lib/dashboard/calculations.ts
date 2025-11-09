@@ -73,7 +73,7 @@ export function prepareSpendingByCategory(
   const categorySpending = transactions
     .filter((t) => {
       const amount = t.amount_number || 0;
-      return amount > 0 && t.category && !t.category.isTransferCategory;
+      return amount < 0 && t.category && !t.category.isTransferCategory;
     })
     .reduce((acc: Record<string, number>, t) => {
       const categoryName = t.category?.name || "Uncategorized";
@@ -105,7 +105,7 @@ export function prepareSpendingBySubcategory(
     .filter((t) => {
       const amount = t.amount_number || 0;
       return (
-        amount > 0 &&
+        amount < 0 &&
         t.subcategory &&
         t.category &&
         !t.category.isTransferCategory
@@ -157,7 +157,7 @@ export function prepareDailySpendingData(
     const spending = dayTransactions
       .filter((t) => {
         const amount = t.amount_number || 0;
-        return amount > 0 && t.category && !t.category.isTransferCategory;
+        return amount < 0 && t.category && !t.category.isTransferCategory;
       })
       .reduce((sum: number, t) => sum + Math.abs(t.amount_number || 0), 0);
 

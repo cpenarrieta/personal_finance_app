@@ -13,12 +13,12 @@ export const metadata: Metadata = {
 export default async function ConnectionsPage() {
   const items = await getAllConnectedItems();
 
-  console.log("Items:", items);
-
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Manage Connections</h1>
+        <h1 className="text-3xl font-bold text-foreground">
+          Manage Connections
+        </h1>
         <p className="text-muted-foreground mt-1">
           View and reauthorize your connected financial institutions.
         </p>

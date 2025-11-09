@@ -274,7 +274,7 @@ export async function getLastMonthStats() {
   const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange();
 
   // Optimized: Single raw SQL query to get both spending and income
-  // Cast to double precision to get number instead of Decimal
+  // Uses amount_number (already inverted): negative = expense, positive = income
   const [stats] = await prisma.$queryRaw<
     Array<{
       total_spending: number | null;
@@ -282,8 +282,8 @@ export async function getLastMonthStats() {
     }>
   >`
     SELECT
-      CAST(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) AS double precision) as total_spending,
-      CAST(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) AS double precision) as total_income
+      CAST(SUM(CASE WHEN t.amount_number < 0 THEN ABS(t.amount_number) ELSE 0 END) AS double precision) as total_spending,
+      CAST(SUM(CASE WHEN t.amount_number > 0 THEN t.amount_number ELSE 0 END) AS double precision) as total_income
     FROM "Transaction" t
     LEFT JOIN "Category" c ON t."categoryId" = c.id
     WHERE t.date >= ${lastMonthStart}
@@ -377,8 +377,8 @@ export async function getTopExpensiveTransactions(limit = 25) {
         gte: lastMonthStart,
         lt: lastMonthEnd,
       },
-      amount: {
-        gt: 0,
+      amount_number: {
+        lt: 0,
       },
       isSplit: false,
       category: {
@@ -387,7 +387,7 @@ export async function getTopExpensiveTransactions(limit = 25) {
     },
     take: limit,
     orderBy: {
-      amount: "desc",
+      amount_number: "asc",
     },
     select: {
       id: true,

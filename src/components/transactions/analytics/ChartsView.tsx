@@ -185,11 +185,11 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
       // If neither is selected, show nothing
       return [];
     } else if (showIncome && !showExpenses) {
-      // Show only income (negative amounts)
-      filtered = filtered.filter((t) => t.amount_number < 0);
-    } else if (!showIncome && showExpenses) {
-      // Show only expenses (positive amounts)
+      // Show only income (positive amounts after inversion)
       filtered = filtered.filter((t) => t.amount_number > 0);
+    } else if (!showIncome && showExpenses) {
+      // Show only expenses (negative amounts after inversion)
+      filtered = filtered.filter((t) => t.amount_number < 0);
     }
     // If both are selected, show both (no filter needed)
 
@@ -384,15 +384,15 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
         })
       );
 
-      const expenses = monthTransactions
-        .filter((t) => t.amount_number > 0)
-        .reduce((sum, t) => sum + (t.amount_number ?? 0), 0);
-
-      const income = Math.abs(
+      const expenses = Math.abs(
         monthTransactions
           .filter((t) => t.amount_number < 0)
           .reduce((sum, t) => sum + (t.amount_number ?? 0), 0)
       );
+
+      const income = monthTransactions
+        .filter((t) => t.amount_number > 0)
+        .reduce((sum, t) => sum + (t.amount_number ?? 0), 0);
 
       return {
         month: format(month, "MMM yyyy"),
@@ -427,15 +427,15 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
   }, [filteredTransactions]);
 
   const incomeVsExpensesData = useMemo(() => {
-    const expenses = filteredTransactions
-      .filter((t) => t.amount_number > 0)
-      .reduce((sum, t) => sum + (t.amount_number ?? 0), 0);
-
-    const income = Math.abs(
+    const expenses = Math.abs(
       filteredTransactions
         .filter((t) => t.amount_number < 0)
         .reduce((sum, t) => sum + (t.amount_number ?? 0), 0)
     );
+
+    const income = filteredTransactions
+      .filter((t) => t.amount_number > 0)
+      .reduce((sum, t) => sum + (t.amount_number ?? 0), 0);
 
     return [
       { name: "Income", value: income },
