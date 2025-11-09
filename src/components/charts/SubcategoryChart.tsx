@@ -10,7 +10,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
-import type { SubcategoryChartProps } from "@/types"
+
+interface SubcategoryChartProps {
+  data: Array<{ name: string; value: number }>
+}
 
 export function SubcategoryChart({ data }: SubcategoryChartProps) {
   const hasData = data.length > 0 && data.some(d => d.value > 0)

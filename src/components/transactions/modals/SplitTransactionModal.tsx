@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatAmount } from "@/lib/utils";
-import type { SplitTransactionModalProps, SplitItem } from "@/types";
+import type { SplitItem, TransactionForClient, CategoryForClient } from "@/types";
+
+interface SplitTransactionModalProps {
+  transaction: TransactionForClient
+  onClose: () => void
+  categories: CategoryForClient[]
+}
 import {
   Dialog,
   DialogContent,

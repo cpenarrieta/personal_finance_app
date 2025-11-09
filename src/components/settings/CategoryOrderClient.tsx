@@ -4,8 +4,11 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CategoryGroupType } from "@/types";
-import type { CategoryOrderClientProps, CategoryForClient } from "@/types";
+import { CategoryGroupType, type CategoryForClient } from "@/types";
+
+interface CategoryOrderClientProps {
+  categories: CategoryForClient[]
+}
 
 export function CategoryOrderClient({
   categories: initialCategories,

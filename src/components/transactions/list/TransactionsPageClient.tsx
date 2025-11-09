@@ -4,7 +4,20 @@ import { useState } from "react";
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
-import type { TransactionsPageClientProps } from "@/types";
+import type { TransactionForClient, CategoryForClient, TagForClient, PlaidAccountForClient } from "@/types";
+
+interface TransactionsPageClientProps {
+  transactions: TransactionForClient[]
+  categories: CategoryForClient[]
+  tags: TagForClient[]
+  accounts: PlaidAccountForClient[]
+  initialFilters?: {
+    accountId?: string
+    categoryId?: string
+    subcategoryId?: string
+    tagIds?: string[]
+  }
+}
 
 export function TransactionsPageClient({
   transactions,

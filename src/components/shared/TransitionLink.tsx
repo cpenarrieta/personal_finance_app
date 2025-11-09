@@ -3,7 +3,16 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import type { TransitionLinkProps } from "@/types";
+
+interface TransitionLinkProps {
+  href: string
+  children: React.ReactNode
+  loadingText?: string
+  disabled?: boolean
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  size?: "default" | "sm" | "lg" | "icon"
+  className?: string
+}
 
 /**
  * Link component with useTransition for smooth client-side navigation

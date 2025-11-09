@@ -4,7 +4,24 @@ import PlaidLinkButton from "@/components/sync/PlaidLinkButton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Building2 } from "lucide-react";
-import type { ConnectedItemsListProps } from "@/types";
+
+interface ConnectedItemsListProps {
+  items: Array<{
+    id: string
+    accessToken: string
+    status: string
+    institution: {
+      name: string
+      logoUrl: string | null
+    } | null
+    accounts: Array<{
+      id: string
+      name: string
+      type: string
+      subtype: string | null
+    }>
+  }>
+}
 
 export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
   if (items.length === 0) {

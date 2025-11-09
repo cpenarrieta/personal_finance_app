@@ -1,7 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import type { ErrorFallbackProps } from "@/types";
+
+interface ErrorFallbackProps {
+  error?: Error
+  title?: string
+  description?: string
+}
 
 /**
  * Inline error fallback component for Suspense boundaries

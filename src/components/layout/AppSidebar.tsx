@@ -51,7 +51,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import type { AppSidebarProps } from "@/types";
+
+interface AppSidebarProps {
+  accountsSlot: React.ReactNode
+  pathname: string
+}
 
 // Static nav items (accounts section will be passed as slot)
 const getStaticNavItems = () => {

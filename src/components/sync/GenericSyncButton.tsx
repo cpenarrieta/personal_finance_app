@@ -13,7 +13,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { GenericSyncButtonProps } from "@/types"
+
+interface GenericSyncButtonProps {
+  action: () => Promise<void>
+  idleText: string
+  pendingText: string
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  className?: string
+  requireConfirmation?: boolean
+  confirmationTitle?: string
+  confirmationDescription?: string
+}
 
 function SubmitButton({
   idleText,
