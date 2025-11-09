@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
@@ -29,10 +30,17 @@ export function TransactionsPageClient({
   initialFilters,
 }: TransactionsPageClientProps) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const searchParams = useSearchParams();
 
   const handleDownloadCSV = () => {
+    // Build CSV export URL with current filter parameters
+    const params = searchParams.toString();
+    const csvUrl = params
+      ? `/api/transactions/export/csv?${params}`
+      : "/api/transactions/export/csv";
+
     // Trigger CSV download
-    window.location.href = "/api/transactions/export/csv";
+    window.location.href = csvUrl;
   };
 
   return (
