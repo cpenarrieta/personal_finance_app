@@ -163,7 +163,7 @@ describe('Dashboard Calculations', () => {
   describe('prepareSpendingByCategory', () => {
     const mockTransactions = [
       {
-        amount_number: 50,
+        amount_number: -50, // Negative = expense (new format)
         date_string: '2024-01-01',
         category: {
           id: 'cat-1',
@@ -176,7 +176,7 @@ describe('Dashboard Calculations', () => {
         subcategory: null,
       },
       {
-        amount_number: 100,
+        amount_number: -100, // Negative = expense (new format)
         date_string: '2024-01-02',
         category: {
           id: 'cat-1',
@@ -189,7 +189,7 @@ describe('Dashboard Calculations', () => {
         subcategory: null,
       },
       {
-        amount_number: 75,
+        amount_number: -75, // Negative = expense (new format)
         date_string: '2024-01-03',
         category: {
           id: 'cat-2',
@@ -226,7 +226,7 @@ describe('Dashboard Calculations', () => {
     it('should limit results to topN', () => {
       // Arrange
       const manyTransactions = Array.from({ length: 15 }, (_, i) => ({
-        amount_number: 10,
+        amount_number: -10, // Negative = expense (new format)
         date_string: '2024-01-01',
         category: {
           id: `cat-${i}`,
@@ -251,7 +251,7 @@ describe('Dashboard Calculations', () => {
       const transactionsWithTransfer = [
         ...mockTransactions,
         {
-          amount_number: 200,
+          amount_number: -200, // Negative = expense (new format)
           date_string: '2024-01-04',
           category: {
             id: 'cat-transfer',
@@ -273,12 +273,12 @@ describe('Dashboard Calculations', () => {
       expect(result.find((r) => r.name === 'Transfer')).toBeUndefined()
     })
 
-    it('should exclude income transactions (negative amounts)', () => {
+    it('should exclude income transactions (positive amounts)', () => {
       // Arrange
       const transactionsWithIncome = [
         ...mockTransactions,
         {
-          amount_number: -500,
+          amount_number: 500, // Positive = income (new format)
           date_string: '2024-01-04',
           category: {
             id: 'cat-income',
@@ -304,7 +304,7 @@ describe('Dashboard Calculations', () => {
       // Arrange
       const transactionsWithoutCategory = [
         {
-          amount_number: 50,
+          amount_number: -50, // Negative = expense (new format)
           date_string: '2024-01-01',
           category: null,
           subcategory: null,
@@ -331,7 +331,7 @@ describe('Dashboard Calculations', () => {
   describe('prepareSpendingBySubcategory', () => {
     const mockTransactions = [
       {
-        amount_number: 50,
+        amount_number: -50, // Negative = expense (new format)
         date_string: '2024-01-01',
         category: {
           id: 'cat-1',
@@ -351,7 +351,7 @@ describe('Dashboard Calculations', () => {
         },
       },
       {
-        amount_number: 100,
+        amount_number: -100, // Negative = expense (new format)
         date_string: '2024-01-02',
         category: {
           id: 'cat-1',
@@ -391,7 +391,7 @@ describe('Dashboard Calculations', () => {
       const transactionsWithoutSubcategory = [
         ...mockTransactions,
         {
-          amount_number: 75,
+          amount_number: -75, // Negative = expense (new format)
           date_string: '2024-01-03',
           category: {
             id: 'cat-1',
@@ -418,7 +418,7 @@ describe('Dashboard Calculations', () => {
       const transactionsWithTransfer = [
         ...mockTransactions,
         {
-          amount_number: 200,
+          amount_number: -200, // Negative = expense (new format)
           date_string: '2024-01-04',
           category: {
             id: 'cat-transfer',
@@ -454,8 +454,8 @@ describe('Dashboard Calculations', () => {
       // Arrange
       const transactions = [
         {
-          amount_number: 50,
-          date_string: '2024-01-15',
+          amount_number: -50, // Negative = expense (new format)
+          date_string: '2024-01-15T12:00:00',
           category: {
             id: 'cat-1',
             name: 'Food',
@@ -467,8 +467,8 @@ describe('Dashboard Calculations', () => {
           subcategory: null,
         },
         {
-          amount_number: 100,
-          date_string: '2024-01-15',
+          amount_number: -100, // Negative = expense (new format)
+          date_string: '2024-01-15T12:00:00',
           category: {
             id: 'cat-2',
             name: 'Transportation',
@@ -480,8 +480,8 @@ describe('Dashboard Calculations', () => {
           subcategory: null,
         },
         {
-          amount_number: 75,
-          date_string: '2024-01-16',
+          amount_number: -75, // Negative = expense (new format)
+          date_string: '2024-01-16T12:00:00',
           category: {
             id: 'cat-1',
             name: 'Food',
@@ -493,8 +493,8 @@ describe('Dashboard Calculations', () => {
           subcategory: null,
         },
       ]
-      const startDate = new Date('2024-01-15')
-      const endDate = new Date('2024-01-16')
+      const startDate = new Date('2024-01-15T12:00:00')
+      const endDate = new Date('2024-01-16T12:00:00')
 
       // Act
       const result = prepareDailySpendingData(transactions, startDate, endDate)
@@ -509,8 +509,8 @@ describe('Dashboard Calculations', () => {
       // Arrange
       const transactions = [
         {
-          amount_number: 50,
-          date_string: '2024-01-15',
+          amount_number: -50, // Negative = expense (new format)
+          date_string: '2024-01-15T12:00:00',
           category: {
             id: 'cat-1',
             name: 'Food',
@@ -522,8 +522,8 @@ describe('Dashboard Calculations', () => {
           subcategory: null,
         },
       ]
-      const startDate = new Date('2024-01-15')
-      const endDate = new Date('2024-01-17')
+      const startDate = new Date('2024-01-15T12:00:00')
+      const endDate = new Date('2024-01-17T12:00:00')
 
       // Act
       const result = prepareDailySpendingData(transactions, startDate, endDate)
@@ -539,8 +539,8 @@ describe('Dashboard Calculations', () => {
       // Arrange
       const transactions = [
         {
-          amount_number: 50,
-          date_string: '2024-01-15',
+          amount_number: -50, // Negative = expense (new format)
+          date_string: '2024-01-15T12:00:00',
           category: {
             id: 'cat-1',
             name: 'Food',
@@ -552,8 +552,8 @@ describe('Dashboard Calculations', () => {
           subcategory: null,
         },
         {
-          amount_number: 200,
-          date_string: '2024-01-15',
+          amount_number: -200, // Negative = expense (new format)
+          date_string: '2024-01-15T12:00:00',
           category: {
             id: 'cat-transfer',
             name: 'Transfer',
@@ -565,8 +565,8 @@ describe('Dashboard Calculations', () => {
           subcategory: null,
         },
       ]
-      const startDate = new Date('2024-01-15')
-      const endDate = new Date('2024-01-15')
+      const startDate = new Date('2024-01-15T12:00:00')
+      const endDate = new Date('2024-01-15T12:00:00')
 
       // Act
       const result = prepareDailySpendingData(transactions, startDate, endDate)
