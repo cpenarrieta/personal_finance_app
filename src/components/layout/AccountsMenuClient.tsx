@@ -11,22 +11,9 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import type { AccountsMenuClientProps } from "@/types";
 
-type Account = {
-  id: string;
-  name: string;
-  item: {
-    institution: {
-      id: string;
-      name: string;
-      logoUrl: string | null;
-    } | null;
-  };
-};
-
-interface AccountsMenuClientProps {
-  accounts: Account[];
-}
+type Account = AccountsMenuClientProps["accounts"][number];
 
 export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
   const pathname = usePathname();

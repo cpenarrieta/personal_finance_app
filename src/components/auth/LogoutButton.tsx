@@ -3,12 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/auth-client";
 import { useState } from "react";
-
-interface LogoutButtonProps {
-  variant?: "default" | "outline" | "ghost" | "destructive";
-  size?: "default" | "sm" | "lg" | "icon";
-  className?: string;
-}
+import type { LogoutButtonProps } from "@/types";
 
 export function LogoutButton({
   variant = "outline",

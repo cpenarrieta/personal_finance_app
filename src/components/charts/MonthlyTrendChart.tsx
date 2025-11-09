@@ -11,14 +11,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
-
-interface MonthlyTrendChartProps {
-  data: {
-    month: string
-    spending: number
-    income: number
-  }[]
-}
+import type { MonthlyTrendChartProps } from "@/types"
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
   const hasData = data.length > 0 && data.some(d => d.spending > 0 || d.income > 0)

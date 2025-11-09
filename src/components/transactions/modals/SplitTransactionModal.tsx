@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatAmount } from "@/lib/utils";
-import type { TransactionForClient, CategoryForClient } from "@/types";
+import type { SplitTransactionModalProps, SplitItem } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -18,20 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-interface SplitItem {
-  amount: string;
-  categoryId: string | null;
-  subcategoryId: string | null;
-  notes: string;
-  description: string;
-}
-
-interface SplitTransactionModalProps {
-  transaction: TransactionForClient;
-  onClose: () => void;
-  categories: CategoryForClient[];
-}
 
 export function SplitTransactionModal({
   transaction,

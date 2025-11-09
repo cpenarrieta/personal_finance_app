@@ -4,21 +4,7 @@ import { useState } from "react";
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
-import type {
-  TransactionForClient,
-  CategoryForClient,
-  TagForClient,
-  PlaidAccountForClient,
-} from "@/types";
-import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params";
-
-interface TransactionsPageClientProps{
-  transactions: TransactionForClient[];
-  categories: CategoryForClient[];
-  tags: TagForClient[];
-  accounts: PlaidAccountForClient[];
-  initialFilters?: TransactionFiltersFromUrl;
-}
+import type { TransactionsPageClientProps } from "@/types";
 
 export function TransactionsPageClient({
   transactions,

@@ -10,15 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
-
-interface SpendingByCategoryChartProps {
-  data: {
-    name: string
-    value: number
-    color: string
-  }[]
-  title?: string
-}
+import type { SpendingByCategoryChartProps } from "@/types"
 
 export function SpendingByCategoryChart({ data, title = "Spending by Category" }: SpendingByCategoryChartProps) {
   const hasData = data.length > 0 && data.some(d => d.value > 0)

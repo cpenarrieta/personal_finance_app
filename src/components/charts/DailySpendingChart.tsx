@@ -10,13 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
-
-interface DailySpendingChartProps {
-  data: {
-    day: string
-    spending: number
-  }[]
-}
+import type { DailySpendingChartProps } from "@/types"
 
 export function DailySpendingChart({ data }: DailySpendingChartProps) {
   const hasData = data.length > 0 && data.some(d => d.spending > 0)

@@ -1,20 +1,6 @@
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { LucideIcon } from "lucide-react"
-
-interface MetricCardProps {
-  title: string
-  value: string | number
-  subtitle?: string
-  icon?: LucideIcon
-  trend?: {
-    value: number
-    label: string
-    positive?: boolean
-  }
-  href?: string
-  valueClassName?: string
-}
+import type { MetricCardProps } from "@/types"
 
 export function MetricCard({
   title,

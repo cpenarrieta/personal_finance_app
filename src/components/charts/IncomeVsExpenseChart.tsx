@@ -11,14 +11,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts"
-
-interface IncomeVsExpenseChartProps {
-  data: {
-    month: string
-    income: number
-    expenses: number
-  }[]
-}
+import type { IncomeVsExpenseChartProps } from "@/types"
 
 export function IncomeVsExpenseChart({ data }: IncomeVsExpenseChartProps) {
   const hasData = data.length > 0 && data.some(d => d.income > 0 || d.expenses > 0)

@@ -1,7 +1,8 @@
 /**
  * Component prop types and UI-specific types
  *
- * This file contains types used specifically in React components
+ * This file contains types used specifically in React components.
+ * All component prop types should be defined here, not in individual component files.
  */
 
 import type { CategoryWithSubcategories } from "./api";
@@ -11,6 +12,7 @@ import type {
   TagForClient,
   HoldingForClient,
   InvestmentTransactionForClient,
+  PlaidAccountForClient,
 } from "./client";
 import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params";
 
@@ -42,6 +44,28 @@ export interface EditTransactionModalProps {
   tags: TagForClient[];
 }
 
+export interface SplitTransactionModalProps {
+  transaction: TransactionForClient;
+  onClose: () => void;
+  categories: CategoryForClient[];
+}
+
+export interface SplitItem {
+  amount: string;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  notes: string;
+  description: string;
+}
+
+export interface AddTransactionModalProps {
+  onClose: () => void;
+  onSuccess?: () => void;
+  categories: CategoryForClient[];
+  tags: TagForClient[];
+  accounts: PlaidAccountForClient[];
+}
+
 export interface SearchableTransactionListProps {
   transactions: TransactionForClient[];
   showAccount?: boolean;
@@ -53,6 +77,32 @@ export interface SearchableTransactionListProps {
     type: string;
     mask?: string | null;
   }>;
+  initialFilters?: TransactionFiltersFromUrl;
+}
+
+export interface TransactionActionBarProps {
+  filteredTransactions: TransactionForClient[];
+  totalTransactions: number;
+  categories: CategoryForClient[];
+  showBulkUpdate: boolean;
+  onToggleBulkUpdate: () => void;
+  bulkCategoryId: string;
+  bulkSubcategoryId: string;
+  setBulkCategoryId: (id: string) => void;
+  setBulkSubcategoryId: (id: string) => void;
+  selectedTransactions: Set<string>;
+  isBulkUpdating: boolean;
+  onSelectAll: () => void;
+  onDeselectAll: () => void;
+  onBulkUpdate: () => void;
+  availableSubcategories: Array<{ id: string; name: string }>;
+}
+
+export interface TransactionsPageClientProps {
+  transactions: TransactionForClient[];
+  categories: CategoryForClient[];
+  tags: TagForClient[];
+  accounts: PlaidAccountForClient[];
   initialFilters?: TransactionFiltersFromUrl;
 }
 
@@ -80,6 +130,10 @@ export interface CategoryBadgeProps {
     imageUrl?: string | null;
   } | null;
   size?: "sm" | "md" | "lg";
+}
+
+export interface CategoryOrderClientProps {
+  categories: CategoryForClient[];
 }
 
 // ============================================================================
@@ -135,6 +189,20 @@ export interface AccountSelectorProps {
   onAccountChange: (accountId: string | null) => void;
 }
 
+export interface AccountsMenuClientProps {
+  accounts: Array<{
+    id: string;
+    name: string;
+    item: {
+      institution: {
+        id: string;
+        name: string;
+        logoUrl: string | null;
+      } | null;
+    };
+  }>;
+}
+
 // ============================================================================
 // INVESTMENT COMPONENT TYPES
 // ============================================================================
@@ -155,6 +223,50 @@ export interface InvestmentTransactionListProps {
 export interface InvestmentTransactionItemProps {
   transaction: InvestmentTransactionForClient;
   onClick?: (transaction: InvestmentTransactionForClient) => void;
+}
+
+// ============================================================================
+// CHART COMPONENT TYPES
+// ============================================================================
+
+export interface DailySpendingChartProps {
+  data: Array<{
+    day: string;
+    spending: number;
+  }>;
+}
+
+export interface MonthlyTrendChartProps {
+  data: Array<{
+    month: string;
+    spending: number;
+    income: number;
+  }>;
+}
+
+export interface SpendingByCategoryChartProps {
+  data: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  title?: string;
+}
+
+export interface SubcategoryChartProps {
+  data: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+}
+
+export interface IncomeVsExpenseChartProps {
+  data: Array<{
+    month: string;
+    income: number;
+    expenses: number;
+  }>;
 }
 
 // ============================================================================
@@ -185,6 +297,16 @@ export interface BarChartData {
   name: string;
   amount: number;
   count: number;
+}
+
+export interface TransactionChartsViewProps {
+  transactions: TransactionForClient[];
+  categories: CategoryForClient[];
+}
+
+export interface ChartsViewProps {
+  transactions: TransactionForClient[];
+  categories: CategoryForClient[];
 }
 
 // ============================================================================
@@ -218,6 +340,12 @@ export interface AmountRangeInputProps {
   onMaxAmountChange: (amount: number | null) => void;
 }
 
+export interface TransferCategoryToggleProps {
+  categoryId: string;
+  isTransferCategory: boolean;
+  updateAction: (formData: FormData) => Promise<void>;
+}
+
 // ============================================================================
 // BUTTON & ACTION COMPONENT TYPES
 // ============================================================================
@@ -237,6 +365,17 @@ export interface DeleteButtonProps {
 export interface CategorizeButtonProps {
   transactionId?: string;
   onCategorizeComplete?: () => void;
+}
+
+export interface GenericSyncButtonProps {
+  action: () => Promise<void>;
+  idleText: string;
+  pendingText: string;
+  variant?: 'default' | 'outline' | 'destructive' | 'secondary' | 'ghost' | 'link';
+  className?: string;
+  requireConfirmation?: boolean;
+  confirmationTitle?: string;
+  confirmationDescription?: string;
 }
 
 // ============================================================================
@@ -308,7 +447,7 @@ export interface PlaidLinkButtonProps {
 }
 
 // ============================================================================
-// NAVIGATION TYPES
+// NAVIGATION & LAYOUT TYPES
 // ============================================================================
 
 export interface NavItem {
@@ -325,4 +464,92 @@ export interface BreadcrumbItem {
 
 export interface BreadcrumbsProps {
   items: BreadcrumbItem[];
+}
+
+export interface AppShellProps {
+  children: React.ReactNode;
+  sidebarSlot: React.ReactNode;
+  breadcrumbsSlot: React.ReactNode;
+}
+
+export interface AppSidebarProps {
+  accountsSlot: React.ReactNode;
+  pathname: string;
+}
+
+export interface AppSidebarWithPathnameProps {
+  accountsSlot: React.ReactNode;
+}
+
+export interface AppSidebarSkeletonProps {
+  // No props currently
+}
+
+// ============================================================================
+// SETTINGS COMPONENT TYPES
+// ============================================================================
+
+export interface ConnectedItemsListProps {
+  items: Array<{
+    id: string;
+    plaidItemId: string;
+    accessToken: string;
+    status: string | null;
+    created_at_string: string | null;
+    institution: {
+      name: string;
+      logoUrl: string | null;
+      shortName: string | null;
+    } | null;
+    accounts: Array<{
+      id: string;
+      name: string;
+      type: string;
+      subtype: string | null;
+    }>;
+  }>;
+}
+
+// ============================================================================
+// SHARED COMPONENT TYPES
+// ============================================================================
+
+export interface ErrorFallbackProps {
+  error?: Error;
+  title?: string;
+  description?: string;
+}
+
+export interface TransitionLinkProps {
+  href: string;
+  children: React.ReactNode;
+  loadingText?: string;
+  disabled?: boolean;
+  variant?: 'default' | 'outline' | 'destructive' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  className?: string;
+}
+
+export interface MetricCardProps {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  trend?: {
+    value: number;
+    label: string;
+    positive?: boolean;
+  };
+  href?: string;
+  valueClassName?: string;
+}
+
+// ============================================================================
+// AUTH COMPONENT TYPES
+// ============================================================================
+
+export interface LogoutButtonProps {
+  variant?: "default" | "outline" | "ghost" | "destructive";
+  size?: "default" | "sm" | "lg" | "icon";
+  className?: string;
 }

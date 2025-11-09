@@ -3,12 +3,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useTransition } from "react";
-
-interface TransferCategoryToggleProps {
-  categoryId: string;
-  isTransferCategory: boolean;
-  updateAction: (formData: FormData) => Promise<void>;
-}
+import type { TransferCategoryToggleProps } from "@/types";
 
 export function TransferCategoryToggle({
   categoryId,

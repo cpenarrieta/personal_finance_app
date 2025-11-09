@@ -6,12 +6,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-
-interface AppShellProps {
-  children: React.ReactNode;
-  sidebarSlot: React.ReactNode;
-  breadcrumbsSlot: React.ReactNode;
-}
+import type { AppShellProps } from "@/types";
 
 export function AppShell({ children, sidebarSlot, breadcrumbsSlot }: AppShellProps) {
   return (
