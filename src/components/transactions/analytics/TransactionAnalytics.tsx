@@ -146,11 +146,11 @@ export function TransactionAnalytics({
       // If neither is selected, show nothing
       return [];
     } else if (showIncome && !showExpenses) {
-      // Show only income (negative amounts)
-      filtered = filtered.filter((t) => t.amount_number < 0);
-    } else if (!showIncome && showExpenses) {
-      // Show only expenses (positive amounts)
+      // Show only income (positive display amounts)
       filtered = filtered.filter((t) => t.amount_number > 0);
+    } else if (!showIncome && showExpenses) {
+      // Show only expenses (negative display amounts)
+      filtered = filtered.filter((t) => t.amount_number < 0);
     }
     // If both are selected, show both (no filter needed)
 
@@ -220,13 +220,11 @@ export function TransactionAnalytics({
       (sum, t) => sum + t.amount_number,
       0
     );
-    const expenses = filteredTransactions.filter((t) => t.amount_number > 0);
-    const income = filteredTransactions.filter((t) => t.amount_number < 0);
+    const expenses = filteredTransactions.filter((t) => t.amount_number < 0);
+    const income = filteredTransactions.filter((t) => t.amount_number > 0);
 
-    const totalExpenses = expenses.reduce((sum, t) => sum + t.amount_number, 0);
-    const totalIncome = Math.abs(
-      income.reduce((sum, t) => sum + t.amount_number, 0)
-    );
+    const totalExpenses = Math.abs(expenses.reduce((sum, t) => sum + t.amount_number, 0));
+    const totalIncome = income.reduce((sum, t) => sum + t.amount_number, 0);
 
     const avgTransaction =
       filteredTransactions.length > 0 ? total / filteredTransactions.length : 0;
@@ -1051,12 +1049,12 @@ export function TransactionAnalytics({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                     <span
                       className={
-                        transaction.amount_number > 0
+                        transaction.amount_number < 0
                           ? "text-destructive font-medium"
                           : "text-success font-medium"
                       }
                     >
-                      {transaction.amount_number > 0 ? "-" : "+"}$
+                      {transaction.amount_number < 0 ? "-" : "+"}$
                       {Math.abs(transaction.amount_number).toLocaleString(
                         "en-US",
                         {

@@ -41,7 +41,7 @@ export function TransactionDetailView({
   const router = useRouter();
 
   const amount = transaction.amount_number;
-  const isExpense = amount > 0;
+  const isExpense = amount < 0;
   const absoluteAmount = Math.abs(amount);
 
   const handleDelete = async () => {
@@ -195,12 +195,12 @@ export function TransactionDetailView({
                         <div className="text-right">
                           <p
                             className={`font-semibold ${
-                              child.amount_number > 0
+                              child.amount_number < 0
                                 ? "text-destructive"
                                 : "text-success"
                             }`}
                           >
-                            {child.amount_number > 0 ? "-" : "+"}$
+                            {child.amount_number < 0 ? "-" : "+"}$
                             {Math.abs(child.amount_number).toLocaleString(
                               "en-US",
                               {
