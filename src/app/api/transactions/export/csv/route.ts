@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
     const headers = [
       "ID",
       "Plaid Transaction ID",
+      "Pending Transaction ID",
       "Account ID",
       "Plaid Account ID",
       "Item ID",
@@ -113,6 +114,7 @@ export async function POST(req: NextRequest) {
       return [
         transaction.id,
         transaction.plaidTransactionId || "",
+        transaction.pendingTransactionId || "",
         transaction.accountId || "",
         transaction.account?.plaidAccountId || "",
         transaction.account?.itemId || "",
