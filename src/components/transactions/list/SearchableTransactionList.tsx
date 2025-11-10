@@ -48,6 +48,7 @@ export function SearchableTransactionList({
   tags,
   accounts = [],
   initialFilters,
+  onFilteredTransactionsChange,
 }: SearchableTransactionListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -179,6 +180,14 @@ export function SearchableTransactionList({
     sort.sortDirection,
     sort.sortTransactions,
   ]);
+
+  // Notify parent of filtered transaction IDs for CSV export
+  useEffect(() => {
+    if (onFilteredTransactionsChange) {
+      const ids = filteredTransactions.map((t) => t.id);
+      onFilteredTransactionsChange(ids);
+    }
+  }, [filteredTransactions, onFilteredTransactionsChange]);
 
   // Close dropdown when clicking outside
   useClickOutside(

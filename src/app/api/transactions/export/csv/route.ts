@@ -1,172 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { parseTransactionFiltersFromUrl } from "@/lib/transactions/url-params";
-import {
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-} from "date-fns";
-import { Prisma } from "@prisma/client";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Parse filters from URL query parameters
-    const searchParams = req.nextUrl.searchParams;
-    const filters = parseTransactionFiltersFromUrl(searchParams);
+    // Parse transaction IDs from request body
+    const body = await req.json();
+    const { transactionIds } = body;
 
-    // Build Prisma where clause
-    const where: Prisma.TransactionWhereInput = {
-      isSplit: false, // Filter out parent transactions that have been split
-    };
-
-    // Date range filter
-    if (filters.dateRange && filters.dateRange !== "all") {
-      const now = new Date();
-      const endOfToday = new Date(now);
-      endOfToday.setHours(23, 59, 59, 999);
-
-      let dateFilter: { gte?: Date; lte?: Date } = {};
-
-      switch (filters.dateRange) {
-        case "last30": {
-          const start = new Date(now);
-          start.setDate(now.getDate() - 29);
-          start.setHours(0, 0, 0, 0);
-          dateFilter = { gte: start, lte: endOfToday };
-          break;
-        }
-        case "last90": {
-          const start = new Date(now);
-          start.setDate(now.getDate() - 89);
-          start.setHours(0, 0, 0, 0);
-          dateFilter = { gte: start, lte: endOfToday };
-          break;
-        }
-        case "thisMonth":
-          dateFilter = { gte: startOfMonth(now), lte: endOfMonth(now) };
-          break;
-        case "lastMonth": {
-          const lastMonth = subMonths(now, 1);
-          dateFilter = {
-            gte: startOfMonth(lastMonth),
-            lte: endOfMonth(lastMonth),
-          };
-          break;
-        }
-        case "custom":
-          if (filters.customStartDate && filters.customEndDate) {
-            dateFilter = {
-              gte: new Date(filters.customStartDate),
-              lte: new Date(filters.customEndDate),
-            };
-          }
-          break;
-      }
-
-      if (dateFilter.gte || dateFilter.lte) {
-        where.date = dateFilter;
-      }
+    if (!transactionIds || !Array.isArray(transactionIds)) {
+      return NextResponse.json(
+        { error: "Invalid request: transactionIds array required" },
+        { status: 400 }
+      );
     }
 
-    // Income/Expense/Transfer filter
-    const showIncome = filters.showIncome ?? true;
-    const showExpenses = filters.showExpenses ?? true;
-    const showTransfers = filters.showTransfers ?? false;
-
-    // Build amount filter based on income/expense toggles
-    const amountConditions: Prisma.TransactionWhereInput[] = [];
-
-    if (!showTransfers) {
-      // Exclude transfers if showTransfers is false
-      where.category = {
-        ...((where.category as Prisma.CategoryWhereInput) || {}),
-        isTransferCategory: false,
-      };
+    if (transactionIds.length === 0) {
+      return NextResponse.json(
+        { error: "No transactions to export" },
+        { status: 400 }
+      );
     }
 
-    // Apply income/expense filters only for non-transfers
-    if (!showIncome || !showExpenses) {
-      if (showIncome && !showExpenses) {
-        // Show only income (positive amounts) - but this would conflict with transfer exclusion
-        // We need to handle this with OR logic
-        amountConditions.push({ amount: { gte: 0 } });
-      } else if (!showIncome && showExpenses) {
-        // Show only expenses (negative amounts)
-        amountConditions.push({ amount: { lt: 0 } });
-      } else if (!showIncome && !showExpenses) {
-        // Show neither - return empty result
-        where.id = "impossible-id-match";
-      }
-    }
-
-    // Category filters
-    if (filters.selectedCategoryIds && filters.selectedCategoryIds.size > 0) {
-      where.categoryId = { in: Array.from(filters.selectedCategoryIds) };
-    }
-
-    if (
-      filters.selectedSubcategoryIds &&
-      filters.selectedSubcategoryIds.size > 0
-    ) {
-      where.subcategoryId = { in: Array.from(filters.selectedSubcategoryIds) };
-    }
-
-    if (filters.excludedCategoryIds && filters.excludedCategoryIds.size > 0) {
-      where.categoryId = {
-        ...((where.categoryId as any) || {}),
-        notIn: Array.from(filters.excludedCategoryIds),
-      };
-    }
-
-    // Account filter
-    if (filters.selectedAccountIds && filters.selectedAccountIds.size > 0) {
-      where.accountId = { in: Array.from(filters.selectedAccountIds) };
-    }
-
-    // Tag filter
-    if (filters.selectedTagIds && filters.selectedTagIds.size > 0) {
-      where.tags = {
-        some: {
-          tagId: { in: Array.from(filters.selectedTagIds) },
-        },
-      };
-    }
-
-    // Uncategorized filter
-    if (filters.showOnlyUncategorized) {
-      where.categoryId = null;
-      where.subcategoryId = null;
-    }
-
-    // Search query filter (need to apply client-side due to OR across multiple fields)
-    // We'll fetch and filter after
-
-    // Build orderBy
-    let orderBy: Prisma.TransactionOrderByWithRelationInput = { date: "desc" };
-    if (filters.sortBy) {
-      switch (filters.sortBy) {
-        case "date":
-          orderBy = { date: filters.sortDirection || "desc" };
-          break;
-        case "createdAt":
-          orderBy = { createdAt: filters.sortDirection || "desc" };
-          break;
-        case "amount":
-          orderBy = { amount: filters.sortDirection || "desc" };
-          break;
-        case "name":
-          orderBy = { name: filters.sortDirection || "desc" };
-          break;
-        case "merchant":
-          orderBy = { merchantName: filters.sortDirection || "desc" };
-          break;
-      }
-    }
-
-    // Fetch all transactions with full relations
-    let transactions = await prisma.transaction.findMany({
-      where,
-      orderBy,
+    // Fetch only the specified transactions with full relations
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        id: { in: transactionIds },
+      },
       include: {
         account: true,
         category: true,
@@ -177,47 +36,14 @@ export async function GET(req: NextRequest) {
           },
         },
       },
+      orderBy: { date: "desc" },
     });
 
-    // Apply search filter client-side (complex OR query)
-    if (filters.searchQuery && filters.searchQuery.trim()) {
-      const query = filters.searchQuery.toLowerCase();
-      transactions = transactions.filter((t) => {
-        const tagNames = t.tags.map((tt) => tt.tag.name).join(" ");
-        const searchableText = [
-          t.name,
-          t.merchantName,
-          t.category?.name,
-          t.subcategory?.name,
-          t.account?.name,
-          t.isoCurrencyCode,
-          t.amount.toString(),
-          t.notes,
-          tagNames,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        return searchableText.includes(query);
-      });
-    }
-
-    // Apply income/expense amount filter client-side if needed
-    if (amountConditions.length > 0 && !showTransfers) {
-      transactions = transactions.filter((t) => {
-        const isTransfer = t.category?.isTransferCategory === true;
-        if (isTransfer) return showTransfers;
-
-        const amount = Number(t.amount);
-        if (showIncome && !showExpenses) {
-          return amount >= 0;
-        } else if (!showIncome && showExpenses) {
-          return amount < 0;
-        }
-        return true;
-      });
-    }
+    // Maintain the order from the frontend (important for sorting)
+    const transactionsMap = new Map(transactions.map((t) => [t.id, t]));
+    const orderedTransactions = transactionIds
+      .map((id) => transactionsMap.get(id))
+      .filter((t) => t !== undefined);
 
     // CSV Headers
     const headers = [
@@ -250,7 +76,7 @@ export async function GET(req: NextRequest) {
     ];
 
     // Convert transactions to CSV rows
-    const csvRows = transactions.map((transaction) => {
+    const csvRows = orderedTransactions.map((transaction) => {
       // Collect tag names
       const tagNames = transaction.tags.map((tt) => tt.tag.name).join("; ");
 

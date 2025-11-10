@@ -54,6 +54,7 @@ export interface SearchableTransactionListProps {
     mask?: string | null;
   }>;
   initialFilters?: TransactionFiltersFromUrl;
+  onFilteredTransactionsChange?: (transactionIds: string[]) => void;
 }
 
 // ============================================================================
