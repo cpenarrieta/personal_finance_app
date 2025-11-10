@@ -59,20 +59,34 @@ export async function POST(req: NextRequest) {
       // Same accounts detected - this is a reconnection
       console.log(`⚠️  Reconnection: Deleting old transactions (Plaid will assign new IDs)...`)
 
-      // Delete only Plaid-sourced transactions (preserve user-created splits)
-      // Why: Plaid assigns new transaction IDs on reconnection, causing duplicates
-      // BUT: Don't delete split transactions or their children (user customization)
+      // STEP 1: Convert split children to manual (preserve user customizations)
+      // This orphans them (removes parent link) before we delete the parent
+      const convertedSplits = await prisma.transaction.updateMany({
+        where: {
+          account: { itemId: existingItemForInstitution.id },
+          parentTransactionId: { not: null },  // Is a split child
+          isManual: false,                      // Not already manual
+        },
+        data: {
+          isManual: true,              // Mark as manual to preserve
+          parentTransactionId: null,   // Orphan (parent will be deleted)
+        },
+      })
+
+      if (convertedSplits.count > 0) {
+        console.log(
+          `   Converted ${convertedSplits.count} split children to manual transactions`
+        )
+      }
+
+      // STEP 2: Delete old Plaid transactions (including split parents)
       const deletedTxs = await prisma.transaction.deleteMany({
         where: {
-          account: {
-            itemId: existingItemForInstitution.id
-          },
-          // Only delete if NOT a split parent and NOT a split child
-          isSplit: false,
-          parentTransactionId: null,
-        }
+          account: { itemId: existingItemForInstitution.id },
+          isManual: false,  // Only delete Plaid-sourced transactions
+        },
       })
-      console.log(`   Deleted ${deletedTxs.count} old transactions (preserved split transactions)`)
+      console.log(`   Deleted ${deletedTxs.count} Plaid transactions (preserved manual & split children)`)
 
       // Update existing item with new access token and plaidItemId
       // Reset cursors since old cursors are tied to old access token

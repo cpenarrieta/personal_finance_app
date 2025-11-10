@@ -84,6 +84,7 @@ model Transaction {
   subcategoryId          String?
   notes                  String?
   isSplit                Boolean       @default(false)
+  isManual               Boolean       @default(false)
   originalTransactionId  String?
   parentTransactionId    String?
   amount_number          Float?        @default(dbgenerated("((amount * -1))::double precision"))
