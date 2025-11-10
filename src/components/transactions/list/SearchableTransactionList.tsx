@@ -187,7 +187,7 @@ export function SearchableTransactionList({
       const ids = filteredTransactions.map((t) => t.id);
       onFilteredTransactionsChange(ids);
     }
-  }, [filteredTransactions, onFilteredTransactionsChange]);
+  }, [filteredTransactions]);
 
   // Close dropdown when clicking outside
   useClickOutside(

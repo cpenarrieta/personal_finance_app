@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,15 @@ export function TransactionsPageClient({
   initialFilters,
 }: TransactionsPageClientProps) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [filteredTransactionIds, setFilteredTransactionIds] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // Use ref instead of state - updates won't cause re-renders
+  const filteredTransactionIdsRef = useRef<string[]>([]);
+
   const handleDownloadCSV = async () => {
-    if (filteredTransactionIds.length === 0) {
+    const filteredIds = filteredTransactionIdsRef.current;
+
+    if (filteredIds.length === 0) {
       alert("No transactions to export");
       return;
     }
@@ -45,7 +49,7 @@ export function TransactionsPageClient({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ transactionIds: filteredTransactionIds }),
+        body: JSON.stringify({ transactionIds: filteredIds }),
       });
 
       if (!response.ok) {
@@ -85,7 +89,7 @@ export function TransactionsPageClient({
           <Button
             variant="outline"
             onClick={handleDownloadCSV}
-            disabled={isDownloading || filteredTransactionIds.length === 0}
+            disabled={isDownloading}
           >
             <Download className="h-4 w-4 mr-2" />
             {isDownloading ? "Downloading..." : "Download CSV"}
@@ -102,7 +106,9 @@ export function TransactionsPageClient({
         tags={tags}
         accounts={accounts}
         initialFilters={initialFilters}
-        onFilteredTransactionsChange={setFilteredTransactionIds}
+        onFilteredTransactionsChange={(ids) => {
+          filteredTransactionIdsRef.current = ids;
+        }}
       />
 
       {showAddModal && (
