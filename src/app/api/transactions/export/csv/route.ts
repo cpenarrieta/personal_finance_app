@@ -5,7 +5,11 @@ import { Prisma } from "@prisma/client";
 // Type for transaction with all relations we need
 type TransactionWithRelations = Prisma.TransactionGetPayload<{
   include: {
-    account: true;
+    account: {
+      include: {
+        item: true;
+      };
+    };
     category: true;
     subcategory: true;
     tags: {
@@ -42,7 +46,11 @@ export async function POST(req: NextRequest) {
         id: { in: transactionIds },
       },
       include: {
-        account: true,
+        account: {
+          include: {
+            item: true,
+          },
+        },
         category: true,
         subcategory: true,
         tags: {
@@ -66,6 +74,10 @@ export async function POST(req: NextRequest) {
     const headers = [
       "ID",
       "Plaid Transaction ID",
+      "Account ID",
+      "Plaid Account ID",
+      "Item ID",
+      "Institution ID",
       "Account Name",
       "Account Type",
       "Account Mask",
@@ -76,7 +88,9 @@ export async function POST(req: NextRequest) {
       "Pending",
       "Merchant Name",
       "Name",
+      "Category ID",
       "Category",
+      "Subcategory ID",
       "Subcategory",
       "Payment Channel",
       "Tags",
@@ -99,6 +113,10 @@ export async function POST(req: NextRequest) {
       return [
         transaction.id,
         transaction.plaidTransactionId || "",
+        transaction.accountId || "",
+        transaction.account?.plaidAccountId || "",
+        transaction.account?.itemId || "",
+        transaction.account?.item?.institutionId || "",
         transaction.account?.name || "",
         transaction.account?.type || "",
         transaction.account?.mask || "",
@@ -111,7 +129,9 @@ export async function POST(req: NextRequest) {
         transaction.pending ? "Yes" : "No",
         transaction.merchantName || "",
         transaction.name || "",
+        transaction.categoryId || "",
         transaction.category?.name || "",
+        transaction.subcategoryId || "",
         transaction.subcategory?.name || "",
         transaction.paymentChannel || "",
         tagNames,
