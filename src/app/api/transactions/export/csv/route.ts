@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { Prisma } from "@prisma/client";
+
+// Type for transaction with all relations we need
+type TransactionWithRelations = Prisma.TransactionGetPayload<{
+  include: {
+    account: true;
+    category: true;
+    subcategory: true;
+    tags: {
+      include: {
+        tag: true;
+      };
+    };
+  };
+}>;
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,10 +55,12 @@ export async function POST(req: NextRequest) {
     });
 
     // Maintain the order from the frontend (important for sorting)
-    const transactionsMap = new Map(transactions.map((t) => [t.id, t]));
+    const transactionsMap = new Map<string, TransactionWithRelations>(
+      transactions.map((t: TransactionWithRelations) => [t.id, t])
+    );
     const orderedTransactions = transactionIds
       .map((id) => transactionsMap.get(id))
-      .filter((t) => t !== undefined);
+      .filter((t): t is TransactionWithRelations => t !== undefined);
 
     // CSV Headers
     const headers = [
