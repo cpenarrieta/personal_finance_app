@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { formatAmount } from "@/lib/utils";
-import type { EditTransactionModalProps } from "@/types";
+import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,13 @@ import { CategorySelect } from "@/components/ui/category-select";
 import { SubcategorySelect } from "@/components/ui/subcategory-select";
 import { Button } from "@/components/ui/button";
 import { TagSelector } from "@/components/transactions/filters/TagSelector";
+
+interface EditTransactionModalProps {
+  transaction: TransactionForClient;
+  onClose: () => void;
+  categories: CategoryForClient[];
+  tags: TagForClient[];
+}
 
 export function EditTransactionModal({
   transaction,
@@ -38,7 +45,7 @@ export function EditTransactionModal({
   );
   const [notes, setNotes] = useState(transaction.notes || "");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
-    transaction.tags?.map((tag) => tag.id) || []
+    transaction.tags?.map((tag: TagForClient) => tag.id) || []
   );
 
   // No longer needed - SubcategorySelect handles this internally

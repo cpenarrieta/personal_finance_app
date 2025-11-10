@@ -11,10 +11,21 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import type { PlaidAccountForClient } from "@/types";
 
 interface AccountsMenuClientProps {
-  accounts: PlaidAccountForClient[]
+  accounts: Array<{
+    id: string;
+    name: string;
+    type: string;
+    mask: string | null;
+    item: {
+      institution: {
+        id: string;
+        name: string;
+        logoUrl: string | null;
+      } | null;
+    };
+  }>;
 }
 
 type Account = AccountsMenuClientProps["accounts"][number];
