@@ -81,13 +81,28 @@ export async function syncItemTransactions(
 
     // Process historical transactions
     for (const t of totalTransactions) {
-      const existing = await prisma.transaction.findUnique({
-        where: { plaidTransactionId: t.transaction_id },
+      // Check if transaction exists by plaidTransactionId OR originalTransactionId (for splits)
+      const existing = await prisma.transaction.findFirst({
+        where: {
+          OR: [
+            { plaidTransactionId: t.transaction_id },
+            { originalTransactionId: t.transaction_id }, // Match split parents
+          ],
+        },
       });
+
+      // If split transaction exists, skip it (don't overwrite user's split)
+      if (existing && existing.isSplit) {
+        console.log(
+          `    ⏭️  Skipping split: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`
+        );
+        continue;
+      }
+
       const isNew = !existing;
 
       await prisma.transaction.upsert({
-        where: { plaidTransactionId: t.transaction_id },
+        where: { plaidTransactionId: existing?.plaidTransactionId || t.transaction_id },
         update: {
           account: { connect: { plaidAccountId: t.account_id } },
           amount: new Prisma.Decimal(t.amount),
@@ -225,6 +240,21 @@ export async function syncItemTransactions(
 
     // Added transactions
     for (const t of resp.data.added) {
+      // Check if this matches a split transaction by originalTransactionId
+      const existingSplit = await prisma.transaction.findFirst({
+        where: {
+          originalTransactionId: t.transaction_id,
+          isSplit: true,
+        },
+      });
+
+      if (existingSplit) {
+        console.log(
+          `    ⏭️  Skipping split: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`
+        );
+        continue;
+      }
+
       stats.transactionsAdded++;
       await prisma.transaction.upsert({
         where: { plaidTransactionId: t.transaction_id },
@@ -273,6 +303,19 @@ export async function syncItemTransactions(
 
     // Modified transactions (e.g., pending -> posted)
     for (const t of resp.data.modified) {
+      // Don't update split transactions (preserve user customization)
+      const tx = await prisma.transaction.findUnique({
+        where: { plaidTransactionId: t.transaction_id },
+        select: { isSplit: true, parentTransactionId: true },
+      });
+
+      if (tx && (tx.isSplit || tx.parentTransactionId)) {
+        console.log(
+          `    ⏭️  Skipping split update: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`
+        );
+        continue;
+      }
+
       stats.transactionsModified++;
       await prisma.transaction.update({
         where: { plaidTransactionId: t.transaction_id },
@@ -302,11 +345,18 @@ export async function syncItemTransactions(
     // Removed transactions
     const removedIds = resp.data.removed.map((r) => r.transaction_id);
     if (removedIds.length) {
-      stats.transactionsRemoved += removedIds.length;
-      await prisma.transaction.deleteMany({
-        where: { plaidTransactionId: { in: removedIds } },
+      // Don't delete split transactions (preserve user customization)
+      const { count } = await prisma.transaction.deleteMany({
+        where: {
+          plaidTransactionId: { in: removedIds },
+          isSplit: false,
+          parentTransactionId: null,
+        },
       });
-      console.log(`    🗑️  Removed ${removedIds.length} transaction(s)`);
+      stats.transactionsRemoved += count;
+      if (count > 0) {
+        console.log(`    🗑️  Removed ${count} transaction(s) (preserved splits)`);
+      }
     }
 
     cursor = resp.data.next_cursor;

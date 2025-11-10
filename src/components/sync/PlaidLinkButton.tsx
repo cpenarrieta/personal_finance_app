@@ -4,22 +4,45 @@ import { useRouter } from "next/navigation";
 import { usePlaidLink } from "react-plaid-link";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface PlaidLinkButtonProps {
   accessToken?: string;
   buttonText?: string;
   onReauthSuccess?: () => void;
+  itemId?: string; // Database item ID for update mode
 }
 
 export default function PlaidLinkButton({
   accessToken,
   buttonText = "Connect Account",
-  onReauthSuccess
+  onReauthSuccess,
+  itemId
 }: PlaidLinkButtonProps) {
   const router = useRouter();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSyncDialog, setShowSyncDialog] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  // Reconnection warning state
+  const [showReconnectionWarning, setShowReconnectionWarning] = useState(false);
+  const [reconnectionData, setReconnectionData] = useState<{
+    reconnectionId: string;
+    transactionCount: number;
+    institutionName: string;
+  } | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+
   const isUpdateMode = !!accessToken;
 
   useEffect(() => {
@@ -43,24 +66,115 @@ export default function PlaidLinkButton({
       });
   }, [accessToken]);
 
-  const onSuccess = useCallback(async (public_token: string) => {
-    // Both new and update mode require token exchange
-    await fetch("/api/plaid/exchange-public-token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ public_token }),
-    });
+  const handleSync = async () => {
+    setIsSyncing(true);
+    setSyncError(null);
+    try {
+      const response = await fetch("/api/plaid/sync", {
+        method: "POST",
+      });
+      const data = await response.json();
 
-    if (isUpdateMode) {
-      alert("Reauthorized! Syncing should work now.");
-      onReauthSuccess?.();
-    } else {
-      alert("Linked! Now run a sync.");
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "Sync failed");
+      }
+
+      // Success - close dialog and refresh
+      setShowSyncDialog(false);
+      router.refresh();
+    } catch (err: any) {
+      setSyncError(err.message);
+    } finally {
+      setIsSyncing(false);
     }
+  };
 
-    // Refresh to get updated data from server
-    router.refresh();
-  }, [isUpdateMode, onReauthSuccess, router]);
+  const handleCompleteReconnection = async () => {
+    if (!reconnectionData) return;
+
+    setIsCompleting(true);
+    setSyncError(null);
+
+    try {
+      const response = await fetch("/api/plaid/complete-reconnection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reconnectionId: reconnectionData.reconnectionId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "Reconnection failed");
+      }
+
+      // Success - close warning dialog
+      setShowReconnectionWarning(false);
+      setReconnectionData(null);
+
+      // Show sync dialog for new connections
+      if (!isUpdateMode) {
+        setShowSyncDialog(true);
+      } else {
+        // For update mode, just show success and call callback
+        onReauthSuccess?.();
+      }
+
+      // Refresh to get updated data
+      router.refresh();
+    } catch (err: any) {
+      setSyncError(err.message);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
+  const onSuccess = useCallback(async (public_token: string) => {
+    try {
+      if (isUpdateMode && itemId) {
+        // Update mode: Use prepare-exchange to detect reauth vs reconnection
+        const response = await fetch("/api/plaid/prepare-exchange", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ public_token, existingItemDbId: itemId }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || "Failed to process update");
+        }
+
+        if (data.type === "reauth") {
+          // Simple reauth - just update status, no transaction deletion
+          onReauthSuccess?.();
+          router.refresh();
+        } else if (data.type === "reconnection") {
+          // Reconnection - show warning before deleting transactions
+          setReconnectionData({
+            reconnectionId: data.reconnectionId,
+            transactionCount: data.transactionCount,
+            institutionName: data.institutionName,
+          });
+          setShowReconnectionWarning(true);
+        }
+      } else {
+        // New connection: Use existing exchange-public-token flow
+        await fetch("/api/plaid/exchange-public-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ public_token }),
+        });
+
+        // Show sync dialog
+        setShowSyncDialog(true);
+        router.refresh();
+      }
+    } catch (err: any) {
+      console.error("Error in onSuccess:", err);
+      setError(err.message || "Failed to connect account");
+    }
+  }, [isUpdateMode, itemId, onReauthSuccess, router]);
 
   const { open, ready } = usePlaidLink(
     linkToken ? { token: linkToken, onSuccess } : { token: "", onSuccess }
@@ -78,12 +192,98 @@ export default function PlaidLinkButton({
   }
 
   return (
-    <Button
-      disabled={!ready}
-      onClick={() => open?.()}
-      variant={isUpdateMode ? "outline" : "default"}
-    >
-      {ready ? buttonText : "Loading…"}
-    </Button>
+    <>
+      <Button
+        disabled={!ready}
+        onClick={() => open?.()}
+        variant={isUpdateMode ? "outline" : "default"}
+      >
+        {ready ? buttonText : "Loading…"}
+      </Button>
+
+      {/* Reconnection Warning Dialog */}
+      <Dialog open={showReconnectionWarning} onOpenChange={setShowReconnectionWarning}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Reconnection Detected
+            </DialogTitle>
+            <DialogDescription>
+              {reconnectionData && (
+                <>
+                  You've reconnected to <strong>{reconnectionData.institutionName}</strong> with a new
+                  item. This will delete <strong>{reconnectionData.transactionCount} existing
+                  transactions</strong> and re-sync them from Plaid.
+                  <br /><br />
+                  Split transactions and user customizations will be preserved.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {syncError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{syncError}</AlertDescription>
+            </Alert>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowReconnectionWarning(false);
+                setReconnectionData(null);
+              }}
+              disabled={isCompleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCompleteReconnection}
+              disabled={isCompleting}
+            >
+              {isCompleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isCompleting ? "Reconnecting..." : "Continue & Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sync Dialog (for new connections) */}
+      <Dialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Account Linked Successfully!</DialogTitle>
+            <DialogDescription>
+              Your account has been linked. Would you like to sync your financial data now?
+            </DialogDescription>
+          </DialogHeader>
+
+          {syncError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{syncError}</AlertDescription>
+            </Alert>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowSyncDialog(false)}
+              disabled={isSyncing}
+            >
+              Skip
+            </Button>
+            <Button onClick={handleSync} disabled={isSyncing}>
+              {isSyncing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSyncing ? "Syncing..." : "Sync Now"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

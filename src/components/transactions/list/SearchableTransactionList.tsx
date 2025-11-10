@@ -26,9 +26,12 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
-  SearchableTransactionListProps,
   TransactionForClient,
+  CategoryForClient,
+  TagForClient,
+  PlaidAccountForClient,
 } from "@/types";
+import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params";
 import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { TagSelector } from "@/components/transactions/filters/TagSelector";
@@ -41,6 +44,16 @@ import { useBulkTransactionOperations } from "@/hooks/useBulkTransactionOperatio
 import { useCategoryToggle } from "@/hooks/useCategoryToggle";
 import { transactionFiltersToUrlParams } from "@/lib/transactions/url-params";
 
+interface SearchableTransactionListProps {
+  transactions: TransactionForClient[];
+  showAccount?: boolean;
+  categories: CategoryForClient[];
+  tags: TagForClient[];
+  accounts?: PlaidAccountForClient[];
+  initialFilters?: TransactionFiltersFromUrl;
+  onFilteredTransactionsChange?: (transactionIds: string[]) => void;
+}
+
 export function SearchableTransactionList({
   transactions,
   showAccount = true,
@@ -48,6 +61,7 @@ export function SearchableTransactionList({
   tags,
   accounts = [],
   initialFilters,
+  onFilteredTransactionsChange,
 }: SearchableTransactionListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -179,6 +193,14 @@ export function SearchableTransactionList({
     sort.sortDirection,
     sort.sortTransactions,
   ]);
+
+  // Notify parent of filtered transaction IDs for CSV export
+  useEffect(() => {
+    if (onFilteredTransactionsChange) {
+      const ids = filteredTransactions.map((t) => t.id);
+      onFilteredTransactionsChange(ids);
+    }
+  }, [filteredTransactions]);
 
   // Close dropdown when clicking outside
   useClickOutside(

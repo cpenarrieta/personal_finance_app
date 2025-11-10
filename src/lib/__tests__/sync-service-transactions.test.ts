@@ -30,6 +30,7 @@ jest.mock("../db/prisma", () => ({
   prisma: {
     transaction: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       upsert: jest.fn(),
       update: jest.fn(),
       deleteMany: jest.fn(),
@@ -79,6 +80,7 @@ describe("syncItemTransactions - Basic Path", () => {
       );
 
       // Mock Prisma responses
+      (prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(null);
       (prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({});
       (prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({});
@@ -142,6 +144,7 @@ describe("syncItemTransactions - Basic Path", () => {
       );
 
       // Mock Prisma responses
+      (prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(null);
       (prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({});
       (prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({});
@@ -185,6 +188,10 @@ describe("syncItemTransactions - Basic Path", () => {
       );
 
       // Mock transaction already exists in DB
+      (prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue({
+        id: "existing-id",
+        plaidTransactionId: "test-transaction-id",
+      });
       (prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue({
         id: "existing-id",
         plaidTransactionId: "test-transaction-id",
@@ -320,6 +327,7 @@ describe("syncItemTransactions - Basic Path", () => {
       );
 
       (prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({});
+      (prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({});
 
       // Act
@@ -387,7 +395,11 @@ describe("syncItemTransactions - Basic Path", () => {
       // Assert
       expect(result.stats.transactionsRemoved).toBe(1);
       expect(prismaModule.prisma.transaction.deleteMany).toHaveBeenCalledWith({
-        where: { plaidTransactionId: { in: ["removed-transaction-id"] } },
+        where: {
+          plaidTransactionId: { in: ["removed-transaction-id"] },
+          isSplit: false,
+          parentTransactionId: null,
+        },
       });
     });
 
@@ -419,7 +431,11 @@ describe("syncItemTransactions - Basic Path", () => {
       // Assert
       expect(result.stats.transactionsRemoved).toBe(3);
       expect(prismaModule.prisma.transaction.deleteMany).toHaveBeenCalledWith({
-        where: { plaidTransactionId: { in: ["removed-1", "removed-2", "removed-3"] } },
+        where: {
+          plaidTransactionId: { in: ["removed-1", "removed-2", "removed-3"] },
+          isSplit: false,
+          parentTransactionId: null,
+        },
       });
     });
   });
@@ -478,6 +494,7 @@ describe("syncItemTransactions - Basic Path", () => {
       });
 
       (prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({});
+      (prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({});
 
       // Act

@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
       paymentChannel: paymentChannel || null,
       notes: notes || null,
       isSplit: false,
+      isManual: true,  // Mark manual transactions
     };
 
     // Handle category relation

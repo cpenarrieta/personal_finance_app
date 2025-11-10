@@ -72,6 +72,7 @@ export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
                   )}
                   <PlaidLinkButton
                     accessToken={item.accessToken}
+                    itemId={item.id}
                     buttonText={needsReauth ? "Reauthorize" : "Update"}
                   />
                 </div>
