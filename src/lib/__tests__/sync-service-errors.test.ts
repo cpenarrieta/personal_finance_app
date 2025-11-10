@@ -19,6 +19,7 @@ jest.mock("../db/prisma", () => ({
   prisma: {
     transaction: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       upsert: jest.fn(),
       update: jest.fn(),
       deleteMany: jest.fn(),
@@ -143,6 +144,7 @@ describe("Sync Service Error Handling", () => {
       });
 
       (prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({});
+      (prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null);
       const dbError = new Error("Database connection failed");
       (prismaModule.prisma.transaction.upsert as jest.Mock).mockRejectedValueOnce(dbError);
 
@@ -342,6 +344,8 @@ describe("Sync Service Error Handling", () => {
       });
 
       (prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({});
+      (prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null);
+      (prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({});
 
       // Act & Assert - should handle invalid date
       // Note: This might not throw but could create invalid Date object
