@@ -101,11 +101,17 @@ export async function syncItemTransactions(
 
       const isNew = !existing;
 
+        console.log('==================== HISTORICAL TRANSACTIONS ===========================');
+        console.log('debbugging transaction 0:', t.name);
+        console.log("debbugging transaction 1:", t.amount);
+        console.log('debbugging transaction 2:', new Prisma.Decimal(t.amount));
+        console.log("debbugging transaction 3:", t);
+
       await prisma.transaction.upsert({
         where: { plaidTransactionId: existing?.plaidTransactionId || t.transaction_id },
         update: {
           account: { connect: { plaidAccountId: t.account_id } },
-          amount: new Prisma.Decimal(t.amount),
+          amount: new Prisma.Decimal(t.amount), // expenses are positive, incomes are negative
           isoCurrencyCode: t.iso_currency_code || null,
           date: new Date(t.date),
           authorizedDate: t.authorized_date
@@ -255,6 +261,13 @@ export async function syncItemTransactions(
         continue;
       }
 
+      console.log('====================ADDED TRANSACTIONS===========================');
+      console.log('debbugging transaction 0:', t.name);
+      console.log("debbugging transaction 1:", t.amount);
+      console.log('debbugging transaction 2:', new Prisma.Decimal(t.amount));
+      console.log("debbugging transaction 3:", t);
+
+
       stats.transactionsAdded++;
       await prisma.transaction.upsert({
         where: { plaidTransactionId: t.transaction_id },
@@ -297,12 +310,17 @@ export async function syncItemTransactions(
         },
       });
       console.log(
-        `    ➕ ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`
+        `    ➕ ${t.date} | ${t.name} | $${t.amount}`
       );
     }
 
     // Modified transactions (e.g., pending -> posted)
     for (const t of resp.data.modified) {
+      console.log('====================MODIFIED TRANSACTIONS===========================');
+      console.log('debbugging transaction 0:', t.name);
+      console.log("debbugging transaction 1:", t.amount);
+      console.log('debbugging transaction 2:', new Prisma.Decimal(t.amount));
+      console.log("debbugging transaction 3:", t);
       // Don't update split transactions (preserve user customization)
       const tx = await prisma.transaction.findUnique({
         where: { plaidTransactionId: t.transaction_id },
