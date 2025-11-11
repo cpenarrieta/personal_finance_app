@@ -60,7 +60,7 @@ export function DailySpendingChart({ data }: DailySpendingChartProps) {
               tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
-              formatter={(value: number) => [`$${value.toFixed(2)}`, "Spending"]}
+              formatter={(value: number) => [`$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, "Spending"]}
               contentStyle={{
                 backgroundColor: "var(--background)",
                 border: "1px solid var(--border)",

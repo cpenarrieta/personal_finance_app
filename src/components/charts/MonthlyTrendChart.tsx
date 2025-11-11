@@ -52,7 +52,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
               tickFormatter={(value) => `$${value}`}
             />
             <Tooltip
-              formatter={(value: number) => `$${value.toFixed(2)}`}
+              formatter={(value: number) => `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               contentStyle={{
                 backgroundColor: "var(--background)",
                 border: "1px solid var(--border)",
