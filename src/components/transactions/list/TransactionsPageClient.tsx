@@ -96,7 +96,7 @@ export function TransactionsPageClient({
             disabled={isCopying}
           >
             <Sheet className="h-4 w-4 mr-2" />
-            {isCopying ? "Copying..." : "Copy for Sheets"}
+            {isCopying ? "Copying..." : "Copy to Clipboard"}
           </Button>
           <Button
             variant="outline"
