@@ -7,6 +7,10 @@ import { prisma } from "../db/prisma"
 import { Prisma } from "@prisma/client"
 import { revalidateTag } from "next/cache"
 
+// Constants
+const HISTORICAL_START_DATE = "2024-01-01"
+const TRANSACTION_BATCH_SIZE = 500
+
 export interface TransactionSyncStats {
   accountsUpdated: number
   transactionsAdded: number
@@ -29,6 +33,162 @@ export interface SyncOptions {
   syncInvestments?: boolean
 }
 
+// Helper functions
+
+/**
+ * Builds transaction data object for Prisma upsert from Plaid transaction
+ */
+function buildTransactionData(t: any) {
+  return {
+    amount: new Prisma.Decimal(t.amount),
+    isoCurrencyCode: t.iso_currency_code || null,
+    date: new Date(t.date),
+    authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
+    pending: t.pending,
+    merchantName: t.merchant_name || null,
+    name: t.name,
+    plaidCategory: t.personal_finance_category?.primary || null,
+    plaidSubcategory: t.personal_finance_category?.detailed || null,
+    paymentChannel: t.payment_channel || null,
+    pendingTransactionId: t.pending_transaction_id || null,
+    logoUrl: t.logo_url || null,
+    categoryIconUrl: t.personal_finance_category_icon_url || null,
+  }
+}
+
+/**
+ * Checks if a transaction is a split transaction that should be preserved
+ */
+async function isSplitTransaction(plaidTransactionId: string): Promise<boolean> {
+  const existing = await prisma.transaction.findFirst({
+    where: {
+      OR: [
+        { plaidTransactionId: plaidTransactionId },
+        { originalTransactionId: plaidTransactionId },
+      ],
+    },
+    select: { isSplit: true, parentTransactionId: true },
+  })
+
+  return !!(existing && (existing.isSplit || existing.parentTransactionId))
+}
+
+/**
+ * Builds account upsert data from Plaid account
+ */
+function buildAccountUpsertData(a: any, itemId: string) {
+  const commonData = {
+    officialName: a.official_name || null,
+    mask: a.mask || null,
+    type: a.type,
+    subtype: a.subtype || null,
+    currency: a.balances.iso_currency_code || null,
+    currentBalance: a.balances.current != null ? new Prisma.Decimal(a.balances.current) : null,
+    availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
+    creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
+    balanceUpdatedAt: new Date(),
+  }
+
+  return {
+    update: {
+      itemId,
+      ...commonData,
+      // Don't update name - preserve user's custom account names
+    },
+    create: {
+      plaidAccountId: a.account_id,
+      itemId,
+      name: a.name ?? a.official_name ?? "Account",
+      ...commonData,
+    },
+  }
+}
+
+/**
+ * Builds security upsert data from Plaid security
+ */
+function buildSecurityUpsertData(s: any) {
+  const data = {
+    name: s.name || null,
+    tickerSymbol: s.ticker_symbol || null,
+    type: s.type || null,
+    isoCurrencyCode: s.iso_currency_code || null,
+  }
+
+  return {
+    update: data,
+    create: {
+      plaidSecurityId: s.security_id,
+      ...data,
+    },
+  }
+}
+
+/**
+ * Builds holding upsert data from Plaid holding, optionally preserving existing price
+ */
+function buildHoldingUpsertData(
+  h: any,
+  accountId: string,
+  securityId: string,
+  existingHolding: { institutionPrice: Prisma.Decimal | null; institutionPriceAsOf: Date | null } | null,
+) {
+  // Determine which price to use
+  let priceToUse = h.institution_price != null ? new Prisma.Decimal(h.institution_price) : null
+  let priceAsOfToUse = h.institution_price_as_of ? new Date(h.institution_price_as_of) : null
+
+  // If existing holding has a non-zero price and Plaid's price is 0 or null, preserve the existing price
+  if (existingHolding?.institutionPrice && existingHolding.institutionPrice.toNumber() > 0) {
+    if (!priceToUse || priceToUse.toNumber() === 0) {
+      priceToUse = existingHolding.institutionPrice
+      priceAsOfToUse = existingHolding.institutionPriceAsOf
+    }
+  }
+
+  const data = {
+    quantity: new Prisma.Decimal(h.quantity),
+    costBasis: h.cost_basis != null ? new Prisma.Decimal(h.cost_basis) : null,
+    institutionPrice: priceToUse,
+    institutionPriceAsOf: priceAsOfToUse,
+    isoCurrencyCode: h.iso_currency_code || null,
+  }
+
+  return {
+    update: data,
+    create: {
+      accountId,
+      securityId,
+      ...data,
+    },
+  }
+}
+
+/**
+ * Builds investment transaction upsert data from Plaid investment transaction
+ */
+function buildInvestmentTransactionUpsertData(t: any, accountId: string, securityId: string | null) {
+  const data = {
+    accountId,
+    securityId: securityId || null,
+    type: t.type,
+    amount: t.amount != null ? new Prisma.Decimal(t.amount) : null,
+    price: t.price != null ? new Prisma.Decimal(t.price) : null,
+    quantity: t.quantity != null ? new Prisma.Decimal(t.quantity) : null,
+    fees: t.fees != null ? new Prisma.Decimal(t.fees) : null,
+    isoCurrencyCode: t.iso_currency_code || null,
+    date: new Date(t.date),
+    name: t.name || null,
+  }
+
+  return {
+    update: data,
+    create: {
+      plaidInvestmentTransactionId: t.investment_transaction_id,
+      ...data,
+    },
+  }
+}
+
 /**
  * Syncs banking transactions for a single item
  */
@@ -48,7 +208,6 @@ export async function syncItemTransactions(
   // First, if no cursor exists, do a historical fetch to get older data
   if (!lastCursor) {
     console.log("  📅 Fetching historical transactions...")
-    const historicalStartDate = "2024-01-01"
     const historicalEndDate = new Date().toISOString().slice(0, 10)
 
     let offset = 0
@@ -59,10 +218,10 @@ export async function syncItemTransactions(
     while (true) {
       const historicalResp = await plaid.transactionsGet({
         access_token: accessToken,
-        start_date: historicalStartDate,
+        start_date: HISTORICAL_START_DATE,
         end_date: historicalEndDate,
         options: {
-          count: 500,
+          count: TRANSACTION_BATCH_SIZE,
           offset: offset,
         },
       })
@@ -72,7 +231,7 @@ export async function syncItemTransactions(
       if (totalTransactions.length >= historicalResp.data.total_transactions) {
         break
       }
-      offset += 500
+      offset += TRANSACTION_BATCH_SIZE
     }
 
     console.log(`  ✓ Found ${totalTransactions.length} historical transaction(s)`)
@@ -96,47 +255,18 @@ export async function syncItemTransactions(
       }
 
       const isNew = !existing
-
-      console.log("==================== HISTORICAL TRANSACTIONS ===========================")
-      console.log("debbugging transaction 0:", t.name)
-      console.log("debbugging transaction 1:", t.amount)
-      console.log("debbugging transaction 2:", new Prisma.Decimal(t.amount))
-      console.log("debbugging transaction 3:", t)
+      const transactionData = buildTransactionData(t)
 
       await prisma.transaction.upsert({
         where: { plaidTransactionId: existing?.plaidTransactionId || t.transaction_id },
         update: {
           account: { connect: { plaidAccountId: t.account_id } },
-          amount: new Prisma.Decimal(t.amount), // expenses are positive, incomes are negative
-          isoCurrencyCode: t.iso_currency_code || null,
-          date: new Date(t.date),
-          authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
-          pending: t.pending,
-          merchantName: t.merchant_name || null,
-          name: t.name,
-          plaidCategory: t.personal_finance_category?.primary || null,
-          plaidSubcategory: t.personal_finance_category?.detailed || null,
-          paymentChannel: t.payment_channel || null,
-          pendingTransactionId: t.pending_transaction_id || null,
-          logoUrl: t.logo_url || null,
-          categoryIconUrl: t.personal_finance_category_icon_url || null,
+          ...transactionData,
         },
         create: {
           plaidTransactionId: t.transaction_id,
           account: { connect: { plaidAccountId: t.account_id } },
-          amount: new Prisma.Decimal(t.amount),
-          isoCurrencyCode: t.iso_currency_code || null,
-          date: new Date(t.date),
-          authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
-          pending: t.pending,
-          merchantName: t.merchant_name || null,
-          name: t.name,
-          plaidCategory: t.personal_finance_category?.primary || null,
-          plaidSubcategory: t.personal_finance_category?.detailed || null,
-          paymentChannel: t.payment_channel || null,
-          pendingTransactionId: t.pending_transaction_id || null,
-          logoUrl: t.logo_url || null,
-          categoryIconUrl: t.personal_finance_category_icon_url || null,
+          ...transactionData,
         },
       })
 
@@ -159,7 +289,7 @@ export async function syncItemTransactions(
       resp = await plaid.transactionsSync({
         access_token: accessToken,
         cursor: cursor,
-        count: 500,
+        count: TRANSACTION_BATCH_SIZE,
       })
     } catch (error: any) {
       console.error("  ❌ Plaid transactionsSync error:")
@@ -184,35 +314,10 @@ export async function syncItemTransactions(
     // Upsert accounts (in case of new/changed)
     for (const a of resp.data.accounts) {
       stats.accountsUpdated++
+      const accountData = buildAccountUpsertData(a, itemId)
       await prisma.plaidAccount.upsert({
         where: { plaidAccountId: a.account_id },
-        update: {
-          itemId: itemId,
-          // Don't update name - preserve user's custom account names
-          officialName: a.official_name || null,
-          mask: a.mask || null,
-          type: a.type,
-          subtype: a.subtype || null,
-          currency: a.balances.iso_currency_code || null,
-          currentBalance: a.balances.current != null ? new Prisma.Decimal(a.balances.current) : null,
-          availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
-          creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
-          balanceUpdatedAt: new Date(),
-        },
-        create: {
-          plaidAccountId: a.account_id,
-          itemId: itemId,
-          name: a.name ?? a.official_name ?? "Account",
-          officialName: a.official_name || null,
-          mask: a.mask || null,
-          type: a.type,
-          subtype: a.subtype || null,
-          currency: a.balances.iso_currency_code || null,
-          currentBalance: a.balances.current != null ? new Prisma.Decimal(a.balances.current) : null,
-          availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
-          creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
-          balanceUpdatedAt: new Date(),
-        },
+        ...accountData,
       })
     }
 
@@ -231,47 +336,19 @@ export async function syncItemTransactions(
         continue
       }
 
-      console.log("====================ADDED TRANSACTIONS===========================")
-      console.log("debbugging transaction 0:", t.name)
-      console.log("debbugging transaction 1:", t.amount)
-      console.log("debbugging transaction 2:", new Prisma.Decimal(t.amount))
-      console.log("debbugging transaction 3:", t)
-
       stats.transactionsAdded++
+      const transactionData = buildTransactionData(t)
+
       await prisma.transaction.upsert({
         where: { plaidTransactionId: t.transaction_id },
         update: {
           account: { connect: { plaidAccountId: t.account_id } },
-          amount: new Prisma.Decimal(t.amount),
-          isoCurrencyCode: t.iso_currency_code || null,
-          date: new Date(t.date),
-          authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
-          pending: t.pending,
-          merchantName: t.merchant_name || null,
-          name: t.name,
-          plaidCategory: t.personal_finance_category?.primary || null,
-          plaidSubcategory: t.personal_finance_category?.detailed || null,
-          paymentChannel: t.payment_channel || null,
-          pendingTransactionId: t.pending_transaction_id || null,
-          logoUrl: t.logo_url || null,
-          categoryIconUrl: t.personal_finance_category_icon_url || null,
+          ...transactionData,
         },
         create: {
           plaidTransactionId: t.transaction_id,
           account: { connect: { plaidAccountId: t.account_id } },
-          amount: new Prisma.Decimal(t.amount),
-          isoCurrencyCode: t.iso_currency_code || null,
-          date: new Date(t.date),
-          authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
-          pending: t.pending,
-          merchantName: t.merchant_name || null,
-          name: t.name,
-          plaidCategory: t.personal_finance_category?.primary || null,
-          plaidSubcategory: t.personal_finance_category?.detailed || null,
-          paymentChannel: t.payment_channel || null,
-          pendingTransactionId: t.pending_transaction_id || null,
-          logoUrl: t.logo_url || null,
-          categoryIconUrl: t.personal_finance_category_icon_url || null,
+          ...transactionData,
         },
       })
       console.log(`    ➕ ${t.date} | ${t.name} | $${t.amount}`)
@@ -279,40 +356,18 @@ export async function syncItemTransactions(
 
     // Modified transactions (e.g., pending -> posted)
     for (const t of resp.data.modified) {
-      console.log("====================MODIFIED TRANSACTIONS===========================")
-      console.log("debbugging transaction 0:", t.name)
-      console.log("debbugging transaction 1:", t.amount)
-      console.log("debbugging transaction 2:", new Prisma.Decimal(t.amount))
-      console.log("debbugging transaction 3:", t)
       // Don't update split transactions (preserve user customization)
-      const tx = await prisma.transaction.findUnique({
-        where: { plaidTransactionId: t.transaction_id },
-        select: { isSplit: true, parentTransactionId: true },
-      })
-
-      if (tx && (tx.isSplit || tx.parentTransactionId)) {
+      if (await isSplitTransaction(t.transaction_id)) {
         console.log(`    ⏭️  Skipping split update: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
         continue
       }
 
       stats.transactionsModified++
+      const transactionData = buildTransactionData(t)
+
       await prisma.transaction.update({
         where: { plaidTransactionId: t.transaction_id },
-        data: {
-          amount: new Prisma.Decimal(t.amount),
-          isoCurrencyCode: t.iso_currency_code || null,
-          date: new Date(t.date),
-          authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
-          pending: t.pending,
-          merchantName: t.merchant_name || null,
-          name: t.name,
-          plaidCategory: t.personal_finance_category?.primary || null,
-          plaidSubcategory: t.personal_finance_category?.detailed || null,
-          paymentChannel: t.payment_channel || null,
-          pendingTransactionId: t.pending_transaction_id || null,
-          logoUrl: t.logo_url || null,
-          categoryIconUrl: t.personal_finance_category_icon_url || null,
-        },
+        data: transactionData,
       })
       console.log(`    📝 ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
     }
@@ -371,21 +426,10 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
     })
     const isNew = !existing
 
+    const securityData = buildSecurityUpsertData(s)
     await prisma.security.upsert({
       where: { plaidSecurityId: s.security_id },
-      update: {
-        name: s.name || null,
-        tickerSymbol: s.ticker_symbol || null,
-        type: s.type || null,
-        isoCurrencyCode: s.iso_currency_code || null,
-      },
-      create: {
-        plaidSecurityId: s.security_id,
-        name: s.name || null,
-        tickerSymbol: s.ticker_symbol || null,
-        type: s.type || null,
-        isoCurrencyCode: s.iso_currency_code || null,
-      },
+      ...securityData,
     })
 
     if (isNew) {
@@ -427,42 +471,21 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
         accountId: account.id,
         securityId: security.id,
       },
+      select: {
+        id: true,
+        institutionPrice: true,
+        institutionPriceAsOf: true,
+      },
     })
-
-    // Determine which price to use
-    let priceToUse = h.institution_price != null ? new Prisma.Decimal(h.institution_price) : null
-    let priceAsOfToUse = h.institution_price_as_of ? new Date(h.institution_price_as_of) : null
-
-    // If existing holding has a non-zero price and Plaid's price is 0 or null, preserve the existing price
-    if (existingHolding?.institutionPrice && existingHolding.institutionPrice.toNumber() > 0) {
-      if (!priceToUse || priceToUse.toNumber() === 0) {
-        priceToUse = existingHolding.institutionPrice
-        priceAsOfToUse = existingHolding.institutionPriceAsOf
-      }
-    }
 
     const isNewHolding = !existingHolding
 
+    const holdingData = buildHoldingUpsertData(h, account.id, security.id, existingHolding)
     await prisma.holding.upsert({
       where: {
         id: existingHolding?.id || "new-holding",
       },
-      update: {
-        quantity: new Prisma.Decimal(h.quantity),
-        costBasis: h.cost_basis != null ? new Prisma.Decimal(h.cost_basis) : null,
-        institutionPrice: priceToUse,
-        institutionPriceAsOf: priceAsOfToUse,
-        isoCurrencyCode: h.iso_currency_code || null,
-      },
-      create: {
-        accountId: account.id,
-        securityId: security.id,
-        quantity: new Prisma.Decimal(h.quantity),
-        costBasis: h.cost_basis != null ? new Prisma.Decimal(h.cost_basis) : null,
-        institutionPrice: priceToUse,
-        institutionPriceAsOf: priceAsOfToUse,
-        isoCurrencyCode: h.iso_currency_code || null,
-      },
+      ...holdingData,
     })
 
     if (isNewHolding) {
@@ -474,12 +497,11 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
   }
 
   // Investment transactions - fetch from beginning of 2024
-  const startDate = "2024-01-01"
   const endDate = new Date().toISOString().slice(0, 10)
 
   const invTxResp = await plaid.investmentsTransactionsGet({
     access_token: accessToken,
-    start_date: startDate,
+    start_date: HISTORICAL_START_DATE,
     end_date: endDate,
   })
 
@@ -500,33 +522,10 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
     })
     const isNew = !existing
 
+    const invTxData = buildInvestmentTransactionUpsertData(t, account.id, securityId)
     await prisma.investmentTransaction.upsert({
       where: { plaidInvestmentTransactionId: t.investment_transaction_id },
-      update: {
-        accountId: account.id,
-        securityId: securityId || null,
-        type: t.type,
-        amount: t.amount != null ? new Prisma.Decimal(t.amount) : null,
-        price: t.price != null ? new Prisma.Decimal(t.price) : null,
-        quantity: t.quantity != null ? new Prisma.Decimal(t.quantity) : null,
-        fees: t.fees != null ? new Prisma.Decimal(t.fees) : null,
-        isoCurrencyCode: t.iso_currency_code || null,
-        date: new Date(t.date),
-        name: t.name || null,
-      },
-      create: {
-        plaidInvestmentTransactionId: t.investment_transaction_id,
-        accountId: account.id,
-        securityId: securityId || null,
-        type: t.type,
-        amount: t.amount != null ? new Prisma.Decimal(t.amount) : null,
-        price: t.price != null ? new Prisma.Decimal(t.price) : null,
-        quantity: t.quantity != null ? new Prisma.Decimal(t.quantity) : null,
-        fees: t.fees != null ? new Prisma.Decimal(t.fees) : null,
-        isoCurrencyCode: t.iso_currency_code || null,
-        date: new Date(t.date),
-        name: t.name || null,
-      },
+      ...invTxData,
     })
 
     if (isNew) {
