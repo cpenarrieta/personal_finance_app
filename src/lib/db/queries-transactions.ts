@@ -5,6 +5,7 @@
 
 import { prisma } from "@/lib/db/prisma"
 import { cacheTag, cacheLife } from "next/cache"
+import { getCurrentUserId } from "@/lib/auth/auth-helpers"
 
 /**
  * Get transaction by ID with full relations
@@ -15,8 +16,17 @@ export async function getTransactionById(id: string) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions")
 
-  return prisma.transaction.findUnique({
-    where: { id },
+  const userId = await getCurrentUserId()
+
+  return prisma.transaction.findFirst({
+    where: {
+      id,
+      account: {
+        item: {
+          userId,
+        },
+      },
+    },
     select: {
       id: true,
       plaidTransactionId: true,

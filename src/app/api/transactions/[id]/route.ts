@@ -4,10 +4,33 @@ import { updateTransactionSchema } from "@/types/api"
 import { safeParseRequestBody } from "@/types/api"
 import type { Prisma } from "@prisma/client"
 import { revalidateTag } from "next/cache"
+import { getCurrentUserIdFromHeaders } from "@/lib/auth/auth-helpers"
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
+
+    // Get current user ID
+    const userId = await getCurrentUserIdFromHeaders(req.headers)
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Verify the transaction belongs to the user
+    const existingTransaction = await prisma.transaction.findFirst({
+      where: {
+        id,
+        account: {
+          item: {
+            userId,
+          },
+        },
+      },
+    })
+
+    if (!existingTransaction) {
+      return NextResponse.json({ error: "Transaction not found or access denied" }, { status: 404 })
+    }
 
     // Validate request body with Zod
     const parseResult = await safeParseRequestBody(req, updateTransactionSchema)
@@ -85,20 +108,33 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
-    // Check if transaction exists
-    const transaction = await prisma.transaction.findUnique({
-      where: { id },
+    // Get current user ID
+    const userId = await getCurrentUserIdFromHeaders(req.headers)
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Check if transaction exists AND belongs to the user
+    const transaction = await prisma.transaction.findFirst({
+      where: {
+        id,
+        account: {
+          item: {
+            userId,
+          },
+        },
+      },
       include: {
         childTransactions: true,
       },
     })
 
     if (!transaction) {
-      return NextResponse.json({ error: "Transaction not found" }, { status: 404 })
+      return NextResponse.json({ error: "Transaction not found or access denied" }, { status: 404 })
     }
 
     // If transaction has child transactions (is a split parent), delete them first

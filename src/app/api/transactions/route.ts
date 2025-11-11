@@ -5,9 +5,16 @@ import { safeParseRequestBody } from "@/types/api"
 import { Prisma } from "@prisma/client"
 import { nanoid } from "nanoid"
 import { revalidateTag } from "next/cache"
+import { getCurrentUserIdFromHeaders } from "@/lib/auth/auth-helpers"
 
 export async function POST(req: NextRequest) {
   try {
+    // Get current user ID
+    const userId = await getCurrentUserIdFromHeaders(req.headers)
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     // Validate request body with Zod
     const parseResult = await safeParseRequestBody(req, createTransactionSchema)
 
@@ -39,13 +46,18 @@ export async function POST(req: NextRequest) {
       tagIds,
     } = parseResult.data
 
-    // Verify the account exists
-    const account = await prisma.plaidAccount.findUnique({
-      where: { id: accountId },
+    // Verify the account exists AND belongs to the user
+    const account = await prisma.plaidAccount.findFirst({
+      where: {
+        id: accountId,
+        item: {
+          userId,
+        },
+      },
     })
 
     if (!account) {
-      return NextResponse.json({ error: "Account not found" }, { status: 404 })
+      return NextResponse.json({ error: "Account not found or access denied" }, { status: 404 })
     }
 
     // Generate a unique plaidTransactionId for manual transactions

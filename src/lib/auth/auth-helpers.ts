@@ -78,3 +78,31 @@ export async function validateAllowedEmail() {
 
   return session
 }
+
+/**
+ * Gets the current user's ID from the session
+ * Requires authentication - redirects to login if not authenticated
+ * @returns The current user's ID
+ */
+export async function getCurrentUserId(): Promise<string> {
+  const session = await requireAuth()
+  return session.user.id
+}
+
+/**
+ * Gets the current user's ID from the session for API routes
+ * Does not redirect - returns null if not authenticated
+ * @param headers Request headers
+ * @returns The current user's ID or null if not authenticated
+ */
+export async function getCurrentUserIdFromHeaders(
+  headers: Headers,
+): Promise<string | null> {
+  try {
+    const session = await auth.api.getSession({ headers })
+    return session?.user?.id || null
+  } catch (error) {
+    console.error("Error getting session from headers:", error)
+    return null
+  }
+}

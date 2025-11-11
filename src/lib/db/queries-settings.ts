@@ -4,6 +4,7 @@
 
 import { prisma } from "@/lib/db/prisma"
 import { cacheTag, cacheLife } from "next/cache"
+import { getCurrentUserId } from "@/lib/auth/auth-helpers"
 
 /**
  * Get all categories with subcategories for management
@@ -14,7 +15,12 @@ export async function getAllCategoriesForManagement() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("categories")
 
+  const userId = await getCurrentUserId()
+
   return prisma.category.findMany({
+    where: {
+      userId,
+    },
     include: { subcategories: true },
     orderBy: { name: "asc" },
   })
@@ -29,7 +35,12 @@ export async function getAllTagsWithCounts() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("tags")
 
+  const userId = await getCurrentUserId()
+
   return prisma.tag.findMany({
+    where: {
+      userId,
+    },
     include: {
       _count: {
         select: { transactions: true },
@@ -48,7 +59,12 @@ export async function getAllCategoriesForMoveTransactions() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("categories")
 
+  const userId = await getCurrentUserId()
+
   return prisma.category.findMany({
+    where: {
+      userId,
+    },
     select: {
       id: true,
       name: true,

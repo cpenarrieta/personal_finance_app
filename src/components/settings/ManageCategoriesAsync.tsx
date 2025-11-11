@@ -11,6 +11,7 @@ import { getAllCategoriesForManagement } from "@/lib/db/queries-settings"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import { prisma } from "@/lib/db/prisma"
 import type { Prisma } from "@prisma/client"
+import { getCurrentUserId } from "@/lib/auth/auth-helpers"
 
 type CategoryWithSubs = Prisma.CategoryGetPayload<{
   include: { subcategories: true }
@@ -19,12 +20,14 @@ type CategoryWithSubs = Prisma.CategoryGetPayload<{
 // Server Actions
 async function createCategory(formData: FormData) {
   "use server"
+  const userId = await getCurrentUserId()
   const name = formData.get("name") as string
   const imageUrl = formData.get("imageUrl") as string
   const isTransferCategory = formData.get("isTransferCategory") === "true"
 
   await prisma.category.create({
     data: {
+      userId,
       name,
       imageUrl: imageUrl || null,
       isTransferCategory,
@@ -36,11 +39,15 @@ async function createCategory(formData: FormData) {
 
 async function updateCategory(formData: FormData) {
   "use server"
+  const userId = await getCurrentUserId()
   const id = formData.get("id") as string
   const isTransferCategory = formData.get("isTransferCategory") === "true"
 
   await prisma.category.update({
-    where: { id },
+    where: {
+      id,
+      userId,
+    },
     data: { isTransferCategory },
   })
   revalidatePath("/settings/manage-categories")
@@ -49,8 +56,14 @@ async function updateCategory(formData: FormData) {
 
 async function deleteCategory(formData: FormData) {
   "use server"
+  const userId = await getCurrentUserId()
   const id = formData.get("id") as string
-  await prisma.category.delete({ where: { id } })
+  await prisma.category.delete({
+    where: {
+      id,
+      userId,
+    },
+  })
   revalidatePath("/settings/manage-categories")
   revalidateTag("categories", "max")
 }

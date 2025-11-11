@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma"
 import { startOfMonth as dateStartOfMonth, endOfMonth, subMonths } from "date-fns"
 import { cacheTag, cacheLife } from "next/cache"
+import { getCurrentUserId } from "@/lib/auth/auth-helpers"
 
 /**
  * Get dashboard metrics (accounts and holdings)
@@ -11,8 +12,15 @@ export async function getDashboardMetrics() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("accounts", "holdings", "dashboard")
 
+  const userId = await getCurrentUserId()
+
   const [accounts, holdings] = await Promise.all([
     prisma.plaidAccount.findMany({
+      where: {
+        item: {
+          userId,
+        },
+      },
       select: {
         id: true,
         plaidAccountId: true,
@@ -51,6 +59,13 @@ export async function getDashboardMetrics() {
       orderBy: { name: "asc" },
     }),
     prisma.holding.findMany({
+      where: {
+        account: {
+          item: {
+            userId,
+          },
+        },
+      },
       select: {
         id: true,
         accountId: true,
@@ -90,10 +105,17 @@ export async function getUncategorizedTransactions() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
 
+  const userId = await getCurrentUserId()
+
   const uncategorizedCount = await prisma.transaction.count({
     where: {
       categoryId: null,
       isSplit: false,
+      account: {
+        item: {
+          userId,
+        },
+      },
     },
   })
 
@@ -103,6 +125,11 @@ export async function getUncategorizedTransactions() {
           where: {
             categoryId: null,
             isSplit: false,
+            account: {
+              item: {
+                userId,
+              },
+            },
           },
           orderBy: { date: "desc" },
           select: {
@@ -168,9 +195,16 @@ export async function getRecentTransactions(limit = 20) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
 
+  const userId = await getCurrentUserId()
+
   return prisma.transaction.findMany({
     where: {
       isSplit: false,
+      account: {
+        item: {
+          userId,
+        },
+      },
     },
     take: limit,
     orderBy: { date: "desc" },
@@ -267,6 +301,7 @@ export async function getLastMonthStats() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
 
+  const userId = await getCurrentUserId()
   const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange()
 
   // Optimized: Single raw SQL query to get both spending and income
@@ -282,10 +317,13 @@ export async function getLastMonthStats() {
       CAST(SUM(CASE WHEN t.amount_number > 0 THEN t.amount_number ELSE 0 END) AS double precision) as total_income
     FROM "Transaction" t
     LEFT JOIN "Category" c ON t."categoryId" = c.id
+    LEFT JOIN "PlaidAccount" a ON t."accountId" = a.id
+    LEFT JOIN "Item" i ON a."itemId" = i.id
     WHERE t.date >= ${lastMonthStart}
       AND t.date < ${lastMonthEnd}
       AND t."isSplit" = false
       AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+      AND i."userId" = ${userId}
   `
 
   const totalLastMonthSpending = Number(stats?.total_spending || 0)
@@ -299,6 +337,11 @@ export async function getLastMonthStats() {
         lt: lastMonthEnd,
       },
       isSplit: false,
+      account: {
+        item: {
+          userId,
+        },
+      },
     },
     select: {
       id: true,
@@ -365,6 +408,7 @@ export async function getTopExpensiveTransactions(limit = 25) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
 
+  const userId = await getCurrentUserId()
   const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange()
 
   return prisma.transaction.findMany({
@@ -379,6 +423,11 @@ export async function getTopExpensiveTransactions(limit = 25) {
       isSplit: false,
       category: {
         isTransferCategory: false,
+      },
+      account: {
+        item: {
+          userId,
+        },
       },
     },
     take: limit,
@@ -465,6 +514,12 @@ export async function hasConnectedAccounts() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("accounts")
 
-  const itemsCount = await prisma.item.count()
+  const userId = await getCurrentUserId()
+
+  const itemsCount = await prisma.item.count({
+    where: {
+      userId,
+    },
+  })
   return itemsCount > 0
 }

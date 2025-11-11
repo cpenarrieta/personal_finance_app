@@ -6,6 +6,7 @@
 import { prisma } from "@/lib/db/prisma"
 import { cacheTag, cacheLife } from "next/cache"
 import type { CategoryForClient, PlaidAccountForClient, TagForClient } from "@/types"
+import { getCurrentUserId } from "@/lib/auth/auth-helpers"
 
 /**
  * Get all transactions with full relations
@@ -16,9 +17,16 @@ export async function getAllTransactions() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions")
 
+  const userId = await getCurrentUserId()
+
   return prisma.transaction.findMany({
     where: {
       isSplit: false, // Filter out parent transactions that have been split
+      account: {
+        item: {
+          userId,
+        },
+      },
     },
     orderBy: { date: "desc" },
     select: {
@@ -100,7 +108,12 @@ export async function getAllCategories() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("categories")
 
+  const userId = await getCurrentUserId()
+
   return prisma.category.findMany({
+    where: {
+      userId,
+    },
     select: {
       id: true,
       name: true,
@@ -135,7 +148,12 @@ export async function getAllTags() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("tags")
 
+  const userId = await getCurrentUserId()
+
   return prisma.tag.findMany({
+    where: {
+      userId,
+    },
     select: {
       id: true,
       name: true,
@@ -156,7 +174,14 @@ export async function getAllAccounts() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("accounts")
 
+  const userId = await getCurrentUserId()
+
   return prisma.plaidAccount.findMany({
+    where: {
+      item: {
+        userId,
+      },
+    },
     select: {
       id: true,
       plaidAccountId: true,
@@ -187,7 +212,14 @@ export async function getAllAccountsWithInstitution() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("accounts")
 
+  const userId = await getCurrentUserId()
+
   return prisma.plaidAccount.findMany({
+    where: {
+      item: {
+        userId,
+      },
+    },
     select: {
       id: true,
       plaidAccountId: true,
@@ -239,7 +271,16 @@ export async function getAllHoldings() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("holdings")
 
+  const userId = await getCurrentUserId()
+
   return prisma.holding.findMany({
+    where: {
+      account: {
+        item: {
+          userId,
+        },
+      },
+    },
     select: {
       id: true,
       accountId: true,
@@ -287,7 +328,16 @@ export async function getAllInvestmentTransactions() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("investments")
 
+  const userId = await getCurrentUserId()
+
   return prisma.investmentTransaction.findMany({
+    where: {
+      account: {
+        item: {
+          userId,
+        },
+      },
+    },
     select: {
       id: true,
       plaidInvestmentTransactionId: true,
@@ -340,8 +390,15 @@ export async function getAccountById(accountId: string) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("accounts")
 
-  return prisma.plaidAccount.findUnique({
-    where: { id: accountId },
+  const userId = await getCurrentUserId()
+
+  return prisma.plaidAccount.findFirst({
+    where: {
+      id: accountId,
+      item: {
+        userId,
+      },
+    },
     select: {
       id: true,
       plaidAccountId: true,
@@ -392,10 +449,17 @@ export async function getTransactionsForAccount(accountId: string) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions")
 
+  const userId = await getCurrentUserId()
+
   return prisma.transaction.findMany({
     where: {
       accountId,
       isSplit: false,
+      account: {
+        item: {
+          userId,
+        },
+      },
     },
     orderBy: { date: "desc" },
     select: {
@@ -477,8 +541,17 @@ export async function getHoldingsForAccount(accountId: string) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("holdings")
 
+  const userId = await getCurrentUserId()
+
   return prisma.holding.findMany({
-    where: { accountId },
+    where: {
+      accountId,
+      account: {
+        item: {
+          userId,
+        },
+      },
+    },
     select: {
       id: true,
       accountId: true,
@@ -524,8 +597,17 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("investments")
 
+  const userId = await getCurrentUserId()
+
   return prisma.investmentTransaction.findMany({
-    where: { accountId },
+    where: {
+      accountId,
+      account: {
+        item: {
+          userId,
+        },
+      },
+    },
     select: {
       id: true,
       plaidInvestmentTransactionId: true,
@@ -576,7 +658,12 @@ export async function getAllConnectedItems() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("items")
 
+  const userId = await getCurrentUserId()
+
   return prisma.item.findMany({
+    where: {
+      userId,
+    },
     select: {
       id: true,
       plaidItemId: true,
