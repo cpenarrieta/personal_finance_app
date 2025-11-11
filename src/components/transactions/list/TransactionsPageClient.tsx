@@ -4,7 +4,12 @@ import { useState, useRef } from "react";
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Sheet } from "lucide-react";
+import { toast } from "sonner";
+import {
+  downloadTransactionsCSV,
+  copyTransactionsForGoogleSheets,
+} from "@/lib/transactions/export";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -30,6 +35,7 @@ export function TransactionsPageClient({
 }: TransactionsPageClientProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
 
   // Use ref instead of state - updates won't cause re-renders
   const filteredTransactionIdsRef = useRef<string[]>([]);
@@ -38,43 +44,41 @@ export function TransactionsPageClient({
     const filteredIds = filteredTransactionIdsRef.current;
 
     if (filteredIds.length === 0) {
-      alert("No transactions to export");
+      toast.error("No transactions to export");
       return;
     }
 
     setIsDownloading(true);
     try {
-      const response = await fetch("/api/transactions/export/csv", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ transactionIds: filteredIds }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to download CSV");
-      }
-
-      // Create blob from response
-      const blob = await response.blob();
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `transactions-${new Date().toISOString().split("T")[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-
-      // Cleanup
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await downloadTransactionsCSV(filteredIds);
+      toast.success(`Downloaded ${filteredIds.length} transaction(s) to CSV`);
     } catch (error) {
       console.error("Error downloading CSV:", error);
-      alert("Failed to download CSV. Please try again.");
+      toast.error("Failed to download CSV. Please try again.");
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const handleCopyForGoogleSheets = async () => {
+    const filteredIds = filteredTransactionIdsRef.current;
+
+    if (filteredIds.length === 0) {
+      toast.error("No transactions to copy");
+      return;
+    }
+
+    setIsCopying(true);
+    try {
+      await copyTransactionsForGoogleSheets(filteredIds);
+      toast.success(
+        `Copied ${filteredIds.length} transaction(s) to clipboard! Paste into Google Sheets (Ctrl+V or Cmd+V)`
+      );
+    } catch (error) {
+      console.error("Error copying for Google Sheets:", error);
+      toast.error("Failed to copy to clipboard. Please try again.");
+    } finally {
+      setIsCopying(false);
     }
   };
 
@@ -86,6 +90,14 @@ export function TransactionsPageClient({
           <p className="text-muted-foreground mt-1">View and search all your banking transactions</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleCopyForGoogleSheets}
+            disabled={isCopying}
+          >
+            <Sheet className="h-4 w-4 mr-2" />
+            {isCopying ? "Copying..." : "Copy for Sheets"}
+          </Button>
           <Button
             variant="outline"
             onClick={handleDownloadCSV}
