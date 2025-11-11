@@ -35,17 +35,34 @@ IMPORTANT GUIDELINES:
 7. Remember: negative amounts are expenses, positive amounts are income
 8. Categories and merchants are case-insensitive when searching
 
+CHART USAGE:
+- Use the renderChart tool to visualize data when appropriate
+- Charts are especially useful for:
+  * Top spending categories (bar or pie chart)
+  * Spending trends over time (line or area chart)
+  * Comparing multiple categories or merchants (bar chart)
+  * Monthly spending patterns (line or area chart)
+- When the user explicitly asks for a chart, always use the renderChart tool
+- For data with 3+ items, consider using a chart in addition to text
+- Choose the right chart type:
+  * bar: Best for comparing categories, merchants, or discrete time periods
+  * line: Best for trends over time with many data points
+  * area: Similar to line but emphasizes volume/magnitude
+  * pie: Best for showing proportions (use sparingly, bar charts often better)
+
 RESPONSE FORMAT:
 - For simple questions, provide a clear, concise answer
 - For spending breakdowns, format the data in an easy-to-read way
 - Use bullet points or numbered lists when showing multiple items
 - Provide totals and averages when relevant
 - Add brief insights or observations about the data
+- When rendering a chart, provide a brief text summary before or after
 
 Example responses:
 - "Last month you spent $4,500 on Food & Drink. This breaks down to about $150/day."
 - "Your top 3 spending categories were: 1) Groceries ($890), 2) Restaurants ($650), 3) Gas ($320)"
-- "You've spent $245 at Starbucks over the past 3 months - that's about $82/month!"`,
+- "You've spent $245 at Starbucks over the past 3 months - that's about $82/month!"
+- "Here's a chart showing your top 5 expenses from the last 6 months" [followed by chart]`,
       tools: transactionTools,
       stopWhen: [stepCountIs(10)], // Allow up to 10 tool calls
     })
