@@ -89,102 +89,66 @@ export function TransactionsPageClient({
 
     setIsCopying(true);
     try {
-      // Get filtered transactions in order
-      const filteredTransactions = filteredIds
-        .map((id) => transactions.find((t) => t.id === id))
-        .filter((t): t is TransactionForClient => t !== undefined);
-
-      // TSV Headers (tab-separated)
-      const headers = [
-        "ID",
-        "Plaid Transaction ID",
-        "Pending Transaction ID",
-        "Account ID",
-        "Plaid Account ID",
-        "Item ID",
-        "Institution ID",
-        "Account Name",
-        "Account Type",
-        "Account Mask",
-        "Amount",
-        "Currency",
-        "Date",
-        "Authorized Date",
-        "Pending",
-        "Merchant Name",
-        "Name",
-        "Category ID",
-        "Category",
-        "Subcategory ID",
-        "Subcategory",
-        "Payment Channel",
-        "Tags",
-        "Notes",
-        "Is Manual",
-        "Is Split",
-        "Parent Transaction ID",
-        "Original Transaction ID",
-        "Logo URL",
-        "Category Icon URL",
-        "Created At",
-        "Updated At",
-      ];
-
-      // Convert transactions to TSV rows
-      const tsvRows = filteredTransactions.map((transaction) => {
-        const tagNames = transaction.tags.map((tag) => tag.name).join("; ");
-
-        return [
-          transaction.id,
-          transaction.plaidTransactionId || "",
-          transaction.pendingTransactionId || "",
-          transaction.accountId || "",
-          transaction.account?.plaidAccountId || "",
-          transaction.account?.itemId || "",
-          transaction.account?.item?.institutionId || "",
-          transaction.account?.name || "",
-          transaction.account?.type || "",
-          transaction.account?.mask || "",
-          transaction.amount_number?.toString() || "",
-          transaction.isoCurrencyCode || "",
-          transaction.date_string || "",
-          transaction.authorizedDate_string || "",
-          transaction.pending ? "Yes" : "No",
-          transaction.merchantName || "",
-          transaction.name || "",
-          transaction.categoryId || "",
-          transaction.category?.name || "",
-          transaction.subcategoryId || "",
-          transaction.subcategory?.name || "",
-          transaction.paymentChannel || "",
-          tagNames,
-          transaction.notes || "",
-          transaction.isManual ? "Yes" : "No",
-          transaction.isSplit ? "Yes" : "No",
-          transaction.parentTransactionId || "",
-          transaction.originalTransactionId || "",
-          transaction.logoUrl || "",
-          transaction.categoryIconUrl || "",
-          transaction.createdAt_string || "",
-          transaction.updatedAt_string || "",
-        ].map((field) => {
-          // Escape tabs and newlines in field values
-          const stringField = String(field);
-          return stringField.replace(/\t/g, " ").replace(/\n/g, " ");
-        });
+      // Reuse the CSV endpoint
+      const response = await fetch("/api/transactions/export/csv", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ transactionIds: filteredIds }),
       });
 
-      // Combine headers and rows with tabs
-      const tsvContent = [
-        headers.join("\t"),
-        ...tsvRows.map((row) => row.join("\t")),
-      ].join("\n");
+      if (!response.ok) {
+        throw new Error("Failed to fetch CSV data");
+      }
+
+      // Get CSV text
+      const csvText = await response.text();
+
+      // Convert CSV to TSV (tab-separated values for Google Sheets)
+      // Parse CSV properly handling quoted fields
+      const lines = csvText.split("\n");
+      const tsvLines = lines.map((line) => {
+        if (!line.trim()) return "";
+
+        const fields: string[] = [];
+        let currentField = "";
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+
+          if (char === '"') {
+            // Handle escaped quotes ("")
+            if (inQuotes && line[i + 1] === '"') {
+              currentField += '"';
+              i++; // Skip next quote
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === "," && !inQuotes) {
+            // End of field
+            fields.push(currentField.replace(/\t/g, " ").replace(/\n/g, " "));
+            currentField = "";
+          } else {
+            currentField += char;
+          }
+        }
+
+        // Add last field
+        fields.push(currentField.replace(/\t/g, " ").replace(/\n/g, " "));
+
+        // Join with tabs
+        return fields.join("\t");
+      });
+
+      const tsvContent = tsvLines.join("\n");
 
       // Copy to clipboard
       await navigator.clipboard.writeText(tsvContent);
 
       alert(
-        `Copied ${filteredTransactions.length} transaction(s) to clipboard!\n\nNow:\n1. Open Google Sheets\n2. Click on cell A1\n3. Paste (Ctrl+V or Cmd+V)`
+        `Copied ${filteredIds.length} transaction(s) to clipboard!\n\nNow:\n1. Open Google Sheets\n2. Click on cell A1\n3. Paste (Ctrl+V or Cmd+V)`
       );
     } catch (error) {
       console.error("Error copying for Google Sheets:", error);
