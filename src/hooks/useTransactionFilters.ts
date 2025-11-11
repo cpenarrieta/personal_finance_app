@@ -150,8 +150,8 @@ export function useTransactionFilters({
       if (!isTransfer) {
         const amount = t.amount_number
         if (!showIncome && !showExpenses) return false
-        if (showIncome && !showExpenses && amount >= 0) return false
-        if (!showIncome && showExpenses && amount < 0) return false
+        if (showIncome && !showExpenses && amount < 0) return false
+        if (!showIncome && showExpenses && amount >= 0) return false
       }
 
       // Uncategorized filter
