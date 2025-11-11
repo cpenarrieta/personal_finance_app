@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User } from "lucide-react";
 import { useRef, useEffect, useState, type FormEvent } from "react";
+import type { MyUIMessage } from "@/app/api/chat/route";
 
 export function ChatPageClient() {
-  const { messages, sendMessage } = useChat();
+  const { messages, sendMessage } = useChat<MyUIMessage>({});
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -99,12 +100,12 @@ export function ChatPageClient() {
             {messages.map((message) => {
               // Extract text content from message parts
               const textContent = message.parts
-                .filter((part: any) => part.type === "text")
-                .map((part: any) => part.text || "")
+                .filter((part) => part.type === "text")
+                .map((part) => (part.type === "text" ? part.text : ""))
                 .join("");
 
               // Get tool calls for debugging
-              const toolCalls = message.parts.filter((part: any) =>
+              const toolCalls = message.parts.filter((part) =>
                 part.type.startsWith("tool-")
               );
 
@@ -135,7 +136,7 @@ export function ChatPageClient() {
                     {/* Show tool invocations for debugging */}
                     {toolCalls.length > 0 && (
                       <div className="mt-2 space-y-1 border-t border-border pt-2">
-                        {toolCalls.map((tool: any, idx: number) => (
+                        {toolCalls.map((tool, idx) => (
                           <div
                             key={idx}
                             className="text-xs text-muted-foreground"

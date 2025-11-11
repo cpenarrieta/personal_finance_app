@@ -4,10 +4,25 @@
  */
 
 import { openai } from "@ai-sdk/openai";
-import { streamText, convertToModelMessages, stepCountIs } from "ai";
+import {
+  streamText,
+  convertToModelMessages,
+  stepCountIs,
+  type UIMessage,
+  type InferUITools,
+} from "ai";
 import { transactionTools } from "@/lib/ai/transaction-tools";
 
 export const maxDuration = 30;
+
+/**
+ * Typed UI message that includes tool types from transactionTools
+ */
+export type MyUIMessage = UIMessage<
+  never,
+  never,
+  InferUITools<typeof transactionTools>
+>;
 
 export async function POST(req: Request) {
   try {
