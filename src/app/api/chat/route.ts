@@ -4,7 +4,7 @@
  */
 
 import { openai } from "@ai-sdk/openai";
-import { streamText, convertToCoreMessages, stepCountIs } from "ai";
+import { streamText, convertToModelMessages, stepCountIs } from "ai";
 import { transactionTools } from "@/lib/ai/transaction-tools";
 
 export const maxDuration = 30;
@@ -14,8 +14,8 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     const result = streamText({
-      model: openai("gpt-4o-mini"),
-      messages: convertToCoreMessages(messages),
+      model: openai("gpt-5-mini"),
+      messages: convertToModelMessages(messages),
       system: `You are a helpful personal finance assistant. You help users understand their spending patterns and financial habits.
 
 When users ask about their transactions or spending, use the available tools to query their transaction data.

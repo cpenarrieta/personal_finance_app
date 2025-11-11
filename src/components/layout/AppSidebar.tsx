@@ -13,6 +13,7 @@ import {
   Moon,
   Sun,
   Wallet,
+  Bot,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -53,8 +54,8 @@ import { useTheme } from "next-themes";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
 interface AppSidebarProps {
-  accountsSlot: React.ReactNode
-  pathname: string
+  accountsSlot: React.ReactNode;
+  pathname: string;
 }
 
 // Static nav items (accounts section will be passed as slot)
@@ -83,6 +84,11 @@ const getStaticNavItems = () => {
           href: "/investments/transactions",
         },
       ],
+    },
+    {
+      title: "AI Chat",
+      href: "/chat",
+      icon: Bot,
     },
     {
       title: "Settings",
@@ -204,7 +210,8 @@ function SyncDropdown() {
           <AlertDialogHeader>
             <AlertDialogTitle>Reauthorization Required</AlertDialogTitle>
             <AlertDialogDescription>
-              Your financial institution requires you to sign in again. This is normal and happens when your login credentials or session expires.
+              Your financial institution requires you to sign in again. This is
+              normal and happens when your login credentials or session expires.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
