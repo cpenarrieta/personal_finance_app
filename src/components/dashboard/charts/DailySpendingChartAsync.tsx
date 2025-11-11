@@ -1,7 +1,7 @@
-import { DailySpendingChart } from "@/components/charts/DailySpendingChart";
-import { getLastMonthStats } from "@/lib/dashboard/data";
-import { prepareDailySpendingData } from "@/lib/dashboard/calculations";
-import { ChartErrorFallback } from "@/components/shared/ErrorFallback";
+import { DailySpendingChart } from "@/components/charts/DailySpendingChart"
+import { getLastMonthStats } from "@/lib/dashboard/data"
+import { prepareDailySpendingData } from "@/lib/dashboard/calculations"
+import { ChartErrorFallback } from "@/components/shared/ErrorFallback"
 
 /**
  * Async Server Component for Daily Spending Chart
@@ -9,16 +9,12 @@ import { ChartErrorFallback } from "@/components/shared/ErrorFallback";
  */
 export async function DailySpendingChartAsync() {
   try {
-    const { lastMonthTransactions, lastMonthStart, lastMonthEnd } = await getLastMonthStats();
-    const dailySpendingData = prepareDailySpendingData(
-      lastMonthTransactions,
-      lastMonthStart,
-      lastMonthEnd
-    );
+    const { lastMonthTransactions, lastMonthStart, lastMonthEnd } = await getLastMonthStats()
+    const dailySpendingData = prepareDailySpendingData(lastMonthTransactions, lastMonthStart, lastMonthEnd)
 
-    return <DailySpendingChart data={dailySpendingData} />;
+    return <DailySpendingChart data={dailySpendingData} />
   } catch (error) {
-    console.error("Failed to load daily spending chart:", error);
-    return <ChartErrorFallback error={error as Error} />;
+    console.error("Failed to load daily spending chart:", error)
+    return <ChartErrorFallback error={error as Error} />
   }
 }

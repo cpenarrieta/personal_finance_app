@@ -1,17 +1,17 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { auth } from "./lib/auth/auth";
-import { isEmailAllowed, getAllowedEmails } from "./lib/auth/auth-helpers";
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import { auth } from "./lib/auth/auth"
+import { isEmailAllowed, getAllowedEmails } from "./lib/auth/auth-helpers"
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl
 
   // Allow bypass for E2E tests when E2E_TEST_MODE is enabled
   // This allows Playwright tests to run without authentication
   if (process.env.E2E_TEST_MODE === "true") {
-    const bypassHeader = request.headers.get("x-e2e-bypass-auth");
+    const bypassHeader = request.headers.get("x-e2e-bypass-auth")
     if (bypassHeader === "true") {
-      return NextResponse.next();
+      return NextResponse.next()
     }
   }
 
@@ -22,36 +22,36 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon")
   ) {
-    return NextResponse.next();
+    return NextResponse.next()
   }
 
   // Check for session using Better Auth
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
-    });
+    })
 
     if (!session?.user?.email) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/login", request.url))
     }
 
     // Validate allowed email
-    const allowedEmails = getAllowedEmails();
+    const allowedEmails = getAllowedEmails()
 
     if (allowedEmails.length === 0) {
-      console.error("ALLOWED_EMAILS not configured");
-      return NextResponse.redirect(new URL("/login?error=unauthorized", request.url));
+      console.error("ALLOWED_EMAILS not configured")
+      return NextResponse.redirect(new URL("/login?error=unauthorized", request.url))
     }
 
     if (!isEmailAllowed(session.user.email)) {
-      return NextResponse.redirect(new URL("/login?error=unauthorized", request.url));
+      return NextResponse.redirect(new URL("/login?error=unauthorized", request.url))
     }
 
     // All checks passed
-    return NextResponse.next();
+    return NextResponse.next()
   } catch (error) {
-    console.error("Proxy auth error:", error);
-    return NextResponse.redirect(new URL("/login", request.url));
+    console.error("Proxy auth error:", error)
+    return NextResponse.redirect(new URL("/login", request.url))
   }
 }
 
@@ -66,4 +66,4 @@ export const config = {
      */
     "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
   ],
-};
+}

@@ -1,68 +1,51 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { format } from "date-fns";
-import { toast } from "sonner";
-import { formatAmount } from "@/lib/utils";
-import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { CategorySelect } from "@/components/ui/category-select";
-import { SubcategorySelect } from "@/components/ui/subcategory-select";
-import { Button } from "@/components/ui/button";
-import { TagSelector } from "@/components/transactions/filters/TagSelector";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { format } from "date-fns"
+import { toast } from "sonner"
+import { formatAmount } from "@/lib/utils"
+import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { CategorySelect } from "@/components/ui/category-select"
+import { SubcategorySelect } from "@/components/ui/subcategory-select"
+import { Button } from "@/components/ui/button"
+import { TagSelector } from "@/components/transactions/filters/TagSelector"
 
 interface EditTransactionModalProps {
-  transaction: TransactionForClient;
-  onClose: () => void;
-  categories: CategoryForClient[];
-  tags: TagForClient[];
+  transaction: TransactionForClient
+  onClose: () => void
+  categories: CategoryForClient[]
+  tags: TagForClient[]
 }
 
-export function EditTransactionModal({
-  transaction,
-  onClose,
-  categories,
-  tags,
-}: EditTransactionModalProps) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function EditTransactionModal({ transaction, onClose, categories, tags }: EditTransactionModalProps) {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Form state
-  const [name, setName] = useState(transaction.name);
-  const [categoryId, setCategoryId] = useState(transaction.categoryId || "");
-  const [subcategoryId, setSubcategoryId] = useState(
-    transaction.subcategoryId || ""
-  );
-  const [notes, setNotes] = useState(transaction.notes || "");
+  const [name, setName] = useState(transaction.name)
+  const [categoryId, setCategoryId] = useState(transaction.categoryId || "")
+  const [subcategoryId, setSubcategoryId] = useState(transaction.subcategoryId || "")
+  const [notes, setNotes] = useState(transaction.notes || "")
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
-    transaction.tags?.map((tag: TagForClient) => tag.id) || []
-  );
+    transaction.tags?.map((tag: TagForClient) => tag.id) || [],
+  )
 
   // No longer needed - SubcategorySelect handles this internally
 
   const toggleTag = (tagId: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
-    );
-  };
+    setSelectedTagIds((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
+    setIsSubmitting(true)
 
-    const toastId = toast.loading("Updating transaction...");
+    const toastId = toast.loading("Updating transaction...")
 
     try {
       const response = await fetch(`/api/transactions/${transaction.id}`, {
@@ -77,24 +60,24 @@ export function EditTransactionModal({
           notes: notes || null,
           tagIds: selectedTagIds,
         }),
-      });
+      })
 
       if (!response.ok) {
-        throw new Error("Failed to update transaction");
+        throw new Error("Failed to update transaction")
       }
 
-      toast.success("Transaction updated!", { id: toastId });
+      toast.success("Transaction updated!", { id: toastId })
 
       // Refresh the page to show updated data
-      router.refresh();
-      onClose();
+      router.refresh()
+      onClose()
     } catch (error) {
-      console.error("Error updating transaction:", error);
-      toast.error("Failed to update transaction", { id: toastId });
+      console.error("Error updating transaction:", error)
+      toast.error("Failed to update transaction", { id: toastId })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
@@ -124,8 +107,8 @@ export function EditTransactionModal({
                 id="category"
                 value={categoryId}
                 onChange={(value) => {
-                  setCategoryId(value);
-                  setSubcategoryId(""); // Reset subcategory when category changes
+                  setCategoryId(value)
+                  setSubcategoryId("") // Reset subcategory when category changes
                 }}
                 categories={categories}
                 placeholder="None"
@@ -158,39 +141,22 @@ export function EditTransactionModal({
           </div>
 
           {/* Tags */}
-          <TagSelector
-            tags={tags}
-            selectedTagIds={selectedTagIds}
-            onToggleTag={toggleTag}
-          />
+          <TagSelector tags={tags} selectedTagIds={selectedTagIds} onToggleTag={toggleTag} />
 
           {/* Transaction Details (Read-only) */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">
-              Transaction Details
-            </h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Transaction Details</h3>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-gray-600">Transaction ID:</div>
-              <div className="font-medium font-mono text-xs">
-                {transaction.id}
-              </div>
+              <div className="font-medium font-mono text-xs">{transaction.id}</div>
               <div className="text-gray-600">Amount:</div>
-              <div className="font-medium">
-                ${formatAmount(transaction.amount_number)}
-              </div>
+              <div className="font-medium">${formatAmount(transaction.amount_number)}</div>
               <div className="text-gray-600">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>
               <div className="text-gray-600">Transaction Date:</div>
-              <div className="font-medium">
-                {format(new Date(transaction.date_string), "MMM d yyyy")}
-              </div>
+              <div className="font-medium">{format(new Date(transaction.date_string), "MMM d yyyy")}</div>
               <div className="text-gray-600">Creation Date:</div>
-              <div className="font-medium">
-                {format(
-                  new Date(transaction.created_at_string),
-                  "MMM d yyyy, h:mm a"
-                )}
-              </div>
+              <div className="font-medium">{format(new Date(transaction.created_at_string), "MMM d yyyy, h:mm a")}</div>
               {transaction.merchantName && (
                 <>
                   <div className="text-gray-600">Merchant:</div>
@@ -202,12 +168,7 @@ export function EditTransactionModal({
 
           {/* Action Buttons */}
           <DialogFooter className="pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
@@ -217,5 +178,5 @@ export function EditTransactionModal({
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

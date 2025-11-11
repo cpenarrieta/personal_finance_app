@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
-import { format } from "date-fns";
-import Link from "next/link";
-import Image from "next/image";
-import { getCategoryImage } from "@/lib/categories/images";
-import { formatAmount } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import type { TransactionForClient } from "@/types";
+import { format } from "date-fns"
+import Link from "next/link"
+import Image from "next/image"
+import { getCategoryImage } from "@/lib/categories/images"
+import { formatAmount } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
+import type { TransactionForClient } from "@/types"
 
 interface TransactionItemProps {
-  transaction: TransactionForClient;
-  showBulkUpdate?: boolean;
-  isSelected?: boolean;
-  onToggleSelect?: (id: string) => void;
-  onEdit?: (transaction: TransactionForClient) => void;
-  showAccount?: boolean; // Whether to display account name
+  transaction: TransactionForClient
+  showBulkUpdate?: boolean
+  isSelected?: boolean
+  onToggleSelect?: (id: string) => void
+  onEdit?: (transaction: TransactionForClient) => void
+  showAccount?: boolean // Whether to display account name
 }
 
 export function TransactionItem({
@@ -28,11 +28,7 @@ export function TransactionItem({
   showAccount = true,
 }: TransactionItemProps) {
   // Determine which image to show (merchant logo takes priority over category image)
-  const displayImage =
-    t.logoUrl ||
-    (t.category
-      ? getCategoryImage(t.category.name, t.category.imageUrl)
-      : null);
+  const displayImage = t.logoUrl || (t.category ? getCategoryImage(t.category.name, t.category.imageUrl) : null)
 
   return (
     <li className="hover:bg-muted/50 transition-colors">
@@ -56,25 +52,19 @@ export function TransactionItem({
             height={40}
             className="w-10 h-10 rounded object-cover flex-shrink-0 mt-0.5 cursor-pointer"
             onClick={() => !showBulkUpdate && onEdit?.(t)}
-            unoptimized={displayImage.startsWith('/images/')}
+            unoptimized={displayImage.startsWith("/images/")}
           />
         )}
 
         {/* Transaction Details */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-4">
-            <div
-              className="flex-1 min-w-0 cursor-pointer"
-              onClick={() => !showBulkUpdate && onEdit?.(t)}
-            >
+            <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !showBulkUpdate && onEdit?.(t)}>
               {/* Transaction Name */}
               <div className="font-medium text-foreground flex items-center gap-2">
                 <span className="truncate">{t.name}</span>
                 {t.pending && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-warning/10 text-warning-foreground flex-shrink-0"
-                  >
+                  <Badge variant="secondary" className="bg-warning/10 text-warning-foreground flex-shrink-0">
                     Pending
                   </Badge>
                 )}
@@ -96,44 +86,28 @@ export function TransactionItem({
               </div>
 
               {/* Merchant Name */}
-              {t.merchantName && (
-                <div className="text-sm text-muted-foreground mt-1">
-                  Merchant: {t.merchantName}
-                </div>
-              )}
+              {t.merchantName && <div className="text-sm text-muted-foreground mt-1">Merchant: {t.merchantName}</div>}
 
               {/* Category and Subcategory */}
               {t.category && (
                 <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
                   <span>Category: {t.category.name}</span>
-                  {t.subcategory && (
-                    <span className="text-muted-foreground/60">
-                      • {t.subcategory.name}
-                    </span>
-                  )}
+                  {t.subcategory && <span className="text-muted-foreground/60">• {t.subcategory.name}</span>}
                 </div>
               )}
 
               {/* Notes */}
-              {t.notes && (
-                <div className="text-sm text-muted-foreground mt-1 italic">
-                  Note: {t.notes}
-                </div>
-              )}
+              {t.notes && <div className="text-sm text-muted-foreground mt-1 italic">Note: {t.notes}</div>}
 
               {/* Tags */}
               {t.tags && t.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {t.tags.map((tag) => {
                     return (
-                      <Badge
-                        key={tag.id}
-                        className="text-white"
-                        style={{ backgroundColor: tag.color }}
-                      >
+                      <Badge key={tag.id} className="text-white" style={{ backgroundColor: tag.color }}>
                         {tag.name}
                       </Badge>
-                    );
+                    )
                   })}
                 </div>
               )}
@@ -141,22 +115,11 @@ export function TransactionItem({
 
             {/* Amount and Actions */}
             <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-              <div
-                className={`text-lg font-semibold ${
-                  t.amount_number < 0 ? "text-destructive" : "text-success"
-                }`}
-              >
-                {t.amount_number < 0 ? "-" : "+"}$
-                {formatAmount(t.amount_number)}
+              <div className={`text-lg font-semibold ${t.amount_number < 0 ? "text-destructive" : "text-success"}`}>
+                {t.amount_number < 0 ? "-" : "+"}${formatAmount(t.amount_number)}
               </div>
-              {t.isoCurrencyCode && (
-                <div className="text-xs text-muted-foreground">{t.isoCurrencyCode}</div>
-              )}
-              <Button
-                asChild
-                size="sm"
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
+              {t.isoCurrencyCode && <div className="text-xs text-muted-foreground">{t.isoCurrencyCode}</div>}
+              <Button asChild size="sm" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                 <Link href={`/transactions/${t.id}`}>Details</Link>
               </Button>
             </div>
@@ -164,5 +127,5 @@ export function TransactionItem({
         </div>
       </div>
     </li>
-  );
+  )
 }

@@ -14,39 +14,37 @@ import {
   parseTransactionFiltersFromUrl,
   transactionFiltersToUrlParams,
   type TransactionFiltersFromUrl,
-} from '../url-params'
+} from "../url-params"
 
-describe('Transaction URL Params', () => {
-  describe('parseTransactionFiltersFromUrl', () => {
-    it('should parse date range from URLSearchParams', () => {
+describe("Transaction URL Params", () => {
+  describe("parseTransactionFiltersFromUrl", () => {
+    it("should parse date range from URLSearchParams", () => {
       // Arrange
-      const params = new URLSearchParams('dateRange=last30')
+      const params = new URLSearchParams("dateRange=last30")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
 
       // Assert
-      expect(filters.dateRange).toBe('last30')
+      expect(filters.dateRange).toBe("last30")
     })
 
-    it('should parse custom dates', () => {
+    it("should parse custom dates", () => {
       // Arrange
-      const params = new URLSearchParams(
-        'dateRange=custom&startDate=2024-01-01&endDate=2024-01-31'
-      )
+      const params = new URLSearchParams("dateRange=custom&startDate=2024-01-01&endDate=2024-01-31")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
 
       // Assert
-      expect(filters.dateRange).toBe('custom')
-      expect(filters.customStartDate).toBe('2024-01-01')
-      expect(filters.customEndDate).toBe('2024-01-31')
+      expect(filters.dateRange).toBe("custom")
+      expect(filters.customStartDate).toBe("2024-01-01")
+      expect(filters.customEndDate).toBe("2024-01-31")
     })
 
-    it('should parse comma-separated category IDs', () => {
+    it("should parse comma-separated category IDs", () => {
       // Arrange
-      const params = new URLSearchParams('categoryId=cat-1,cat-2,cat-3')
+      const params = new URLSearchParams("categoryId=cat-1,cat-2,cat-3")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -54,14 +52,14 @@ describe('Transaction URL Params', () => {
       // Assert
       expect(filters.selectedCategoryIds).toBeInstanceOf(Set)
       expect(filters.selectedCategoryIds?.size).toBe(3)
-      expect(filters.selectedCategoryIds?.has('cat-1')).toBe(true)
-      expect(filters.selectedCategoryIds?.has('cat-2')).toBe(true)
-      expect(filters.selectedCategoryIds?.has('cat-3')).toBe(true)
+      expect(filters.selectedCategoryIds?.has("cat-1")).toBe(true)
+      expect(filters.selectedCategoryIds?.has("cat-2")).toBe(true)
+      expect(filters.selectedCategoryIds?.has("cat-3")).toBe(true)
     })
 
-    it('should parse comma-separated subcategory IDs', () => {
+    it("should parse comma-separated subcategory IDs", () => {
       // Arrange
-      const params = new URLSearchParams('subcategoryId=sub-1,sub-2')
+      const params = new URLSearchParams("subcategoryId=sub-1,sub-2")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -69,13 +67,13 @@ describe('Transaction URL Params', () => {
       // Assert
       expect(filters.selectedSubcategoryIds).toBeInstanceOf(Set)
       expect(filters.selectedSubcategoryIds?.size).toBe(2)
-      expect(filters.selectedSubcategoryIds?.has('sub-1')).toBe(true)
-      expect(filters.selectedSubcategoryIds?.has('sub-2')).toBe(true)
+      expect(filters.selectedSubcategoryIds?.has("sub-1")).toBe(true)
+      expect(filters.selectedSubcategoryIds?.has("sub-2")).toBe(true)
     })
 
-    it('should parse excluded category IDs', () => {
+    it("should parse excluded category IDs", () => {
       // Arrange
-      const params = new URLSearchParams('excludeCategory=cat-1,cat-2')
+      const params = new URLSearchParams("excludeCategory=cat-1,cat-2")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -83,12 +81,12 @@ describe('Transaction URL Params', () => {
       // Assert
       expect(filters.excludedCategoryIds).toBeInstanceOf(Set)
       expect(filters.excludedCategoryIds?.size).toBe(2)
-      expect(filters.excludedCategoryIds?.has('cat-1')).toBe(true)
+      expect(filters.excludedCategoryIds?.has("cat-1")).toBe(true)
     })
 
-    it('should parse account IDs', () => {
+    it("should parse account IDs", () => {
       // Arrange
-      const params = new URLSearchParams('accountId=acc-1,acc-2')
+      const params = new URLSearchParams("accountId=acc-1,acc-2")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -98,9 +96,9 @@ describe('Transaction URL Params', () => {
       expect(filters.selectedAccountIds?.size).toBe(2)
     })
 
-    it('should parse tag IDs', () => {
+    it("should parse tag IDs", () => {
       // Arrange
-      const params = new URLSearchParams('tagId=tag-1,tag-2,tag-3')
+      const params = new URLSearchParams("tagId=tag-1,tag-2,tag-3")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -110,10 +108,10 @@ describe('Transaction URL Params', () => {
       expect(filters.selectedTagIds?.size).toBe(3)
     })
 
-    it('should parse boolean toggle for showIncome', () => {
+    it("should parse boolean toggle for showIncome", () => {
       // Arrange
-      const paramsTrue = new URLSearchParams('showIncome=true')
-      const paramsFalse = new URLSearchParams('showIncome=false')
+      const paramsTrue = new URLSearchParams("showIncome=true")
+      const paramsFalse = new URLSearchParams("showIncome=false")
 
       // Act
       const filtersTrue = parseTransactionFiltersFromUrl(paramsTrue)
@@ -124,9 +122,9 @@ describe('Transaction URL Params', () => {
       expect(filtersFalse.showIncome).toBe(false)
     })
 
-    it('should parse boolean toggle for showExpenses', () => {
+    it("should parse boolean toggle for showExpenses", () => {
       // Arrange
-      const params = new URLSearchParams('showExpenses=true')
+      const params = new URLSearchParams("showExpenses=true")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -135,9 +133,9 @@ describe('Transaction URL Params', () => {
       expect(filters.showExpenses).toBe(true)
     })
 
-    it('should parse boolean toggle for showTransfers', () => {
+    it("should parse boolean toggle for showTransfers", () => {
       // Arrange
-      const params = new URLSearchParams('showTransfers=true')
+      const params = new URLSearchParams("showTransfers=true")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -146,9 +144,9 @@ describe('Transaction URL Params', () => {
       expect(filters.showTransfers).toBe(true)
     })
 
-    it('should parse uncategorized filter', () => {
+    it("should parse uncategorized filter", () => {
       // Arrange
-      const params = new URLSearchParams('uncategorized=true')
+      const params = new URLSearchParams("uncategorized=true")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -157,50 +155,50 @@ describe('Transaction URL Params', () => {
       expect(filters.showOnlyUncategorized).toBe(true)
     })
 
-    it('should parse search query', () => {
+    it("should parse search query", () => {
       // Arrange
-      const params = new URLSearchParams('search=coffee shop')
+      const params = new URLSearchParams("search=coffee shop")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
 
       // Assert
-      expect(filters.searchQuery).toBe('coffee shop')
+      expect(filters.searchQuery).toBe("coffee shop")
     })
 
-    it('should parse sort parameters', () => {
+    it("should parse sort parameters", () => {
       // Arrange
-      const params = new URLSearchParams('sortBy=amount&sortDirection=asc')
+      const params = new URLSearchParams("sortBy=amount&sortDirection=asc")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
 
       // Assert
-      expect(filters.sortBy).toBe('amount')
-      expect(filters.sortDirection).toBe('asc')
+      expect(filters.sortBy).toBe("amount")
+      expect(filters.sortDirection).toBe("asc")
     })
 
-    it('should handle all parameters together', () => {
+    it("should handle all parameters together", () => {
       // Arrange
       const params = new URLSearchParams(
-        'dateRange=last30&categoryId=cat-1&showIncome=false&search=test&sortBy=date&sortDirection=desc'
+        "dateRange=last30&categoryId=cat-1&showIncome=false&search=test&sortBy=date&sortDirection=desc",
       )
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
 
       // Assert
-      expect(filters.dateRange).toBe('last30')
-      expect(filters.selectedCategoryIds?.has('cat-1')).toBe(true)
+      expect(filters.dateRange).toBe("last30")
+      expect(filters.selectedCategoryIds?.has("cat-1")).toBe(true)
       expect(filters.showIncome).toBe(false)
-      expect(filters.searchQuery).toBe('test')
-      expect(filters.sortBy).toBe('date')
-      expect(filters.sortDirection).toBe('desc')
+      expect(filters.searchQuery).toBe("test")
+      expect(filters.sortBy).toBe("date")
+      expect(filters.sortDirection).toBe("desc")
     })
 
-    it('should ignore invalid date range values', () => {
+    it("should ignore invalid date range values", () => {
       // Arrange
-      const params = new URLSearchParams('dateRange=invalid')
+      const params = new URLSearchParams("dateRange=invalid")
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
@@ -209,39 +207,39 @@ describe('Transaction URL Params', () => {
       expect(filters.dateRange).toBeUndefined()
     })
 
-    it('should handle Record format input', () => {
+    it("should handle Record format input", () => {
       // Arrange
       const params = {
-        dateRange: 'last30',
-        categoryId: 'cat-1,cat-2',
-        showIncome: 'true',
+        dateRange: "last30",
+        categoryId: "cat-1,cat-2",
+        showIncome: "true",
       }
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
 
       // Assert
-      expect(filters.dateRange).toBe('last30')
+      expect(filters.dateRange).toBe("last30")
       expect(filters.selectedCategoryIds?.size).toBe(2)
       expect(filters.showIncome).toBe(true)
     })
 
-    it('should handle array values in Record format', () => {
+    it("should handle array values in Record format", () => {
       // Arrange
       const params = {
-        dateRange: ['last30', 'last90'], // Takes first value
-        categoryId: ['cat-1'],
+        dateRange: ["last30", "last90"], // Takes first value
+        categoryId: ["cat-1"],
       }
 
       // Act
       const filters = parseTransactionFiltersFromUrl(params)
 
       // Assert
-      expect(filters.dateRange).toBe('last30')
-      expect(filters.selectedCategoryIds?.has('cat-1')).toBe(true)
+      expect(filters.dateRange).toBe("last30")
+      expect(filters.selectedCategoryIds?.has("cat-1")).toBe(true)
     })
 
-    it('should return empty object for no parameters', () => {
+    it("should return empty object for no parameters", () => {
       // Arrange
       const params = new URLSearchParams()
 
@@ -253,120 +251,120 @@ describe('Transaction URL Params', () => {
     })
   })
 
-  describe('transactionFiltersToUrlParams', () => {
-    it('should convert date range to URL params', () => {
+  describe("transactionFiltersToUrlParams", () => {
+    it("should convert date range to URL params", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        dateRange: 'last30',
+        dateRange: "last30",
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('dateRange')).toBe('last30')
+      expect(params.get("dateRange")).toBe("last30")
     })
 
     it('should not include "all" date range in params', () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        dateRange: 'all',
+        dateRange: "all",
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.has('dateRange')).toBe(false)
+      expect(params.has("dateRange")).toBe(false)
     })
 
-    it('should convert custom dates to URL params', () => {
+    it("should convert custom dates to URL params", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        dateRange: 'custom',
-        customStartDate: '2024-01-01',
-        customEndDate: '2024-01-31',
+        dateRange: "custom",
+        customStartDate: "2024-01-01",
+        customEndDate: "2024-01-31",
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('dateRange')).toBe('custom')
-      expect(params.get('startDate')).toBe('2024-01-01')
-      expect(params.get('endDate')).toBe('2024-01-31')
+      expect(params.get("dateRange")).toBe("custom")
+      expect(params.get("startDate")).toBe("2024-01-01")
+      expect(params.get("endDate")).toBe("2024-01-31")
     })
 
-    it('should convert Set of category IDs to comma-separated string', () => {
+    it("should convert Set of category IDs to comma-separated string", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        selectedCategoryIds: new Set(['cat-1', 'cat-2', 'cat-3']),
+        selectedCategoryIds: new Set(["cat-1", "cat-2", "cat-3"]),
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      const categoryIds = params.get('categoryId')?.split(',') || []
+      const categoryIds = params.get("categoryId")?.split(",") || []
       expect(categoryIds).toHaveLength(3)
-      expect(categoryIds).toContain('cat-1')
-      expect(categoryIds).toContain('cat-2')
-      expect(categoryIds).toContain('cat-3')
+      expect(categoryIds).toContain("cat-1")
+      expect(categoryIds).toContain("cat-2")
+      expect(categoryIds).toContain("cat-3")
     })
 
-    it('should convert Set of subcategory IDs to comma-separated string', () => {
+    it("should convert Set of subcategory IDs to comma-separated string", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        selectedSubcategoryIds: new Set(['sub-1', 'sub-2']),
+        selectedSubcategoryIds: new Set(["sub-1", "sub-2"]),
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('subcategoryId')).toBe('sub-1,sub-2')
+      expect(params.get("subcategoryId")).toBe("sub-1,sub-2")
     })
 
-    it('should convert excluded category IDs', () => {
+    it("should convert excluded category IDs", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        excludedCategoryIds: new Set(['cat-1']),
+        excludedCategoryIds: new Set(["cat-1"]),
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('excludeCategory')).toBe('cat-1')
+      expect(params.get("excludeCategory")).toBe("cat-1")
     })
 
-    it('should convert account IDs', () => {
+    it("should convert account IDs", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        selectedAccountIds: new Set(['acc-1', 'acc-2']),
+        selectedAccountIds: new Set(["acc-1", "acc-2"]),
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('accountId')).toBe('acc-1,acc-2')
+      expect(params.get("accountId")).toBe("acc-1,acc-2")
     })
 
-    it('should convert tag IDs', () => {
+    it("should convert tag IDs", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        selectedTagIds: new Set(['tag-1']),
+        selectedTagIds: new Set(["tag-1"]),
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('tagId')).toBe('tag-1')
+      expect(params.get("tagId")).toBe("tag-1")
     })
 
-    it('should convert boolean toggles', () => {
+    it("should convert boolean toggles", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
         showIncome: true,
@@ -378,12 +376,12 @@ describe('Transaction URL Params', () => {
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('showIncome')).toBe('true')
-      expect(params.get('showExpenses')).toBe('false')
-      expect(params.get('showTransfers')).toBe('true')
+      expect(params.get("showIncome")).toBe("true")
+      expect(params.get("showExpenses")).toBe("false")
+      expect(params.get("showTransfers")).toBe("true")
     })
 
-    it('should convert uncategorized filter', () => {
+    it("should convert uncategorized filter", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
         showOnlyUncategorized: true,
@@ -393,64 +391,64 @@ describe('Transaction URL Params', () => {
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('uncategorized')).toBe('true')
+      expect(params.get("uncategorized")).toBe("true")
     })
 
-    it('should convert search query', () => {
+    it("should convert search query", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        searchQuery: 'coffee shop',
+        searchQuery: "coffee shop",
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('search')).toBe('coffee shop')
+      expect(params.get("search")).toBe("coffee shop")
     })
 
-    it('should convert sort parameters', () => {
+    it("should convert sort parameters", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        sortBy: 'amount',
-        sortDirection: 'asc',
+        sortBy: "amount",
+        sortDirection: "asc",
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('sortBy')).toBe('amount')
-      expect(params.get('sortDirection')).toBe('asc')
+      expect(params.get("sortBy")).toBe("amount")
+      expect(params.get("sortDirection")).toBe("asc")
     })
 
     it('should not include default sortBy value "date"', () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        sortBy: 'date',
+        sortBy: "date",
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.has('sortBy')).toBe(false)
+      expect(params.has("sortBy")).toBe(false)
     })
 
     it('should not include default sortDirection value "desc"', () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        sortDirection: 'desc',
+        sortDirection: "desc",
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.has('sortDirection')).toBe(false)
+      expect(params.has("sortDirection")).toBe(false)
     })
 
-    it('should not include empty Sets', () => {
+    it("should not include empty Sets", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
         selectedCategoryIds: new Set(),
@@ -460,33 +458,33 @@ describe('Transaction URL Params', () => {
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.has('categoryId')).toBe(false)
+      expect(params.has("categoryId")).toBe(false)
     })
 
-    it('should handle all filters together', () => {
+    it("should handle all filters together", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {
-        dateRange: 'last30',
-        selectedCategoryIds: new Set(['cat-1']),
+        dateRange: "last30",
+        selectedCategoryIds: new Set(["cat-1"]),
         showIncome: false,
-        searchQuery: 'test',
-        sortBy: 'amount',
-        sortDirection: 'asc',
+        searchQuery: "test",
+        sortBy: "amount",
+        sortDirection: "asc",
       }
 
       // Act
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.get('dateRange')).toBe('last30')
-      expect(params.get('categoryId')).toBe('cat-1')
-      expect(params.get('showIncome')).toBe('false')
-      expect(params.get('search')).toBe('test')
-      expect(params.get('sortBy')).toBe('amount')
-      expect(params.get('sortDirection')).toBe('asc')
+      expect(params.get("dateRange")).toBe("last30")
+      expect(params.get("categoryId")).toBe("cat-1")
+      expect(params.get("showIncome")).toBe("false")
+      expect(params.get("search")).toBe("test")
+      expect(params.get("sortBy")).toBe("amount")
+      expect(params.get("sortDirection")).toBe("asc")
     })
 
-    it('should create empty URLSearchParams for empty filters', () => {
+    it("should create empty URLSearchParams for empty filters", () => {
       // Arrange
       const filters: TransactionFiltersFromUrl = {}
 
@@ -494,22 +492,22 @@ describe('Transaction URL Params', () => {
       const params = transactionFiltersToUrlParams(filters)
 
       // Assert
-      expect(params.toString()).toBe('')
+      expect(params.toString()).toBe("")
     })
   })
 
-  describe('Round-trip conversion', () => {
-    it('should maintain data integrity through parse and convert cycle', () => {
+  describe("Round-trip conversion", () => {
+    it("should maintain data integrity through parse and convert cycle", () => {
       // Arrange
       const originalFilters: TransactionFiltersFromUrl = {
-        dateRange: 'last30',
-        selectedCategoryIds: new Set(['cat-1', 'cat-2']),
-        selectedSubcategoryIds: new Set(['sub-1']),
+        dateRange: "last30",
+        selectedCategoryIds: new Set(["cat-1", "cat-2"]),
+        selectedSubcategoryIds: new Set(["sub-1"]),
         showIncome: true,
         showExpenses: false,
-        searchQuery: 'test query',
-        sortBy: 'amount',
-        sortDirection: 'asc',
+        searchQuery: "test query",
+        sortBy: "amount",
+        sortDirection: "asc",
       }
 
       // Act
@@ -518,12 +516,8 @@ describe('Transaction URL Params', () => {
 
       // Assert
       expect(parsedFilters.dateRange).toBe(originalFilters.dateRange)
-      expect(parsedFilters.selectedCategoryIds).toEqual(
-        originalFilters.selectedCategoryIds
-      )
-      expect(parsedFilters.selectedSubcategoryIds).toEqual(
-        originalFilters.selectedSubcategoryIds
-      )
+      expect(parsedFilters.selectedCategoryIds).toEqual(originalFilters.selectedCategoryIds)
+      expect(parsedFilters.selectedSubcategoryIds).toEqual(originalFilters.selectedSubcategoryIds)
       expect(parsedFilters.showIncome).toBe(originalFilters.showIncome)
       expect(parsedFilters.showExpenses).toBe(originalFilters.showExpenses)
       expect(parsedFilters.searchQuery).toBe(originalFilters.searchQuery)

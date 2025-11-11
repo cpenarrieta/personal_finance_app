@@ -3,30 +3,20 @@
  * Uses AI SDK v5 with custom tools for querying transaction data
  */
 
-import { openai } from "@ai-sdk/openai";
-import {
-  streamText,
-  convertToModelMessages,
-  stepCountIs,
-  type UIMessage,
-  type InferUITools,
-} from "ai";
-import { transactionTools } from "@/lib/ai/transaction-tools";
+import { openai } from "@ai-sdk/openai"
+import { streamText, convertToModelMessages, stepCountIs, type UIMessage, type InferUITools } from "ai"
+import { transactionTools } from "@/lib/ai/transaction-tools"
 
-export const maxDuration = 30;
+export const maxDuration = 30
 
 /**
  * Typed UI message that includes tool types from transactionTools
  */
-export type MyUIMessage = UIMessage<
-  never,
-  never,
-  InferUITools<typeof transactionTools>
->;
+export type MyUIMessage = UIMessage<never, never, InferUITools<typeof transactionTools>>
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const { messages } = await req.json()
 
     const result = streamText({
       model: openai("gpt-5-mini"),
@@ -58,11 +48,11 @@ Example responses:
 - "You've spent $245 at Starbucks over the past 3 months - that's about $82/month!"`,
       tools: transactionTools,
       stopWhen: [stepCountIs(10)], // Allow up to 10 tool calls
-    });
+    })
 
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse()
   } catch (error) {
-    console.error("Chat API error:", error);
+    console.error("Chat API error:", error)
     return new Response(
       JSON.stringify({
         error: "Failed to process chat request",
@@ -71,7 +61,7 @@ Example responses:
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
-    );
+      },
+    )
   }
 }

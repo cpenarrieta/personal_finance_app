@@ -1,16 +1,16 @@
-import { redirect } from "next/navigation";
-import { Suspense } from "react";
-import type { Metadata } from "next";
+import { redirect } from "next/navigation"
+import { Suspense } from "react"
+import type { Metadata } from "next"
 
 // Dashboard modules
-import { hasConnectedAccounts } from "@/lib/dashboard/data";
+import { hasConnectedAccounts } from "@/lib/dashboard/data"
 
 // Async Server Components
-import { DashboardMetricsSection } from "@/components/dashboard/DashboardMetricsSection";
-import { DashboardUncategorizedSection } from "@/components/dashboard/DashboardUncategorizedSection";
-import { DashboardRecentTransactionsSection } from "@/components/dashboard/DashboardRecentTransactionsSection";
-import { DashboardLastMonthSection } from "@/components/dashboard/DashboardLastMonthSection";
-import { DashboardTopExpensesSection } from "@/components/dashboard/DashboardTopExpensesSection";
+import { DashboardMetricsSection } from "@/components/dashboard/DashboardMetricsSection"
+import { DashboardUncategorizedSection } from "@/components/dashboard/DashboardUncategorizedSection"
+import { DashboardRecentTransactionsSection } from "@/components/dashboard/DashboardRecentTransactionsSection"
+import { DashboardLastMonthSection } from "@/components/dashboard/DashboardLastMonthSection"
+import { DashboardTopExpensesSection } from "@/components/dashboard/DashboardTopExpensesSection"
 
 // Skeleton loaders
 import {
@@ -19,7 +19,7 @@ import {
   TransactionTableSkeleton,
   ChartsSkeleton,
   SectionSkeleton,
-} from "@/components/dashboard/DashboardSkeletons";
+} from "@/components/dashboard/DashboardSkeletons"
 
 export const metadata: Metadata = {
   title: "Dashboard | Personal Finance",
@@ -27,12 +27,12 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
-};
+}
 
 export default async function Page() {
   // Check if user has connected Plaid accounts
   if (!(await hasConnectedAccounts())) {
-    redirect("/connect-account");
+    redirect("/connect-account")
   }
 
   return (
@@ -75,5 +75,5 @@ export default async function Page() {
         <DashboardTopExpensesSection />
       </Suspense>
     </div>
-  );
+  )
 }

@@ -1,11 +1,7 @@
-"use client";
+"use client"
 
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { Separator } from "@/components/ui/separator"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -26,5 +22,5 @@ export function AppShell({ children, sidebarSlot, breadcrumbsSlot }: AppShellPro
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
-  );
+  )
 }

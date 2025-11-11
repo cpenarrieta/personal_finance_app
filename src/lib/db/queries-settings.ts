@@ -2,22 +2,22 @@
  * Cached queries for settings pages
  */
 
-import { prisma } from "@/lib/db/prisma";
-import { cacheTag, cacheLife } from "next/cache";
+import { prisma } from "@/lib/db/prisma"
+import { cacheTag, cacheLife } from "next/cache"
 
 /**
  * Get all categories with subcategories for management
  * Cached with 24h expiration, tagged with "categories"
  */
 export async function getAllCategoriesForManagement() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("categories");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("categories")
 
   return prisma.category.findMany({
     include: { subcategories: true },
     orderBy: { name: "asc" },
-  });
+  })
 }
 
 /**
@@ -25,9 +25,9 @@ export async function getAllCategoriesForManagement() {
  * Cached with 24h expiration, tagged with "tags"
  */
 export async function getAllTagsWithCounts() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("tags");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("tags")
 
   return prisma.tag.findMany({
     include: {
@@ -36,7 +36,7 @@ export async function getAllTagsWithCounts() {
       },
     },
     orderBy: { name: "asc" },
-  });
+  })
 }
 
 /**
@@ -44,9 +44,9 @@ export async function getAllTagsWithCounts() {
  * Cached with 24h expiration, tagged with "categories"
  */
 export async function getAllCategoriesForMoveTransactions() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("categories");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("categories")
 
   return prisma.category.findMany({
     select: {
@@ -69,10 +69,6 @@ export async function getAllCategoriesForMoveTransactions() {
         orderBy: { name: "asc" },
       },
     },
-    orderBy: [
-      { groupType: "asc" },
-      { displayOrder: "asc" },
-      { name: "asc" },
-    ],
-  });
+    orderBy: [{ groupType: "asc" }, { displayOrder: "asc" }, { name: "asc" }],
+  })
 }

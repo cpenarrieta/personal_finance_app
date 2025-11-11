@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { useState, useMemo } from "react";
-import Image from "next/image";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { formatAmount } from "@/lib/utils";
-import type { HoldingForClient } from "@/types";
+import { useState, useMemo } from "react"
+import Image from "next/image"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { formatAmount } from "@/lib/utils"
+import type { HoldingForClient } from "@/types"
 interface HoldingsPortfolioProps {
-  holdings: HoldingForClient[];
+  holdings: HoldingForClient[]
 }
 
 const COLORS = [
@@ -25,60 +25,58 @@ const COLORS = [
   "#22c55e",
   "#eab308",
   "#a855f7",
-];
+]
 
-type GroupBy = "none" | "ticker";
-type SortBy = "ticker" | "value" | "gainLoss" | "gainLossPercent" | "quantity";
+type GroupBy = "none" | "ticker"
+type SortBy = "ticker" | "value" | "gainLoss" | "gainLossPercent" | "quantity"
 
 export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
-  const [groupBy, setGroupBy] = useState<GroupBy>("none");
-  const [sortBy, setSortBy] = useState<SortBy>("value");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [selectedAccount, setSelectedAccount] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [groupBy, setGroupBy] = useState<GroupBy>("none")
+  const [sortBy, setSortBy] = useState<SortBy>("value")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [selectedAccount, setSelectedAccount] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Get unique accounts
   const uniqueAccounts = useMemo(() => {
-    const accounts = new Map<string, string>();
+    const accounts = new Map<string, string>()
     holdings.forEach((h) => {
-      accounts.set(h.account.id, h.account.name);
-    });
-    return Array.from(accounts.entries());
-  }, [holdings]);
+      accounts.set(h.account.id, h.account.name)
+    })
+    return Array.from(accounts.entries())
+  }, [holdings])
 
   // Filter holdings
   const filteredHoldings = useMemo(() => {
-    let filtered = holdings;
+    let filtered = holdings
 
     // Account filter
     if (selectedAccount !== "all") {
-      filtered = filtered.filter((h) => h.account.id === selectedAccount);
+      filtered = filtered.filter((h) => h.account.id === selectedAccount)
     }
 
     // Search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        (h) =>
-          h.security.tickerSymbol?.toLowerCase().includes(query) ||
-          h.security.name?.toLowerCase().includes(query)
-      );
+        (h) => h.security.tickerSymbol?.toLowerCase().includes(query) || h.security.name?.toLowerCase().includes(query),
+      )
     }
 
-    return filtered;
-  }, [holdings, selectedAccount, searchQuery]);
+    return filtered
+  }, [holdings, selectedAccount, searchQuery])
 
   // Calculate enhanced holding data
   const enhancedHoldings = useMemo(() => {
     return filteredHoldings.map((h) => {
-      const quantity = h.quantity_number ?? 0;
-      const price = h.institution_price_number || 0;
-      const costBasis = h.cost_basis_number || 0; // Total cost basis (already the total amount spent)
-      const marketValue = quantity * price;
-      const totalCost = costBasis; // costBasis is already the total cost
-      const avgCostBasis = quantity > 0 ? costBasis / quantity : 0; // Calculate per-share cost
-      const gainLoss = marketValue - totalCost;
-      const gainLossPercent = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0;
+      const quantity = h.quantity_number ?? 0
+      const price = h.institution_price_number || 0
+      const costBasis = h.cost_basis_number || 0 // Total cost basis (already the total amount spent)
+      const marketValue = quantity * price
+      const totalCost = costBasis // costBasis is already the total cost
+      const avgCostBasis = quantity > 0 ? costBasis / quantity : 0 // Calculate per-share cost
+      const gainLoss = marketValue - totalCost
+      const gainLossPercent = totalCost > 0 ? (gainLoss / totalCost) * 100 : 0
 
       return {
         ...h,
@@ -89,46 +87,39 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         totalCost,
         gainLoss,
         gainLossPercent,
-      };
-    });
-  }, [filteredHoldings]);
+      }
+    })
+  }, [filteredHoldings])
 
   // Group holdings
   const groupedHoldings = useMemo(() => {
     if (groupBy === "none") {
-      return enhancedHoldings;
+      return enhancedHoldings
     }
 
-    const groups = new Map<string, typeof enhancedHoldings>();
+    const groups = new Map<string, typeof enhancedHoldings>()
 
     enhancedHoldings.forEach((h) => {
-      const key = h.security.tickerSymbol || "Unknown";
+      const key = h.security.tickerSymbol || "Unknown"
 
       if (!groups.has(key)) {
-        groups.set(key, []);
+        groups.set(key, [])
       }
-      groups.get(key)!.push(h);
-    });
+      groups.get(key)!.push(h)
+    })
 
     // Aggregate grouped data
     const aggregated = Array.from(groups.entries()).map(([key, items]) => {
-      const totalQuantity = items.reduce(
-        (sum, item) => sum + item.calculatedQuantity,
-        0
-      );
-      const totalMarketValue = items.reduce(
-        (sum, item) => sum + item.marketValue,
-        0
-      );
-      const totalCost = items.reduce((sum, item) => sum + item.totalCost, 0);
-      const totalGainLoss = totalMarketValue - totalCost;
-      const avgPrice = totalQuantity > 0 ? totalMarketValue / totalQuantity : 0;
-      const avgCostBasis = totalQuantity > 0 ? totalCost / totalQuantity : 0;
-      const gainLossPercent =
-        totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
+      const totalQuantity = items.reduce((sum, item) => sum + item.calculatedQuantity, 0)
+      const totalMarketValue = items.reduce((sum, item) => sum + item.marketValue, 0)
+      const totalCost = items.reduce((sum, item) => sum + item.totalCost, 0)
+      const totalGainLoss = totalMarketValue - totalCost
+      const avgPrice = totalQuantity > 0 ? totalMarketValue / totalQuantity : 0
+      const avgCostBasis = totalQuantity > 0 ? totalCost / totalQuantity : 0
+      const gainLossPercent = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0
 
       // Use first item as template
-      const template = items[0];
+      const template = items[0]
 
       return {
         ...template,
@@ -142,70 +133,58 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         gainLossPercent,
         _isGrouped: true,
         _groupItems: items,
-      };
-    });
+      }
+    })
 
-    return aggregated;
-  }, [enhancedHoldings, groupBy]);
+    return aggregated
+  }, [enhancedHoldings, groupBy])
 
   // Sort holdings
   const sortedHoldings = useMemo(() => {
-    const sorted = [...groupedHoldings];
+    const sorted = [...groupedHoldings]
 
     sorted.sort((a, b) => {
-      let comparison = 0;
+      let comparison = 0
 
       switch (sortBy) {
         case "ticker":
-          comparison = (a.security?.tickerSymbol || "").localeCompare(
-            b.security?.tickerSymbol || ""
-          );
-          break;
+          comparison = (a.security?.tickerSymbol || "").localeCompare(b.security?.tickerSymbol || "")
+          break
         case "value":
-          comparison = a.marketValue - b.marketValue;
-          break;
+          comparison = a.marketValue - b.marketValue
+          break
         case "gainLoss":
-          comparison = a.gainLoss - b.gainLoss;
-          break;
+          comparison = a.gainLoss - b.gainLoss
+          break
         case "gainLossPercent":
-          comparison = a.gainLossPercent - b.gainLossPercent;
-          break;
+          comparison = a.gainLossPercent - b.gainLossPercent
+          break
         case "quantity":
-          comparison = a.calculatedQuantity - b.calculatedQuantity;
-          break;
+          comparison = a.calculatedQuantity - b.calculatedQuantity
+          break
       }
 
-      return sortOrder === "asc" ? comparison : -comparison;
-    });
+      return sortOrder === "asc" ? comparison : -comparison
+    })
 
-    return sorted;
-  }, [groupedHoldings, sortBy, sortOrder]);
+    return sorted
+  }, [groupedHoldings, sortBy, sortOrder])
 
   // Calculate portfolio stats
   const portfolioStats = useMemo(() => {
-    const totalValue = enhancedHoldings.reduce(
-      (sum, h) => sum + h.marketValue,
-      0
-    );
-    const totalCost = enhancedHoldings.reduce((sum, h) => sum + h.totalCost, 0);
-    const totalGainLoss = totalValue - totalCost;
-    const totalGainLossPercent =
-      totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
+    const totalValue = enhancedHoldings.reduce((sum, h) => sum + h.marketValue, 0)
+    const totalCost = enhancedHoldings.reduce((sum, h) => sum + h.totalCost, 0)
+    const totalGainLoss = totalValue - totalCost
+    const totalGainLossPercent = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0
 
     // Best and worst performers
-    const withGains = enhancedHoldings.filter((h) => h.totalCost > 0);
+    const withGains = enhancedHoldings.filter((h) => h.totalCost > 0)
     const bestPerformer =
-      withGains.length > 0
-        ? withGains.reduce((best, h) =>
-            h.gainLossPercent > best.gainLossPercent ? h : best
-          )
-        : null;
+      withGains.length > 0 ? withGains.reduce((best, h) => (h.gainLossPercent > best.gainLossPercent ? h : best)) : null
     const worstPerformer =
       withGains.length > 0
-        ? withGains.reduce((worst, h) =>
-            h.gainLossPercent < worst.gainLossPercent ? h : worst
-          )
-        : null;
+        ? withGains.reduce((worst, h) => (h.gainLossPercent < worst.gainLossPercent ? h : worst))
+        : null
 
     return {
       totalValue,
@@ -215,42 +194,39 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
       holdingsCount: enhancedHoldings.length,
       bestPerformer,
       worstPerformer,
-    };
-  }, [enhancedHoldings]);
+    }
+  }, [enhancedHoldings])
 
   // Allocation data for pie chart
   const allocationData = useMemo(() => {
-    const tickerMap = new Map<string, number>();
+    const tickerMap = new Map<string, number>()
 
     enhancedHoldings.forEach((h) => {
-      const ticker = h.security.tickerSymbol || "Unknown";
-      tickerMap.set(ticker, (tickerMap.get(ticker) || 0) + h.marketValue);
-    });
+      const ticker = h.security.tickerSymbol || "Unknown"
+      tickerMap.set(ticker, (tickerMap.get(ticker) || 0) + h.marketValue)
+    })
 
     return Array.from(tickerMap.entries())
       .map(([ticker, value]) => ({
         name: ticker,
         value,
-        percent:
-          portfolioStats.totalValue > 0
-            ? (value / portfolioStats.totalValue) * 100
-            : 0,
+        percent: portfolioStats.totalValue > 0 ? (value / portfolioStats.totalValue) * 100 : 0,
       }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10); // Top 10
-  }, [enhancedHoldings, portfolioStats.totalValue]);
+      .slice(0, 10) // Top 10
+  }, [enhancedHoldings, portfolioStats.totalValue])
 
   const toggleSort = (field: SortBy) => {
     if (sortBy === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
     } else {
-      setSortBy(field);
-      setSortOrder("desc");
+      setSortBy(field)
+      setSortOrder("desc")
     }
-  };
+  }
 
   if (holdings.length === 0) {
-    return <p className="text-muted-foreground">No holdings found.</p>;
+    return <p className="text-muted-foreground">No holdings found.</p>
   }
 
   return (
@@ -262,9 +238,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">
-              Search
-            </label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Search</label>
             <input
               type="text"
               placeholder="Ticker or name..."
@@ -276,9 +250,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
           {/* Group By */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">
-              Group By
-            </label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Group By</label>
             <select
               value={groupBy}
               onChange={(e) => setGroupBy(e.target.value as GroupBy)}
@@ -291,9 +263,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
           {/* Account Filter */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">
-              Account
-            </label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Account</label>
             <select
               value={selectedAccount}
               onChange={(e) => setSelectedAccount(e.target.value)}
@@ -310,9 +280,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
           {/* Sort By */}
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">
-              Sort By
-            </label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Sort By</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortBy)}
@@ -332,31 +300,17 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 overflow-hidden">
         <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Portfolio Value</div>
-          <div className="text-2xl font-bold text-foreground">
-            $
-            {formatAmount(portfolioStats.totalValue)}
-          </div>
+          <div className="text-2xl font-bold text-foreground">${formatAmount(portfolioStats.totalValue)}</div>
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Total Gain/Loss</div>
           <div
-            className={`text-2xl font-bold ${
-              portfolioStats.totalGainLoss >= 0
-                ? "text-success"
-                : "text-destructive"
-            }`}
+            className={`text-2xl font-bold ${portfolioStats.totalGainLoss >= 0 ? "text-success" : "text-destructive"}`}
           >
-            {portfolioStats.totalGainLoss >= 0 ? "+" : ""}$
-            {formatAmount(Math.abs(portfolioStats.totalGainLoss))}
+            {portfolioStats.totalGainLoss >= 0 ? "+" : ""}${formatAmount(Math.abs(portfolioStats.totalGainLoss))}
           </div>
-          <div
-            className={`text-sm ${
-              portfolioStats.totalGainLoss >= 0
-                ? "text-success"
-                : "text-destructive"
-            }`}
-          >
+          <div className={`text-sm ${portfolioStats.totalGainLoss >= 0 ? "text-success" : "text-destructive"}`}>
             {portfolioStats.totalGainLoss >= 0 ? "+" : ""}
             {portfolioStats.totalGainLossPercent.toFixed(2)}%
           </div>
@@ -366,12 +320,8 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           <div className="text-sm text-muted-foreground mb-1">Best Performer</div>
           {portfolioStats.bestPerformer ? (
             <>
-              <div className="text-lg font-bold text-success">
-                {portfolioStats.bestPerformer.security.tickerSymbol}
-              </div>
-              <div className="text-sm text-success">
-                +{portfolioStats.bestPerformer.gainLossPercent.toFixed(2)}%
-              </div>
+              <div className="text-lg font-bold text-success">{portfolioStats.bestPerformer.security.tickerSymbol}</div>
+              <div className="text-sm text-success">+{portfolioStats.bestPerformer.gainLossPercent.toFixed(2)}%</div>
             </>
           ) : (
             <div className="text-muted-foreground/60">N/A</div>
@@ -414,27 +364,17 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                     dataKey="value"
                   >
                     {allocationData.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value: number) =>
-                      `$${formatAmount(value)}`
-                    }
-                  />
+                  <Tooltip formatter={(value: number) => `$${formatAmount(value)}`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
 
             <div className="space-y-2">
               {allocationData.map((item, index) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between text-sm"
-                >
+                <div key={item.name} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <div
                       className="w-4 h-4 rounded flex-shrink-0"
@@ -443,13 +383,8 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                     <span className="font-medium">{item.name}</span>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">
-                      $
-                      {formatAmount(item.value)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {item.percent.toFixed(2)}%
-                    </div>
+                    <div className="font-medium">${formatAmount(item.value)}</div>
+                    <div className="text-xs text-muted-foreground">{item.percent.toFixed(2)}%</div>
                   </div>
                 </div>
               ))}
@@ -463,8 +398,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         <div className="p-4 border-b">
           <h3 className="text-lg font-semibold">Holdings</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Showing {sortedHoldings.length}{" "}
-            {groupBy !== "none" ? "grouped " : ""}holding
+            Showing {sortedHoldings.length} {groupBy !== "none" ? "grouped " : ""}holding
             {sortedHoldings.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -480,8 +414,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                   onClick={() => toggleSort("quantity")}
                   className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
-                  Quantity{" "}
-                  {sortBy === "quantity" && (sortOrder === "asc" ? "↑" : "↓")}
+                  Quantity {sortBy === "quantity" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 <th className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Avg Price
@@ -493,23 +426,19 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                   onClick={() => toggleSort("value")}
                   className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
-                  Market Value{" "}
-                  {sortBy === "value" && (sortOrder === "asc" ? "↑" : "↓")}
+                  Market Value {sortBy === "value" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 <th
                   onClick={() => toggleSort("gainLoss")}
                   className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
-                  Gain/Loss{" "}
-                  {sortBy === "gainLoss" && (sortOrder === "asc" ? "↑" : "↓")}
+                  Gain/Loss {sortBy === "gainLoss" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 <th
                   onClick={() => toggleSort("gainLossPercent")}
                   className="px-3 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted"
                 >
-                  Return{" "}
-                  {sortBy === "gainLossPercent" &&
-                    (sortOrder === "asc" ? "↑" : "↓")}
+                  Return {sortBy === "gainLossPercent" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
                 {groupBy === "none" && (
                   <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -536,9 +465,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                         <div className="font-medium text-foreground text-sm">
                           {holding.security?.tickerSymbol || "N/A"}
                         </div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {holding.security?.name}
-                        </div>
+                        <div className="text-xs text-muted-foreground truncate">{holding.security?.name}</div>
                       </div>
                     </div>
                   </td>
@@ -549,35 +476,25 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                     })}
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap text-right text-sm text-foreground">
-                    $
-                    {formatAmount(holding.calculatedPrice)}
+                    ${formatAmount(holding.calculatedPrice)}
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap text-right text-sm text-muted-foreground">
-                    $
-                    {formatAmount(holding.calculatedCostBasis)}
+                    ${formatAmount(holding.calculatedCostBasis)}
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium text-foreground">
-                    $
-                    {formatAmount(holding.marketValue)}
+                    ${formatAmount(holding.marketValue)}
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap text-right text-sm">
                     <span
-                      className={
-                        holding.gainLoss >= 0
-                          ? "text-success font-medium"
-                          : "text-destructive font-medium"
-                      }
+                      className={holding.gainLoss >= 0 ? "text-success font-medium" : "text-destructive font-medium"}
                     >
-                      {holding.gainLoss >= 0 ? "+" : ""}$
-                      {formatAmount(Math.abs(holding.gainLoss))}
+                      {holding.gainLoss >= 0 ? "+" : ""}${formatAmount(Math.abs(holding.gainLoss))}
                     </span>
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap text-right text-sm">
                     <span
                       className={
-                        holding.gainLossPercent >= 0
-                          ? "text-success font-medium"
-                          : "text-destructive font-medium"
+                        holding.gainLossPercent >= 0 ? "text-success font-medium" : "text-destructive font-medium"
                       }
                     >
                       {holding.gainLossPercent >= 0 ? "+" : ""}
@@ -602,5 +519,5 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
         )}
       </div>
     </div>
-  );
+  )
 }

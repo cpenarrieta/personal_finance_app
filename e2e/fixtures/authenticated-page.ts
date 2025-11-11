@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect } from "@playwright/test"
 
 /**
  * Authenticated page fixture that automatically sets the E2E auth bypass header
@@ -8,11 +8,11 @@ export const test = base.extend({
   page: async ({ page }, use) => {
     // Set the E2E bypass header for all requests
     await page.setExtraHTTPHeaders({
-      'x-e2e-bypass-auth': 'true',
-    });
+      "x-e2e-bypass-auth": "true",
+    })
 
-    await use(page);
+    await use(page)
   },
-});
+})
 
-export { expect };
+export { expect }

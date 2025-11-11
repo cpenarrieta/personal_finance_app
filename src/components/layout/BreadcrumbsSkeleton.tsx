@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function BreadcrumbsSkeleton() {
-  return <Skeleton className="h-4 w-32" />;
+  return <Skeleton className="h-4 w-32" />
 }

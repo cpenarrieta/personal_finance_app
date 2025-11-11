@@ -1,8 +1,8 @@
-import { Suspense } from "react";
-import type { Metadata } from "next";
-import { getAccountById } from "@/lib/db/queries";
-import { AccountDetailAsync } from "@/components/accounts/AccountDetailAsync";
-import { AccountDetailSkeleton } from "@/components/accounts/AccountDetailSkeleton";
+import { Suspense } from "react"
+import type { Metadata } from "next"
+import { getAccountById } from "@/lib/db/queries"
+import { AccountDetailAsync } from "@/components/accounts/AccountDetailAsync"
+import { AccountDetailSkeleton } from "@/components/accounts/AccountDetailSkeleton"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!account) {
     return {
-      title: 'Account Not Found',
+      title: "Account Not Found",
       robots: {
         index: false,
         follow: false,
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   return {
-    title: `${account.name}${account.mask ? ` • ${account.mask}` : ''}`,
+    title: `${account.name}${account.mask ? ` • ${account.mask}` : ""}`,
     robots: {
       index: false,
       follow: false,
@@ -28,11 +28,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  const { id } = await params
 
   return (
     <Suspense fallback={<AccountDetailSkeleton />}>
       <AccountDetailAsync id={id} />
     </Suspense>
-  );
+  )
 }

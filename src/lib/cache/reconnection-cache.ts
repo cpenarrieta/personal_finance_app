@@ -18,7 +18,7 @@ interface ReconnectionData {
 const cache = new Map<string, ReconnectionData>()
 const TTL = 5 * 60 * 1000 // 5 minutes
 
-export function storeReconnectionData(data: Omit<ReconnectionData, 'createdAt'>): string {
+export function storeReconnectionData(data: Omit<ReconnectionData, "createdAt">): string {
   const id = crypto.randomUUID()
   cache.set(id, { ...data, createdAt: Date.now() })
 

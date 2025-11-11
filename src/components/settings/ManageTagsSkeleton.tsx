@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 
 /**
  * Skeleton for Manage Tags page
@@ -65,5 +65,5 @@ export function ManageTagsSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

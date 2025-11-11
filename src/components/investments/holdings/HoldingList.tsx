@@ -1,30 +1,27 @@
-import type { HoldingForClient } from "@/types";
-import Image from "next/image";
-import { formatAmount } from "@/lib/utils";
+import type { HoldingForClient } from "@/types"
+import Image from "next/image"
+import { formatAmount } from "@/lib/utils"
 
 interface HoldingListProps {
-  holdings: HoldingForClient[];
-  showAccount?: boolean;
+  holdings: HoldingForClient[]
+  showAccount?: boolean
 }
 
-export function HoldingList({
-  holdings,
-  showAccount = false,
-}: HoldingListProps) {
+export function HoldingList({ holdings, showAccount = false }: HoldingListProps) {
   if (holdings.length === 0) {
-    return <p className="text-muted-foreground">No holdings found.</p>;
+    return <p className="text-muted-foreground">No holdings found.</p>
   }
 
   // Calculate totals by currency
-  const totalsByCurrency: Record<string, number> = {};
+  const totalsByCurrency: Record<string, number> = {}
 
   holdings.forEach((h) => {
     if (h.institution_price_number != null && h.quantity_number != null && h.isoCurrencyCode) {
-      const value = h.quantity_number * h.institution_price_number;
-      const currency = h.isoCurrencyCode;
-      totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + value;
+      const value = h.quantity_number * h.institution_price_number
+      const currency = h.isoCurrencyCode
+      totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + value
     }
-  });
+  })
 
   return (
     <div>
@@ -37,8 +34,7 @@ export function HoldingList({
               <div key={currency} className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">{currency}:</span>
                 <span className="font-medium text-lg">
-                  {formatAmount(total)}{" "}
-                  {currency}
+                  {formatAmount(total)} {currency}
                 </span>
               </div>
             ))}
@@ -63,24 +59,23 @@ export function HoldingList({
               <div className="flex-1 min-w-0">
                 <div className="font-medium">
                   {h.security.tickerSymbol || h.security.name} —{" "}
-                  {h.quantity_number != null ? h.quantity_number.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 6,
-                  }) : "0"} shares
+                  {h.quantity_number != null
+                    ? h.quantity_number.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 6,
+                      })
+                    : "0"}{" "}
+                  shares
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {showAccount && h.account && `${h.account.name} · `}
                   {h.isoCurrencyCode}
                 </div>
                 {h.cost_basis_number != null && (
-                  <div className="text-sm">
-                    Cost Basis: {formatAmount(h.cost_basis_number)}
-                  </div>
+                  <div className="text-sm">Cost Basis: {formatAmount(h.cost_basis_number)}</div>
                 )}
                 {h.institution_price_number != null && (
-                  <div className="text-sm">
-                    Price: {formatAmount(h.institution_price_number)}
-                  </div>
+                  <div className="text-sm">Price: {formatAmount(h.institution_price_number)}</div>
                 )}
               </div>
             </div>
@@ -88,5 +83,5 @@ export function HoldingList({
         ))}
       </ul>
     </div>
-  );
+  )
 }

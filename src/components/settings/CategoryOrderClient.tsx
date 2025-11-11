@@ -1,119 +1,115 @@
-"use client";
+"use client"
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CategoryGroupType, type CategoryForClient } from "@/types";
+import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CategoryGroupType, type CategoryForClient } from "@/types"
 
 interface CategoryOrderClientProps {
   categories: CategoryForClient[]
 }
 
-export function CategoryOrderClient({
-  categories: initialCategories,
-}: CategoryOrderClientProps) {
-  const router = useRouter();
-  const [categories, setCategories] = useState<CategoryForClient[]>(initialCategories);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+export function CategoryOrderClient({ categories: initialCategories }: CategoryOrderClientProps) {
+  const router = useRouter()
+  const [categories, setCategories] = useState<CategoryForClient[]>(initialCategories)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   // Group categories by groupType and sort within each group
   const grouped = useMemo(() => {
-    const groups = new Map<CategoryGroupType, CategoryForClient[]>();
+    const groups = new Map<CategoryGroupType, CategoryForClient[]>()
     for (const cat of categories) {
-      const group = cat.groupType || CategoryGroupType.EXPENSES;
+      const group = cat.groupType || CategoryGroupType.EXPENSES
       if (!groups.has(group)) {
-        groups.set(group, []);
+        groups.set(group, [])
       }
-      groups.get(group)!.push(cat);
+      groups.get(group)!.push(cat)
     }
 
     // Sort categories within each group by displayOrder
     for (const [groupType, cats] of groups) {
       groups.set(
         groupType,
-        cats.sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999))
-      );
+        cats.sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999)),
+      )
     }
 
-    return groups;
-  }, [categories]);
+    return groups
+  }, [categories])
 
-  const groupOrder = [CategoryGroupType.EXPENSES, CategoryGroupType.INCOME, CategoryGroupType.INVESTMENT];
+  const groupOrder = [CategoryGroupType.EXPENSES, CategoryGroupType.INCOME, CategoryGroupType.INVESTMENT]
 
   const moveUp = (categoryId: string) => {
     setCategories((prevCategories) => {
-      const cat = prevCategories.find((c) => c.id === categoryId);
-      if (!cat) return prevCategories;
+      const cat = prevCategories.find((c) => c.id === categoryId)
+      if (!cat) return prevCategories
 
       // Get all categories in the same group, sorted by displayOrder
       const groupCats = prevCategories
         .filter((c) => (c.groupType || CategoryGroupType.EXPENSES) === (cat.groupType || CategoryGroupType.EXPENSES))
-        .sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999));
+        .sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999))
 
-      const index = groupCats.findIndex((c) => c.id === categoryId);
-      if (index <= 0) return prevCategories;
+      const index = groupCats.findIndex((c) => c.id === categoryId)
+      if (index <= 0) return prevCategories
 
       // Swap displayOrder with previous category
-      const prevCat = groupCats[index - 1];
-      const currentOrder = cat.displayOrder ?? index;
-      const prevOrder = prevCat?.displayOrder ?? (index - 1);
+      const prevCat = groupCats[index - 1]
+      const currentOrder = cat.displayOrder ?? index
+      const prevOrder = prevCat?.displayOrder ?? index - 1
 
       return prevCategories.map((c) => {
         if (c.id === categoryId) {
-          return { ...c, displayOrder: prevOrder };
+          return { ...c, displayOrder: prevOrder }
         }
         if (c.id === prevCat?.id) {
-          return { ...c, displayOrder: currentOrder };
+          return { ...c, displayOrder: currentOrder }
         }
-        return c;
-      });
-    });
-  };
+        return c
+      })
+    })
+  }
 
   const moveDown = (categoryId: string) => {
     setCategories((prevCategories) => {
-      const cat = prevCategories.find((c) => c.id === categoryId);
-      if (!cat) return prevCategories;
+      const cat = prevCategories.find((c) => c.id === categoryId)
+      if (!cat) return prevCategories
 
       // Get all categories in the same group, sorted by displayOrder
       const groupCats = prevCategories
         .filter((c) => (c.groupType || CategoryGroupType.EXPENSES) === (cat.groupType || CategoryGroupType.EXPENSES))
-        .sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999));
+        .sort((a, b) => (a.displayOrder ?? 9999) - (b.displayOrder ?? 9999))
 
-      const index = groupCats.findIndex((c) => c.id === categoryId);
-      if (index === -1 || index >= groupCats.length - 1) return prevCategories;
+      const index = groupCats.findIndex((c) => c.id === categoryId)
+      if (index === -1 || index >= groupCats.length - 1) return prevCategories
 
       // Swap displayOrder with next category
-      const nextCat = groupCats[index + 1];
-      const currentOrder = cat.displayOrder ?? index;
-      const nextOrder = nextCat?.displayOrder ?? (index + 1);
+      const nextCat = groupCats[index + 1]
+      const currentOrder = cat.displayOrder ?? index
+      const nextOrder = nextCat?.displayOrder ?? index + 1
 
       return prevCategories.map((c) => {
         if (c.id === categoryId) {
-          return { ...c, displayOrder: nextOrder };
+          return { ...c, displayOrder: nextOrder }
         }
         if (c.id === nextCat?.id) {
-          return { ...c, displayOrder: currentOrder };
+          return { ...c, displayOrder: currentOrder }
         }
-        return c;
-      });
-    });
-  };
+        return c
+      })
+    })
+  }
 
   const changeGroup = (categoryId: string, newGroupType: CategoryGroupType) => {
     const updated = categories.map((c) =>
-      c.id === categoryId
-        ? { ...c, groupType: newGroupType, displayOrder: 9999 }
-        : c
-    );
-    setCategories(updated);
-  };
+      c.id === categoryId ? { ...c, groupType: newGroupType, displayOrder: 9999 } : c,
+    )
+    setCategories(updated)
+  }
 
   const handleSave = async () => {
-    setIsSaving(true);
-    setSaveMessage(null);
+    setIsSaving(true)
+    setSaveMessage(null)
 
     try {
       // Update all categories with new groupType and displayOrder
@@ -121,27 +117,27 @@ export function CategoryOrderClient({
         id: cat.id,
         groupType: cat.groupType,
         displayOrder: cat.displayOrder,
-      }));
+      }))
 
       const response = await fetch("/api/categories/update-order", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updates }),
-      });
+      })
 
       if (!response.ok) {
-        throw new Error("Failed to save");
+        throw new Error("Failed to save")
       }
 
-      setSaveMessage({ type: "success", text: "Category order saved successfully!" });
-      router.refresh();
+      setSaveMessage({ type: "success", text: "Category order saved successfully!" })
+      router.refresh()
     } catch (error) {
-      console.error("Error saving:", error);
-      setSaveMessage({ type: "error", text: "Failed to save. Please try again." });
+      console.error("Error saving:", error)
+      setSaveMessage({ type: "error", text: "Failed to save. Please try again." })
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -159,8 +155,8 @@ export function CategoryOrderClient({
 
       {/* Category Groups */}
       {groupOrder.map((groupType) => {
-        const groupCats = grouped.get(groupType) || [];
-        if (groupCats.length === 0) return null;
+        const groupCats = grouped.get(groupType) || []
+        if (groupCats.length === 0) return null
 
         return (
           <div key={groupType} className="bg-card rounded-lg shadow p-6">
@@ -168,25 +164,15 @@ export function CategoryOrderClient({
 
             <div className="space-y-2">
               {groupCats.map((cat, index) => (
-                <div
-                  key={cat.id}
-                  className="flex items-center justify-between p-3 border rounded-lg bg-muted/50"
-                >
+                <div key={cat.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground font-mono w-8">
-                      {index + 1}.
-                    </span>
+                    <span className="text-sm text-muted-foreground font-mono w-8">{index + 1}.</span>
                     <span>{cat.name}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     {/* Move up/down */}
-                    <Button
-                      onClick={() => moveUp(cat.id)}
-                      disabled={index === 0}
-                      variant="outline"
-                      size="sm"
-                    >
+                    <Button onClick={() => moveUp(cat.id)} disabled={index === 0} variant="outline" size="sm">
                       ↑
                     </Button>
                     <Button
@@ -215,7 +201,7 @@ export function CategoryOrderClient({
               ))}
             </div>
           </div>
-        );
+        )
       })}
 
       <div className="flex justify-end">
@@ -224,5 +210,5 @@ export function CategoryOrderClient({
         </Button>
       </div>
     </div>
-  );
+  )
 }

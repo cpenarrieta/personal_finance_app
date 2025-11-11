@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useState, useMemo, useRef, RefObject } from "react";
-import Image from "next/image";
+import { useState, useMemo, useRef, RefObject } from "react"
+import Image from "next/image"
 import {
   ResponsiveContainer,
   Tooltip,
@@ -16,64 +16,28 @@ import {
   Pie,
   Cell,
   Legend,
-} from "recharts";
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-  isWithinInterval,
-  parseISO,
-  eachMonthOfInterval,
-} from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { CategoryForClient, TransactionForClient } from "@/types";
-import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
-import { useClickOutside } from "@/hooks/useClickOutside";
+} from "recharts"
+import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO, eachMonthOfInterval } from "date-fns"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { CategoryForClient, TransactionForClient } from "@/types"
+import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils"
+import { useClickOutside } from "@/hooks/useClickOutside"
 
 interface ChartsViewProps {
-  transactions: TransactionForClient[];
-  categories: CategoryForClient[];
+  transactions: TransactionForClient[]
+  categories: CategoryForClient[]
 }
 
-type DateRange =
-  | "all"
-  | "last30"
-  | "last90"
-  | "thisMonth"
-  | "lastMonth"
-  | "custom";
-type ChartTab =
-  | "subcategories"
-  | "monthly-comparison"
-  | "spending-trends"
-  | "income-vs-expenses"
-  | "category-breakdown";
+type DateRange = "all" | "last30" | "last90" | "thisMonth" | "lastMonth" | "custom"
+type ChartTab = "subcategories" | "monthly-comparison" | "spending-trends" | "income-vs-expenses" | "category-breakdown"
 
 const COLORS = [
   "#3b82f6",
@@ -86,88 +50,73 @@ const COLORS = [
   "#f97316",
   "#06b6d4",
   "#84cc16",
-];
+]
 
 export function ChartsView({ transactions, categories }: ChartsViewProps) {
-  const [activeTab, setActiveTab] = useState<ChartTab>("subcategories");
-  const [dateRange, setDateRange] = useState<DateRange>("last30");
-  const [customStartDate, setCustomStartDate] = useState("");
-  const [customEndDate, setCustomEndDate] = useState("");
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(
-    new Set()
-  );
-  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<
-    Set<string>
-  >(new Set());
-  const [showIncome, setShowIncome] = useState(false);
+  const [activeTab, setActiveTab] = useState<ChartTab>("subcategories")
+  const [dateRange, setDateRange] = useState<DateRange>("last30")
+  const [customStartDate, setCustomStartDate] = useState("")
+  const [customEndDate, setCustomEndDate] = useState("")
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set())
+  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<Set<string>>(new Set())
+  const [showIncome, setShowIncome] = useState(false)
 
   // Sort categories by group type and display order
-  const sortedCategories = useMemo(
-    () => sortCategoriesByGroupAndOrder(categories),
-    [categories]
-  );
-  const [showExpenses, setShowExpenses] = useState(true);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories])
+  const [showExpenses, setShowExpenses] = useState(true)
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Set default exclusions (🔁 Transfers) on mount
-  const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(
-    () => {
-      const transfersCategory = categories.find(
-        (cat) => cat.name === "🔁 Transfers"
-      );
-      return transfersCategory ? new Set([transfersCategory.id]) : new Set();
-    }
-  );
+  const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(() => {
+    const transfersCategory = categories.find((cat) => cat.name === "🔁 Transfers")
+    return transfersCategory ? new Set([transfersCategory.id]) : new Set()
+  })
 
   // Close dropdown when clicking outside
-  useClickOutside(
-    dropdownRef as RefObject<HTMLElement>,
-    () => setShowCategoryDropdown(false),
-    showCategoryDropdown
-  );
+  useClickOutside(dropdownRef as RefObject<HTMLElement>, () => setShowCategoryDropdown(false), showCategoryDropdown)
 
   // Determine if filters should be disabled for current tab
-  const filtersDisabled = activeTab === "monthly-comparison";
+  const filtersDisabled = activeTab === "monthly-comparison"
 
   // Filter transactions
   const filteredTransactions = useMemo(() => {
-    let filtered = transactions;
+    let filtered = transactions
 
     // For monthly comparison, we don't apply filters
     if (filtersDisabled) {
-      return transactions;
+      return transactions
     }
 
     // Calculate date range
-    const now = new Date();
-    let range: { start: Date; end: Date } | null = null;
+    const now = new Date()
+    let range: { start: Date; end: Date } | null = null
 
     switch (dateRange) {
       case "last30":
-        range = { start: subMonths(now, 1), end: now };
-        break;
+        range = { start: subMonths(now, 1), end: now }
+        break
       case "last90":
-        range = { start: subMonths(now, 3), end: now };
-        break;
+        range = { start: subMonths(now, 3), end: now }
+        break
       case "thisMonth":
-        range = { start: startOfMonth(now), end: endOfMonth(now) };
-        break;
+        range = { start: startOfMonth(now), end: endOfMonth(now) }
+        break
       case "lastMonth":
-        const lastMonth = subMonths(now, 1);
-        range = { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
-        break;
+        const lastMonth = subMonths(now, 1)
+        range = { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) }
+        break
       case "custom":
         if (customStartDate && customEndDate) {
           range = {
             start: new Date(customStartDate),
             end: new Date(customEndDate),
-          };
+          }
         }
-        break;
+        break
       case "all":
       default:
-        range = null;
+        range = null
     }
 
     // Date range filter
@@ -176,48 +125,48 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
         isWithinInterval(parseISO(t.date_string), {
           start: range.start,
           end: range.end,
-        })
-      );
+        }),
+      )
     }
 
     // Income/Expense filter
     if (!showIncome && !showExpenses) {
       // If neither is selected, show nothing
-      return [];
+      return []
     } else if (showIncome && !showExpenses) {
       // Show only income (positive amounts after inversion)
-      filtered = filtered.filter((t) => t.amount_number > 0);
+      filtered = filtered.filter((t) => t.amount_number > 0)
     } else if (!showIncome && showExpenses) {
       // Show only expenses (negative amounts after inversion)
-      filtered = filtered.filter((t) => t.amount_number < 0);
+      filtered = filtered.filter((t) => t.amount_number < 0)
     }
     // If both are selected, show both (no filter needed)
 
     // Exclude categories filter
     if (excludedCategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.categoryId) return true; // Keep uncategorized
-        return !excludedCategoryIds.has(t.categoryId);
-      });
+        if (!t.categoryId) return true // Keep uncategorized
+        return !excludedCategoryIds.has(t.categoryId)
+      })
     }
 
     // Category filter (include)
     if (selectedCategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.categoryId) return false;
-        return selectedCategoryIds.has(t.categoryId);
-      });
+        if (!t.categoryId) return false
+        return selectedCategoryIds.has(t.categoryId)
+      })
     }
 
     // Subcategory filter
     if (selectedSubcategoryIds.size > 0) {
       filtered = filtered.filter((t) => {
-        if (!t.subcategoryId) return false;
-        return selectedSubcategoryIds.has(t.subcategoryId);
-      });
+        if (!t.subcategoryId) return false
+        return selectedSubcategoryIds.has(t.subcategoryId)
+      })
     }
 
-    return filtered;
+    return filtered
   }, [
     transactions,
     dateRange,
@@ -229,79 +178,73 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     showIncome,
     showExpenses,
     filtersDisabled,
-  ]);
+  ])
 
   // Toggle category selection
   const toggleCategory = (categoryId: string) => {
-    const newSelected = new Set(selectedCategoryIds);
+    const newSelected = new Set(selectedCategoryIds)
     if (newSelected.has(categoryId)) {
-      newSelected.delete(categoryId);
-      const category = categories.find((c) => c.id === categoryId);
+      newSelected.delete(categoryId)
+      const category = categories.find((c) => c.id === categoryId)
       if (category) {
-        const newSelectedSubs = new Set(selectedSubcategoryIds);
-        category.subcategories?.forEach((sub) =>
-          newSelectedSubs.delete(sub.id)
-        );
-        setSelectedSubcategoryIds(newSelectedSubs);
+        const newSelectedSubs = new Set(selectedSubcategoryIds)
+        category.subcategories?.forEach((sub) => newSelectedSubs.delete(sub.id))
+        setSelectedSubcategoryIds(newSelectedSubs)
       }
     } else {
-      newSelected.add(categoryId);
+      newSelected.add(categoryId)
     }
-    setSelectedCategoryIds(newSelected);
-  };
+    setSelectedCategoryIds(newSelected)
+  }
 
   // Toggle subcategory selection
   const toggleSubcategory = (subcategoryId: string, categoryId: string) => {
-    const newSelected = new Set(selectedSubcategoryIds);
+    const newSelected = new Set(selectedSubcategoryIds)
     if (newSelected.has(subcategoryId)) {
-      newSelected.delete(subcategoryId);
+      newSelected.delete(subcategoryId)
     } else {
-      newSelected.add(subcategoryId);
+      newSelected.add(subcategoryId)
       if (!selectedCategoryIds.has(categoryId)) {
-        setSelectedCategoryIds(new Set(selectedCategoryIds).add(categoryId));
+        setSelectedCategoryIds(new Set(selectedCategoryIds).add(categoryId))
       }
     }
-    setSelectedSubcategoryIds(newSelected);
-  };
+    setSelectedSubcategoryIds(newSelected)
+  }
 
   // Toggle excluded category
   const toggleExcludedCategory = (categoryId: string) => {
-    const newExcluded = new Set(excludedCategoryIds);
+    const newExcluded = new Set(excludedCategoryIds)
     if (newExcluded.has(categoryId)) {
-      newExcluded.delete(categoryId);
+      newExcluded.delete(categoryId)
     } else {
-      newExcluded.add(categoryId);
+      newExcluded.add(categoryId)
     }
-    setExcludedCategoryIds(newExcluded);
-  };
+    setExcludedCategoryIds(newExcluded)
+  }
 
   // Clear all filters
   const clearAllFilters = () => {
-    setDateRange("last30");
-    setCustomStartDate("");
-    setCustomEndDate("");
-    setSelectedCategoryIds(new Set());
-    setSelectedSubcategoryIds(new Set());
+    setDateRange("last30")
+    setCustomStartDate("")
+    setCustomEndDate("")
+    setSelectedCategoryIds(new Set())
+    setSelectedSubcategoryIds(new Set())
     // Reset to default exclusions
-    const transfersCategory = categories.find((c) => c.name === "🔁 Transfers");
+    const transfersCategory = categories.find((c) => c.name === "🔁 Transfers")
     if (transfersCategory) {
-      setExcludedCategoryIds(new Set([transfersCategory.id]));
+      setExcludedCategoryIds(new Set([transfersCategory.id]))
     } else {
-      setExcludedCategoryIds(new Set());
+      setExcludedCategoryIds(new Set())
     }
-    setShowIncome(false);
-    setShowExpenses(true);
-  };
+    setShowIncome(false)
+    setShowExpenses(true)
+  }
 
   // Check if any filters are active (excluding default transfers exclusion)
-  const defaultExcludedCategory = categories.find(
-    (c) => c.name === "🔁 Transfers"
-  );
+  const defaultExcludedCategory = categories.find((c) => c.name === "🔁 Transfers")
   const hasNonDefaultExclusions =
     excludedCategoryIds.size > 0 &&
-    (excludedCategoryIds.size > 1 ||
-      !defaultExcludedCategory ||
-      !excludedCategoryIds.has(defaultExcludedCategory.id));
+    (excludedCategoryIds.size > 1 || !defaultExcludedCategory || !excludedCategoryIds.has(defaultExcludedCategory.id))
 
   const hasActiveFilters =
     dateRange !== "last30" ||
@@ -309,140 +252,127 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     selectedSubcategoryIds.size > 0 ||
     showIncome ||
     !showExpenses ||
-    hasNonDefaultExclusions;
+    hasNonDefaultExclusions
 
   // Chart data calculations
   const subcategoryData = useMemo(() => {
-    const subcategoryMap = new Map<
-      string,
-      { name: string; value: number; imageUrl?: string; categoryName?: string }
-    >();
+    const subcategoryMap = new Map<string, { name: string; value: number; imageUrl?: string; categoryName?: string }>()
 
     filteredTransactions.forEach((t) => {
-      const amount = Math.abs(t.amount_number ?? 0);
-      const subcategoryName = t.subcategory?.name || "No Subcategory";
-      const imageUrl = t.subcategory?.imageUrl;
-      const categoryName =
-        t.subcategory?.category?.name || t.category?.name || "Uncategorized";
+      const amount = Math.abs(t.amount_number ?? 0)
+      const subcategoryName = t.subcategory?.name || "No Subcategory"
+      const imageUrl = t.subcategory?.imageUrl
+      const categoryName = t.subcategory?.category?.name || t.category?.name || "Uncategorized"
 
       if (subcategoryMap.has(subcategoryName)) {
-        subcategoryMap.get(subcategoryName)!.value += amount;
+        subcategoryMap.get(subcategoryName)!.value += amount
       } else {
         subcategoryMap.set(subcategoryName, {
           name: subcategoryName,
           value: amount,
           imageUrl: imageUrl || undefined,
           categoryName,
-        });
+        })
       }
-    });
+    })
 
-    return Array.from(subcategoryMap.values()).sort(
-      (a, b) => b.value - a.value
-    );
-  }, [filteredTransactions]);
+    return Array.from(subcategoryMap.values()).sort((a, b) => b.value - a.value)
+  }, [filteredTransactions])
 
   const categoryData = useMemo(() => {
-    const categoryMap = new Map<
-      string,
-      { name: string; value: number; imageUrl?: string }
-    >();
+    const categoryMap = new Map<string, { name: string; value: number; imageUrl?: string }>()
 
     filteredTransactions.forEach((t) => {
-      const amount = Math.abs(t.amount_number ?? 0);
-      const categoryName = t.category?.name || "Uncategorized";
-      const imageUrl = t.category?.imageUrl;
+      const amount = Math.abs(t.amount_number ?? 0)
+      const categoryName = t.category?.name || "Uncategorized"
+      const imageUrl = t.category?.imageUrl
 
       if (categoryMap.has(categoryName)) {
-        categoryMap.get(categoryName)!.value += amount;
+        categoryMap.get(categoryName)!.value += amount
       } else {
         categoryMap.set(categoryName, {
           name: categoryName,
           value: amount,
           imageUrl: imageUrl || undefined,
-        });
+        })
       }
-    });
+    })
 
-    return Array.from(categoryMap.values()).sort((a, b) => b.value - a.value);
-  }, [filteredTransactions]);
+    return Array.from(categoryMap.values()).sort((a, b) => b.value - a.value)
+  }, [filteredTransactions])
 
   const monthlyComparisonData = useMemo(() => {
     // Get last 12 months of data
-    const now = new Date();
-    const startDate = subMonths(startOfMonth(now), 11);
-    const months = eachMonthOfInterval({ start: startDate, end: now });
+    const now = new Date()
+    const startDate = subMonths(startOfMonth(now), 11)
+    const months = eachMonthOfInterval({ start: startDate, end: now })
 
     return months.map((month) => {
-      const monthStart = startOfMonth(month);
-      const monthEnd = endOfMonth(month);
+      const monthStart = startOfMonth(month)
+      const monthEnd = endOfMonth(month)
 
       const monthTransactions = transactions.filter((t) =>
         isWithinInterval(parseISO(t.date_string), {
           start: monthStart,
           end: monthEnd,
-        })
-      );
+        }),
+      )
 
       const expenses = Math.abs(
-        monthTransactions
-          .filter((t) => t.amount_number < 0)
-          .reduce((sum, t) => sum + (t.amount_number ?? 0), 0)
-      );
+        monthTransactions.filter((t) => t.amount_number < 0).reduce((sum, t) => sum + (t.amount_number ?? 0), 0),
+      )
 
       const income = monthTransactions
         .filter((t) => t.amount_number > 0)
-        .reduce((sum, t) => sum + (t.amount_number ?? 0), 0);
+        .reduce((sum, t) => sum + (t.amount_number ?? 0), 0)
 
       return {
         month: format(month, "MMM yyyy"),
         expenses,
         income,
         net: income - expenses,
-      };
-    });
-  }, [transactions]);
+      }
+    })
+  }, [transactions])
 
   const spendingTrendsData = useMemo(() => {
-    const monthMap = new Map<string, number>();
+    const monthMap = new Map<string, number>()
 
     filteredTransactions.forEach((t) => {
-      const month = format(parseISO(t.date_string), "MMM yyyy");
-      const amount = Math.abs(t.amount_number ?? 0);
+      const month = format(parseISO(t.date_string), "MMM yyyy")
+      const amount = Math.abs(t.amount_number ?? 0)
 
       if (monthMap.has(month)) {
-        monthMap.set(month, monthMap.get(month)! + amount);
+        monthMap.set(month, monthMap.get(month)! + amount)
       } else {
-        monthMap.set(month, amount);
+        monthMap.set(month, amount)
       }
-    });
+    })
 
     return Array.from(monthMap.entries())
       .map(([month, amount]) => ({ month, amount }))
       .sort((a, b) => {
-        const dateA = new Date(a.month);
-        const dateB = new Date(b.month);
-        return dateA.getTime() - dateB.getTime();
-      });
-  }, [filteredTransactions]);
+        const dateA = new Date(a.month)
+        const dateB = new Date(b.month)
+        return dateA.getTime() - dateB.getTime()
+      })
+  }, [filteredTransactions])
 
   const incomeVsExpensesData = useMemo(() => {
     const expenses = Math.abs(
-      filteredTransactions
-        .filter((t) => t.amount_number < 0)
-        .reduce((sum, t) => sum + (t.amount_number ?? 0), 0)
-    );
+      filteredTransactions.filter((t) => t.amount_number < 0).reduce((sum, t) => sum + (t.amount_number ?? 0), 0),
+    )
 
     const income = filteredTransactions
       .filter((t) => t.amount_number > 0)
-      .reduce((sum, t) => sum + (t.amount_number ?? 0), 0);
+      .reduce((sum, t) => sum + (t.amount_number ?? 0), 0)
 
     return [
       { name: "Income", value: income },
       { name: "Expenses", value: expenses },
       { name: "Net", value: income - expenses },
-    ];
-  }, [filteredTransactions]);
+    ]
+  }, [filteredTransactions])
 
   const tabs = [
     { id: "subcategories" as ChartTab, name: "Subcategories", icon: "📊" },
@@ -462,7 +392,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
       name: "Category Breakdown",
       icon: "🥧",
     },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
@@ -475,11 +405,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
             </span>
           </div>
         )}
-        <div
-          className={`flex flex-wrap items-center gap-4 ${
-            filtersDisabled ? "opacity-50 pointer-events-none" : ""
-          }`}
-        >
+        <div className={`flex flex-wrap items-center gap-4 ${filtersDisabled ? "opacity-50 pointer-events-none" : ""}`}>
           {/* Date Range */}
           <div className="flex-shrink-0">
             <Select
@@ -512,12 +438,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       className="w-[180px] justify-start text-left font-normal"
                       disabled={filtersDisabled}
                     >
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -525,22 +446,14 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customStartDate
-                        ? format(new Date(customStartDate), "PPP")
-                        : "Start date"}
+                      {customStartDate ? format(new Date(customStartDate), "PPP") : "Start date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        customStartDate ? new Date(customStartDate) : undefined
-                      }
-                      onSelect={(date) =>
-                        setCustomStartDate(
-                          date ? format(date, "yyyy-MM-dd") : ""
-                        )
-                      }
+                      selected={customStartDate ? new Date(customStartDate) : undefined}
+                      onSelect={(date) => setCustomStartDate(date ? format(date, "yyyy-MM-dd") : "")}
                       weekStartsOn={1}
                       initialFocus
                     />
@@ -555,12 +468,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       className="w-[180px] justify-start text-left font-normal"
                       disabled={filtersDisabled}
                     >
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -568,20 +476,14 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customEndDate
-                        ? format(new Date(customEndDate), "PPP")
-                        : "End date"}
+                      {customEndDate ? format(new Date(customEndDate), "PPP") : "End date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        customEndDate ? new Date(customEndDate) : undefined
-                      }
-                      onSelect={(date) =>
-                        setCustomEndDate(date ? format(date, "yyyy-MM-dd") : "")
-                      }
+                      selected={customEndDate ? new Date(customEndDate) : undefined}
+                      onSelect={(date) => setCustomEndDate(date ? format(date, "yyyy-MM-dd") : "")}
                       weekStartsOn={1}
                       initialFocus
                     />
@@ -595,25 +497,12 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
           <div className="flex-shrink-0 relative" ref={dropdownRef}>
             <Button
               variant="outline"
-              onClick={() =>
-                !filtersDisabled &&
-                setShowCategoryDropdown(!showCategoryDropdown)
-              }
+              onClick={() => !filtersDisabled && setShowCategoryDropdown(!showCategoryDropdown)}
               disabled={filtersDisabled}
             >
               <span>Categories...</span>
-              <svg
-                className="h-4 w-4 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
+              <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </Button>
 
@@ -622,9 +511,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
               <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-border rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
                 <div className="p-3">
                   <div className="mb-3 pb-3 border-b border-border">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                      Include Categories
-                    </h4>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Include Categories</h4>
                     {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-muted/50 rounded cursor-pointer">
@@ -632,9 +519,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                             checked={selectedCategoryIds.has(category.id)}
                             onCheckedChange={() => toggleCategory(category.id)}
                           />
-                          <span className="ml-2 text-sm font-medium text-foreground">
-                            {category.name}
-                          </span>
+                          <span className="ml-2 text-sm font-medium text-foreground">{category.name}</span>
                         </label>
                         {category.subcategories?.length &&
                           category.subcategories?.length > 0 &&
@@ -647,13 +532,9 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                 >
                                   <Checkbox
                                     checked={selectedSubcategoryIds.has(sub.id)}
-                                    onCheckedChange={() =>
-                                      toggleSubcategory(sub.id, category.id)
-                                    }
+                                    onCheckedChange={() => toggleSubcategory(sub.id, category.id)}
                                   />
-                                  <span className="ml-2 text-sm text-muted-foreground">
-                                    {sub.name}
-                                  </span>
+                                  <span className="ml-2 text-sm text-muted-foreground">{sub.name}</span>
                                 </label>
                               ))}
                             </div>
@@ -663,9 +544,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                      Exclude Categories
-                    </h4>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Exclude Categories</h4>
                     {sortedCategories.map((category) => (
                       <label
                         key={category.id}
@@ -673,13 +552,9 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       >
                         <Checkbox
                           checked={excludedCategoryIds.has(category.id)}
-                          onCheckedChange={() =>
-                            toggleExcludedCategory(category.id)
-                          }
+                          onCheckedChange={() => toggleExcludedCategory(category.id)}
                         />
-                        <span className="ml-2 text-sm text-foreground">
-                          {category.name}
-                        </span>
+                        <span className="ml-2 text-sm text-foreground">{category.name}</span>
                       </label>
                     ))}
                   </div>
@@ -724,13 +599,11 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
 
         {/* Selected Filter Chips */}
         {!filtersDisabled &&
-          (selectedCategoryIds.size > 0 ||
-            selectedSubcategoryIds.size > 0 ||
-            excludedCategoryIds.size > 0) && (
+          (selectedCategoryIds.size > 0 || selectedSubcategoryIds.size > 0 || excludedCategoryIds.size > 0) && (
             <div className="mt-3 flex flex-wrap gap-2">
               {Array.from(selectedCategoryIds).map((catId) => {
-                const category = categories.find((c) => c.id === catId);
-                if (!category) return null;
+                const category = categories.find((c) => c.id === catId)
+                if (!category) return null
                 return (
                   <Badge
                     key={catId}
@@ -744,31 +617,17 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       onClick={() => toggleCategory(catId)}
                       className="h-auto p-0.5 hover:bg-primary/20"
                     >
-                      <svg
-                        className="h-3 w-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </Button>
                   </Badge>
-                );
+                )
               })}
               {Array.from(selectedSubcategoryIds).map((subId) => {
-                const category = categories.find((c) =>
-                  c.subcategories?.some((s) => s.id === subId)
-                );
-                const subcategory = category?.subcategories?.find(
-                  (s) => s.id === subId
-                );
-                if (!subcategory || !category) return null;
+                const category = categories.find((c) => c.subcategories?.some((s) => s.id === subId))
+                const subcategory = category?.subcategories?.find((s) => s.id === subId)
+                if (!subcategory || !category) return null
                 return (
                   <Badge
                     key={subId}
@@ -782,26 +641,16 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       onClick={() => toggleSubcategory(subId, category.id)}
                       className="h-auto p-0.5 hover:bg-indigo-200"
                     >
-                      <svg
-                        className="h-3 w-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </Button>
                   </Badge>
-                );
+                )
               })}
               {Array.from(excludedCategoryIds).map((catId) => {
-                const category = categories.find((c) => c.id === catId);
-                if (!category) return null;
+                const category = categories.find((c) => c.id === catId)
+                if (!category) return null
                 return (
                   <Badge
                     key={`excluded-${catId}`}
@@ -815,22 +664,12 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       onClick={() => toggleExcludedCategory(catId)}
                       className="h-auto p-0.5 hover:bg-red-200"
                     >
-                      <svg
-                        className="h-3 w-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </Button>
                   </Badge>
-                );
+                )
               })}
             </div>
           )}
@@ -862,15 +701,10 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
         <div className="p-6">
           {activeTab === "subcategories" && (
             <div>
-              <h3 className="text-lg font-semibold mb-4">
-                Spending by Subcategory
-              </h3>
+              <h3 className="text-lg font-semibold mb-4">Spending by Subcategory</h3>
               {subcategoryData.length > 0 ? (
                 <>
-                  <ResponsiveContainer
-                    width="100%"
-                    height={Math.max(subcategoryData.length * 40, 400)}
-                  >
+                  <ResponsiveContainer width="100%" height={Math.max(subcategoryData.length * 40, 400)}>
                     <BarChart
                       data={subcategoryData}
                       layout="vertical"
@@ -878,47 +712,29 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis type="number" />
-                      <YAxis
-                        type="category"
-                        dataKey="name"
-                        width={200}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <Tooltip
-                        formatter={(value: number) => `$${formatAmount(value)}`}
-                      />
+                      <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 12 }} />
+                      <Tooltip formatter={(value: number) => `$${formatAmount(value)}`} />
                       <Bar dataKey="value" fill="#10b981" />
                     </BarChart>
                   </ResponsiveContainer>
 
                   {/* Subcategory Summary Table */}
                   <div className="mt-6">
-                    <h4 className="text-md font-medium mb-3">
-                      Detailed Breakdown
-                    </h4>
+                    <h4 className="text-md font-medium mb-3">Detailed Breakdown</h4>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="text-left">
-                              Subcategory
-                            </TableHead>
-                            <TableHead className="text-left">
-                              Category
-                            </TableHead>
+                            <TableHead className="text-left">Subcategory</TableHead>
+                            <TableHead className="text-left">Category</TableHead>
                             <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">
-                              Percentage
-                            </TableHead>
+                            <TableHead className="text-right">Percentage</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {subcategoryData.map((sub, index) => {
-                            const total = subcategoryData.reduce(
-                              (sum, s) => sum + s.value,
-                              0
-                            );
-                            const percentage = (sub.value / total) * 100;
+                            const total = subcategoryData.reduce((sum, s) => sum + s.value, 0)
+                            const percentage = (sub.value / total) * 100
                             return (
                               <TableRow key={index}>
                                 <TableCell className="font-medium">
@@ -936,14 +752,12 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                   </div>
                                 </TableCell>
                                 <TableCell>{sub.categoryName}</TableCell>
-                                <TableCell className="text-right">
-                                  ${formatAmount(sub.value)}
-                                </TableCell>
+                                <TableCell className="text-right">${formatAmount(sub.value)}</TableCell>
                                 <TableCell className="text-right text-muted-foreground">
                                   {percentage.toFixed(1)}%
                                 </TableCell>
                               </TableRow>
-                            );
+                            )
                           })}
                         </TableBody>
                       </Table>
@@ -951,18 +765,14 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </div>
                 </>
               ) : (
-                <p className="text-muted-foreground text-center py-12">
-                  No data available
-                </p>
+                <p className="text-muted-foreground text-center py-12">No data available</p>
               )}
             </div>
           )}
 
           {activeTab === "monthly-comparison" && (
             <div>
-              <h3 className="text-lg font-semibold mb-4">
-                Monthly Income vs Expenses (Last 12 Months)
-              </h3>
+              <h3 className="text-lg font-semibold mb-4">Monthly Income vs Expenses (Last 12 Months)</h3>
               {monthlyComparisonData.length > 0 ? (
                 <>
                   <ResponsiveContainer width="100%" height={400}>
@@ -970,9 +780,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip
-                        formatter={(value: number) => `$${formatAmount(value)}`}
-                      />
+                      <Tooltip formatter={(value: number) => `$${formatAmount(value)}`} />
                       <Legend />
                       <Bar dataKey="income" fill="#10b981" name="Income" />
                       <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
@@ -980,42 +788,31 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </ResponsiveContainer>
 
                   <div className="mt-6">
-                    <h4 className="text-md font-medium mb-3">
-                      Monthly Summary
-                    </h4>
+                    <h4 className="text-md font-medium mb-3">Monthly Summary</h4>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead className="text-left">Month</TableHead>
                             <TableHead className="text-right">Income</TableHead>
-                            <TableHead className="text-right">
-                              Expenses
-                            </TableHead>
+                            <TableHead className="text-right">Expenses</TableHead>
                             <TableHead className="text-right">Net</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {monthlyComparisonData.map((month, index) => (
                             <TableRow key={index}>
-                              <TableCell className="font-medium">
-                                {month.month}
-                              </TableCell>
-                              <TableCell className="text-right text-success">
-                                ${formatAmount(month.income)}
-                              </TableCell>
+                              <TableCell className="font-medium">{month.month}</TableCell>
+                              <TableCell className="text-right text-success">${formatAmount(month.income)}</TableCell>
                               <TableCell className="text-right text-destructive">
                                 ${formatAmount(month.expenses)}
                               </TableCell>
                               <TableCell
                                 className={`text-right font-medium ${
-                                  month.net >= 0
-                                    ? "text-success"
-                                    : "text-destructive"
+                                  month.net >= 0 ? "text-success" : "text-destructive"
                                 }`}
                               >
-                                {month.net >= 0 ? "+" : ""}$
-                                {formatAmount(Math.abs(month.net))}
+                                {month.net >= 0 ? "+" : ""}${formatAmount(Math.abs(month.net))}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -1025,18 +822,14 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                   </div>
                 </>
               ) : (
-                <p className="text-muted-foreground text-center py-12">
-                  No data available
-                </p>
+                <p className="text-muted-foreground text-center py-12">No data available</p>
               )}
             </div>
           )}
 
           {activeTab === "spending-trends" && (
             <div>
-              <h3 className="text-lg font-semibold mb-4">
-                Spending Trends Over Time
-              </h3>
+              <h3 className="text-lg font-semibold mb-4">Spending Trends Over Time</h3>
               {spendingTrendsData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart data={spendingTrendsData}>
@@ -1052,46 +845,30 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                       }
                     />
                     <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="amount"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      name="Spending"
-                    />
+                    <Line type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} name="Spending" />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-muted-foreground text-center py-12">
-                  No data available
-                </p>
+                <p className="text-muted-foreground text-center py-12">No data available</p>
               )}
             </div>
           )}
 
           {activeTab === "income-vs-expenses" && (
             <div>
-              <h3 className="text-lg font-semibold mb-4">
-                Income vs Expenses Overview
-              </h3>
+              <h3 className="text-lg font-semibold mb-4">Income vs Expenses Overview</h3>
               {incomeVsExpensesData.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={incomeVsExpensesData.filter(
-                          (d) => d.name !== "Net"
-                        )}
+                        data={incomeVsExpensesData.filter((d) => d.name !== "Net")}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({
-                          name,
-                          percent,
-                        }: {
-                          name?: unknown;
-                          percent?: number;
-                        }) => `${name}: ${((percent ?? 0) * 100).toFixed(1)}%`}
+                        label={({ name, percent }: { name?: unknown; percent?: number }) =>
+                          `${name}: ${((percent ?? 0) * 100).toFixed(1)}%`
+                        }
                         outerRadius={100}
                         fill="#8884d8"
                         dataKey="value"
@@ -1099,52 +876,37 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                         {incomeVsExpensesData
                           .filter((d) => d.name !== "Net")
                           .map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={
-                                entry.name === "Income" ? "#10b981" : "#ef4444"
-                              }
-                            />
+                            <Cell key={`cell-${index}`} fill={entry.name === "Income" ? "#10b981" : "#ef4444"} />
                           ))}
                       </Pie>
-                      <Tooltip
-                        formatter={(value: number) => `$${formatAmount(value)}`}
-                      />
+                      <Tooltip formatter={(value: number) => `$${formatAmount(value)}`} />
                     </PieChart>
                   </ResponsiveContainer>
 
                   <div className="flex flex-col justify-center space-y-4">
                     {incomeVsExpensesData.map((item, index) => (
                       <div key={index} className="bg-muted/50 p-4 rounded-lg">
-                        <div className="text-sm text-muted-foreground mb-1">
-                          {item.name}
-                        </div>
+                        <div className="text-sm text-muted-foreground mb-1">{item.name}</div>
                         <div
                           className={`text-2xl font-bold ${
                             item.name === "Income"
                               ? "text-success"
                               : item.name === "Expenses"
-                              ? "text-destructive"
-                              : item.value >= 0
-                              ? "text-success"
-                              : "text-destructive"
+                                ? "text-destructive"
+                                : item.value >= 0
+                                  ? "text-success"
+                                  : "text-destructive"
                           }`}
                         >
-                          {item.name !== "Net" && item.name === "Expenses"
-                            ? "-"
-                            : item.value >= 0
-                            ? "+"
-                            : ""}
-                          ${formatAmount(item.value)}
+                          {item.name !== "Net" && item.name === "Expenses" ? "-" : item.value >= 0 ? "+" : ""}$
+                          {formatAmount(item.value)}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-12">
-                  No data available
-                </p>
+                <p className="text-muted-foreground text-center py-12">No data available</p>
               )}
             </div>
           )}
@@ -1161,45 +923,28 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({
-                          name,
-                          percent,
-                        }: {
-                          name?: unknown;
-                          percent?: number;
-                        }) => `${name}: ${((percent ?? 0) * 100).toFixed(1)}%`}
+                        label={({ name, percent }: { name?: unknown; percent?: number }) =>
+                          `${name}: ${((percent ?? 0) * 100).toFixed(1)}%`
+                        }
                         outerRadius={120}
                         fill="#8884d8"
                         dataKey="value"
                       >
                         {categoryData.map((_entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip
-                        formatter={(value: number) => `$${formatAmount(value)}`}
-                      />
+                      <Tooltip formatter={(value: number) => `$${formatAmount(value)}`} />
                     </PieChart>
                   </ResponsiveContainer>
 
                   <div className="space-y-2">
-                    <h4 className="text-md font-medium mb-3">
-                      Category Summary
-                    </h4>
+                    <h4 className="text-md font-medium mb-3">Category Summary</h4>
                     {categoryData.map((cat, index) => {
-                      const total = categoryData.reduce(
-                        (sum, c) => sum + c.value,
-                        0
-                      );
-                      const percentage = (cat.value / total) * 100;
+                      const total = categoryData.reduce((sum, c) => sum + c.value, 0)
+                      const percentage = (cat.value / total) * 100
                       return (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-muted/50 rounded"
-                        >
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div
                               className="w-4 h-4 rounded flex-shrink-0"
@@ -1216,32 +961,24 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                                 className="w-5 h-5 rounded flex-shrink-0"
                               />
                             )}
-                            <span className="text-sm text-muted-foreground truncate">
-                              {cat.name}
-                            </span>
+                            <span className="text-sm text-muted-foreground truncate">{cat.name}</span>
                           </div>
                           <div className="text-right ml-2 flex-shrink-0">
-                            <div className="text-sm font-medium text-foreground">
-                              ${formatAmount(cat.value)}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {percentage.toFixed(1)}%
-                            </div>
+                            <div className="text-sm font-medium text-foreground">${formatAmount(cat.value)}</div>
+                            <div className="text-xs text-muted-foreground">{percentage.toFixed(1)}%</div>
                           </div>
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-12">
-                  No data available
-                </p>
+                <p className="text-muted-foreground text-center py-12">No data available</p>
               )}
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }

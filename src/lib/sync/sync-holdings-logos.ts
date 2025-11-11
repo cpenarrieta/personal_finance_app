@@ -1,7 +1,7 @@
 // lib/syncHoldingsLogos.ts
-import { prisma } from '../db/prisma'
+import { prisma } from "../db/prisma"
 
-const LOGO_DEV_TOKEN = process.env.LOGO_DEV_TOKEN || 'pk_A4XxtLBuSvWdGiAYJMzjTA'
+const LOGO_DEV_TOKEN = process.env.LOGO_DEV_TOKEN || "pk_A4XxtLBuSvWdGiAYJMzjTA"
 
 export async function syncHoldingsLogos() {
   // Get all securities with ticker symbols
@@ -33,5 +33,5 @@ export async function syncHoldingsLogos() {
     }
   }
 
-  console.log('Holdings logo sync completed!')
+  console.log("Holdings logo sync completed!")
 }

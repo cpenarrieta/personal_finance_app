@@ -1,100 +1,75 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { format } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { CategorySelect } from "@/components/ui/category-select";
-import { Button } from "@/components/ui/button";
-import { TagSelector } from "@/components/transactions/filters/TagSelector";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type {
-  CategoryForClient,
-  PlaidAccountForClient,
-  TagForClient
-} from "@/types";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { format } from "date-fns"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { CategorySelect } from "@/components/ui/category-select"
+import { Button } from "@/components/ui/button"
+import { TagSelector } from "@/components/transactions/filters/TagSelector"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { CategoryForClient, PlaidAccountForClient, TagForClient } from "@/types"
 
 interface AddTransactionModalProps {
-  onClose: () => void;
-  categories: CategoryForClient[];
-  tags: TagForClient[];
-  accounts: PlaidAccountForClient[];
+  onClose: () => void
+  categories: CategoryForClient[]
+  tags: TagForClient[]
+  accounts: PlaidAccountForClient[]
 }
 
-export function AddTransactionModal({
-  onClose,
-  categories,
-  tags,
-  accounts,
-}: AddTransactionModalProps) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function AddTransactionModal({ onClose, categories, tags, accounts }: AddTransactionModalProps) {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Form state - Required fields
-  const [accountId, setAccountId] = useState("");
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [pending, setPending] = useState(false);
+  const [accountId, setAccountId] = useState("")
+  const [name, setName] = useState("")
+  const [amount, setAmount] = useState("")
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0])
+  const [pending, setPending] = useState(false)
 
   // Form state - Optional fields
-  const [merchantName, setMerchantName] = useState("");
-  const [isoCurrencyCode, setIsoCurrencyCode] = useState("CAD");
-  const [authorizedDate, setAuthorizedDate] = useState("");
-  const [paymentChannel, setPaymentChannel] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [subcategoryId, setSubcategoryId] = useState("");
-  const [notes, setNotes] = useState("");
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [merchantName, setMerchantName] = useState("")
+  const [isoCurrencyCode, setIsoCurrencyCode] = useState("CAD")
+  const [authorizedDate, setAuthorizedDate] = useState("")
+  const [paymentChannel, setPaymentChannel] = useState("")
+  const [categoryId, setCategoryId] = useState("")
+  const [subcategoryId, setSubcategoryId] = useState("")
+  const [notes, setNotes] = useState("")
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
 
   // Get subcategories for selected category
-  const selectedCategory = categories.find((c) => c.id === categoryId);
-  const availableSubcategories = selectedCategory?.subcategories || [];
+  const selectedCategory = categories.find((c) => c.id === categoryId)
+  const availableSubcategories = selectedCategory?.subcategories || []
 
   const toggleTag = (tagId: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
-    );
-  };
+    setSelectedTagIds((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     // Validation
     if (!accountId) {
-      alert("Please select an account");
-      return;
+      alert("Please select an account")
+      return
     }
     if (!name.trim()) {
-      alert("Please enter a transaction name");
-      return;
+      alert("Please enter a transaction name")
+      return
     }
     if (!amount || isNaN(parseFloat(amount))) {
-      alert("Please enter a valid amount");
-      return;
+      alert("Please enter a valid amount")
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       const response = await fetch("/api/transactions", {
@@ -117,27 +92,23 @@ export function AddTransactionModal({
           notes: notes.trim() || null,
           tagIds: selectedTagIds,
         }),
-      });
+      })
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create transaction");
+        const error = await response.json()
+        throw new Error(error.error || "Failed to create transaction")
       }
 
       // Refresh the page to show the new transaction
-      router.refresh();
-      onClose();
+      router.refresh()
+      onClose()
     } catch (error) {
-      console.error("Error creating transaction:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to create transaction. Please try again."
-      );
+      console.error("Error creating transaction:", error)
+      alert(error instanceof Error ? error.message : "Failed to create transaction. Please try again.")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
@@ -198,9 +169,7 @@ export function AddTransactionModal({
                 placeholder="0.00"
                 required
               />
-              <p className="text-xs text-gray-500">
-                Positive for income, negative for expenses
-              </p>
+              <p className="text-xs text-gray-500">Positive for income, negative for expenses</p>
             </div>
 
             <div className="space-y-2">
@@ -209,9 +178,7 @@ export function AddTransactionModal({
                 id="currency"
                 type="text"
                 value={isoCurrencyCode}
-                onChange={(e) =>
-                  setIsoCurrencyCode(e.target.value.toUpperCase())
-                }
+                onChange={(e) => setIsoCurrencyCode(e.target.value.toUpperCase())}
                 placeholder="USD"
                 maxLength={3}
               />
@@ -226,16 +193,8 @@ export function AddTransactionModal({
               </Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <svg
-                      className="mr-2 h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -262,16 +221,8 @@ export function AddTransactionModal({
               <Label htmlFor="authorized-date">Authorized Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <svg
-                      className="mr-2 h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -286,7 +237,9 @@ export function AddTransactionModal({
                   <Calendar
                     mode="single"
                     selected={authorizedDate ? new Date(authorizedDate) : undefined}
-                    onSelect={(selectedDate) => setAuthorizedDate(selectedDate ? format(selectedDate, "yyyy-MM-dd") : "")}
+                    onSelect={(selectedDate) =>
+                      setAuthorizedDate(selectedDate ? format(selectedDate, "yyyy-MM-dd") : "")
+                    }
                     weekStartsOn={1}
                     initialFocus
                   />
@@ -349,8 +302,8 @@ export function AddTransactionModal({
                 id="category"
                 value={categoryId}
                 onChange={(value) => {
-                  setCategoryId(value);
-                  setSubcategoryId(""); // Reset subcategory when category changes
+                  setCategoryId(value)
+                  setSubcategoryId("") // Reset subcategory when category changes
                 }}
                 categories={categories}
                 placeholder="None"
@@ -389,20 +342,11 @@ export function AddTransactionModal({
           </div>
 
           {/* Tags */}
-          <TagSelector
-            tags={tags}
-            selectedTagIds={selectedTagIds}
-            onToggleTag={toggleTag}
-          />
+          <TagSelector tags={tags} selectedTagIds={selectedTagIds} onToggleTag={toggleTag} />
 
           {/* Action Buttons */}
           <DialogFooter className="pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
@@ -412,5 +356,5 @@ export function AddTransactionModal({
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

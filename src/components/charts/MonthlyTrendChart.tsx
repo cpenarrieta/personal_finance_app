@@ -1,23 +1,14 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
 interface MonthlyTrendChartProps {
   data: Array<{ month: string; spending: number; income: number }>
 }
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
-  const hasData = data.length > 0 && data.some(d => d.spending > 0 || d.income > 0)
+  const hasData = data.length > 0 && data.some((d) => d.spending > 0 || d.income > 0)
 
   if (!hasData) {
     return (
@@ -41,18 +32,12 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis
-              dataKey="month"
-              stroke="var(--muted-foreground)"
-              fontSize={12}
-            />
-            <YAxis
-              stroke="var(--muted-foreground)"
-              fontSize={12}
-              tickFormatter={(value) => `$${value}`}
-            />
+            <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} />
+            <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(value) => `$${value}`} />
             <Tooltip
-              formatter={(value: number) => `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              formatter={(value: number) =>
+                `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              }
               contentStyle={{
                 backgroundColor: "var(--background)",
                 border: "1px solid var(--border)",
@@ -60,20 +45,8 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
               }}
             />
             <Legend />
-            <Line
-              type="monotone"
-              dataKey="spending"
-              stroke="var(--destructive)"
-              strokeWidth={2}
-              name="Spending"
-            />
-            <Line
-              type="monotone"
-              dataKey="income"
-              stroke="var(--chart-1)"
-              strokeWidth={2}
-              name="Income"
-            />
+            <Line type="monotone" dataKey="spending" stroke="var(--destructive)" strokeWidth={2} name="Spending" />
+            <Line type="monotone" dataKey="income" stroke="var(--chart-1)" strokeWidth={2} name="Income" />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>

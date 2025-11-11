@@ -1,23 +1,20 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client"
 
 const prisma = new PrismaClient()
 
 // Helper function to extract keywords from category/subcategory names
 function extractKeywords(text: string): string[] {
   // Remove emojis and clean up text
-  const cleaned = text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim()
+  const cleaned = text.replace(/[\u{1F300}-\u{1F9FF}]/gu, "").trim()
   // Split by common separators and get individual words
   return cleaned
     .toLowerCase()
     .split(/[,\s\(\)&\/]+/)
-    .filter(word => word.length > 2) // Filter out very short words
+    .filter((word) => word.length > 2) // Filter out very short words
 }
 
 // Calculate match score between transaction data and category keywords
-function calculateMatchScore(
-  transactionData: string[],
-  categoryKeywords: string[]
-): number {
+function calculateMatchScore(transactionData: string[], categoryKeywords: string[]): number {
   let matches = 0
   let totalKeywords = categoryKeywords.length
 
@@ -40,7 +37,7 @@ function findBestMatch(
     id: string
     name: string
     subcategories: Array<{ id: string; name: string }>
-  }>
+  }>,
 ): { categoryId: string | null; subcategoryId: string | null; confidence: number } {
   let bestCategoryId: string | null = null
   let bestSubcategoryId: string | null = null
@@ -76,18 +73,18 @@ function findBestMatch(
   return {
     categoryId: bestCategoryId,
     subcategoryId: bestSubcategoryId,
-    confidence: bestScore
+    confidence: bestScore,
   }
 }
 
 async function main() {
-  console.log('Starting auto-categorization...')
+  console.log("Starting auto-categorization...")
 
   // Fetch all categories with subcategories
   const categories = await prisma.category.findMany({
     include: {
-      subcategories: true
-    }
+      subcategories: true,
+    },
   })
   console.log(`Loaded ${categories.length} categories`)
 
@@ -101,8 +98,8 @@ async function main() {
       plaidSubcategory: true,
       notes: true,
       categoryId: true,
-      subcategoryId: true
-    }
+      subcategoryId: true,
+    },
   })
   console.log(`Processing ${transactions.length} transactions...`)
 
@@ -128,18 +125,16 @@ async function main() {
         where: { id: transaction.id },
         data: {
           category: { connect: { id: match.categoryId } },
-          subcategory: match.subcategoryId
-            ? { connect: { id: match.subcategoryId } }
-            : { disconnect: true }
-        }
+          subcategory: match.subcategoryId ? { connect: { id: match.subcategoryId } } : { disconnect: true },
+        },
       })
 
-      const category = categories.find(c => c.id === match.categoryId)
-      const subcategory = category?.subcategories.find(s => s.id === match.subcategoryId)
+      const category = categories.find((c) => c.id === match.categoryId)
+      const subcategory = category?.subcategories.find((s) => s.id === match.subcategoryId)
 
       console.log(
         `✓ [${match.confidence.toFixed(0)}%] "${transaction.name}" → ${category?.name}` +
-        (subcategory ? ` > ${subcategory.name}` : '')
+          (subcategory ? ` > ${subcategory.name}` : ""),
       )
       categorized++
     } else {
@@ -150,7 +145,7 @@ async function main() {
     }
   }
 
-  console.log('\n=== Summary ===')
+  console.log("\n=== Summary ===")
   console.log(`Total transactions: ${transactions.length}`)
   console.log(`Categorized: ${categorized}`)
   console.log(`Skipped: ${skipped}`)

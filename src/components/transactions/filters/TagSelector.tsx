@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import type { TagForClient } from "@/types";
+import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
+import type { TagForClient } from "@/types"
 
 interface TagSelectorProps {
-  tags: TagForClient[];
-  selectedTagIds: string[];
-  onToggleTag: (tagId: string) => void;
-  label?: string;
-  showManageLink?: boolean;
+  tags: TagForClient[]
+  selectedTagIds: string[]
+  onToggleTag: (tagId: string) => void
+  label?: string
+  showManageLink?: boolean
 }
 
 export function TagSelector({
@@ -19,7 +19,7 @@ export function TagSelector({
   label = "Tags",
   showManageLink = true,
 }: TagSelectorProps) {
-  const showHeader = label || showManageLink;
+  const showHeader = label || showManageLink
 
   const badgeList = (
     <div className="flex flex-wrap gap-2">
@@ -32,21 +32,17 @@ export function TagSelector({
               ? "text-white ring-2 ring-offset-2"
               : "text-muted-foreground bg-muted hover:bg-muted/80"
           }`}
-          style={
-            selectedTagIds.includes(tag.id)
-              ? { backgroundColor: tag.color }
-              : undefined
-          }
+          style={selectedTagIds.includes(tag.id) ? { backgroundColor: tag.color } : undefined}
           onClick={() => onToggleTag(tag.id)}
         >
           {tag.name}
         </Badge>
       ))}
     </div>
-  );
+  )
 
   if (!showHeader && tags.length > 0) {
-    return badgeList;
+    return badgeList
   }
 
   return (
@@ -84,5 +80,5 @@ export function TagSelector({
         badgeList
       )}
     </div>
-  );
+  )
 }

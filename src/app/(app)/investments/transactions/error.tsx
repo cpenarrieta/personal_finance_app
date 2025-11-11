@@ -1,28 +1,22 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error("Investment transactions error:", error);
+    console.error("Investment transactions error:", error)
 
     // Report error to Sentry
     import("@sentry/nextjs").then((Sentry) => {
       Sentry.captureException(error, {
         tags: { page: "investment-transactions" },
-      });
-    });
-  }, [error]);
+      })
+    })
+  }, [error])
 
   return (
     <Card>
@@ -36,18 +30,16 @@ export default function Error({
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            {error.message || "Unable to fetch investment transaction data"}
-          </AlertDescription>
+          <AlertDescription>{error.message || "Unable to fetch investment transaction data"}</AlertDescription>
         </Alert>
 
         <div className="flex gap-2">
           <Button onClick={reset}>Try again</Button>
-          <Button onClick={() => window.location.href = "/"} variant="outline">
+          <Button onClick={() => (window.location.href = "/")} variant="outline">
             Back to dashboard
           </Button>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

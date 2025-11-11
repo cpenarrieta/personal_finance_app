@@ -1,4 +1,4 @@
-import { useEffect, RefObject } from "react";
+import { useEffect, RefObject } from "react"
 
 /**
  * Custom hook that triggers a callback when clicking outside of the referenced element
@@ -9,23 +9,23 @@ import { useEffect, RefObject } from "react";
 export function useClickOutside<T extends HTMLElement = HTMLElement>(
   ref: RefObject<T>,
   handler: (event: MouseEvent) => void,
-  enabled: boolean = true
+  enabled: boolean = true,
 ): void {
   useEffect(() => {
     if (!enabled) {
-      return undefined;
+      return undefined
     }
 
     function handleClickOutside(event: MouseEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        handler(event);
+        handler(event)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside)
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [ref, handler, enabled]);
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [ref, handler, enabled])
 }

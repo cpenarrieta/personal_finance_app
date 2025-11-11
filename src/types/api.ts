@@ -8,24 +8,24 @@
  * - Request payload types
  */
 
-import { z } from "zod";
+import { z } from "zod"
 
 // ============================================================================
 // GENERIC API RESPONSE TYPES
 // ============================================================================
 
 export type ApiSuccess<T> = {
-  success: true;
-  data: T;
-};
+  success: true
+  data: T
+}
 
 export type ApiError = {
-  success: false;
-  error: string;
-  details?: unknown;
-};
+  success: false
+  error: string
+  details?: unknown
+}
 
-export type ApiResponse<T> = ApiSuccess<T> | ApiError;
+export type ApiResponse<T> = ApiSuccess<T> | ApiError
 
 // ============================================================================
 // TRANSACTION API SCHEMAS
@@ -50,9 +50,9 @@ export const createTransactionSchema = z.object({
   subcategoryId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
-});
+})
 
-export type CreateTransactionPayload = z.infer<typeof createTransactionSchema>;
+export type CreateTransactionPayload = z.infer<typeof createTransactionSchema>
 
 /**
  * Schema for updating a transaction
@@ -65,9 +65,9 @@ export const updateTransactionSchema = z.object({
   subcategoryId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
-});
+})
 
-export type UpdateTransactionPayload = z.infer<typeof updateTransactionSchema>;
+export type UpdateTransactionPayload = z.infer<typeof updateTransactionSchema>
 
 /**
  * Schema for bulk updating transactions
@@ -77,11 +77,9 @@ export const bulkUpdateTransactionsSchema = z.object({
   categoryId: z.string().nullable().optional(),
   subcategoryId: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
-});
+})
 
-export type BulkUpdateTransactionsPayload = z.infer<
-  typeof bulkUpdateTransactionsSchema
->;
+export type BulkUpdateTransactionsPayload = z.infer<typeof bulkUpdateTransactionsSchema>
 
 // ============================================================================
 // CATEGORY API SCHEMAS
@@ -93,11 +91,9 @@ export type BulkUpdateTransactionsPayload = z.infer<
 export const createCategorySchema = z.object({
   name: z.string().min(1).max(100),
   imageUrl: z.string().url().nullable().optional(),
-});
+})
 
-export type CreateCategoryPayload = z.infer<
-  typeof createCategorySchema
->;
+export type CreateCategoryPayload = z.infer<typeof createCategorySchema>
 
 /**
  * Schema for updating a category
@@ -105,11 +101,9 @@ export type CreateCategoryPayload = z.infer<
 export const updateCategorySchema = z.object({
   name: z.string().min(1).max(100).optional(),
   imageUrl: z.string().url().nullable().optional(),
-});
+})
 
-export type UpdateCategoryPayload = z.infer<
-  typeof updateCategorySchema
->;
+export type UpdateCategoryPayload = z.infer<typeof updateCategorySchema>
 
 /**
  * Schema for creating a subcategory
@@ -118,11 +112,9 @@ export const createSubcategorySchema = z.object({
   categoryId: z.string(),
   name: z.string().min(1).max(100),
   imageUrl: z.string().url().nullable().optional(),
-});
+})
 
-export type CreateSubcategoryPayload = z.infer<
-  typeof createSubcategorySchema
->;
+export type CreateSubcategoryPayload = z.infer<typeof createSubcategorySchema>
 
 /**
  * Schema for category with subcategories (API response)
@@ -141,13 +133,11 @@ export const categoryWithSubcategoriesSchema = z.object({
       imageUrl: z.string().nullable(),
       createdAt: z.string(),
       updatedAt: z.string(),
-    })
+    }),
   ),
-});
+})
 
-export type CategoryWithSubcategories = z.infer<
-  typeof categoryWithSubcategoriesSchema
->;
+export type CategoryWithSubcategories = z.infer<typeof categoryWithSubcategoriesSchema>
 
 // ============================================================================
 // TAG API SCHEMAS
@@ -159,9 +149,9 @@ export type CategoryWithSubcategories = z.infer<
 export const createTagSchema = z.object({
   name: z.string().min(1).max(50),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color"),
-});
+})
 
-export type CreateTagPayload = z.infer<typeof createTagSchema>;
+export type CreateTagPayload = z.infer<typeof createTagSchema>
 
 /**
  * Schema for updating a tag
@@ -172,9 +162,9 @@ export const updateTagSchema = z.object({
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color")
     .optional(),
-});
+})
 
-export type UpdateTagPayload = z.infer<typeof updateTagSchema>;
+export type UpdateTagPayload = z.infer<typeof updateTagSchema>
 
 /**
  * Schema for tag with count
@@ -188,9 +178,9 @@ export const tagWithCountSchema = z.object({
   _count: z.object({
     transactions: z.number(),
   }),
-});
+})
 
-export type TagWithCount = z.infer<typeof tagWithCountSchema>;
+export type TagWithCount = z.infer<typeof tagWithCountSchema>
 
 // ============================================================================
 // PLAID ACCOUNT API SCHEMAS
@@ -206,11 +196,9 @@ export type TagWithCount = z.infer<typeof tagWithCountSchema>;
 export const createLinkTokenResponseSchema = z.object({
   link_token: z.string(),
   expiration: z.string(),
-});
+})
 
-export type CreateLinkTokenResponse = z.infer<
-  typeof createLinkTokenResponseSchema
->;
+export type CreateLinkTokenResponse = z.infer<typeof createLinkTokenResponseSchema>
 
 /**
  * Schema for public token exchange request
@@ -221,11 +209,9 @@ export const exchangePublicTokenSchema = z.object({
     institution_id: z.string(),
     name: z.string(),
   }),
-});
+})
 
-export type ExchangePublicTokenPayload = z.infer<
-  typeof exchangePublicTokenSchema
->;
+export type ExchangePublicTokenPayload = z.infer<typeof exchangePublicTokenSchema>
 
 // ============================================================================
 // HOLDING API SCHEMAS
@@ -243,9 +229,9 @@ export const transactionByCategorySchema = z.object({
   categoryName: z.string().nullable(),
   total: z.string(), // Decimal as string
   count: z.number(),
-});
+})
 
-export type TransactionByCategory = z.infer<typeof transactionByCategorySchema>;
+export type TransactionByCategory = z.infer<typeof transactionByCategorySchema>
 
 /**
  * Schema for date range query
@@ -253,9 +239,9 @@ export type TransactionByCategory = z.infer<typeof transactionByCategorySchema>;
 export const dateRangeQuerySchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-});
+})
 
-export type DateRangeQuery = z.infer<typeof dateRangeQuerySchema>;
+export type DateRangeQuery = z.infer<typeof dateRangeQuerySchema>
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -265,29 +251,23 @@ export type DateRangeQuery = z.infer<typeof dateRangeQuerySchema>;
  * Helper to create a success response
  */
 export function createSuccessResponse<T>(data: T): ApiSuccess<T> {
-  return { success: true, data };
+  return { success: true, data }
 }
 
 /**
  * Helper to create an error response
  */
-export function createErrorResponse(
-  error: string,
-  details?: unknown
-): ApiError {
-  return { success: false, error, details };
+export function createErrorResponse(error: string, details?: unknown): ApiError {
+  return { success: false, error, details }
 }
 
 /**
  * Parse and validate request body with Zod schema
  * Throws if validation fails
  */
-export async function parseRequestBody<T extends z.ZodType>(
-  request: Request,
-  schema: T
-): Promise<z.infer<T>> {
-  const body = await request.json();
-  return schema.parse(body);
+export async function parseRequestBody<T extends z.ZodType>(request: Request, schema: T): Promise<z.infer<T>> {
+  const body = await request.json()
+  return schema.parse(body)
 }
 
 /**
@@ -296,17 +276,15 @@ export async function parseRequestBody<T extends z.ZodType>(
  */
 export async function safeParseRequestBody<T extends z.ZodType>(
   request: Request,
-  schema: T
-): Promise<
-  { success: true; data: z.infer<T> } | { success: false; error: z.ZodError }
-> {
+  schema: T,
+): Promise<{ success: true; data: z.infer<T> } | { success: false; error: z.ZodError }> {
   try {
-    const body = await request.json();
-    const result = schema.safeParse(body);
+    const body = await request.json()
+    const result = schema.safeParse(body)
     if (result.success) {
-      return { success: true, data: result.data };
+      return { success: true, data: result.data }
     }
-    return { success: false, error: result.error };
+    return { success: false, error: result.error }
   } catch {
     return {
       success: false,
@@ -317,6 +295,6 @@ export async function safeParseRequestBody<T extends z.ZodType>(
           message: "Invalid JSON",
         },
       ]),
-    };
+    }
   }
 }

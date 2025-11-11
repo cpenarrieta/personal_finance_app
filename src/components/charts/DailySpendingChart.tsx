@@ -1,22 +1,14 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 interface DailySpendingChartProps {
   data: Array<{ day: string; spending: number }>
 }
 
 export function DailySpendingChart({ data }: DailySpendingChartProps) {
-  const hasData = data.length > 0 && data.some(d => d.spending > 0)
+  const hasData = data.length > 0 && data.some((d) => d.spending > 0)
 
   if (!hasData) {
     return (
@@ -54,13 +46,12 @@ export function DailySpendingChart({ data }: DailySpendingChartProps) {
               textAnchor="end"
               height={80}
             />
-            <YAxis
-              stroke="var(--muted-foreground)"
-              fontSize={12}
-              tickFormatter={(value) => `$${value}`}
-            />
+            <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(value) => `$${value}`} />
             <Tooltip
-              formatter={(value: number) => [`$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, "Spending"]}
+              formatter={(value: number) => [
+                `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                "Spending",
+              ]}
               contentStyle={{
                 backgroundColor: "var(--background)",
                 border: "1px solid var(--border)",
@@ -81,4 +72,3 @@ export function DailySpendingChart({ data }: DailySpendingChartProps) {
     </Card>
   )
 }
-

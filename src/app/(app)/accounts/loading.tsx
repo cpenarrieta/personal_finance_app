@@ -1,4 +1,4 @@
-import { AccountsListSkeleton } from "@/components/accounts/AccountsListSkeleton";
+import { AccountsListSkeleton } from "@/components/accounts/AccountsListSkeleton"
 
 export default function Loading() {
   return (
@@ -6,5 +6,5 @@ export default function Loading() {
       <h2 className="text-2xl font-semibold mb-4">Accounts</h2>
       <AccountsListSkeleton />
     </>
-  );
+  )
 }

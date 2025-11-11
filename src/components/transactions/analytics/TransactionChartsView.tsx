@@ -12,10 +12,7 @@ interface TransactionChartsViewProps {
   categories: CategoryForClient[]
 }
 
-export function TransactionChartsView({
-  transactions,
-  categories,
-}: TransactionChartsViewProps) {
+export function TransactionChartsView({ transactions, categories }: TransactionChartsViewProps) {
   const chartData = useMemo(() => {
     // Use filtered transactions - no additional date filtering
     if (transactions.length === 0) {
@@ -28,35 +25,32 @@ export function TransactionChartsView({
     }
 
     // Get date range from filtered transactions
-    const transactionDates = transactions.map((t) =>
-      new Date(t.date_string || t.created_at_string)
-    )
+    const transactionDates = transactions.map((t) => new Date(t.date_string || t.created_at_string))
     const minDate = min(transactionDates)
     const maxDate = max(transactionDates)
 
     // Generate months for the filtered date range
     const months = eachMonthOfInterval({
       start: dateStartOfMonth(minDate),
-      end: dateStartOfMonth(maxDate)
+      end: dateStartOfMonth(maxDate),
     })
 
     // Spending by Category (all filtered transactions, exclude transfers)
     const categorySpending = transactions
       .filter((t: TransactionForClient) => {
-        return (
-          t.amount_number < 0 &&
-          t.category &&
-          t.category.name !== "🔁 Transfers"
-        )
+        return t.amount_number < 0 && t.category && t.category.name !== "🔁 Transfers"
       })
-      .reduce((acc: Record<string, number>, t: TransactionForClient) => {
-        const categoryName = t.category?.name || "Uncategorized"
-        if (!acc[categoryName]) {
-          acc[categoryName] = 0
-        }
-        acc[categoryName] += Math.abs(t.amount_number)
-        return acc
-      }, {} as Record<string, number>)
+      .reduce(
+        (acc: Record<string, number>, t: TransactionForClient) => {
+          const categoryName = t.category?.name || "Uncategorized"
+          if (!acc[categoryName]) {
+            acc[categoryName] = 0
+          }
+          acc[categoryName] += Math.abs(t.amount_number)
+          return acc
+        },
+        {} as Record<string, number>,
+      )
 
     const CHART_COLORS = [
       "hsl(var(--chart-1))",
@@ -78,21 +72,19 @@ export function TransactionChartsView({
     // Spending by Subcategory (all filtered transactions, exclude transfers)
     const subcategorySpending = transactions
       .filter((t: TransactionForClient) => {
-        return (
-          t.amount_number < 0 &&
-          t.subcategory &&
-          t.category &&
-          t.category.name !== "🔁 Transfers"
-        )
+        return t.amount_number < 0 && t.subcategory && t.category && t.category.name !== "🔁 Transfers"
       })
-      .reduce((acc: Record<string, number>, t: TransactionForClient) => {
-        const subcategoryName = t.subcategory?.name || "Uncategorized"
-        if (!acc[subcategoryName]) {
-          acc[subcategoryName] = 0
-        }
-        acc[subcategoryName] += Math.abs(t.amount_number)
-        return acc
-      }, {} as Record<string, number>)
+      .reduce(
+        (acc: Record<string, number>, t: TransactionForClient) => {
+          const subcategoryName = t.subcategory?.name || "Uncategorized"
+          if (!acc[subcategoryName]) {
+            acc[subcategoryName] = 0
+          }
+          acc[subcategoryName] += Math.abs(t.amount_number)
+          return acc
+        },
+        {} as Record<string, number>,
+      )
 
     const spendingBySubcategory = Object.entries(subcategorySpending)
       .map(([name, value], index) => ({
@@ -163,14 +155,8 @@ export function TransactionChartsView({
 
   return (
     <div className="space-y-6">
-      <SpendingByCategoryChart
-        data={chartData.spendingByCategory}
-        title="Spending by Category"
-      />
-      <SpendingByCategoryChart
-        data={chartData.spendingBySubcategory}
-        title="Spending by Sub-Category"
-      />
+      <SpendingByCategoryChart data={chartData.spendingByCategory} title="Spending by Category" />
+      <SpendingByCategoryChart data={chartData.spendingBySubcategory} title="Spending by Sub-Category" />
       <MonthlyTrendChart data={chartData.monthlyTrendData} />
       <IncomeVsExpenseChart data={chartData.incomeVsExpenseData} />
     </div>

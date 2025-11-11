@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getPlaidClient } from '@/lib/api/plaid'
-import { prisma } from '@/lib/db/prisma'
-import { CountryCode } from 'plaid'
-import { storeReconnectionData } from '@/lib/cache/reconnection-cache'
+import { NextRequest, NextResponse } from "next/server"
+import { getPlaidClient } from "@/lib/api/plaid"
+import { prisma } from "@/lib/db/prisma"
+import { CountryCode } from "plaid"
+import { storeReconnectionData } from "@/lib/cache/reconnection-cache"
 
 /**
  * Prepares public token exchange by checking if it's a reauth or reconnection
@@ -14,10 +14,7 @@ export async function POST(req: NextRequest) {
     const { public_token, existingItemDbId } = await req.json()
 
     if (!public_token) {
-      return NextResponse.json(
-        { error: 'public_token is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "public_token is required" }, { status: 400 })
     }
 
     const plaid = getPlaidClient()
@@ -29,9 +26,9 @@ export async function POST(req: NextRequest) {
 
     // Get institution info
     const item = await plaid.itemGet({ access_token: accessToken })
-    const instId = item.data.item.institution_id || 'unknown'
-    let institutionName = 'Unknown'
-    if (instId && instId !== 'unknown') {
+    const instId = item.data.item.institution_id || "unknown"
+    let institutionName = "Unknown"
+    if (instId && instId !== "unknown") {
       const inst = await plaid.institutionsGetById({
         institution_id: instId,
         country_codes: [CountryCode.Ca],
@@ -50,10 +47,7 @@ export async function POST(req: NextRequest) {
       })
 
       if (!existingItem) {
-        return NextResponse.json(
-          { error: 'Existing item not found' },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: "Existing item not found" }, { status: 404 })
       }
 
       // Check if item_id has changed (reconnection) or stayed same (reauth)
@@ -63,24 +57,24 @@ export async function POST(req: NextRequest) {
 
         await prisma.item.update({
           where: { id: existingItemDbId },
-          data: { status: 'ACTIVE' },
+          data: { status: "ACTIVE" },
         })
 
         return NextResponse.json({
           ok: true,
-          type: 'reauth',
-          message: 'Reauthorization successful!',
+          type: "reauth",
+          message: "Reauthorization successful!",
         })
       } else {
         // RECONNECTION: item_id changed, need user confirmation
         console.log(
-          `⚠️  Reconnection detected for ${institutionName} (old: ${existingItem.plaidItemId}, new: ${itemId})`
+          `⚠️  Reconnection detected for ${institutionName} (old: ${existingItem.plaidItemId}, new: ${itemId})`,
         )
 
         // Count transactions that will be deleted
         const transactionCount = existingItem.accounts.reduce(
           (sum: number, acc: { _count: { transactions: number } }) => sum + acc._count.transactions,
-          0
+          0,
         )
 
         // Store reconnection data for confirmation
@@ -97,7 +91,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
           ok: true,
-          type: 'reconnection',
+          type: "reconnection",
           reconnectionId,
           transactionCount,
           institutionName,
@@ -111,7 +105,7 @@ export async function POST(req: NextRequest) {
     // or the original exchange-public-token endpoint
     return NextResponse.json({
       ok: true,
-      type: 'new',
+      type: "new",
       data: {
         accessToken,
         itemId,
@@ -121,10 +115,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('❌ Error preparing exchange:', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    console.error("❌ Error preparing exchange:", error)
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

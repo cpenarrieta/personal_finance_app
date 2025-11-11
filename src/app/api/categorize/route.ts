@@ -1,56 +1,53 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
-import OpenAI from "openai";
-import {
-  CategoryWithSubcategories,
-  TransactionWithRelations,
-} from "@/types";
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/db/prisma"
+import OpenAI from "openai"
+import { CategoryWithSubcategories, TransactionWithRelations } from "@/types"
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
-});
+  apiKey: process.env.OPENAI_API_KEY || "",
+})
 
 interface CategoryMatch {
-  categoryName: string | null;
-  subcategoryName: string | null;
-  confidence: number;
-  reasoning: string;
+  categoryName: string | null
+  subcategoryName: string | null
+  confidence: number
+  reasoning: string
 }
 
 async function categorizeBatch(
   transactions: Array<{
-    id: string;
-    name: string;
-    merchantName: string | null;
-    plaidCategory: string | null;
-    plaidSubcategory: string | null;
-    notes: string | null;
-    amount: string;
+    id: string
+    name: string
+    merchantName: string | null
+    plaidCategory: string | null
+    plaidSubcategory: string | null
+    notes: string | null
+    amount: string
   }>,
   categories: Array<{
-    id: string;
-    name: string;
-    subcategories: Array<{ id: string; name: string }>;
-  }>
+    id: string
+    name: string
+    subcategories: Array<{ id: string; name: string }>
+  }>,
 ): Promise<Map<string, CategoryMatch>> {
   const categoriesStr = categories
     .map((cat) => {
-      const subs = cat.subcategories.map((s) => s.name).join(", ");
-      return `${cat.name}: [${subs}]`;
+      const subs = cat.subcategories.map((s) => s.name).join(", ")
+      return `${cat.name}: [${subs}]`
     })
-    .join("\n");
+    .join("\n")
 
   const transactionsStr = transactions
     .map((t, idx) => {
-      const amount = Number(t.amount);
-      const type = amount > 0 ? "expense" : "income";
+      const amount = Number(t.amount)
+      const type = amount > 0 ? "expense" : "income"
       return `[${idx}] "${t.name}" | Merchant: ${
         t.merchantName || "N/A"
       } | Amount: $${Math.abs(amount).toFixed(2)} (${type}) | Plaid: ${
         t.plaidCategory || "N/A"
-      }/${t.plaidSubcategory || "N/A"} | Notes: ${t.notes || "N/A"}`;
+      }/${t.plaidSubcategory || "N/A"} | Notes: ${t.notes || "N/A"}`
     })
-    .join("\n");
+    .join("\n")
 
   const prompt = `You are a financial transaction categorizer. Given the following categories and transactions, categorize each transaction.
 
@@ -75,7 +72,7 @@ IMPORTANT RULES:
 5. Consider transaction type (income vs expense) when categorizing
 6. Be conservative - when in doubt, return null
 
-Return ONLY the JSON array, no other text.`;
+Return ONLY the JSON array, no other text.`
 
   try {
     const response = await openai.chat.completions.create({
@@ -83,8 +80,7 @@ Return ONLY the JSON array, no other text.`;
       messages: [
         {
           role: "system",
-          content:
-            "You are a financial transaction categorization assistant. Always respond with valid JSON only.",
+          content: "You are a financial transaction categorization assistant. Always respond with valid JSON only.",
         },
         {
           role: "user",
@@ -92,43 +88,43 @@ Return ONLY the JSON array, no other text.`;
         },
       ],
       response_format: { type: "json_object" },
-    });
+    })
 
-    const content = response.choices[0]?.message.content;
-    if (!content) throw new Error("No response from OpenAI");
+    const content = response.choices[0]?.message.content
+    if (!content) throw new Error("No response from OpenAI")
 
-    const parsed = JSON.parse(content);
-    const results = parsed.results || parsed.transactions || parsed;
+    const parsed = JSON.parse(content)
+    const results = parsed.results || parsed.transactions || parsed
 
     if (!Array.isArray(results)) {
-      throw new Error("Response is not an array");
+      throw new Error("Response is not an array")
     }
 
-    const matchMap = new Map<string, CategoryMatch>();
+    const matchMap = new Map<string, CategoryMatch>()
     results.forEach(
       (result: {
-        transactionIndex: number;
-        categoryName: string;
-        subcategoryName: string;
-        confidence: number;
-        reasoning: string;
+        transactionIndex: number
+        categoryName: string
+        subcategoryName: string
+        confidence: number
+        reasoning: string
       }) => {
-        const txId = transactions[result.transactionIndex]?.id;
+        const txId = transactions[result.transactionIndex]?.id
         if (txId) {
           matchMap.set(txId, {
             categoryName: result.categoryName,
             subcategoryName: result.subcategoryName,
             confidence: result.confidence || 0,
             reasoning: result.reasoning || "",
-          });
+          })
         }
-      }
-    );
+      },
+    )
 
-    return matchMap;
+    return matchMap
   } catch (error) {
-    console.error("Error calling OpenAI:", error);
-    return new Map();
+    console.error("Error calling OpenAI:", error)
+    return new Map()
   }
 }
 
@@ -139,7 +135,7 @@ export async function POST() {
       include: {
         subcategories: true,
       },
-    })) as CategoryWithSubcategories[];
+    })) as CategoryWithSubcategories[]
 
     // Fetch transactions that don't have a category
     const transactions = (await prisma.transaction.findMany({
@@ -155,7 +151,7 @@ export async function POST() {
         notes: true,
         amount: true,
       },
-    })) as TransactionWithRelations[];
+    })) as TransactionWithRelations[]
 
     if (transactions.length === 0) {
       return NextResponse.json({
@@ -163,19 +159,16 @@ export async function POST() {
         message: "No transactions to categorize",
         categorized: 0,
         skipped: 0,
-      });
+      })
     }
 
-    let categorized = 0;
-    let skipped = 0;
+    let categorized = 0
+    let skipped = 0
 
     // Process in batches of 20
-    const BATCH_SIZE = 20;
+    const BATCH_SIZE = 20
     for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
-      const batch = transactions.slice(
-        i,
-        Math.min(i + BATCH_SIZE, transactions.length)
-      );
+      const batch = transactions.slice(i, Math.min(i + BATCH_SIZE, transactions.length))
 
       const batchData = batch.map((t) => ({
         id: t.id,
@@ -185,44 +178,42 @@ export async function POST() {
         plaidSubcategory: t.plaidSubcategory,
         notes: t.notes,
         amount: t.amount.toString(),
-      }));
+      }))
 
-      const matches = await categorizeBatch(batchData, categories);
+      const matches = await categorizeBatch(batchData, categories)
 
       for (const transaction of batch) {
-        const match = matches.get(transaction.id);
+        const match = matches.get(transaction.id)
 
         if (!match || match.confidence <= 50 || !match.categoryName) {
-          skipped++;
-          continue;
+          skipped++
+          continue
         }
 
-        const category = categories.find((c) => c.name === match.categoryName);
+        const category = categories.find((c) => c.name === match.categoryName)
         if (!category) {
-          skipped++;
-          continue;
+          skipped++
+          continue
         }
 
         const subcategory = match.subcategoryName
           ? category.subcategories.find((s) => s.name === match.subcategoryName)
-          : null;
+          : null
 
         await prisma.transaction.update({
           where: { id: transaction.id },
           data: {
             category: { connect: { id: category.id } },
-            subcategory: subcategory
-              ? { connect: { id: subcategory.id } }
-              : { disconnect: true },
+            subcategory: subcategory ? { connect: { id: subcategory.id } } : { disconnect: true },
           },
-        });
+        })
 
-        categorized++;
+        categorized++
       }
 
       // Small delay between batches
       if (i + BATCH_SIZE < transactions.length) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000))
       }
     }
 
@@ -232,16 +223,16 @@ export async function POST() {
       total: transactions.length,
       categorized,
       skipped,
-    });
+    })
   } catch (error) {
-    console.error("Categorization error:", error);
+    console.error("Categorization error:", error)
     return NextResponse.json(
       {
         success: false,
         error: "Failed to categorize transactions",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
-    );
+      { status: 500 },
+    )
   }
 }

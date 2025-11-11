@@ -1,57 +1,39 @@
-"use client";
+"use client"
 
-import { useState, useMemo, useEffect, useRef, RefObject } from "react";
-import { format } from "date-fns";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal";
-import { TransactionItem } from "@/components/transactions/list/TransactionItem";
-import { TransactionChartsView } from "@/components/transactions/analytics/TransactionChartsView";
-import { TransactionActionBar } from "@/components/transactions/list/TransactionActionBar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type {
-  TransactionForClient,
-  CategoryForClient,
-  TagForClient,
-  PlaidAccountForClient,
-} from "@/types";
-import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params";
-import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
-import { useClickOutside } from "@/hooks/useClickOutside";
-import { TagSelector } from "@/components/transactions/filters/TagSelector";
-import {
-  useTransactionFilters,
-  DateRange,
-} from "@/hooks/useTransactionFilters";
-import { useTransactionSort } from "@/hooks/useTransactionSort";
-import { useBulkTransactionOperations } from "@/hooks/useBulkTransactionOperations";
-import { useCategoryToggle } from "@/hooks/useCategoryToggle";
-import { transactionFiltersToUrlParams } from "@/lib/transactions/url-params";
+import { useState, useMemo, useEffect, useRef, RefObject } from "react"
+import { format } from "date-fns"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
+import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal"
+import { TransactionItem } from "@/components/transactions/list/TransactionItem"
+import { TransactionChartsView } from "@/components/transactions/analytics/TransactionChartsView"
+import { TransactionActionBar } from "@/components/transactions/list/TransactionActionBar"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { TransactionForClient, CategoryForClient, TagForClient, PlaidAccountForClient } from "@/types"
+import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params"
+import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils"
+import { useClickOutside } from "@/hooks/useClickOutside"
+import { TagSelector } from "@/components/transactions/filters/TagSelector"
+import { useTransactionFilters, DateRange } from "@/hooks/useTransactionFilters"
+import { useTransactionSort } from "@/hooks/useTransactionSort"
+import { useBulkTransactionOperations } from "@/hooks/useBulkTransactionOperations"
+import { useCategoryToggle } from "@/hooks/useCategoryToggle"
+import { transactionFiltersToUrlParams } from "@/lib/transactions/url-params"
 
 interface SearchableTransactionListProps {
-  transactions: TransactionForClient[];
-  showAccount?: boolean;
-  categories: CategoryForClient[];
-  tags: TagForClient[];
-  accounts?: PlaidAccountForClient[];
-  initialFilters?: TransactionFiltersFromUrl;
-  onFilteredTransactionsChange?: (transactionIds: string[]) => void;
+  transactions: TransactionForClient[]
+  showAccount?: boolean
+  categories: CategoryForClient[]
+  tags: TagForClient[]
+  accounts?: PlaidAccountForClient[]
+  initialFilters?: TransactionFiltersFromUrl
+  onFilteredTransactionsChange?: (transactionIds: string[]) => void
 }
 
 export function SearchableTransactionList({
@@ -63,17 +45,14 @@ export function SearchableTransactionList({
   initialFilters,
   onFilteredTransactionsChange,
 }: SearchableTransactionListProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  const [editingTransaction, setEditingTransaction] =
-    useState<TransactionForClient | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [editingTransaction, setEditingTransaction] = useState<TransactionForClient | null>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const nonInvestmentAccounts = accounts.filter(
-    (account) => account.type !== "investment"
-  );
+  const nonInvestmentAccounts = accounts.filter((account) => account.type !== "investment")
 
   // Use hooks with initial values from URL
   const filters = useTransactionFilters({
@@ -97,22 +76,19 @@ export function SearchableTransactionList({
     initialSelectedTagIds: initialFilters?.selectedTagIds,
     initialShowOnlyUncategorized: initialFilters?.showOnlyUncategorized,
     initialSelectedAccountIds: initialFilters?.selectedAccountIds,
-  });
+  })
 
   const sort = useTransactionSort({
     defaultSortBy: (initialFilters?.sortBy as any) ?? "date",
     defaultSortDirection: initialFilters?.sortDirection ?? "desc",
-  });
+  })
 
-  const bulk = useBulkTransactionOperations();
+  const bulk = useBulkTransactionOperations()
 
-  const categoryToggle = useCategoryToggle();
+  const categoryToggle = useCategoryToggle()
 
   // Sort categories by group type and display order
-  const sortedCategories = useMemo(
-    () => sortCategoriesByGroupAndOrder(categories),
-    [categories]
-  );
+  const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories])
 
   // No longer need default transfer exclusions - using showTransfers checkbox instead
 
@@ -134,19 +110,15 @@ export function SearchableTransactionList({
       selectedAccountIds: filters.selectedAccountIds,
       sortBy: sort.sortBy,
       sortDirection: sort.sortDirection,
-    });
+    })
 
-    const newUrl = params.toString()
-      ? `${pathname}?${params.toString()}`
-      : pathname;
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
 
     // Only update if the URL actually changed
-    const currentUrl = searchParams.toString()
-      ? `${pathname}?${searchParams.toString()}`
-      : pathname;
+    const currentUrl = searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname
 
     if (newUrl !== currentUrl) {
-      router.replace(newUrl, { scroll: false });
+      router.replace(newUrl, { scroll: false })
     }
   }, [
     filters.dateRange,
@@ -167,12 +139,12 @@ export function SearchableTransactionList({
     pathname,
     router,
     searchParams,
-  ]);
+  ])
 
   // Filter and sort transactions
   const filteredTransactions = useMemo(() => {
-    const filtered = filters.filterTransactions(transactions);
-    return sort.sortTransactions(filtered);
+    const filtered = filters.filterTransactions(transactions)
+    return sort.sortTransactions(filtered)
   }, [
     transactions,
     filters.dateRange,
@@ -192,47 +164,43 @@ export function SearchableTransactionList({
     sort.sortBy,
     sort.sortDirection,
     sort.sortTransactions,
-  ]);
+  ])
 
   // Notify parent of filtered transaction IDs for CSV export
   useEffect(() => {
     if (onFilteredTransactionsChange) {
-      const ids = filteredTransactions.map((t) => t.id);
-      onFilteredTransactionsChange(ids);
+      const ids = filteredTransactions.map((t) => t.id)
+      onFilteredTransactionsChange(ids)
     }
-  }, [filteredTransactions]);
+  }, [filteredTransactions])
 
   // Close dropdown when clicking outside
   useClickOutside(
     dropdownRef as RefObject<HTMLElement>,
     () => filters.setShowCategoryDropdown(false),
-    filters.showCategoryDropdown
-  );
+    filters.showCategoryDropdown,
+  )
 
   // Calculate totals for filtered transactions
   const totals = useMemo(() => {
     const expenses = Math.abs(
-      filteredTransactions
-        .filter((t) => t.amount_number < 0)
-        .reduce((sum, t) => sum + t.amount_number, 0)
-    );
+      filteredTransactions.filter((t) => t.amount_number < 0).reduce((sum, t) => sum + t.amount_number, 0),
+    )
 
-    const income = filteredTransactions
-      .filter((t) => t.amount_number > 0)
-      .reduce((sum, t) => sum + t.amount_number, 0);
+    const income = filteredTransactions.filter((t) => t.amount_number > 0).reduce((sum, t) => sum + t.amount_number, 0)
 
-    const netBalance = income - expenses;
+    const netBalance = income - expenses
 
     return {
       expenses,
       income,
       netBalance,
       count: filteredTransactions.length,
-    };
-  }, [filteredTransactions]);
+    }
+  }, [filteredTransactions])
 
   // Get subcategories for selected bulk category
-  const availableBulkSubcategories = bulk.getAvailableSubcategories(categories);
+  const availableBulkSubcategories = bulk.getAvailableSubcategories(categories)
 
   // Helper functions using hooks
   const toggleCategory = (categoryId: string) => {
@@ -242,9 +210,9 @@ export function SearchableTransactionList({
       filters.setSelectedCategoryIds,
       filters.selectedSubcategoryIds,
       filters.setSelectedSubcategoryIds,
-      categories
-    );
-  };
+      categories,
+    )
+  }
 
   const toggleSubcategory = (subcategoryId: string, categoryId: string) => {
     categoryToggle.toggleSubcategory(
@@ -253,39 +221,35 @@ export function SearchableTransactionList({
       filters.selectedCategoryIds,
       filters.setSelectedCategoryIds,
       filters.selectedSubcategoryIds,
-      filters.setSelectedSubcategoryIds
-    );
-  };
+      filters.setSelectedSubcategoryIds,
+    )
+  }
 
   const toggleExcludedCategory = (categoryId: string) => {
-    categoryToggle.toggleExcludedCategory(
-      categoryId,
-      filters.excludedCategoryIds,
-      filters.setExcludedCategoryIds
-    );
-  };
+    categoryToggle.toggleExcludedCategory(categoryId, filters.excludedCategoryIds, filters.setExcludedCategoryIds)
+  }
 
   const toggleTag = (tagId: string) => {
-    if (!filters.selectedTagIds || !filters.setSelectedTagIds) return;
-    const newSelected = new Set(filters.selectedTagIds);
+    if (!filters.selectedTagIds || !filters.setSelectedTagIds) return
+    const newSelected = new Set(filters.selectedTagIds)
     if (newSelected.has(tagId)) {
-      newSelected.delete(tagId);
+      newSelected.delete(tagId)
     } else {
-      newSelected.add(tagId);
+      newSelected.add(tagId)
     }
-    filters.setSelectedTagIds(newSelected);
-  };
+    filters.setSelectedTagIds(newSelected)
+  }
 
   const toggleAccount = (accountId: string) => {
-    if (!filters.selectedAccountIds || !filters.setSelectedAccountIds) return;
-    const newSelected = new Set(filters.selectedAccountIds);
+    if (!filters.selectedAccountIds || !filters.setSelectedAccountIds) return
+    const newSelected = new Set(filters.selectedAccountIds)
     if (newSelected.has(accountId)) {
-      newSelected.delete(accountId);
+      newSelected.delete(accountId)
     } else {
-      newSelected.add(accountId);
+      newSelected.add(accountId)
     }
-    filters.setSelectedAccountIds(newSelected);
-  };
+    filters.setSelectedAccountIds(newSelected)
+  }
 
   return (
     <div className="space-y-4">
@@ -319,18 +283,8 @@ export function SearchableTransactionList({
               onClick={() => filters.setSearchQuery?.("")}
               className="absolute right-3 top-2 h-7 w-7 p-0"
             >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </Button>
           )}
@@ -342,10 +296,7 @@ export function SearchableTransactionList({
         {/* Primary Filters Row */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Date Range */}
-          <Select
-            value={filters.dateRange}
-            onValueChange={(value) => filters.setDateRange(value as DateRange)}
-          >
+          <Select value={filters.dateRange} onValueChange={(value) => filters.setDateRange(value as DateRange)}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Select date range" />
             </SelectTrigger>
@@ -363,16 +314,8 @@ export function SearchableTransactionList({
           {filters.dateRange === "custom" && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-[280px] justify-start text-left font-normal"
-                >
-                  <svg
-                    className="mr-2 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
+                  <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -383,14 +326,11 @@ export function SearchableTransactionList({
                   {filters.customStartDate && filters.customEndDate
                     ? `${format(
                         new Date(filters.customStartDate),
-                        "PP"
+                        "PP",
                       )} - ${format(new Date(filters.customEndDate), "PP")}`
                     : filters.customStartDate
-                    ? `${format(
-                        new Date(filters.customStartDate),
-                        "PP"
-                      )} - End date`
-                    : "Select date range"}
+                      ? `${format(new Date(filters.customStartDate), "PP")} - End date`
+                      : "Select date range"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -399,22 +339,14 @@ export function SearchableTransactionList({
                   selected={
                     filters.customStartDate || filters.customEndDate
                       ? {
-                          from: filters.customStartDate
-                            ? new Date(filters.customStartDate)
-                            : undefined,
-                          to: filters.customEndDate
-                            ? new Date(filters.customEndDate)
-                            : undefined,
+                          from: filters.customStartDate ? new Date(filters.customStartDate) : undefined,
+                          to: filters.customEndDate ? new Date(filters.customEndDate) : undefined,
                         }
                       : undefined
                   }
                   onSelect={(range) => {
-                    filters.setCustomStartDate(
-                      range?.from ? format(range.from, "yyyy-MM-dd") : ""
-                    );
-                    filters.setCustomEndDate(
-                      range?.to ? format(range.to, "yyyy-MM-dd") : ""
-                    );
+                    filters.setCustomStartDate(range?.from ? format(range.from, "yyyy-MM-dd") : "")
+                    filters.setCustomEndDate(range?.to ? format(range.to, "yyyy-MM-dd") : "")
                   }}
                   numberOfMonths={2}
                   weekStartsOn={1}
@@ -428,16 +360,15 @@ export function SearchableTransactionList({
           {nonInvestmentAccounts.length > 0 && (
             <Select
               value={
-                filters.selectedAccountIds &&
-                filters.selectedAccountIds.size === 1
+                filters.selectedAccountIds && filters.selectedAccountIds.size === 1
                   ? Array.from(filters.selectedAccountIds)[0]
                   : "all"
               }
               onValueChange={(value) => {
                 if (value === "all") {
-                  filters.setSelectedAccountIds?.(new Set());
+                  filters.setSelectedAccountIds?.(new Set())
                 } else {
-                  filters.setSelectedAccountIds?.(new Set([value]));
+                  filters.setSelectedAccountIds?.(new Set([value]))
                 }
               }}
             >
@@ -457,25 +388,10 @@ export function SearchableTransactionList({
 
           {/* Category/Subcategory Multi-select */}
           <div className="relative" ref={dropdownRef}>
-            <Button
-              variant="outline"
-              onClick={() =>
-                filters.setShowCategoryDropdown(!filters.showCategoryDropdown)
-              }
-            >
+            <Button variant="outline" onClick={() => filters.setShowCategoryDropdown(!filters.showCategoryDropdown)}>
               <span>Select Categories...</span>
-              <svg
-                className="h-4 w-4 ml-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
+              <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </Button>
 
@@ -484,21 +400,15 @@ export function SearchableTransactionList({
               <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
                 <div className="p-3">
                   <div className="mb-3 pb-3 border-b border-gray-200">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                      Include Categories
-                    </h4>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Include Categories</h4>
                     {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
                         <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
                           <Checkbox
-                            checked={filters.selectedCategoryIds.has(
-                              category.id
-                            )}
+                            checked={filters.selectedCategoryIds.has(category.id)}
                             onCheckedChange={() => toggleCategory(category.id)}
                           />
-                          <span className="ml-2 text-sm font-medium text-foreground">
-                            {category.name}
-                          </span>
+                          <span className="ml-2 text-sm font-medium text-foreground">{category.name}</span>
                         </label>
                         {category.subcategories &&
                           category.subcategories.length > 0 &&
@@ -510,16 +420,10 @@ export function SearchableTransactionList({
                                   className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer"
                                 >
                                   <Checkbox
-                                    checked={filters.selectedSubcategoryIds.has(
-                                      sub.id
-                                    )}
-                                    onCheckedChange={() =>
-                                      toggleSubcategory(sub.id, category.id)
-                                    }
+                                    checked={filters.selectedSubcategoryIds.has(sub.id)}
+                                    onCheckedChange={() => toggleSubcategory(sub.id, category.id)}
                                   />
-                                  <span className="ml-2 text-sm text-muted-foreground">
-                                    {sub.name}
-                                  </span>
+                                  <span className="ml-2 text-sm text-muted-foreground">{sub.name}</span>
                                 </label>
                               ))}
                             </div>
@@ -529,9 +433,7 @@ export function SearchableTransactionList({
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                      Exclude Categories
-                    </h4>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Exclude Categories</h4>
                     {sortedCategories.map((category) => (
                       <label
                         key={category.id}
@@ -539,13 +441,9 @@ export function SearchableTransactionList({
                       >
                         <Checkbox
                           checked={filters.excludedCategoryIds.has(category.id)}
-                          onCheckedChange={() =>
-                            toggleExcludedCategory(category.id)
-                          }
+                          onCheckedChange={() => toggleExcludedCategory(category.id)}
                         />
-                        <span className="ml-2 text-sm text-foreground">
-                          {category.name}
-                        </span>
+                        <span className="ml-2 text-sm text-foreground">{category.name}</span>
                       </label>
                     ))}
                   </div>
@@ -557,10 +455,7 @@ export function SearchableTransactionList({
           {/* Sort Controls */}
           <div className="ml-auto flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Sort:</span>
-            <Select
-              value={sort.sortBy}
-              onValueChange={(value) => sort.setSortBy(value as any)}
-            >
+            <Select value={sort.sortBy} onValueChange={(value) => sort.setSortBy(value as any)}>
               <SelectTrigger className="w-[160px]">
                 <SelectValue />
               </SelectTrigger>
@@ -575,20 +470,11 @@ export function SearchableTransactionList({
             <Button
               variant="outline"
               size="icon"
-              onClick={() =>
-                sort.setSortDirection(
-                  sort.sortDirection === "asc" ? "desc" : "asc"
-                )
-              }
+              onClick={() => sort.setSortDirection(sort.sortDirection === "asc" ? "desc" : "asc")}
               title={sort.sortDirection === "asc" ? "Ascending" : "Descending"}
             >
               {sort.sortDirection === "asc" ? (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -597,12 +483,7 @@ export function SearchableTransactionList({
                   />
                 </svg>
               ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -622,9 +503,7 @@ export function SearchableTransactionList({
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
                 checked={filters.showIncome}
-                onCheckedChange={(checked) =>
-                  filters.setShowIncome(checked === true)
-                }
+                onCheckedChange={(checked) => filters.setShowIncome(checked === true)}
               />
               <span className="text-sm text-muted-foreground">Income</span>
             </label>
@@ -632,9 +511,7 @@ export function SearchableTransactionList({
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
                 checked={filters.showExpenses}
-                onCheckedChange={(checked) =>
-                  filters.setShowExpenses(checked === true)
-                }
+                onCheckedChange={(checked) => filters.setShowExpenses(checked === true)}
               />
               <span className="text-sm text-muted-foreground">Expenses</span>
             </label>
@@ -642,9 +519,7 @@ export function SearchableTransactionList({
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
                 checked={filters.showTransfers}
-                onCheckedChange={(checked) =>
-                  filters.setShowTransfers(checked === true)
-                }
+                onCheckedChange={(checked) => filters.setShowTransfers(checked === true)}
               />
               <span className="text-sm text-muted-foreground">Transfers</span>
             </label>
@@ -668,21 +543,14 @@ export function SearchableTransactionList({
           <label className="flex items-center gap-2 cursor-pointer">
             <Checkbox
               checked={filters.showOnlyUncategorized || false}
-              onCheckedChange={(checked) =>
-                filters.setShowOnlyUncategorized?.(checked === true)
-              }
+              onCheckedChange={(checked) => filters.setShowOnlyUncategorized?.(checked === true)}
             />
             <span className="text-sm text-muted-foreground">Uncategorized</span>
           </label>
 
           {/* Clear Filters */}
           {filters.hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={filters.clearAllFilters}
-              className="ml-auto"
-            >
+            <Button variant="ghost" size="sm" onClick={filters.clearAllFilters} className="ml-auto">
               Clear Filters
             </Button>
           )}
@@ -693,12 +561,11 @@ export function SearchableTransactionList({
           filters.selectedSubcategoryIds.size > 0 ||
           filters.excludedCategoryIds.size > 0 ||
           (filters.selectedTagIds && filters.selectedTagIds.size > 0) ||
-          (filters.selectedAccountIds &&
-            filters.selectedAccountIds.size > 0)) && (
+          (filters.selectedAccountIds && filters.selectedAccountIds.size > 0)) && (
           <div className="flex flex-wrap gap-2 pt-3 border-t">
             {Array.from(filters.selectedCategoryIds).map((catId) => {
-              const category = categories.find((c) => c.id === catId);
-              if (!category) return null;
+              const category = categories.find((c) => c.id === catId)
+              if (!category) return null
               return (
                 <Badge
                   key={catId}
@@ -712,31 +579,17 @@ export function SearchableTransactionList({
                     onClick={() => toggleCategory(catId)}
                     className="h-auto p-0.5 hover:bg-primary/20"
                   >
-                    <svg
-                      className="h-3 w-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </Button>
                 </Badge>
-              );
+              )
             })}
             {Array.from(filters.selectedSubcategoryIds).map((subId) => {
-              const category = categories.find((c) =>
-                c.subcategories?.some((s) => s.id === subId)
-              );
-              const subcategory = category?.subcategories?.find(
-                (s) => s.id === subId
-              );
-              if (!subcategory || !category) return null;
+              const category = categories.find((c) => c.subcategories?.some((s) => s.id === subId))
+              const subcategory = category?.subcategories?.find((s) => s.id === subId)
+              if (!subcategory || !category) return null
               return (
                 <Badge
                   key={subId}
@@ -750,26 +603,16 @@ export function SearchableTransactionList({
                     onClick={() => toggleSubcategory(subId, category.id)}
                     className="h-auto p-0.5 hover:bg-secondary/30"
                   >
-                    <svg
-                      className="h-3 w-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </Button>
                 </Badge>
-              );
+              )
             })}
             {Array.from(filters.excludedCategoryIds).map((catId) => {
-              const category = categories.find((c) => c.id === catId);
-              if (!category) return null;
+              const category = categories.find((c) => c.id === catId)
+              if (!category) return null
               return (
                 <Badge
                   key={`excluded-${catId}`}
@@ -783,27 +626,17 @@ export function SearchableTransactionList({
                     onClick={() => toggleExcludedCategory(catId)}
                     className="h-auto p-0.5 hover:bg-destructive/20"
                   >
-                    <svg
-                      className="h-3 w-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </Button>
                 </Badge>
-              );
+              )
             })}
             {filters.selectedTagIds &&
               Array.from(filters.selectedTagIds).map((tagId) => {
-                const tag = tags.find((t) => t.id === tagId);
-                if (!tag) return null;
+                const tag = tags.find((t) => t.id === tagId)
+                if (!tag) return null
                 return (
                   <Badge
                     key={`tag-${tagId}`}
@@ -817,29 +650,17 @@ export function SearchableTransactionList({
                       onClick={() => toggleTag(tagId)}
                       className="h-auto p-0.5 hover:bg-black hover:bg-opacity-20"
                     >
-                      <svg
-                        className="h-3 w-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </Button>
                   </Badge>
-                );
+                )
               })}
             {filters.selectedAccountIds &&
               Array.from(filters.selectedAccountIds).map((accountId) => {
-                const account = nonInvestmentAccounts.find(
-                  (a) => a.id === accountId
-                );
-                if (!account) return null;
+                const account = nonInvestmentAccounts.find((a) => a.id === accountId)
+                if (!account) return null
                 return (
                   <Badge
                     key={`account-${accountId}`}
@@ -853,22 +674,12 @@ export function SearchableTransactionList({
                       onClick={() => toggleAccount(accountId)}
                       className="h-auto p-0.5 hover:bg-primary/20"
                     >
-                      <svg
-                        className="h-3 w-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </Button>
                   </Badge>
-                );
+                )
               })}
           </div>
         )}
@@ -885,9 +696,7 @@ export function SearchableTransactionList({
         </div>
 
         <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <div className="text-sm text-muted-foreground mb-1">
-            Total Expenses
-          </div>
+          <div className="text-sm text-muted-foreground mb-1">Total Expenses</div>
           <div className="text-2xl font-bold text-destructive">
             -$
             {formatAmount(totals.expenses)}
@@ -896,13 +705,8 @@ export function SearchableTransactionList({
 
         <div className="bg-white p-4 rounded-lg shadow-sm border">
           <div className="text-sm text-muted-foreground mb-1">Net Balance</div>
-          <div
-            className={`text-2xl font-bold ${
-              totals.netBalance >= 0 ? "text-success" : "text-destructive"
-            }`}
-          >
-            {totals.netBalance >= 0 ? "+" : ""}$
-            {formatAmount(Math.abs(totals.netBalance))}
+          <div className={`text-2xl font-bold ${totals.netBalance >= 0 ? "text-success" : "text-destructive"}`}>
+            {totals.netBalance >= 0 ? "+" : ""}${formatAmount(Math.abs(totals.netBalance))}
           </div>
         </div>
       </div>
@@ -937,9 +741,7 @@ export function SearchableTransactionList({
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
             {filteredTransactions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                {filters.searchQuery
-                  ? "No transactions found matching your search."
-                  : "No transactions found."}
+                {filters.searchQuery ? "No transactions found matching your search." : "No transactions found."}
               </div>
             ) : (
               <ul className="divide-y divide-border">
@@ -960,10 +762,7 @@ export function SearchableTransactionList({
         </TabsContent>
 
         <TabsContent value="charts">
-          <TransactionChartsView
-            transactions={filteredTransactions}
-            categories={categories}
-          />
+          <TransactionChartsView transactions={filteredTransactions} categories={categories} />
         </TabsContent>
       </Tabs>
 
@@ -977,5 +776,5 @@ export function SearchableTransactionList({
         />
       )}
     </div>
-  );
+  )
 }

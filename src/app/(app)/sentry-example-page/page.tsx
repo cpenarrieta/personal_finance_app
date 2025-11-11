@@ -1,54 +1,52 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 
 /**
  * Example page to test Sentry error monitoring
  * This page is created by the Sentry installation wizard
  */
 export default function SentryExamplePage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorSent, setErrorSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorSent, setErrorSent] = useState(false)
 
   const handleClientError = async () => {
-    setIsLoading(true);
-    setErrorSent(false);
+    setIsLoading(true)
+    setErrorSent(false)
 
     try {
       // Trigger a client-side error
-      throw new Error("Sentry Frontend Error - Test from Example Page");
+      throw new Error("Sentry Frontend Error - Test from Example Page")
     } catch (error) {
       // Capture the error with Sentry
-      const Sentry = await import("@sentry/nextjs");
-      Sentry.captureException(error);
+      const Sentry = await import("@sentry/nextjs")
+      Sentry.captureException(error)
 
-      setErrorSent(true);
-      console.error("Client error captured:", error);
+      setErrorSent(true)
+      console.error("Client error captured:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <Card>
         <CardHeader>
           <CardTitle>Sentry Example Page</CardTitle>
-          <CardDescription>
-            Test your Sentry integration by triggering example errors
-          </CardDescription>
+          <CardDescription>Test your Sentry integration by triggering example errors</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>How to test Sentry</AlertTitle>
             <AlertDescription>
-              Click the button below to generate a test error. This error will be sent to your Sentry project
-              where you can view it in the Issues section.
+              Click the button below to generate a test error. This error will be sent to your Sentry project where you
+              can view it in the Issues section.
             </AlertDescription>
           </Alert>
 
@@ -58,11 +56,7 @@ export default function SentryExamplePage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Triggers a client-side error that will be captured by Sentry.
               </p>
-              <Button
-                onClick={handleClientError}
-                disabled={isLoading}
-                variant="destructive"
-              >
+              <Button onClick={handleClientError} disabled={isLoading} variant="destructive">
                 {isLoading ? "Throwing error..." : "Throw Test Error"}
               </Button>
             </div>
@@ -112,5 +106,5 @@ export default function SentryExamplePage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

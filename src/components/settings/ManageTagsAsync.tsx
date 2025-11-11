@@ -1,51 +1,51 @@
-import { revalidatePath, revalidateTag } from "next/cache";
-import { DeleteButton } from "@/components/shared/DeleteButton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { getAllTagsWithCounts } from "@/lib/db/queries-settings";
-import { ErrorFallback } from "@/components/shared/ErrorFallback";
-import { prisma } from "@/lib/db/prisma";
-import type { PrismaTagWithCount } from "@/types";
+import { revalidatePath, revalidateTag } from "next/cache"
+import { DeleteButton } from "@/components/shared/DeleteButton"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { getAllTagsWithCounts } from "@/lib/db/queries-settings"
+import { ErrorFallback } from "@/components/shared/ErrorFallback"
+import { prisma } from "@/lib/db/prisma"
+import type { PrismaTagWithCount } from "@/types"
 
 // Server Actions
 async function createTag(formData: FormData) {
-  "use server";
-  const name = formData.get("name") as string;
-  const color = formData.get("color") as string;
+  "use server"
+  const name = formData.get("name") as string
+  const color = formData.get("color") as string
 
   await prisma.tag.create({
     data: { name, color },
-  });
-  revalidatePath("/settings/manage-tags");
-  revalidateTag("tags", "max");
+  })
+  revalidatePath("/settings/manage-tags")
+  revalidateTag("tags", "max")
 }
 
 async function deleteTag(formData: FormData) {
-  "use server";
-  const id = formData.get("id") as string;
-  await prisma.tag.delete({ where: { id } });
-  revalidatePath("/settings/manage-tags");
-  revalidateTag("tags", "max");
+  "use server"
+  const id = formData.get("id") as string
+  await prisma.tag.delete({ where: { id } })
+  revalidatePath("/settings/manage-tags")
+  revalidateTag("tags", "max")
 }
 
 async function updateTag(formData: FormData) {
-  "use server";
-  const id = formData.get("id") as string;
-  const name = formData.get("name") as string;
-  const color = formData.get("color") as string;
+  "use server"
+  const id = formData.get("id") as string
+  const name = formData.get("name") as string
+  const color = formData.get("color") as string
 
   await prisma.tag.update({
     where: { id },
     data: { name, color },
-  });
-  revalidatePath("/settings/manage-tags");
-  revalidateTag("tags", "max");
+  })
+  revalidatePath("/settings/manage-tags")
+  revalidateTag("tags", "max")
 }
 
 export async function ManageTagsAsync() {
   try {
-    const tags = (await getAllTagsWithCounts()) as PrismaTagWithCount[];
+    const tags = (await getAllTagsWithCounts()) as PrismaTagWithCount[]
 
     // Predefined color palette
     const colorPalette = [
@@ -69,7 +69,7 @@ export async function ManageTagsAsync() {
       "#64748B",
       "#78716C",
       "#A3A3A3",
-    ];
+    ]
 
     return (
       <div className="border rounded-lg p-4">
@@ -79,30 +79,14 @@ export async function ManageTagsAsync() {
           <div className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="tag-name">Tag Name</Label>
-              <Input
-                id="tag-name"
-                type="text"
-                name="name"
-                placeholder="Enter tag name"
-                required
-              />
+              <Input id="tag-name" type="text" name="name" placeholder="Enter tag name" required />
             </div>
             <div className="space-y-2">
               <Label>Tag Color</Label>
               <div className="grid grid-cols-10 gap-2 mb-2">
                 {colorPalette.map((color) => (
-                  <label
-                    key={color}
-                    className="relative cursor-pointer group"
-                    title={color}
-                  >
-                    <input
-                      type="radio"
-                      name="color"
-                      value={color}
-                      required
-                      className="sr-only peer"
-                    />
+                  <label key={color} className="relative cursor-pointer group" title={color}>
+                    <input type="radio" name="color" value={color} required className="sr-only peer" />
                     <div
                       className="w-8 h-8 rounded-full border-2 border-border peer-checked:border-foreground peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-foreground hover:scale-110 transition-transform"
                       style={{ backgroundColor: color }}
@@ -111,14 +95,8 @@ export async function ManageTagsAsync() {
                 ))}
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <label className="text-sm text-muted-foreground">
-                  Or custom:
-                </label>
-                <input
-                  type="color"
-                  name="color"
-                  className="h-8 w-16 rounded border cursor-pointer"
-                />
+                <label className="text-sm text-muted-foreground">Or custom:</label>
+                <input type="color" name="color" className="h-8 w-16 rounded border cursor-pointer" />
               </div>
             </div>
             <Button type="submit" className="w-full">
@@ -131,9 +109,7 @@ export async function ManageTagsAsync() {
         <div>
           <h2 className="text-lg font-semibold mb-3">Existing Tags</h2>
           {tags.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              No tags created yet. Add your first tag above!
-            </p>
+            <p className="text-muted-foreground text-center py-8">No tags created yet. Add your first tag above!</p>
           ) : (
             <div className="space-y-2">
               {tags.map((tag) => (
@@ -169,11 +145,7 @@ export async function ManageTagsAsync() {
                       defaultValue={tag.color}
                       className="h-8 w-12 rounded border cursor-pointer"
                     />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      className="bg-success hover:bg-success/90"
-                    >
+                    <Button type="submit" size="sm" className="bg-success hover:bg-success/90">
                       Update
                     </Button>
                   </form>
@@ -181,9 +153,7 @@ export async function ManageTagsAsync() {
                   <DeleteButton
                     id={tag.id}
                     action={deleteTag}
-                    confirmMessage={`Are you sure you want to delete the tag "${
-                      tag.name
-                    }"?${
+                    confirmMessage={`Are you sure you want to delete the tag "${tag.name}"?${
                       tag._count.transactions > 0
                         ? ` This tag is used in ${tag._count.transactions} transaction(s).`
                         : ""
@@ -197,15 +167,9 @@ export async function ManageTagsAsync() {
           )}
         </div>
       </div>
-    );
+    )
   } catch (error) {
-    console.error("Failed to load tags:", error);
-    return (
-      <ErrorFallback
-        error={error as Error}
-        title="Failed to load tags"
-        description="Unable to fetch tag data"
-      />
-    );
+    console.error("Failed to load tags:", error)
+    return <ErrorFallback error={error as Error} title="Failed to load tags" description="Unable to fetch tag data" />
   }
 }

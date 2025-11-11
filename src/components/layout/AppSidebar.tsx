@@ -1,21 +1,10 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  Home,
-  Receipt,
-  TrendingUp,
-  Settings,
-  ChevronDown,
-  RefreshCw,
-  Moon,
-  Sun,
-  Wallet,
-  Bot,
-} from "lucide-react";
-import { toast } from "sonner";
+import React, { useState, useEffect, useMemo } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Home, Receipt, TrendingUp, Settings, ChevronDown, RefreshCw, Moon, Sun, Wallet, Bot } from "lucide-react"
+import { toast } from "sonner"
 
 import {
   Sidebar,
@@ -32,13 +21,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarSeparator,
-} from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/sidebar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,14 +32,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
-import { LogoutButton } from "@/components/auth/LogoutButton";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { useTheme } from "next-themes"
+import { LogoutButton } from "@/components/auth/LogoutButton"
 
 interface AppSidebarProps {
-  accountsSlot: React.ReactNode;
-  pathname: string;
+  accountsSlot: React.ReactNode
+  pathname: string
 }
 
 // Static nav items (accounts section will be passed as slot)
@@ -116,45 +100,45 @@ const getStaticNavItems = () => {
         },
       ],
     },
-  ];
-};
+  ]
+}
 
 function SyncDropdown() {
-  const router = useRouter();
-  const [syncing, setSyncing] = useState(false);
-  const [showReauthModal, setShowReauthModal] = useState(false);
+  const router = useRouter()
+  const [syncing, setSyncing] = useState(false)
+  const [showReauthModal, setShowReauthModal] = useState(false)
 
   const handleSync = async (endpoint: string, label: string) => {
-    setSyncing(true);
-    const toastId = toast.loading(`${label}...`);
+    setSyncing(true)
+    const toastId = toast.loading(`${label}...`)
 
     try {
-      const response = await fetch(endpoint, { method: "POST" });
+      const response = await fetch(endpoint, { method: "POST" })
 
       if (response.ok) {
-        toast.success(`${label} completed!`, { id: toastId });
-        router.refresh();
+        toast.success(`${label} completed!`, { id: toastId })
+        router.refresh()
       } else {
         // Check if it's a reauth error
-        const errorData = await response.json().catch(() => null);
+        const errorData = await response.json().catch(() => null)
         if (errorData?.errorCode === "ITEM_LOGIN_REQUIRED") {
-          toast.dismiss(toastId);
-          setShowReauthModal(true);
-          return;
+          toast.dismiss(toastId)
+          setShowReauthModal(true)
+          return
         }
-        toast.error(`${label} failed`, { id: toastId });
+        toast.error(`${label} failed`, { id: toastId })
       }
     } catch (error) {
-      toast.error(`${label} failed`, { id: toastId });
+      toast.error(`${label} failed`, { id: toastId })
     } finally {
-      setSyncing(false);
+      setSyncing(false)
     }
-  };
+  }
 
   const handleReauthClick = () => {
-    setShowReauthModal(false);
-    router.push("/settings/connections");
-  };
+    setShowReauthModal(false)
+    router.push("/settings/connections")
+  }
 
   return (
     <DropdownMenu>
@@ -173,32 +157,23 @@ function SyncDropdown() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="right" className="w-56">
-        <DropdownMenuItem
-          onClick={() => handleSync("/api/plaid/sync", "Syncing all")}
-          disabled={syncing}
-        >
+        <DropdownMenuItem onClick={() => handleSync("/api/plaid/sync", "Syncing all")} disabled={syncing}>
           Sync All
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() =>
-            handleSync("/api/plaid/sync-transactions", "Syncing transactions")
-          }
+          onClick={() => handleSync("/api/plaid/sync-transactions", "Syncing transactions")}
           disabled={syncing}
         >
           Sync Transactions Only
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() =>
-            handleSync("/api/plaid/sync-investments", "Syncing investments")
-          }
+          onClick={() => handleSync("/api/plaid/sync-investments", "Syncing investments")}
           disabled={syncing}
         >
           Sync Investments Only
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() =>
-            handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")
-          }
+          onClick={() => handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")}
           disabled={syncing}
           className="text-destructive"
         >
@@ -210,36 +185,34 @@ function SyncDropdown() {
           <AlertDialogHeader>
             <AlertDialogTitle>Reauthorization Required</AlertDialogTitle>
             <AlertDialogDescription>
-              Your financial institution requires you to sign in again. This is
-              normal and happens when your login credentials or session expires.
+              Your financial institution requires you to sign in again. This is normal and happens when your login
+              credentials or session expires.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReauthClick}>
-              Go to Connections
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleReauthClick}>Go to Connections</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </DropdownMenu>
-  );
+  )
 }
 
 function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   if (!mounted) {
     return (
       <Button variant="outline" size="icon" className="w-full">
         <Sun className="h-4 w-4" />
       </Button>
-    );
+    )
   }
 
   return (
@@ -249,55 +222,47 @@ function ThemeToggle() {
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       className="w-full"
     >
-      {theme === "dark" ? (
-        <Sun className="h-4 w-4" />
-      ) : (
-        <Moon className="h-4 w-4" />
-      )}
+      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       <span className="sr-only">Toggle theme</span>
     </Button>
-  );
+  )
 }
 
 export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
-  const navItems = useMemo(() => getStaticNavItems(), []);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
+  const navItems = useMemo(() => getStaticNavItems(), [])
 
   // Auto-expand menu if current path matches
   useEffect(() => {
-    const newOpenMenus: Record<string, boolean> = {};
+    const newOpenMenus: Record<string, boolean> = {}
 
     navItems.forEach((item) => {
       if (item.items) {
-        const hasActiveSubItem = item.items.some(
-          (subItem) => pathname === subItem.href
-        );
+        const hasActiveSubItem = item.items.some((subItem) => pathname === subItem.href)
         if (hasActiveSubItem) {
-          newOpenMenus[item.title] = true;
+          newOpenMenus[item.title] = true
         }
       }
-    });
+    })
 
     // Auto-expand Accounts menu if on an account page
     if (pathname.startsWith("/accounts/") || pathname === "/connect-account") {
-      newOpenMenus["Accounts"] = true;
+      newOpenMenus["Accounts"] = true
     }
 
-    setOpenMenus(newOpenMenus);
-  }, [pathname, navItems]);
+    setOpenMenus(newOpenMenus)
+  }, [pathname, navItems])
 
   const toggleMenu = (title: string) => {
-    setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }));
-  };
+    setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }))
+  }
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-2">
           <Wallet className="h-6 w-6 text-primary" />
-          <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
-            Personal Finance
-          </span>
+          <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">Personal Finance</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -308,33 +273,22 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
               {navItems.map((item, idx) => {
                 const isActive = item.href
                   ? pathname === item.href
-                  : item.items?.some((subItem) => pathname === subItem.href);
+                  : item.items?.some((subItem) => pathname === subItem.href)
 
                 const menuItem = item.items ? (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      onClick={() => toggleMenu(item.title)}
-                      isActive={isActive}
-                      tooltip={item.title}
-                    >
+                    <SidebarMenuButton onClick={() => toggleMenu(item.title)} isActive={isActive} tooltip={item.title}>
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
                       <ChevronDown
-                        className={`ml-auto h-4 w-4 transition-transform ${
-                          openMenus[item.title] ? "rotate-180" : ""
-                        }`}
+                        className={`ml-auto h-4 w-4 transition-transform ${openMenus[item.title] ? "rotate-180" : ""}`}
                       />
                     </SidebarMenuButton>
                     {openMenus[item.title] && (
                       <SidebarMenuSub>
                         {item.items.map((subItem, index) => (
-                          <SidebarMenuSubItem
-                            key={subItem.href || `${subItem.title}-${index}`}
-                          >
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={pathname === subItem.href}
-                            >
+                          <SidebarMenuSubItem key={subItem.href || `${subItem.title}-${index}`}>
+                            <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
                               <Link href={subItem.href!}>
                                 <span>{subItem.title}</span>
                               </Link>
@@ -346,18 +300,14 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
                   </SidebarMenuItem>
                 ) : (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.title}
-                    >
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
                       <Link href={item.href!}>
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
+                )
 
                 // Insert accounts slot after Transactions (idx === 1)
                 return (
@@ -365,7 +315,7 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
                     {menuItem}
                     {idx === 1 && accountsSlot}
                   </React.Fragment>
-                );
+                )
               })}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -383,5 +333,5 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
         </div>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * Skeleton loader for transaction detail page - matches typical TransactionDetailView layout
@@ -100,5 +100,5 @@ export function TransactionDetailSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

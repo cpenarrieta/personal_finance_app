@@ -3,17 +3,17 @@
  * Separate file to avoid circular dependencies
  */
 
-import { prisma } from "@/lib/db/prisma";
-import { cacheTag, cacheLife } from "next/cache";
+import { prisma } from "@/lib/db/prisma"
+import { cacheTag, cacheLife } from "next/cache"
 
 /**
  * Get transaction by ID with full relations
  * Cached with 24h expiration, tagged with "transactions"
  */
 export async function getTransactionById(id: string) {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("transactions");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions")
 
   return prisma.transaction.findUnique({
     where: { id },
@@ -120,5 +120,5 @@ export async function getTransactionById(id: string) {
         },
       },
     },
-  });
+  })
 }

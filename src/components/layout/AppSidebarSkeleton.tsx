@@ -1,4 +1,4 @@
-import { Wallet } from "lucide-react";
+import { Wallet } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -11,12 +11,12 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarSeparator,
-} from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/sidebar"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 
 interface AppSidebarSkeletonProps {
-  accountsSlot: React.ReactNode;
+  accountsSlot: React.ReactNode
 }
 
 export function AppSidebarSkeleton({ accountsSlot }: AppSidebarSkeletonProps) {
@@ -25,9 +25,7 @@ export function AppSidebarSkeleton({ accountsSlot }: AppSidebarSkeletonProps) {
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-2">
           <Wallet className="h-6 w-6 text-primary" />
-          <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
-            Personal Finance
-          </span>
+          <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">Personal Finance</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -80,5 +78,5 @@ export function AppSidebarSkeleton({ accountsSlot }: AppSidebarSkeletonProps) {
         </div>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

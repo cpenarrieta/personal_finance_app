@@ -1,23 +1,14 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
 interface IncomeVsExpenseChartProps {
   data: Array<{ month: string; income: number; expenses: number }>
 }
 
 export function IncomeVsExpenseChart({ data }: IncomeVsExpenseChartProps) {
-  const hasData = data.length > 0 && data.some(d => d.income > 0 || d.expenses > 0)
+  const hasData = data.length > 0 && data.some((d) => d.income > 0 || d.expenses > 0)
 
   if (!hasData) {
     return (
@@ -41,18 +32,12 @@ export function IncomeVsExpenseChart({ data }: IncomeVsExpenseChartProps) {
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis
-              dataKey="month"
-              stroke="var(--muted-foreground)"
-              fontSize={12}
-            />
-            <YAxis
-              stroke="var(--muted-foreground)"
-              fontSize={12}
-              tickFormatter={(value) => `$${value}`}
-            />
+            <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} />
+            <YAxis stroke="var(--muted-foreground)" fontSize={12} tickFormatter={(value) => `$${value}`} />
             <Tooltip
-              formatter={(value: number) => `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              formatter={(value: number) =>
+                `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              }
               contentStyle={{
                 backgroundColor: "var(--background)",
                 border: "1px solid var(--border)",
@@ -60,18 +45,8 @@ export function IncomeVsExpenseChart({ data }: IncomeVsExpenseChartProps) {
               }}
             />
             <Legend />
-            <Bar
-              dataKey="income"
-              fill="var(--chart-1)"
-              name="Income"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              dataKey="expenses"
-              fill="var(--destructive)"
-              name="Expenses"
-              radius={[4, 4, 0, 0]}
-            />
+            <Bar dataKey="income" fill="var(--chart-1)" name="Income" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="expenses" fill="var(--destructive)" name="Expenses" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

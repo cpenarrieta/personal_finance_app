@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileQuestion } from "lucide-react";
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileQuestion } from "lucide-react"
 
 /**
  * Root-level not-found page
@@ -55,5 +55,5 @@ export default function NotFound() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

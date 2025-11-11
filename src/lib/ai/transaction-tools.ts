@@ -3,12 +3,12 @@
  * These tools wrap existing cached queries to provide transaction insights
  */
 
-import { tool } from "ai";
-import { z } from "zod";
-import { getAllTransactions } from "@/lib/db/queries";
+import { tool } from "ai"
+import { z } from "zod"
+import { getAllTransactions } from "@/lib/db/queries"
 
 // Type for a single transaction from getAllTransactions
-type Transaction = Awaited<ReturnType<typeof getAllTransactions>>[number];
+type Transaction = Awaited<ReturnType<typeof getAllTransactions>>[number]
 
 /**
  * Get transactions within a date range with optional filters
@@ -17,20 +17,10 @@ export const getTransactionsByDateRange = tool({
   description:
     "Get bank transactions within a specific date range. Optionally filter by category name or merchant. Use this to answer questions like 'How much did I spend last month?' or 'Show me food transactions in January'.",
   inputSchema: z.object({
-    startDate: z
-      .string()
-      .describe("Start date in YYYY-MM-DD format (e.g., 2024-01-01)"),
-    endDate: z
-      .string()
-      .describe("End date in YYYY-MM-DD format (e.g., 2024-01-31)"),
-    categoryName: z
-      .string()
-      .optional()
-      .describe("Filter by category name (e.g., 'Food & Drink', 'Shopping')"),
-    merchantName: z
-      .string()
-      .optional()
-      .describe("Filter by merchant name (e.g., 'Starbucks', 'Amazon')"),
+    startDate: z.string().describe("Start date in YYYY-MM-DD format (e.g., 2024-01-01)"),
+    endDate: z.string().describe("End date in YYYY-MM-DD format (e.g., 2024-01-31)"),
+    categoryName: z.string().optional().describe("Filter by category name (e.g., 'Food & Drink', 'Shopping')"),
+    merchantName: z.string().optional().describe("Filter by merchant name (e.g., 'Starbucks', 'Amazon')"),
   }),
   execute: async ({
     startDate,
@@ -38,29 +28,25 @@ export const getTransactionsByDateRange = tool({
     categoryName,
     merchantName,
   }: {
-    startDate: string;
-    endDate: string;
-    categoryName?: string;
-    merchantName?: string;
+    startDate: string
+    endDate: string
+    categoryName?: string
+    merchantName?: string
   }) => {
-    const transactions = await getAllTransactions();
+    const transactions = await getAllTransactions()
 
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      const date = new Date(t.date_string)
+      const start = new Date(startDate)
+      const end = new Date(endDate)
 
-      const isInRange = date >= start && date <= end;
-      const matchesCategory =
-        !categoryName ||
-        t.category?.name.toLowerCase().includes(categoryName.toLowerCase());
+      const isInRange = date >= start && date <= end
+      const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
       const matchesMerchant =
-        !merchantName ||
-        (t.merchantName &&
-          t.merchantName.toLowerCase().includes(merchantName.toLowerCase()));
+        !merchantName || (t.merchantName && t.merchantName.toLowerCase().includes(merchantName.toLowerCase()))
 
-      return isInRange && matchesCategory && matchesMerchant;
-    });
+      return isInRange && matchesCategory && matchesMerchant
+    })
 
     // Return simplified data for the AI
     return filtered.map((t: Transaction) => ({
@@ -72,9 +58,9 @@ export const getTransactionsByDateRange = tool({
       subcategory: t.subcategory?.name,
       account: t.account?.name,
       pending: t.pending,
-    }));
+    }))
   },
-});
+})
 
 /**
  * Get spending grouped by category for a date range
@@ -85,11 +71,7 @@ export const getSpendingByCategory = tool({
   inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
-    limit: z
-      .number()
-      .optional()
-      .default(10)
-      .describe("Number of top categories to return (default: 10)"),
+    limit: z.number().optional().default(10).describe("Number of top categories to return (default: 10)"),
     sortBy: z
       .enum(["amount", "count"])
       .optional()
@@ -102,53 +84,50 @@ export const getSpendingByCategory = tool({
     limit = 10,
     sortBy = "amount",
   }: {
-    startDate: string;
-    endDate: string;
-    limit?: number;
-    sortBy?: "amount" | "count";
+    startDate: string
+    endDate: string
+    limit?: number
+    sortBy?: "amount" | "count"
   }) => {
-    const transactions = await getAllTransactions();
+    const transactions = await getAllTransactions()
 
     // Filter by date range
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      return date >= start && date <= end;
-    });
+      const date = new Date(t.date_string)
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      return date >= start && date <= end
+    })
 
     // Group by category
-    const categoryMap = new Map<
-      string,
-      { name: string; total: number; count: number; transactions: number[] }
-    >();
+    const categoryMap = new Map<string, { name: string; total: number; count: number; transactions: number[] }>()
 
     filtered.forEach((t: Transaction) => {
-      const categoryName = t.category?.name || "Uncategorized";
-      const existing = categoryMap.get(categoryName);
+      const categoryName = t.category?.name || "Uncategorized"
+      const existing = categoryMap.get(categoryName)
 
       if (existing) {
-        existing.total += t.amount_number;
-        existing.count += 1;
-        existing.transactions.push(t.amount_number);
+        existing.total += t.amount_number
+        existing.count += 1
+        existing.transactions.push(t.amount_number)
       } else {
         categoryMap.set(categoryName, {
           name: categoryName,
           total: t.amount_number,
           count: 1,
           transactions: [t.amount_number],
-        });
+        })
       }
-    });
+    })
 
     // Convert to array and sort
-    const categoryData = Array.from(categoryMap.values());
+    const categoryData = Array.from(categoryMap.values())
     categoryData.sort((a, b) => {
       if (sortBy === "amount") {
-        return b.total - a.total;
+        return b.total - a.total
       }
-      return b.count - a.count;
-    });
+      return b.count - a.count
+    })
 
     // Return top N categories
     return categoryData.slice(0, limit).map((c) => ({
@@ -156,9 +135,9 @@ export const getSpendingByCategory = tool({
       totalSpent: Number(c.total.toFixed(2)),
       transactionCount: c.count,
       averageTransaction: Number((c.total / c.count).toFixed(2)),
-    }));
+    }))
   },
-});
+})
 
 /**
  * Get spending grouped by merchant
@@ -169,56 +148,41 @@ export const getSpendingByMerchant = tool({
   inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
-    limit: z
-      .number()
-      .optional()
-      .default(10)
-      .describe("Number of top merchants to return (default: 10)"),
+    limit: z.number().optional().default(10).describe("Number of top merchants to return (default: 10)"),
   }),
-  execute: async ({
-    startDate,
-    endDate,
-    limit = 10,
-  }: {
-    startDate: string;
-    endDate: string;
-    limit?: number;
-  }) => {
-    const transactions = await getAllTransactions();
+  execute: async ({ startDate, endDate, limit = 10 }: { startDate: string; endDate: string; limit?: number }) => {
+    const transactions = await getAllTransactions()
 
     // Filter by date range and merchants only
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      return date >= start && date <= end && t.merchantName;
-    });
+      const date = new Date(t.date_string)
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      return date >= start && date <= end && t.merchantName
+    })
 
     // Group by merchant
-    const merchantMap = new Map<
-      string,
-      { name: string; total: number; count: number }
-    >();
+    const merchantMap = new Map<string, { name: string; total: number; count: number }>()
 
     filtered.forEach((t: Transaction) => {
-      const merchantName = t.merchantName!;
-      const existing = merchantMap.get(merchantName);
+      const merchantName = t.merchantName!
+      const existing = merchantMap.get(merchantName)
 
       if (existing) {
-        existing.total += t.amount_number;
-        existing.count += 1;
+        existing.total += t.amount_number
+        existing.count += 1
       } else {
         merchantMap.set(merchantName, {
           name: merchantName,
           total: t.amount_number,
           count: 1,
-        });
+        })
       }
-    });
+    })
 
     // Convert to array and sort by total
-    const merchantData = Array.from(merchantMap.values());
-    merchantData.sort((a, b) => b.total - a.total);
+    const merchantData = Array.from(merchantMap.values())
+    merchantData.sort((a, b) => b.total - a.total)
 
     // Return top N merchants
     return merchantData.slice(0, limit).map((m) => ({
@@ -226,9 +190,9 @@ export const getSpendingByMerchant = tool({
       totalSpent: Number(m.total.toFixed(2)),
       transactionCount: m.count,
       averageTransaction: Number((m.total / m.count).toFixed(2)),
-    }));
+    }))
   },
-});
+})
 
 /**
  * Get total spending for a date range
@@ -240,34 +204,28 @@ export const getTotalSpending = tool({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
   }),
-  execute: async ({
-    startDate,
-    endDate,
-  }: {
-    startDate: string;
-    endDate: string;
-  }) => {
-    const transactions = await getAllTransactions();
+  execute: async ({ startDate, endDate }: { startDate: string; endDate: string }) => {
+    const transactions = await getAllTransactions()
 
     // Filter by date range
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      return date >= start && date <= end;
-    });
+      const date = new Date(t.date_string)
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      return date >= start && date <= end
+    })
 
     // Calculate totals (negative = expense, positive = income)
-    let totalExpenses = 0;
-    let totalIncome = 0;
+    let totalExpenses = 0
+    let totalIncome = 0
 
     filtered.forEach((t: Transaction) => {
       if (t.amount_number < 0) {
-        totalExpenses += Math.abs(t.amount_number);
+        totalExpenses += Math.abs(t.amount_number)
       } else {
-        totalIncome += t.amount_number;
+        totalIncome += t.amount_number
       }
-    });
+    })
 
     return {
       totalExpenses: Number(totalExpenses.toFixed(2)),
@@ -278,9 +236,9 @@ export const getTotalSpending = tool({
         start: startDate,
         end: endDate,
       },
-    };
+    }
   },
-});
+})
 
 /**
  * Get spending trends over time (monthly breakdown)
@@ -294,62 +252,55 @@ export const getSpendingTrends = tool({
     categoryName: z
       .string()
       .optional()
-      .describe(
-        "Optional: filter by category name to see trends for a specific category"
-      ),
+      .describe("Optional: filter by category name to see trends for a specific category"),
   }),
   execute: async ({
     startDate,
     endDate,
     categoryName,
   }: {
-    startDate: string;
-    endDate: string;
-    categoryName?: string;
+    startDate: string
+    endDate: string
+    categoryName?: string
   }) => {
-    const transactions = await getAllTransactions();
+    const transactions = await getAllTransactions()
 
     // Filter by date range and optional category
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string);
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const isInRange = date >= start && date <= end;
-      const matchesCategory =
-        !categoryName ||
-        t.category?.name.toLowerCase().includes(categoryName.toLowerCase());
-      return isInRange && matchesCategory;
-    });
+      const date = new Date(t.date_string)
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      const isInRange = date >= start && date <= end
+      const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
+      return isInRange && matchesCategory
+    })
 
     // Group by month
-    const monthMap = new Map<
-      string,
-      { expenses: number; income: number; count: number }
-    >();
+    const monthMap = new Map<string, { expenses: number; income: number; count: number }>()
 
     filtered.forEach((t: Transaction) => {
-      const date = new Date(t.date_string);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      const date = new Date(t.date_string)
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
 
-      const existing = monthMap.get(monthKey);
-      const isExpense = t.amount_number < 0;
-      const amount = Math.abs(t.amount_number);
+      const existing = monthMap.get(monthKey)
+      const isExpense = t.amount_number < 0
+      const amount = Math.abs(t.amount_number)
 
       if (existing) {
         if (isExpense) {
-          existing.expenses += amount;
+          existing.expenses += amount
         } else {
-          existing.income += amount;
+          existing.income += amount
         }
-        existing.count += 1;
+        existing.count += 1
       } else {
         monthMap.set(monthKey, {
           expenses: isExpense ? amount : 0,
           income: isExpense ? 0 : amount,
           count: 1,
-        });
+        })
       }
-    });
+    })
 
     // Convert to array and sort by month
     const monthData = Array.from(monthMap.entries())
@@ -360,11 +311,11 @@ export const getSpendingTrends = tool({
         netAmount: Number((data.income - data.expenses).toFixed(2)),
         transactionCount: data.count,
       }))
-      .sort((a, b) => a.month.localeCompare(b.month));
+      .sort((a, b) => a.month.localeCompare(b.month))
 
-    return monthData;
+    return monthData
   },
-});
+})
 
 /**
  * All available transaction tools
@@ -375,4 +326,4 @@ export const transactionTools = {
   getSpendingByMerchant,
   getTotalSpending,
   getSpendingTrends,
-};
+}

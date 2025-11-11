@@ -12,32 +12,34 @@ export function cn(...inputs: ClassValue[]) {
  * @returns Sorted flat array of categories
  */
 export function sortCategoriesByGroupAndOrder(categories: CategoryForClient[]): CategoryForClient[] {
-  const groupOrder: CategoryGroupType[] = ['EXPENSES' as CategoryGroupType, 'INVESTMENT' as CategoryGroupType, 'INCOME' as CategoryGroupType];
-  const grouped = new Map<CategoryGroupType, CategoryForClient[]>();
+  const groupOrder: CategoryGroupType[] = [
+    "EXPENSES" as CategoryGroupType,
+    "INVESTMENT" as CategoryGroupType,
+    "INCOME" as CategoryGroupType,
+  ]
+  const grouped = new Map<CategoryGroupType, CategoryForClient[]>()
 
   // Group categories by groupType
   for (const category of categories) {
-    const groupType = category.groupType || ('EXPENSES' as CategoryGroupType);
+    const groupType = category.groupType || ("EXPENSES" as CategoryGroupType)
     if (!grouped.has(groupType)) {
-      grouped.set(groupType, []);
+      grouped.set(groupType, [])
     }
-    grouped.get(groupType)!.push(category);
+    grouped.get(groupType)!.push(category)
   }
 
   // Sort categories within each group by displayOrder
   for (const [, cats] of grouped) {
     cats.sort((a, b) => {
-      const orderA = a.displayOrder ?? 9999;
-      const orderB = b.displayOrder ?? 9999;
-      if (orderA !== orderB) return orderA - orderB;
-      return a.name.localeCompare(b.name); // Fallback to name if same order
-    });
+      const orderA = a.displayOrder ?? 9999
+      const orderB = b.displayOrder ?? 9999
+      if (orderA !== orderB) return orderA - orderB
+      return a.name.localeCompare(b.name) // Fallback to name if same order
+    })
   }
 
   // Flatten groups in the defined order
-  return groupOrder
-    .filter((groupType) => grouped.has(groupType))
-    .flatMap((groupType) => grouped.get(groupType)!);
+  return groupOrder.filter((groupType) => grouped.has(groupType)).flatMap((groupType) => grouped.get(groupType)!)
 }
 
 /**
@@ -48,9 +50,9 @@ export function sortCategoriesByGroupAndOrder(categories: CategoryForClient[]): 
  */
 export function formatCurrency(amount: number, currency = "USD"): string {
   return amount.toLocaleString("en-US", {
-    style: 'currency',
+    style: "currency",
     currency: currency,
-  });
+  })
 }
 
 /**
@@ -62,7 +64,7 @@ export function formatAmount(amount: number): string {
   return Math.abs(amount).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  })
 }
 
 /**
@@ -71,5 +73,5 @@ export function formatAmount(amount: number): string {
  * @returns Formatted percentage string (e.g., "12.34%")
  */
 export function formatPercentage(value: number): string {
-  return `${value.toFixed(2)}%`;
+  return `${value.toFixed(2)}%`
 }

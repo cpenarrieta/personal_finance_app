@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { usePathname } from "next/navigation";
+import { usePathname } from "next/navigation"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,15 +8,15 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { generateBreadcrumbs } from "@/lib/breadcrumbs";
+} from "@/components/ui/breadcrumb"
+import { generateBreadcrumbs } from "@/lib/breadcrumbs"
 
 export function BreadcrumbsAsync() {
-  const pathname = usePathname();
-  const breadcrumbs = generateBreadcrumbs(pathname);
+  const pathname = usePathname()
+  const breadcrumbs = generateBreadcrumbs(pathname)
 
   if (!breadcrumbs || breadcrumbs.length === 0) {
-    return null;
+    return null
   }
 
   return (
@@ -27,9 +27,7 @@ export function BreadcrumbsAsync() {
             {index > 0 && <BreadcrumbSeparator />}
             <BreadcrumbItem>
               {crumb.href ? (
-                <BreadcrumbLink href={crumb.href}>
-                  {crumb.label}
-                </BreadcrumbLink>
+                <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
               ) : (
                 <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
               )}
@@ -38,5 +36,5 @@ export function BreadcrumbsAsync() {
         ))}
       </BreadcrumbList>
     </Breadcrumb>
-  );
+  )
 }

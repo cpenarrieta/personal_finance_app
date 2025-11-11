@@ -1,15 +1,9 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { TransactionForClient, CategoryForClient, SubcategoryForClient } from "@/types";
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { TransactionForClient, CategoryForClient, SubcategoryForClient } from "@/types"
 
 interface TransactionActionBarProps {
   filteredTransactions: TransactionForClient[]
@@ -52,14 +46,10 @@ export function TransactionActionBar({
       <div className="bg-white p-4 rounded-lg shadow-sm border">
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {filteredTransactions.length} of {totalTransactions}{" "}
-            transactions
+            Showing {filteredTransactions.length} of {totalTransactions} transactions
           </div>
           {filteredTransactions.length > 0 && (
-            <Button
-              onClick={onToggleBulkUpdate}
-              className="bg-primary hover:bg-primary/90"
-            >
+            <Button onClick={onToggleBulkUpdate} className="bg-primary hover:bg-primary/90">
               {showBulkUpdate ? "Hide Bulk Update" : "Bulk Update"}
             </Button>
           )}
@@ -70,15 +60,9 @@ export function TransactionActionBar({
       {showBulkUpdate && (
         <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-primary">
-              Bulk Update Categories
-            </h3>
+            <h3 className="text-lg font-semibold text-primary">Bulk Update Categories</h3>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={onSelectAll}
-                className="bg-primary hover:bg-primary/90"
-              >
+              <Button size="sm" onClick={onSelectAll} className="bg-primary hover:bg-primary/90">
                 Select All ({filteredTransactions.length})
               </Button>
               <Button size="sm" onClick={onDeselectAll} variant="secondary">
@@ -99,8 +83,8 @@ export function TransactionActionBar({
                   <Select
                     value={bulkCategoryId}
                     onValueChange={(value) => {
-                      setBulkCategoryId(value);
-                      setBulkSubcategoryId("");
+                      setBulkCategoryId(value)
+                      setBulkSubcategoryId("")
                     }}
                   >
                     <SelectTrigger id="bulk-category">
@@ -118,11 +102,7 @@ export function TransactionActionBar({
 
                 <div className="space-y-2">
                   <Label htmlFor="bulk-subcategory">Subcategory</Label>
-                  <Select
-                    value={bulkSubcategoryId}
-                    onValueChange={setBulkSubcategoryId}
-                    disabled={!bulkCategoryId}
-                  >
+                  <Select value={bulkSubcategoryId} onValueChange={setBulkSubcategoryId} disabled={!bulkCategoryId}>
                     <SelectTrigger id="bulk-subcategory">
                       <SelectValue placeholder="None" />
                     </SelectTrigger>
@@ -145,9 +125,7 @@ export function TransactionActionBar({
                 >
                   {isBulkUpdating
                     ? "Updating..."
-                    : `Update ${selectedTransactions.size} Transaction${
-                        selectedTransactions.size !== 1 ? "s" : ""
-                      }`}
+                    : `Update ${selectedTransactions.size} Transaction${selectedTransactions.size !== 1 ? "s" : ""}`}
                 </Button>
               </div>
             </div>
@@ -155,5 +133,5 @@ export function TransactionActionBar({
         </div>
       )}
     </>
-  );
+  )
 }

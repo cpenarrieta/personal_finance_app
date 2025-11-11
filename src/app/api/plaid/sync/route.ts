@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
-import { syncAllItems } from '@/lib/sync/sync'
+import { NextResponse } from "next/server"
+import { syncAllItems } from "@/lib/sync/sync"
 
 export async function POST() {
   try {
@@ -16,7 +16,7 @@ export async function POST() {
         error: errorMessage,
         errorCode: errorCode,
       },
-      { status: errorCode === 'ITEM_LOGIN_REQUIRED' ? 401 : 500 }
+      { status: errorCode === "ITEM_LOGIN_REQUIRED" ? 401 : 500 },
     )
   }
 }

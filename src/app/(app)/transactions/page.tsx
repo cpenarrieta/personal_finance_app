@@ -1,14 +1,9 @@
-import { TransactionsPageClient } from "@/components/transactions/list/TransactionsPageClient";
-import { TransactionsPageSkeleton } from "@/components/transactions/list/TransactionsPageSkeleton";
-import type { Metadata } from "next";
-import { Suspense } from "react";
-import {
-  getAllTransactions,
-  getAllCategories,
-  getAllTags,
-  getAllAccounts,
-} from "@/lib/db/queries";
-import { parseTransactionFiltersFromUrl } from "@/lib/transactions/url-params";
+import { TransactionsPageClient } from "@/components/transactions/list/TransactionsPageClient"
+import { TransactionsPageSkeleton } from "@/components/transactions/list/TransactionsPageSkeleton"
+import type { Metadata } from "next"
+import { Suspense } from "react"
+import { getAllTransactions, getAllCategories, getAllTags, getAllAccounts } from "@/lib/db/queries"
+import { parseTransactionFiltersFromUrl } from "@/lib/transactions/url-params"
 
 export const metadata: Metadata = {
   title: "Banking Transactions",
@@ -16,10 +11,10 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
-};
+}
 
 interface TransactionsPageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 /**
@@ -28,7 +23,7 @@ interface TransactionsPageProps {
 async function TransactionsData({
   initialFilters,
 }: {
-  initialFilters: ReturnType<typeof parseTransactionFiltersFromUrl>;
+  initialFilters: ReturnType<typeof parseTransactionFiltersFromUrl>
 }) {
   // Use cached queries for all data fetching
   const [transactions, categories, tags, accounts] = await Promise.all([
@@ -36,15 +31,13 @@ async function TransactionsData({
     getAllCategories(),
     getAllTags(),
     getAllAccounts(),
-  ] as const);
+  ] as const)
 
   // Flatten tags structure (tags.tag → tags)
-  const transactionsWithFlatTags = transactions.map(
-    (t: (typeof transactions)[0]) => ({
-      ...t,
-      tags: t.tags.map((tt: (typeof t.tags)[0]) => tt.tag),
-    })
-  );
+  const transactionsWithFlatTags = transactions.map((t: (typeof transactions)[0]) => ({
+    ...t,
+    tags: t.tags.map((tt: (typeof t.tags)[0]) => tt.tag),
+  }))
 
   return (
     <TransactionsPageClient
@@ -54,18 +47,16 @@ async function TransactionsData({
       accounts={accounts}
       initialFilters={initialFilters}
     />
-  );
+  )
 }
 
-export default async function TransactionsPage({
-  searchParams,
-}: TransactionsPageProps) {
-  const params = await searchParams;
-  const initialFilters = parseTransactionFiltersFromUrl(params);
+export default async function TransactionsPage({ searchParams }: TransactionsPageProps) {
+  const params = await searchParams
+  const initialFilters = parseTransactionFiltersFromUrl(params)
 
   return (
     <Suspense fallback={<TransactionsPageSkeleton />}>
       <TransactionsData initialFilters={initialFilters} />
     </Suspense>
-  );
+  )
 }

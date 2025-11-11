@@ -1,5 +1,5 @@
 // Mock Prisma client for testing
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client"
 
 export const mockPrismaClient = {
   transaction: {
@@ -33,9 +33,9 @@ export const mockPrismaClient = {
     findUnique: jest.fn(),
     upsert: jest.fn(),
   },
-};
+}
 
-export const prisma = mockPrismaClient as any;
+export const prisma = mockPrismaClient as any
 
 // Mock Prisma.Decimal
-export { Prisma };
+export { Prisma }

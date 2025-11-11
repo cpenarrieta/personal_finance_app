@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import { usePathname } from "next/navigation";
-import { AppSidebar } from "@/components/layout/AppSidebar";
+import { usePathname } from "next/navigation"
+import { AppSidebar } from "@/components/layout/AppSidebar"
 
 interface AppSidebarWithPathnameProps {
   accountsSlot: React.ReactNode
 }
 
 export function AppSidebarWithPathname({ accountsSlot }: AppSidebarWithPathnameProps) {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
-  return <AppSidebar accountsSlot={accountsSlot} pathname={pathname} />;
+  return <AppSidebar accountsSlot={accountsSlot} pathname={pathname} />
 }

@@ -1,10 +1,10 @@
-"use client";
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { usePlaidLink } from "react-plaid-link";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, AlertTriangle } from "lucide-react";
+"use client"
+import { useCallback, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { usePlaidLink } from "react-plaid-link"
+import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle, Loader2, AlertTriangle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -12,192 +12,187 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 
 interface PlaidLinkButtonProps {
-  accessToken?: string;
-  buttonText?: string;
-  onReauthSuccess?: () => void;
-  itemId?: string; // Database item ID for update mode
+  accessToken?: string
+  buttonText?: string
+  onReauthSuccess?: () => void
+  itemId?: string // Database item ID for update mode
 }
 
 export default function PlaidLinkButton({
   accessToken,
   buttonText = "Connect Account",
   onReauthSuccess,
-  itemId
+  itemId,
 }: PlaidLinkButtonProps) {
-  const router = useRouter();
-  const [linkToken, setLinkToken] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showSyncDialog, setShowSyncDialog] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncError, setSyncError] = useState<string | null>(null);
+  const router = useRouter()
+  const [linkToken, setLinkToken] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [showSyncDialog, setShowSyncDialog] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
 
   // Reconnection warning state
-  const [showReconnectionWarning, setShowReconnectionWarning] = useState(false);
+  const [showReconnectionWarning, setShowReconnectionWarning] = useState(false)
   const [reconnectionData, setReconnectionData] = useState<{
-    reconnectionId: string;
-    transactionCount: number;
-    institutionName: string;
-  } | null>(null);
-  const [isCompleting, setIsCompleting] = useState(false);
+    reconnectionId: string
+    transactionCount: number
+    institutionName: string
+  } | null>(null)
+  const [isCompleting, setIsCompleting] = useState(false)
 
-  const isUpdateMode = !!accessToken;
+  const isUpdateMode = !!accessToken
 
   useEffect(() => {
-    const body = accessToken ? JSON.stringify({ access_token: accessToken }) : undefined;
+    const body = accessToken ? JSON.stringify({ access_token: accessToken }) : undefined
     fetch("/api/plaid/create-link-token", {
       method: "POST",
       headers: accessToken ? { "Content-Type": "application/json" } : undefined,
       body,
     })
       .then(async (r) => {
-        const data = await r.json();
+        const data = await r.json()
         if (!r.ok) {
-          throw new Error(data.error || "Failed to create link token");
+          throw new Error(data.error || "Failed to create link token")
         }
-        return data;
+        return data
       })
       .then((d) => setLinkToken(d.link_token))
       .catch((err) => {
-        console.error("Error creating link token:", err);
-        setError(err.message);
-      });
-  }, [accessToken]);
+        console.error("Error creating link token:", err)
+        setError(err.message)
+      })
+  }, [accessToken])
 
   const handleSync = async () => {
-    setIsSyncing(true);
-    setSyncError(null);
+    setIsSyncing(true)
+    setSyncError(null)
     try {
       const response = await fetch("/api/plaid/sync", {
         method: "POST",
-      });
-      const data = await response.json();
+      })
+      const data = await response.json()
 
       if (!response.ok || !data.ok) {
-        throw new Error(data.error || "Sync failed");
+        throw new Error(data.error || "Sync failed")
       }
 
       // Success - close dialog and refresh
-      setShowSyncDialog(false);
-      router.refresh();
+      setShowSyncDialog(false)
+      router.refresh()
     } catch (err: any) {
-      setSyncError(err.message);
+      setSyncError(err.message)
     } finally {
-      setIsSyncing(false);
+      setIsSyncing(false)
     }
-  };
+  }
 
   const handleCompleteReconnection = async () => {
-    if (!reconnectionData) return;
+    if (!reconnectionData) return
 
-    setIsCompleting(true);
-    setSyncError(null);
+    setIsCompleting(true)
+    setSyncError(null)
 
     try {
       const response = await fetch("/api/plaid/complete-reconnection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reconnectionId: reconnectionData.reconnectionId }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok || !data.ok) {
-        throw new Error(data.error || "Reconnection failed");
+        throw new Error(data.error || "Reconnection failed")
       }
 
       // Success - close warning dialog
-      setShowReconnectionWarning(false);
-      setReconnectionData(null);
+      setShowReconnectionWarning(false)
+      setReconnectionData(null)
 
       // Show sync dialog for new connections
       if (!isUpdateMode) {
-        setShowSyncDialog(true);
+        setShowSyncDialog(true)
       } else {
         // For update mode, just show success and call callback
-        onReauthSuccess?.();
+        onReauthSuccess?.()
       }
 
       // Refresh to get updated data
-      router.refresh();
+      router.refresh()
     } catch (err: any) {
-      setSyncError(err.message);
+      setSyncError(err.message)
     } finally {
-      setIsCompleting(false);
+      setIsCompleting(false)
     }
-  };
+  }
 
-  const onSuccess = useCallback(async (public_token: string) => {
-    try {
-      if (isUpdateMode && itemId) {
-        // Update mode: Use prepare-exchange to detect reauth vs reconnection
-        const response = await fetch("/api/plaid/prepare-exchange", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ public_token, existingItemDbId: itemId }),
-        });
+  const onSuccess = useCallback(
+    async (public_token: string) => {
+      try {
+        if (isUpdateMode && itemId) {
+          // Update mode: Use prepare-exchange to detect reauth vs reconnection
+          const response = await fetch("/api/plaid/prepare-exchange", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ public_token, existingItemDbId: itemId }),
+          })
 
-        const data = await response.json();
+          const data = await response.json()
 
-        if (!response.ok || !data.ok) {
-          throw new Error(data.error || "Failed to process update");
+          if (!response.ok || !data.ok) {
+            throw new Error(data.error || "Failed to process update")
+          }
+
+          if (data.type === "reauth") {
+            // Simple reauth - just update status, no transaction deletion
+            onReauthSuccess?.()
+            router.refresh()
+          } else if (data.type === "reconnection") {
+            // Reconnection - show warning before deleting transactions
+            setReconnectionData({
+              reconnectionId: data.reconnectionId,
+              transactionCount: data.transactionCount,
+              institutionName: data.institutionName,
+            })
+            setShowReconnectionWarning(true)
+          }
+        } else {
+          // New connection: Use existing exchange-public-token flow
+          await fetch("/api/plaid/exchange-public-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ public_token }),
+          })
+
+          // Show sync dialog
+          setShowSyncDialog(true)
+          router.refresh()
         }
-
-        if (data.type === "reauth") {
-          // Simple reauth - just update status, no transaction deletion
-          onReauthSuccess?.();
-          router.refresh();
-        } else if (data.type === "reconnection") {
-          // Reconnection - show warning before deleting transactions
-          setReconnectionData({
-            reconnectionId: data.reconnectionId,
-            transactionCount: data.transactionCount,
-            institutionName: data.institutionName,
-          });
-          setShowReconnectionWarning(true);
-        }
-      } else {
-        // New connection: Use existing exchange-public-token flow
-        await fetch("/api/plaid/exchange-public-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ public_token }),
-        });
-
-        // Show sync dialog
-        setShowSyncDialog(true);
-        router.refresh();
+      } catch (err: any) {
+        console.error("Error in onSuccess:", err)
+        setError(err.message || "Failed to connect account")
       }
-    } catch (err: any) {
-      console.error("Error in onSuccess:", err);
-      setError(err.message || "Failed to connect account");
-    }
-  }, [isUpdateMode, itemId, onReauthSuccess, router]);
+    },
+    [isUpdateMode, itemId, onReauthSuccess, router],
+  )
 
-  const { open, ready } = usePlaidLink(
-    linkToken ? { token: linkToken, onSuccess } : { token: "", onSuccess }
-  );
+  const { open, ready } = usePlaidLink(linkToken ? { token: linkToken, onSuccess } : { token: "", onSuccess })
 
   if (error) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          {error}
-        </AlertDescription>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
-    );
+    )
   }
 
   return (
     <>
-      <Button
-        disabled={!ready}
-        onClick={() => open?.()}
-        variant={isUpdateMode ? "outline" : "default"}
-      >
+      <Button disabled={!ready} onClick={() => open?.()} variant={isUpdateMode ? "outline" : "default"}>
         {ready ? buttonText : "Loading…"}
       </Button>
 
@@ -212,10 +207,11 @@ export default function PlaidLinkButton({
             <DialogDescription>
               {reconnectionData && (
                 <>
-                  You've reconnected to <strong>{reconnectionData.institutionName}</strong> with a new
-                  item. This will delete <strong>{reconnectionData.transactionCount} existing
-                  transactions</strong> and re-sync them from Plaid.
-                  <br /><br />
+                  You've reconnected to <strong>{reconnectionData.institutionName}</strong> with a new item. This will
+                  delete <strong>{reconnectionData.transactionCount} existing transactions</strong> and re-sync them
+                  from Plaid.
+                  <br />
+                  <br />
                   Split transactions and user customizations will be preserved.
                 </>
               )}
@@ -233,18 +229,14 @@ export default function PlaidLinkButton({
             <Button
               variant="outline"
               onClick={() => {
-                setShowReconnectionWarning(false);
-                setReconnectionData(null);
+                setShowReconnectionWarning(false)
+                setReconnectionData(null)
               }}
               disabled={isCompleting}
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleCompleteReconnection}
-              disabled={isCompleting}
-            >
+            <Button variant="destructive" onClick={handleCompleteReconnection} disabled={isCompleting}>
               {isCompleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isCompleting ? "Reconnecting..." : "Continue & Delete"}
             </Button>
@@ -270,11 +262,7 @@ export default function PlaidLinkButton({
           )}
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowSyncDialog(false)}
-              disabled={isSyncing}
-            >
+            <Button variant="outline" onClick={() => setShowSyncDialog(false)} disabled={isSyncing}>
               Skip
             </Button>
             <Button onClick={handleSync} disabled={isSyncing}>
@@ -285,5 +273,5 @@ export default function PlaidLinkButton({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

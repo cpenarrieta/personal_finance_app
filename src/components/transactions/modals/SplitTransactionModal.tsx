@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { formatAmount } from "@/lib/utils";
-import type { SplitItem, TransactionForClient, CategoryForClient } from "@/types";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { formatAmount } from "@/lib/utils"
+import type { SplitItem, TransactionForClient, CategoryForClient } from "@/types"
 
 interface SplitTransactionModalProps {
   transaction: TransactionForClient
@@ -17,20 +17,16 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { CategorySelect } from "@/components/ui/category-select";
-import { SubcategorySelect } from "@/components/ui/subcategory-select";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/dialog"
+import { CategorySelect } from "@/components/ui/category-select"
+import { SubcategorySelect } from "@/components/ui/subcategory-select"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
-export function SplitTransactionModal({
-  transaction,
-  onClose,
-  categories,
-}: SplitTransactionModalProps) {
-  const router = useRouter();
+export function SplitTransactionModal({ transaction, onClose, categories }: SplitTransactionModalProps) {
+  const router = useRouter()
   const [splits, setSplits] = useState<SplitItem[]>([
     {
       amount: "",
@@ -46,11 +42,11 @@ export function SplitTransactionModal({
       notes: "",
       description: "",
     },
-  ]);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  ])
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const originalAmount = transaction.amount_number;
+  const originalAmount = transaction.amount_number
 
   const addSplit = () => {
     setSplits([
@@ -62,110 +58,99 @@ export function SplitTransactionModal({
         notes: "",
         description: "",
       },
-    ]);
-  };
+    ])
+  }
 
   const removeSplit = (index: number) => {
     if (splits.length > 2) {
-      setSplits(splits.filter((_, i) => i !== index));
+      setSplits(splits.filter((_, i) => i !== index))
     }
-  };
+  }
 
-  const updateSplit = (
-    index: number,
-    field: keyof SplitItem,
-    value: string | null
-  ) => {
-    const newSplits = [...splits];
-    const currentSplit = newSplits[index];
+  const updateSplit = (index: number, field: keyof SplitItem, value: string | null) => {
+    const newSplits = [...splits]
+    const currentSplit = newSplits[index]
     if (currentSplit) {
-      newSplits[index] = { ...currentSplit, [field]: value };
+      newSplits[index] = { ...currentSplit, [field]: value }
 
       // If category changes, reset subcategory
       if (field === "categoryId") {
-        newSplits[index]!.subcategoryId = null;
+        newSplits[index]!.subcategoryId = null
       }
     }
 
-    setSplits(newSplits);
-    setError(null);
-  };
+    setSplits(newSplits)
+    setError(null)
+  }
 
   const getTotalSplitAmount = (): number => {
     return splits.reduce((sum, split) => {
-      const amount = parseFloat(split.amount) || 0;
-      return sum + amount;
-    }, 0);
-  };
+      const amount = parseFloat(split.amount) || 0
+      return sum + amount
+    }, 0)
+  }
 
   const getRemainingAmount = (): number => {
-    return originalAmount - getTotalSplitAmount();
-  };
+    return originalAmount - getTotalSplitAmount()
+  }
 
   const validate = (): boolean => {
     // Check all splits have amounts
     for (const split of splits) {
       if (!split.amount || parseFloat(split.amount) <= 0) {
-        setError("All splits must have a positive amount");
-        return false;
+        setError("All splits must have a positive amount")
+        return false
       }
     }
 
     // Check total equals original
-    const totalSplit = getTotalSplitAmount();
+    const totalSplit = getTotalSplitAmount()
     if (Math.abs(totalSplit - originalAmount) > 0.01) {
-      setError(
-        `Split amounts ($${totalSplit.toFixed(
-          2
-        )}) must equal original amount ($${originalAmount.toFixed(2)})`
-      );
-      return false;
+      setError(`Split amounts ($${totalSplit.toFixed(2)}) must equal original amount ($${originalAmount.toFixed(2)})`)
+      return false
     }
 
-    return true;
-  };
+    return true
+  }
 
   const handleSubmit = async () => {
     if (!validate()) {
-      return;
+      return
     }
 
-    setIsSubmitting(true);
-    setError(null);
+    setIsSubmitting(true)
+    setError(null)
 
     try {
-      const response = await fetch(
-        `/api/transactions/${transaction.id}/split`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ splits }),
-        }
-      );
+      const response = await fetch(`/api/transactions/${transaction.id}/split`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ splits }),
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to split transaction");
-        setIsSubmitting(false);
-        return;
+        const errorData = await response.json()
+        setError(errorData.error || "Failed to split transaction")
+        setIsSubmitting(false)
+        return
       }
 
       // Success - refresh and close
-      router.refresh();
-      onClose();
+      router.refresh()
+      onClose()
     } catch (err) {
-      console.error("Error splitting transaction:", err);
-      setError("An unexpected error occurred");
-      setIsSubmitting(false);
+      console.error("Error splitting transaction:", err)
+      setError("An unexpected error occurred")
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // No longer needed - SubcategorySelect handles this internally
 
-  const remaining = getRemainingAmount();
-  const isValid = Math.abs(remaining) < 0.01;
+  const remaining = getRemainingAmount()
+  const isValid = Math.abs(remaining) < 0.01
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
@@ -184,31 +169,21 @@ export function SplitTransactionModal({
               isValid
                 ? "bg-success/10 border-success/30"
                 : remaining > 0
-                ? "bg-warning/10 border-warning/30"
-                : "bg-destructive/10 border-destructive/30"
+                  ? "bg-warning/10 border-warning/30"
+                  : "bg-destructive/10 border-destructive/30"
             }`}
           >
             <div className="flex justify-between items-center">
-              <span className="font-medium text-foreground">
-                Remaining to allocate:
-              </span>
+              <span className="font-medium text-foreground">Remaining to allocate:</span>
               <span
                 className={`text-2xl font-bold ${
-                  isValid
-                    ? "text-success"
-                    : remaining > 0
-                    ? "text-warning-foreground"
-                    : "text-destructive"
+                  isValid ? "text-success" : remaining > 0 ? "text-warning-foreground" : "text-destructive"
                 }`}
               >
                 ${formatAmount(remaining)}
               </span>
             </div>
-            {isValid && (
-              <p className="text-sm text-success mt-1">
-                Perfect! All amounts are allocated.
-              </p>
-            )}
+            {isValid && <p className="text-sm text-success mt-1">Perfect! All amounts are allocated.</p>}
           </div>
 
           {/* Split Items */}
@@ -216,15 +191,9 @@ export function SplitTransactionModal({
             {splits.map((split, index) => (
               <div key={index} className="border rounded-lg p-4 bg-muted/50">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-foreground">
-                    Split #{index + 1}
-                  </h3>
+                  <h3 className="font-semibold text-foreground">Split #{index + 1}</h3>
                   {splits.length > 2 && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeSplit(index)}
-                    >
+                    <Button variant="destructive" size="sm" onClick={() => removeSplit(index)}>
                       Remove
                     </Button>
                   )}
@@ -241,9 +210,9 @@ export function SplitTransactionModal({
                       value={split.amount}
                       onChange={(e) => {
                         // Only allow valid number input
-                        const value = e.target.value;
+                        const value = e.target.value
                         if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                          updateSplit(index, "amount", value);
+                          updateSplit(index, "amount", value)
                         }
                       }}
                       placeholder="0.00"
@@ -252,19 +221,13 @@ export function SplitTransactionModal({
 
                   {/* Description */}
                   <div className="space-y-2">
-                    <Label htmlFor={`split-description-${index}`}>
-                      Description (optional)
-                    </Label>
+                    <Label htmlFor={`split-description-${index}`}>Description (optional)</Label>
                     <Input
                       id={`split-description-${index}`}
                       type="text"
                       value={split.description}
-                      onChange={(e) =>
-                        updateSplit(index, "description", e.target.value)
-                      }
-                      placeholder={`${transaction.name} (Split ${index + 1}/${
-                        splits.length
-                      })`}
+                      onChange={(e) => updateSplit(index, "description", e.target.value)}
+                      placeholder={`${transaction.name} (Split ${index + 1}/${splits.length})`}
                     />
                   </div>
 
@@ -274,9 +237,7 @@ export function SplitTransactionModal({
                     <CategorySelect
                       id={`split-category-${index}`}
                       value={split.categoryId || ""}
-                      onChange={(value) =>
-                        updateSplit(index, "categoryId", value || null)
-                      }
+                      onChange={(value) => updateSplit(index, "categoryId", value || null)}
                       categories={categories}
                       placeholder="No Category"
                       className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
@@ -285,15 +246,11 @@ export function SplitTransactionModal({
 
                   {/* Subcategory */}
                   <div className="space-y-2">
-                    <Label htmlFor={`split-subcategory-${index}`}>
-                      Subcategory
-                    </Label>
+                    <Label htmlFor={`split-subcategory-${index}`}>Subcategory</Label>
                     <SubcategorySelect
                       id={`split-subcategory-${index}`}
                       value={split.subcategoryId || ""}
-                      onChange={(value) =>
-                        updateSplit(index, "subcategoryId", value || null)
-                      }
+                      onChange={(value) => updateSplit(index, "subcategoryId", value || null)}
                       categories={categories}
                       categoryId={split.categoryId}
                       placeholder="No Subcategory"
@@ -307,9 +264,7 @@ export function SplitTransactionModal({
                     <Textarea
                       id={`split-notes-${index}`}
                       value={split.notes}
-                      onChange={(e) =>
-                        updateSplit(index, "notes", e.target.value)
-                      }
+                      onChange={(e) => updateSplit(index, "notes", e.target.value)}
                       rows={2}
                       placeholder="Add any notes for this split..."
                     />
@@ -355,5 +310,5 @@ export function SplitTransactionModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

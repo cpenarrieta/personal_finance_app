@@ -1,7 +1,7 @@
-import Link from "next/link";
-import Image from "next/image";
-import { getAllAccountsWithInstitution } from "@/lib/db/queries";
-import { ErrorFallback } from "@/components/shared/ErrorFallback";
+import Link from "next/link"
+import Image from "next/image"
+import { getAllAccountsWithInstitution } from "@/lib/db/queries"
+import { ErrorFallback } from "@/components/shared/ErrorFallback"
 
 /**
  * Async Server Component for accounts list
@@ -9,42 +9,40 @@ import { ErrorFallback } from "@/components/shared/ErrorFallback";
  */
 export async function AccountsListAsync() {
   try {
-    const accounts = await getAllAccountsWithInstitution();
+    const accounts = await getAllAccountsWithInstitution()
 
-    type AccountWithInstitution = typeof accounts[number];
+    type AccountWithInstitution = (typeof accounts)[number]
 
     // Group accounts by institution
     const accountsByInstitution = accounts.reduce(
-      (acc: Record<string, { accounts: AccountWithInstitution[]; logoUrl: string | null }>, account: AccountWithInstitution) => {
-        const institutionName =
-          account.item?.institution?.name || "Unknown Institution";
+      (
+        acc: Record<string, { accounts: AccountWithInstitution[]; logoUrl: string | null }>,
+        account: AccountWithInstitution,
+      ) => {
+        const institutionName = account.item?.institution?.name || "Unknown Institution"
         if (!acc[institutionName]) {
           acc[institutionName] = {
             accounts: [],
             logoUrl: account.item?.institution?.logoUrl || null,
-          };
+          }
         }
-        acc[institutionName].accounts.push(account);
-        return acc;
+        acc[institutionName].accounts.push(account)
+        return acc
       },
-      {} as Record<string, { accounts: AccountWithInstitution[]; logoUrl: string | null }>
-    );
+      {} as Record<string, { accounts: AccountWithInstitution[]; logoUrl: string | null }>,
+    )
 
-    const institutionNames = Object.keys(accountsByInstitution).sort();
+    const institutionNames = Object.keys(accountsByInstitution).sort()
 
     if (accounts.length === 0) {
-      return (
-        <p className="text-muted-foreground">
-          No accounts found. Connect your bank and run sync.
-        </p>
-      );
+      return <p className="text-muted-foreground">No accounts found. Connect your bank and run sync.</p>
     }
 
     return (
       <div className="space-y-6">
         {institutionNames.map((institutionName) => {
-          const institution = accountsByInstitution[institutionName];
-          if (!institution) return null;
+          const institution = accountsByInstitution[institutionName]
+          if (!institution) return null
 
           return (
             <div key={institutionName} className="space-y-2">
@@ -58,9 +56,7 @@ export async function AccountsListAsync() {
                     className="rounded object-contain"
                   />
                 )}
-                <h3 className="text-lg font-semibold text-foreground">
-                  {institutionName}
-                </h3>
+                <h3 className="text-lg font-semibold text-foreground">{institutionName}</h3>
               </div>
               <ul className="space-y-2 pl-2">
                 {institution.accounts.map((a: AccountWithInstitution) => (
@@ -79,15 +75,11 @@ export async function AccountsListAsync() {
                       {(a.current_balance_number != null || a.available_balance_number != null) && (
                         <div className="text-sm text-foreground mt-1">
                           {a.current_balance_number != null && (
-                            <span>
-                              Balance: ${a.current_balance_number.toFixed(2)}
-                            </span>
+                            <span>Balance: ${a.current_balance_number.toFixed(2)}</span>
                           )}
                           {a.available_balance_number != null && a.current_balance_number != null && " · "}
                           {a.available_balance_number != null && (
-                            <span>
-                              Available: ${a.available_balance_number.toFixed(2)}
-                            </span>
+                            <span>Available: ${a.available_balance_number.toFixed(2)}</span>
                           )}
                         </div>
                       )}
@@ -96,18 +88,18 @@ export async function AccountsListAsync() {
                 ))}
               </ul>
             </div>
-          );
+          )
         })}
       </div>
-    );
+    )
   } catch (error) {
-    console.error("Failed to load accounts:", error);
+    console.error("Failed to load accounts:", error)
     return (
       <ErrorFallback
         error={error as Error}
         title="Failed to load accounts"
         description="Unable to fetch account data"
       />
-    );
+    )
   }
 }

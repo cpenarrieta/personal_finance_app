@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getPlaidClient } from '@/lib/api/plaid'
-import { Products, CountryCode } from 'plaid'
+import { NextRequest, NextResponse } from "next/server"
+import { getPlaidClient } from "@/lib/api/plaid"
+import { Products, CountryCode } from "plaid"
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,32 +9,32 @@ export async function POST(req: NextRequest) {
     const { access_token } = body
 
     const config: any = {
-      user: { client_user_id: 'local-user' },
-      client_name: 'Personal Finance (Local)',
-      language: 'en',
+      user: { client_user_id: "local-user" },
+      client_name: "Personal Finance (Local)",
+      language: "en",
       redirect_uri: process.env.PLAID_REDIRECT_URI || undefined,
     }
 
     if (access_token) {
       // Update mode - reauth existing item
       config.access_token = access_token
-      config.country_codes = process.env.PLAID_COUNTRY_CODES!.split(',').map(c => c.trim() as CountryCode)
+      config.country_codes = process.env.PLAID_COUNTRY_CODES!.split(",").map((c) => c.trim() as CountryCode)
     } else {
       // New item mode
-      config.products = process.env.PLAID_PRODUCTS!.split(',').map(p => p.trim() as Products)
-      config.country_codes = process.env.PLAID_COUNTRY_CODES!.split(',').map(c => c.trim() as CountryCode)
+      config.products = process.env.PLAID_PRODUCTS!.split(",").map((p) => p.trim() as Products)
+      config.country_codes = process.env.PLAID_COUNTRY_CODES!.split(",").map((c) => c.trim() as CountryCode)
     }
 
     const resp = await plaid.linkTokenCreate(config)
     return NextResponse.json({ link_token: resp.data.link_token })
   } catch (error: any) {
-    console.error('Error creating link token:', error.response?.data || error.message)
+    console.error("Error creating link token:", error.response?.data || error.message)
     return NextResponse.json(
       {
-        error: error.response?.data?.error_message || error.message || 'Failed to create link token',
+        error: error.response?.data?.error_message || error.message || "Failed to create link token",
         errorCode: error.response?.data?.error_code,
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

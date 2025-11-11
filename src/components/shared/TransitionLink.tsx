@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 
 interface TransitionLinkProps {
   href: string
@@ -27,24 +27,18 @@ export function TransitionLink({
   size,
   className,
 }: TransitionLinkProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   const handleClick = () => {
     startTransition(() => {
-      router.push(href);
-    });
-  };
+      router.push(href)
+    })
+  }
 
   return (
-    <Button
-      onClick={handleClick}
-      disabled={disabled || isPending}
-      variant={variant}
-      size={size}
-      className={className}
-    >
+    <Button onClick={handleClick} disabled={disabled || isPending} variant={variant} size={size} className={className}>
       {isPending ? loadingText : children}
     </Button>
-  );
+  )
 }

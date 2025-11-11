@@ -3,22 +3,18 @@
  * All queries are cached for 24 hours and tagged for invalidation
  */
 
-import { prisma } from "@/lib/db/prisma";
-import { cacheTag, cacheLife } from "next/cache";
-import type {
-  CategoryForClient,
-  PlaidAccountForClient,
-  TagForClient,
-} from "@/types";
+import { prisma } from "@/lib/db/prisma"
+import { cacheTag, cacheLife } from "next/cache"
+import type { CategoryForClient, PlaidAccountForClient, TagForClient } from "@/types"
 
 /**
  * Get all transactions with full relations
  * Cached with 24h expiration, tagged with "transactions"
  */
 export async function getAllTransactions() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("transactions");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions")
 
   return prisma.transaction.findMany({
     where: {
@@ -92,7 +88,7 @@ export async function getAllTransactions() {
         },
       },
     },
-  });
+  })
 }
 
 /**
@@ -100,9 +96,9 @@ export async function getAllTransactions() {
  * Cached with 24h expiration, tagged with "categories"
  */
 export async function getAllCategories() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("categories");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("categories")
 
   return prisma.category.findMany({
     select: {
@@ -126,12 +122,8 @@ export async function getAllCategories() {
         orderBy: { name: "asc" },
       },
     },
-    orderBy: [
-      { groupType: "asc" },
-      { displayOrder: "asc" },
-      { name: "asc" },
-    ],
-  }) as Promise<CategoryForClient[]>;
+    orderBy: [{ groupType: "asc" }, { displayOrder: "asc" }, { name: "asc" }],
+  }) as Promise<CategoryForClient[]>
 }
 
 /**
@@ -139,9 +131,9 @@ export async function getAllCategories() {
  * Cached with 24h expiration, tagged with "tags"
  */
 export async function getAllTags() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("tags");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("tags")
 
   return prisma.tag.findMany({
     select: {
@@ -152,7 +144,7 @@ export async function getAllTags() {
       updated_at_string: true, // Generated column
     },
     orderBy: { name: "asc" },
-  }) as Promise<TagForClient[]>;
+  }) as Promise<TagForClient[]>
 }
 
 /**
@@ -160,9 +152,9 @@ export async function getAllTags() {
  * Cached with 24h expiration, tagged with "accounts"
  */
 export async function getAllAccounts() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("accounts");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("accounts")
 
   return prisma.plaidAccount.findMany({
     select: {
@@ -183,7 +175,7 @@ export async function getAllAccounts() {
       updated_at_string: true, // Generated column
     },
     orderBy: { name: "asc" },
-  }) as Promise<PlaidAccountForClient[]>;
+  }) as Promise<PlaidAccountForClient[]>
 }
 
 /**
@@ -191,9 +183,9 @@ export async function getAllAccounts() {
  * Cached with 24h expiration, tagged with "accounts"
  */
 export async function getAllAccountsWithInstitution() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("accounts");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("accounts")
 
   return prisma.plaidAccount.findMany({
     select: {
@@ -235,7 +227,7 @@ export async function getAllAccountsWithInstitution() {
       },
     },
     orderBy: { name: "asc" },
-  });
+  })
 }
 
 /**
@@ -243,9 +235,9 @@ export async function getAllAccountsWithInstitution() {
  * Cached with 24h expiration, tagged with "holdings"
  */
 export async function getAllHoldings() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("holdings");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("holdings")
 
   return prisma.holding.findMany({
     select: {
@@ -283,7 +275,7 @@ export async function getAllHoldings() {
         },
       },
     },
-  });
+  })
 }
 
 /**
@@ -291,9 +283,9 @@ export async function getAllHoldings() {
  * Cached with 24h expiration, tagged with "investments"
  */
 export async function getAllInvestmentTransactions() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("investments");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("investments")
 
   return prisma.investmentTransaction.findMany({
     select: {
@@ -336,7 +328,7 @@ export async function getAllInvestmentTransactions() {
       },
     },
     orderBy: { date: "desc" },
-  });
+  })
 }
 
 /**
@@ -344,9 +336,9 @@ export async function getAllInvestmentTransactions() {
  * Cached with 24h expiration, tagged with "accounts"
  */
 export async function getAccountById(accountId: string) {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("accounts");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("accounts")
 
   return prisma.plaidAccount.findUnique({
     where: { id: accountId },
@@ -388,7 +380,7 @@ export async function getAccountById(accountId: string) {
         },
       },
     },
-  });
+  })
 }
 
 /**
@@ -396,9 +388,9 @@ export async function getAccountById(accountId: string) {
  * Cached with 24h expiration, tagged with "transactions"
  */
 export async function getTransactionsForAccount(accountId: string) {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("transactions");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions")
 
   return prisma.transaction.findMany({
     where: {
@@ -473,7 +465,7 @@ export async function getTransactionsForAccount(accountId: string) {
         },
       },
     },
-  });
+  })
 }
 
 /**
@@ -481,9 +473,9 @@ export async function getTransactionsForAccount(accountId: string) {
  * Cached with 24h expiration, tagged with "holdings"
  */
 export async function getHoldingsForAccount(accountId: string) {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("holdings");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("holdings")
 
   return prisma.holding.findMany({
     where: { accountId },
@@ -520,7 +512,7 @@ export async function getHoldingsForAccount(accountId: string) {
         },
       },
     },
-  });
+  })
 }
 
 /**
@@ -528,9 +520,9 @@ export async function getHoldingsForAccount(accountId: string) {
  * Cached with 24h expiration, tagged with "investments"
  */
 export async function getInvestmentTransactionsForAccount(accountId: string) {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("investments");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("investments")
 
   return prisma.investmentTransaction.findMany({
     where: { accountId },
@@ -572,7 +564,7 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
       },
     },
     orderBy: { date: "desc" },
-  });
+  })
 }
 
 /**
@@ -580,9 +572,9 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
  * Cached with 24h expiration, tagged with "items"
  */
 export async function getAllConnectedItems() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("items");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("items")
 
   return prisma.item.findMany({
     select: {
@@ -610,5 +602,5 @@ export async function getAllConnectedItems() {
       },
     },
     orderBy: { createdAt: "desc" },
-  });
+  })
 }

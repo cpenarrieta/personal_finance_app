@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from "@/components/ui/button";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 
 export function RecategorizeButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,8 +29,8 @@ export function RecategorizeButton() {
     setMessage(null)
 
     try {
-      const response = await fetch('/api/categorize-all', {
-        method: 'POST',
+      const response = await fetch("/api/categorize-all", {
+        method: "POST",
       })
 
       const data = await response.json()
@@ -46,8 +46,8 @@ export function RecategorizeButton() {
         setMessage(`✗ Error: ${data.error}`)
       }
     } catch (error) {
-      console.error('Categorization failed:', error)
-      setMessage('✗ Categorization failed. Please try again.')
+      console.error("Categorization failed:", error)
+      setMessage("✗ Categorization failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -57,18 +57,16 @@ export function RecategorizeButton() {
     <div className="flex items-center gap-2">
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogTrigger asChild>
-          <Button
-            disabled={isLoading}
-            className="px-6 py-3 bg-orange-600 hover:bg-orange-700"
-          >
-            {isLoading ? '🔄 Re-categorizing All...' : '🔄 Re-Categorize All (Overwrite)'}
+          <Button disabled={isLoading} className="px-6 py-3 bg-orange-600 hover:bg-orange-700">
+            {isLoading ? "🔄 Re-categorizing All..." : "🔄 Re-Categorize All (Overwrite)"}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>⚠️ WARNING: Re-categorize All Transactions</AlertDialogTitle>
             <AlertDialogDescription>
-              This will re-categorize ALL transactions using AI, overwriting any existing categories you have set manually. This action cannot be undone. Continue?
+              This will re-categorize ALL transactions using AI, overwriting any existing categories you have set
+              manually. This action cannot be undone. Continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -80,9 +78,7 @@ export function RecategorizeButton() {
         </AlertDialogContent>
       </AlertDialog>
       {message && (
-        <span className={`text-sm ${message.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>
-          {message}
-        </span>
+        <span className={`text-sm ${message.startsWith("✓") ? "text-green-600" : "text-red-600"}`}>{message}</span>
       )}
     </div>
   )

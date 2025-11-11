@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
-import { startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns'
-import type { CategoryForClient, TransactionForClient, TagForClient } from '@/types'
+import { useState, useMemo } from "react"
+import { startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns"
+import type { CategoryForClient, TransactionForClient, TagForClient } from "@/types"
 
-export type DateRange = 'all' | 'last30' | 'last90' | 'thisMonth' | 'lastMonth' | 'custom'
+export type DateRange = "all" | "last30" | "last90" | "thisMonth" | "lastMonth" | "custom"
 
 interface UseTransactionFiltersConfig {
   categories: CategoryForClient[]
@@ -32,7 +32,7 @@ export function useTransactionFilters({
   categories,
   tags: _tags = [],
   accounts: _accounts = [],
-  defaultDateRange = 'all',
+  defaultDateRange = "all",
   defaultShowIncome = false,
   defaultShowExpenses = true,
   excludeTransfersByDefault = true,
@@ -52,20 +52,18 @@ export function useTransactionFilters({
 }: UseTransactionFiltersConfig) {
   // Date filters
   const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange)
-  const [customStartDate, setCustomStartDate] = useState(initialCustomStartDate ?? '')
-  const [customEndDate, setCustomEndDate] = useState(initialCustomEndDate ?? '')
+  const [customStartDate, setCustomStartDate] = useState(initialCustomStartDate ?? "")
+  const [customEndDate, setCustomEndDate] = useState(initialCustomEndDate ?? "")
 
   // Category filters
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(
-    initialSelectedCategoryIds ?? new Set()
-  )
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(initialSelectedCategoryIds ?? new Set())
   const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<Set<string>>(
-    initialSelectedSubcategoryIds ?? new Set()
+    initialSelectedSubcategoryIds ?? new Set(),
   )
   const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(() => {
     if (initialExcludedCategoryIds) return initialExcludedCategoryIds
     if (!excludeTransfersByDefault) return new Set()
-    const transfersCategory = categories.find((cat) => cat.name === '🔁 Transfers')
+    const transfersCategory = categories.find((cat) => cat.name === "🔁 Transfers")
     return transfersCategory ? new Set([transfersCategory.id]) : new Set()
   })
 
@@ -78,23 +76,21 @@ export function useTransactionFilters({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
 
   // Optional: Search
-  const [searchQuery, setSearchQuery] = useState(
-    enableSearch ? (initialSearchQuery ?? '') : undefined
-  )
+  const [searchQuery, setSearchQuery] = useState(enableSearch ? (initialSearchQuery ?? "") : undefined)
 
   // Optional: Tags
   const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(
-    enableTagFilter ? (initialSelectedTagIds ?? new Set()) : (undefined as never)
+    enableTagFilter ? (initialSelectedTagIds ?? new Set()) : (undefined as never),
   )
 
   // Optional: Uncategorized
   const [showOnlyUncategorized, setShowOnlyUncategorized] = useState(
-    enableUncategorizedFilter ? (initialShowOnlyUncategorized ?? false) : undefined
+    enableUncategorizedFilter ? (initialShowOnlyUncategorized ?? false) : undefined,
   )
 
   // Optional: Account
   const [selectedAccountIds, setSelectedAccountIds] = useState<Set<string>>(
-    enableAccountFilter ? (initialSelectedAccountIds ?? new Set()) : (undefined as never)
+    enableAccountFilter ? (initialSelectedAccountIds ?? new Set()) : (undefined as never),
   )
 
   // Get date range interval
@@ -104,30 +100,30 @@ export function useTransactionFilters({
     endOfToday.setHours(23, 59, 59, 999)
 
     switch (dateRange) {
-      case 'last30': {
+      case "last30": {
         const start = new Date(now)
         start.setDate(now.getDate() - 29) // -29 days to include today (30 days total)
         start.setHours(0, 0, 0, 0)
         return { start, end: endOfToday }
       }
-      case 'last90': {
+      case "last90": {
         const start = new Date(now)
         start.setDate(now.getDate() - 89) // -89 days to include today (90 days total)
         start.setHours(0, 0, 0, 0)
         return { start, end: endOfToday }
       }
-      case 'thisMonth':
+      case "thisMonth":
         return { start: startOfMonth(now), end: endOfMonth(now) }
-      case 'lastMonth': {
+      case "lastMonth": {
         const lastMonth = subMonths(now, 1)
         return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) }
       }
-      case 'custom':
+      case "custom":
         if (customStartDate && customEndDate) {
           return { start: new Date(customStartDate), end: new Date(customEndDate) }
         }
         return null
-      case 'all':
+      case "all":
       default:
         return null
     }
@@ -184,7 +180,7 @@ export function useTransactionFilters({
       // Search filter
       if (searchQuery !== undefined && searchQuery.trim()) {
         const query = searchQuery.toLowerCase()
-        const tagNames = t.tags?.map((tag) => tag.name).join(' ') || ''
+        const tagNames = t.tags?.map((tag) => tag.name).join(" ") || ""
         const searchableText = [
           t.name,
           t.merchantName,
@@ -197,7 +193,7 @@ export function useTransactionFilters({
           tagNames,
         ]
           .filter(Boolean)
-          .join(' ')
+          .join(" ")
           .toLowerCase()
 
         if (!searchableText.includes(query)) return false
@@ -210,8 +206,8 @@ export function useTransactionFilters({
   // Clear all filters
   const clearAllFilters = () => {
     setDateRange(defaultDateRange)
-    setCustomStartDate('')
-    setCustomEndDate('')
+    setCustomStartDate("")
+    setCustomEndDate("")
     setSelectedCategoryIds(new Set())
     setSelectedSubcategoryIds(new Set())
     setShowIncome(defaultShowIncome)
@@ -220,7 +216,7 @@ export function useTransactionFilters({
     setExcludedCategoryIds(new Set()) // No longer using excludedCategories for transfers
 
     // Optional filters
-    if (searchQuery !== undefined) setSearchQuery('')
+    if (searchQuery !== undefined) setSearchQuery("")
     if (selectedTagIds !== undefined) setSelectedTagIds(new Set())
     if (showOnlyUncategorized !== undefined) setShowOnlyUncategorized(false)
     if (selectedAccountIds !== undefined) setSelectedAccountIds(new Set())
@@ -238,7 +234,7 @@ export function useTransactionFilters({
       showTransfers !== false // showTransfers is active if true
 
     const optionalFilters =
-      (searchQuery !== undefined && searchQuery.trim() !== '') ||
+      (searchQuery !== undefined && searchQuery.trim() !== "") ||
       (selectedTagIds !== undefined && selectedTagIds.size > 0) ||
       (showOnlyUncategorized !== undefined && showOnlyUncategorized) ||
       (selectedAccountIds !== undefined && selectedAccountIds.size > 0)

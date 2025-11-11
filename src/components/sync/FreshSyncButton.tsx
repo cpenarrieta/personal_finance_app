@@ -1,4 +1,4 @@
-import { GenericSyncButton } from './GenericSyncButton'
+import { GenericSyncButton } from "./GenericSyncButton"
 
 export function FreshSyncButton({ action }: { action: () => Promise<void> }) {
   return (

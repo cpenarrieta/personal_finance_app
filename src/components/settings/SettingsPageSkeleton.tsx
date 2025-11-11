@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 
 /**
  * Generic skeleton for settings pages
@@ -33,5 +33,5 @@ export function SettingsPageSkeleton() {
         ))}
       </div>
     </div>
-  );
+  )
 }

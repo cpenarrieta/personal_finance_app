@@ -1,14 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db/prisma'
-import { updateTransactionSchema } from '@/types/api'
-import { safeParseRequestBody } from '@/types/api'
-import type { Prisma } from '@prisma/client'
-import { revalidateTag } from 'next/cache'
+import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/db/prisma"
+import { updateTransactionSchema } from "@/types/api"
+import { safeParseRequestBody } from "@/types/api"
+import type { Prisma } from "@prisma/client"
+import { revalidateTag } from "next/cache"
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -18,22 +15,14 @@ export async function PATCH(
     if (!parseResult.success) {
       return NextResponse.json(
         {
-          error: 'Invalid request data',
+          error: "Invalid request data",
           details: parseResult.error.message,
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    const {
-      name,
-      plaidCategory,
-      plaidSubcategory,
-      categoryId,
-      subcategoryId,
-      notes,
-      tagIds,
-    } = parseResult.data
+    const { name, plaidCategory, plaidSubcategory, categoryId, subcategoryId, notes, tagIds } = parseResult.data
 
     // Build update data object with proper typing
     const updateData: Prisma.TransactionUpdateInput = {}
@@ -86,23 +75,17 @@ export async function PATCH(
     })
 
     // Invalidate transaction and dashboard caches
-    revalidateTag("transactions", "max");
-    revalidateTag("dashboard", "max");
+    revalidateTag("transactions", "max")
+    revalidateTag("dashboard", "max")
 
     return NextResponse.json(updatedTransaction)
   } catch (error) {
-    console.error('Error updating transaction:', error)
-    return NextResponse.json(
-      { error: 'Failed to update transaction' },
-      { status: 500 }
-    )
+    console.error("Error updating transaction:", error)
+    return NextResponse.json({ error: "Failed to update transaction" }, { status: 500 })
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -115,10 +98,7 @@ export async function DELETE(
     })
 
     if (!transaction) {
-      return NextResponse.json(
-        { error: 'Transaction not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "Transaction not found" }, { status: 404 })
     }
 
     // If transaction has child transactions (is a split parent), delete them first
@@ -139,15 +119,12 @@ export async function DELETE(
     })
 
     // Invalidate transaction and dashboard caches
-    revalidateTag("transactions", "max");
-    revalidateTag("dashboard", "max");
+    revalidateTag("transactions", "max")
+    revalidateTag("dashboard", "max")
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting transaction:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete transaction' },
-      { status: 500 }
-    )
+    console.error("Error deleting transaction:", error)
+    return NextResponse.json({ error: "Failed to delete transaction" }, { status: 500 })
   }
 }

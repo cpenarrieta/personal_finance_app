@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 /**
  * Skeleton for metric cards (5 cards in grid)
@@ -20,7 +20,7 @@ export function MetricCardsSkeleton() {
         </Card>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -48,7 +48,7 @@ export function UncategorizedSectionSkeleton() {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -80,7 +80,7 @@ export function TransactionTableSkeleton({ rows = 20 }: { rows?: number }) {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -101,7 +101,7 @@ export function ChartsSkeleton() {
         </Card>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -113,10 +113,10 @@ export function SectionSkeleton({
   button = false,
   children,
 }: {
-  title?: boolean;
-  subtitle?: boolean;
-  button?: boolean;
-  children: React.ReactNode;
+  title?: boolean
+  subtitle?: boolean
+  button?: boolean
+  children: React.ReactNode
 }) {
   return (
     <div className="space-y-4">
@@ -129,5 +129,5 @@ export function SectionSkeleton({
       </div>
       {children}
     </div>
-  );
+  )
 }

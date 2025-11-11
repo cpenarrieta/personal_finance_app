@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
-import { CategoryForClient, SubcategoryForClient } from "@/types";
+import { useMemo } from "react"
+import { CategoryForClient, SubcategoryForClient } from "@/types"
 
 interface SubcategorySelectProps {
-  value: string;
-  onChange: (value: string) => void;
-  categories: CategoryForClient[];
-  categoryId: string | null;
-  placeholder?: string;
-  disabled?: boolean;
-  id?: string;
-  className?: string;
-  showAllOption?: boolean; // For MoveTransactions: "All subcategories"
-  showNullOption?: boolean; // For MoveTransactions: "No subcategory"
+  value: string
+  onChange: (value: string) => void
+  categories: CategoryForClient[]
+  categoryId: string | null
+  placeholder?: string
+  disabled?: boolean
+  id?: string
+  className?: string
+  showAllOption?: boolean // For MoveTransactions: "All subcategories"
+  showNullOption?: boolean // For MoveTransactions: "No subcategory"
 }
 
 /**
@@ -34,13 +34,13 @@ export function SubcategorySelect({
 }: SubcategorySelectProps) {
   // Get subcategories for the selected category
   const availableSubcategories = useMemo<SubcategoryForClient[]>(() => {
-    if (!categoryId) return [];
-    const category = categories.find((c) => c.id === categoryId);
-    return category?.subcategories || [];
-  }, [categoryId, categories]);
+    if (!categoryId) return []
+    const category = categories.find((c) => c.id === categoryId)
+    return category?.subcategories || []
+  }, [categoryId, categories])
 
   // Disable if no category is selected
-  const isDisabled = disabled || !categoryId;
+  const isDisabled = disabled || !categoryId
 
   return (
     <select
@@ -51,9 +51,7 @@ export function SubcategorySelect({
       className={className}
     >
       {/* Show either placeholder or special options, not both */}
-      {!showAllOption && !showNullOption && (
-        <option value="">{placeholder}</option>
-      )}
+      {!showAllOption && !showNullOption && <option value="">{placeholder}</option>}
       {showAllOption && <option value="">All subcategories</option>}
       {showNullOption && <option value="null">No subcategory</option>}
       {availableSubcategories.map((sub) => (
@@ -62,5 +60,5 @@ export function SubcategorySelect({
         </option>
       ))}
     </select>
-  );
+  )
 }

@@ -1,6 +1,6 @@
 // lib/sync.ts
 // Convenience wrappers for different sync operations
-import { syncItems } from './sync-service'
+import { syncItems } from "./sync-service"
 
 export async function syncAllItems() {
   await syncItems({ syncTransactions: true, syncInvestments: true })

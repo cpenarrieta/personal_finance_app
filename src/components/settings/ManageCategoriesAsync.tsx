@@ -1,27 +1,27 @@
-import Image from "next/image";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { DeleteButton } from "@/components/shared/DeleteButton";
-import { getCategoryImage } from "@/lib/categories/images";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { TransferCategoryToggle } from "@/components/transactions/filters/TransferCategoryToggle";
-import { getAllCategoriesForManagement } from "@/lib/db/queries-settings";
-import { ErrorFallback } from "@/components/shared/ErrorFallback";
-import { prisma } from "@/lib/db/prisma";
-import type { Prisma } from "@prisma/client";
+import Image from "next/image"
+import { revalidatePath, revalidateTag } from "next/cache"
+import { DeleteButton } from "@/components/shared/DeleteButton"
+import { getCategoryImage } from "@/lib/categories/images"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { TransferCategoryToggle } from "@/components/transactions/filters/TransferCategoryToggle"
+import { getAllCategoriesForManagement } from "@/lib/db/queries-settings"
+import { ErrorFallback } from "@/components/shared/ErrorFallback"
+import { prisma } from "@/lib/db/prisma"
+import type { Prisma } from "@prisma/client"
 
 type CategoryWithSubs = Prisma.CategoryGetPayload<{
-  include: { subcategories: true };
-}>;
+  include: { subcategories: true }
+}>
 
 // Server Actions
 async function createCategory(formData: FormData) {
-  "use server";
-  const name = formData.get("name") as string;
-  const imageUrl = formData.get("imageUrl") as string;
-  const isTransferCategory = formData.get("isTransferCategory") === "true";
+  "use server"
+  const name = formData.get("name") as string
+  const imageUrl = formData.get("imageUrl") as string
+  const isTransferCategory = formData.get("isTransferCategory") === "true"
 
   await prisma.category.create({
     data: {
@@ -29,64 +29,62 @@ async function createCategory(formData: FormData) {
       imageUrl: imageUrl || null,
       isTransferCategory,
     },
-  });
-  revalidatePath("/settings/manage-categories");
-  revalidateTag("categories", "max");
+  })
+  revalidatePath("/settings/manage-categories")
+  revalidateTag("categories", "max")
 }
 
 async function updateCategory(formData: FormData) {
-  "use server";
-  const id = formData.get("id") as string;
-  const isTransferCategory = formData.get("isTransferCategory") === "true";
+  "use server"
+  const id = formData.get("id") as string
+  const isTransferCategory = formData.get("isTransferCategory") === "true"
 
   await prisma.category.update({
     where: { id },
     data: { isTransferCategory },
-  });
-  revalidatePath("/settings/manage-categories");
-  revalidateTag("categories", "max");
+  })
+  revalidatePath("/settings/manage-categories")
+  revalidateTag("categories", "max")
 }
 
 async function deleteCategory(formData: FormData) {
-  "use server";
-  const id = formData.get("id") as string;
-  await prisma.category.delete({ where: { id } });
-  revalidatePath("/settings/manage-categories");
-  revalidateTag("categories", "max");
+  "use server"
+  const id = formData.get("id") as string
+  await prisma.category.delete({ where: { id } })
+  revalidatePath("/settings/manage-categories")
+  revalidateTag("categories", "max")
 }
 
 async function createSubcategory(formData: FormData) {
-  "use server";
-  const categoryId = formData.get("categoryId") as string;
-  const name = formData.get("name") as string;
-  const imageUrl = formData.get("imageUrl") as string;
+  "use server"
+  const categoryId = formData.get("categoryId") as string
+  const name = formData.get("name") as string
+  const imageUrl = formData.get("imageUrl") as string
 
   await prisma.subcategory.create({
     data: { categoryId, name, imageUrl: imageUrl || null },
-  });
-  revalidatePath("/settings/manage-categories");
-  revalidateTag("categories", "max");
+  })
+  revalidatePath("/settings/manage-categories")
+  revalidateTag("categories", "max")
 }
 
 async function deleteSubcategory(formData: FormData) {
-  "use server";
-  const id = formData.get("id") as string;
-  await prisma.subcategory.delete({ where: { id } });
-  revalidatePath("/settings/manage-categories");
-  revalidateTag("categories", "max");
+  "use server"
+  const id = formData.get("id") as string
+  await prisma.subcategory.delete({ where: { id } })
+  revalidatePath("/settings/manage-categories")
+  revalidateTag("categories", "max")
 }
 
 export async function ManageCategoriesAsync() {
   try {
-    const categories = await getAllCategoriesForManagement();
+    const categories = await getAllCategoriesForManagement()
 
     return (
       <>
         {/* Add Category Form */}
         <div className="bg-card rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Add New Category
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Add New Category</h2>
           <form action={createCategory} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -101,26 +99,13 @@ export async function ManageCategoriesAsync() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category-image">Image URL (optional)</Label>
-                <Input
-                  id="category-image"
-                  type="text"
-                  name="imageUrl"
-                  placeholder="https://example.com/icon.png"
-                />
+                <Input id="category-image" type="text" name="imageUrl" placeholder="https://example.com/icon.png" />
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Checkbox
-                id="is-transfer-category"
-                name="isTransferCategory"
-                value="true"
-              />
-              <Label
-                htmlFor="is-transfer-category"
-                className="text-sm font-normal cursor-pointer"
-              >
-                This is a transfer category (transactions moving money between
-                accounts)
+              <Checkbox id="is-transfer-category" name="isTransferCategory" value="true" />
+              <Label htmlFor="is-transfer-category" className="text-sm font-normal cursor-pointer">
+                This is a transfer category (transactions moving money between accounts)
               </Label>
             </div>
             <Button type="submit">+ Add Category</Button>
@@ -129,23 +114,16 @@ export async function ManageCategoriesAsync() {
 
         {/* Categories List */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">
-            Your Categories ({categories.length})
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground">Your Categories ({categories.length})</h2>
 
           {categories.length === 0 ? (
             <div className="bg-card rounded-lg shadow-md p-8 text-center">
-              <p className="text-muted-foreground">
-                No categories yet. Create your first category above!
-              </p>
+              <p className="text-muted-foreground">No categories yet. Create your first category above!</p>
             </div>
           ) : (
             <div className="space-y-3">
               {categories.map((cat: CategoryWithSubs) => (
-                <div
-                  key={cat.id}
-                  className="bg-card rounded-lg shadow-md overflow-hidden"
-                >
+                <div key={cat.id} className="bg-card rounded-lg shadow-md overflow-hidden">
                   {/* Category Header */}
                   <div className="p-4 bg-muted/50 border-b">
                     <div className="flex items-center gap-3">
@@ -157,20 +135,16 @@ export async function ManageCategoriesAsync() {
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-lg object-cover border"
-                            unoptimized={getCategoryImage(cat.name, cat.imageUrl)!.startsWith('/images/')}
+                            unoptimized={getCategoryImage(cat.name, cat.imageUrl)!.startsWith("/images/")}
                           />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-foreground">
-                          {cat.name}
-                        </h3>
+                        <h3 className="font-semibold text-lg text-foreground">{cat.name}</h3>
                         <p className="text-sm text-muted-foreground">
                           {cat.subcategories.length === 0
                             ? "No subcategories"
-                            : `${cat.subcategories.length} subcategory${
-                                cat.subcategories.length > 1 ? "ies" : ""
-                              }`}
+                            : `${cat.subcategories.length} subcategory${cat.subcategories.length > 1 ? "ies" : ""}`}
                         </p>
                         <div className="mt-2">
                           <TransferCategoryToggle
@@ -183,9 +157,7 @@ export async function ManageCategoriesAsync() {
                       <DeleteButton
                         id={cat.id}
                         action={deleteCategory}
-                        confirmMessage={`Are you sure you want to delete "${
-                          cat.name
-                        }"?${
+                        confirmMessage={`Are you sure you want to delete "${cat.name}"?${
                           cat.subcategories.length > 0
                             ? ` This will also delete ${cat.subcategories.length} subcategory(ies).`
                             : ""
@@ -212,12 +184,10 @@ export async function ManageCategoriesAsync() {
                                 width={32}
                                 height={32}
                                 className="w-8 h-8 rounded object-cover border"
-                                unoptimized={getCategoryImage(sub.name, sub.imageUrl)!.startsWith('/images/')}
+                                unoptimized={getCategoryImage(sub.name, sub.imageUrl)!.startsWith("/images/")}
                               />
                             )}
-                            <span className="flex-1 text-foreground font-medium">
-                              {sub.name}
-                            </span>
+                            <span className="flex-1 text-foreground font-medium">{sub.name}</span>
                             <DeleteButton
                               id={sub.id}
                               action={deleteSubcategory}
@@ -231,30 +201,13 @@ export async function ManageCategoriesAsync() {
                     )}
 
                     {/* Add Subcategory Form */}
-                    <form
-                      action={createSubcategory}
-                      className="border-t pt-4 space-y-2"
-                    >
+                    <form action={createSubcategory} className="border-t pt-4 space-y-2">
                       <input type="hidden" name="categoryId" value={cat.id} />
                       <Label>Add Subcategory</Label>
                       <div className="flex gap-2">
-                        <Input
-                          type="text"
-                          name="name"
-                          placeholder="Subcategory name"
-                          className="flex-1"
-                        />
-                        <Input
-                          type="text"
-                          name="imageUrl"
-                          placeholder="Image URL (optional)"
-                          className="w-48"
-                        />
-                        <Button
-                          type="submit"
-                          size="sm"
-                          className="bg-success hover:bg-success/90"
-                        >
+                        <Input type="text" name="name" placeholder="Subcategory name" className="flex-1" />
+                        <Input type="text" name="imageUrl" placeholder="Image URL (optional)" className="w-48" />
+                        <Button type="submit" size="sm" className="bg-success hover:bg-success/90">
                           + Add
                         </Button>
                       </div>
@@ -266,15 +219,15 @@ export async function ManageCategoriesAsync() {
           )}
         </div>
       </>
-    );
+    )
   } catch (error) {
-    console.error("Failed to load categories:", error);
+    console.error("Failed to load categories:", error)
     return (
       <ErrorFallback
         error={error as Error}
         title="Failed to load categories"
         description="Unable to fetch category data"
       />
-    );
+    )
   }
 }

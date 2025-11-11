@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Button } from "@/components/ui/button";
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,14 +12,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 
 export function DeleteButton({
   id,
   action,
   confirmMessage,
-  buttonText = 'Delete',
-  className = 'text-destructive hover:text-destructive/80 text-sm',
+  buttonText = "Delete",
+  className = "text-destructive hover:text-destructive/80 text-sm",
 }: {
   id: string
   action: (formData: FormData) => Promise<void>
@@ -32,7 +32,7 @@ export function DeleteButton({
   const handleConfirm = () => {
     setShowConfirmDialog(false)
     const formData = new FormData()
-    formData.append('id', id)
+    formData.append("id", id)
     action(formData)
   }
 
@@ -46,9 +46,7 @@ export function DeleteButton({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-          <AlertDialogDescription>
-            {confirmMessage}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{confirmMessage}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -60,4 +58,3 @@ export function DeleteButton({
     </AlertDialog>
   )
 }
-

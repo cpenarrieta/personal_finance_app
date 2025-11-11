@@ -1,19 +1,19 @@
-import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import type { NextConfig } from "next"
+import { withSentryConfig } from "@sentry/nextjs"
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'plaid-merchant-logos.plaid.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "plaid-merchant-logos.plaid.com",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
-};
+}
 
 // Sentry configuration options
 const sentryWebpackPluginOptions = {
@@ -50,6 +50,6 @@ const sentryWebpackPluginOptions = {
 
   // Enables automatic instrumentation of Vercel Cron Monitors (only available on Vercel)
   automaticVercelMonitors: true,
-};
+}
 
-export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+export default withSentryConfig(nextConfig, sentryWebpackPluginOptions)

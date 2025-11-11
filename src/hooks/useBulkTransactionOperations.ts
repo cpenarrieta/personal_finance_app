@@ -1,12 +1,12 @@
-import { useState } from 'react'
-import { toast } from 'sonner'
-import type { TransactionForClient, CategoryForClient } from '@/types'
+import { useState } from "react"
+import { toast } from "sonner"
+import type { TransactionForClient, CategoryForClient } from "@/types"
 
 export function useBulkTransactionOperations() {
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set())
   const [showBulkUpdate, setShowBulkUpdate] = useState(false)
-  const [bulkCategoryId, setBulkCategoryId] = useState('')
-  const [bulkSubcategoryId, setBulkSubcategoryId] = useState('')
+  const [bulkCategoryId, setBulkCategoryId] = useState("")
+  const [bulkSubcategoryId, setBulkSubcategoryId] = useState("")
   const [isBulkUpdating, setIsBulkUpdating] = useState(false)
 
   // Toggle transaction selection
@@ -41,20 +41,20 @@ export function useBulkTransactionOperations() {
     const toastId = toast.loading(`Updating ${selectedTransactions.size} transactions...`)
 
     try {
-      const response = await fetch('/api/transactions/bulk-update', {
-        method: 'PATCH',
+      const response = await fetch("/api/transactions/bulk-update", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           transactionIds: Array.from(selectedTransactions),
           categoryId: bulkCategoryId,
-          subcategoryId: bulkSubcategoryId && bulkSubcategoryId !== 'NONE' ? bulkSubcategoryId : null,
+          subcategoryId: bulkSubcategoryId && bulkSubcategoryId !== "NONE" ? bulkSubcategoryId : null,
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to bulk update transactions')
+        throw new Error("Failed to bulk update transactions")
       }
 
       toast.success(`Updated ${selectedTransactions.size} transactions!`, { id: toastId })
@@ -62,8 +62,8 @@ export function useBulkTransactionOperations() {
       // Refresh the page to show updated data
       window.location.reload()
     } catch (error) {
-      console.error('Error bulk updating transactions:', error)
-      toast.error('Failed to update transactions', { id: toastId })
+      console.error("Error bulk updating transactions:", error)
+      toast.error("Failed to update transactions", { id: toastId })
     } finally {
       setIsBulkUpdating(false)
     }

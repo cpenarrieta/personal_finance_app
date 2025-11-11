@@ -1,7 +1,7 @@
-import { Suspense } from "react";
-import type { Metadata } from "next";
-import { AccountsListAsync } from "@/components/accounts/AccountsListAsync";
-import { AccountsListSkeleton } from "@/components/accounts/AccountsListSkeleton";
+import { Suspense } from "react"
+import type { Metadata } from "next"
+import { AccountsListAsync } from "@/components/accounts/AccountsListAsync"
+import { AccountsListSkeleton } from "@/components/accounts/AccountsListSkeleton"
 
 export const metadata: Metadata = {
   title: "Accounts",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
-};
+}
 
 export default async function AccountsPage() {
   return (
@@ -19,5 +19,5 @@ export default async function AccountsPage() {
         <AccountsListAsync />
       </Suspense>
     </>
-  );
+  )
 }

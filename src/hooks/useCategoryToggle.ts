@@ -1,4 +1,4 @@
-import type { CategoryForClient } from '@/types'
+import type { CategoryForClient } from "@/types"
 
 export function useCategoryToggle() {
   // Toggle category selection
@@ -8,7 +8,7 @@ export function useCategoryToggle() {
     setSelectedCategoryIds: (ids: Set<string>) => void,
     selectedSubcategoryIds: Set<string>,
     setSelectedSubcategoryIds: (ids: Set<string>) => void,
-    categories: CategoryForClient[]
+    categories: CategoryForClient[],
   ) => {
     const newSelected = new Set(selectedCategoryIds)
     if (newSelected.has(categoryId)) {
@@ -33,7 +33,7 @@ export function useCategoryToggle() {
     selectedCategoryIds: Set<string>,
     setSelectedCategoryIds: (ids: Set<string>) => void,
     selectedSubcategoryIds: Set<string>,
-    setSelectedSubcategoryIds: (ids: Set<string>) => void
+    setSelectedSubcategoryIds: (ids: Set<string>) => void,
   ) => {
     const newSelected = new Set(selectedSubcategoryIds)
     if (newSelected.has(subcategoryId)) {
@@ -52,7 +52,7 @@ export function useCategoryToggle() {
   const toggleExcludedCategory = (
     categoryId: string,
     excludedCategoryIds: Set<string>,
-    setExcludedCategoryIds: (ids: Set<string>) => void
+    setExcludedCategoryIds: (ids: Set<string>) => void,
   ) => {
     const newExcluded = new Set(excludedCategoryIds)
     if (newExcluded.has(categoryId)) {

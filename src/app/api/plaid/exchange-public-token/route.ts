@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getPlaidClient } from '@/lib/api/plaid'
-import { prisma } from '@/lib/db/prisma'
-import { Prisma } from '@prisma/client'
-import { CountryCode } from 'plaid'
-import { revalidateTag } from 'next/cache'
+import { NextRequest, NextResponse } from "next/server"
+import { getPlaidClient } from "@/lib/api/plaid"
+import { prisma } from "@/lib/db/prisma"
+import { Prisma } from "@prisma/client"
+import { CountryCode } from "plaid"
+import { revalidateTag } from "next/cache"
 
 export async function POST(req: NextRequest) {
   const { public_token } = await req.json()
@@ -15,12 +15,12 @@ export async function POST(req: NextRequest) {
 
   // Fetch institution info & accounts
   const item = await plaid.itemGet({ access_token: accessToken })
-  const instId = item.data.item.institution_id || 'unknown'
-  let institutionName = 'Unknown'
-  if (instId && instId !== 'unknown') {
+  const instId = item.data.item.institution_id || "unknown"
+  let institutionName = "Unknown"
+  if (instId && instId !== "unknown") {
     const inst = await plaid.institutionsGetById({
       institution_id: instId,
-      country_codes: [CountryCode.Ca]
+      country_codes: [CountryCode.Ca],
     })
     institutionName = inst.data.institution.name
   }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   // Check for existing item with same institution (reconnection scenario)
   const existingItemForInstitution = await prisma.item.findFirst({
     where: { institutionId: institution.id },
-    include: { accounts: true }
+    include: { accounts: true },
   })
 
   // Get accounts from Plaid
@@ -46,11 +46,9 @@ export async function POST(req: NextRequest) {
     console.log(`Reconnection detected for ${institutionName}. Updating existing item...`)
 
     // Check if accounts match (by name + mask)
-    const newAccountSignatures = new Set(
-      accts.data.accounts.map((a) => `${a.name}|${a.mask}`)
-    )
+    const newAccountSignatures = new Set(accts.data.accounts.map((a) => `${a.name}|${a.mask}`))
     const existingAccountSignatures = new Set(
-      existingItemForInstitution.accounts.map((a: { name: string; mask: string | null }) => `${a.name}|${a.mask}`)
+      existingItemForInstitution.accounts.map((a: { name: string; mask: string | null }) => `${a.name}|${a.mask}`),
     )
 
     const matchingAccounts = [...newAccountSignatures].filter((sig) => existingAccountSignatures.has(sig))
@@ -64,26 +62,24 @@ export async function POST(req: NextRequest) {
       const convertedSplits = await prisma.transaction.updateMany({
         where: {
           account: { itemId: existingItemForInstitution.id },
-          parentTransactionId: { not: null },  // Is a split child
-          isManual: false,                      // Not already manual
+          parentTransactionId: { not: null }, // Is a split child
+          isManual: false, // Not already manual
         },
         data: {
-          isManual: true,              // Mark as manual to preserve
-          parentTransactionId: null,   // Orphan (parent will be deleted)
+          isManual: true, // Mark as manual to preserve
+          parentTransactionId: null, // Orphan (parent will be deleted)
         },
       })
 
       if (convertedSplits.count > 0) {
-        console.log(
-          `   Converted ${convertedSplits.count} split children to manual transactions`
-        )
+        console.log(`   Converted ${convertedSplits.count} split children to manual transactions`)
       }
 
       // STEP 2: Delete old Plaid transactions (including split parents)
       const deletedTxs = await prisma.transaction.deleteMany({
         where: {
           account: { itemId: existingItemForInstitution.id },
-          isManual: false,  // Only delete Plaid-sourced transactions
+          isManual: false, // Only delete Plaid-sourced transactions
         },
       })
       console.log(`   Deleted ${deletedTxs.count} Plaid transactions (preserved manual & split children)`)
@@ -98,14 +94,14 @@ export async function POST(req: NextRequest) {
           status: null,
           lastTransactionsCursor: null,
           lastInvestmentsCursor: null,
-        }
+        },
       })
 
       // Update existing accounts with new plaidAccountIds
       for (const a of accts.data.accounts) {
         const accountSignature = `${a.name}|${a.mask}`
         const existingAccount = existingItemForInstitution.accounts.find(
-          (acc: { name: string; mask: string | null }) => `${acc.name}|${acc.mask}` === accountSignature
+          (acc: { name: string; mask: string | null }) => `${acc.name}|${acc.mask}` === accountSignature,
         )
 
         if (existingAccount) {
@@ -122,7 +118,7 @@ export async function POST(req: NextRequest) {
               availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
               creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
               balanceUpdatedAt: new Date(),
-            }
+            },
           })
         } else {
           // New account - create it
@@ -130,7 +126,7 @@ export async function POST(req: NextRequest) {
             data: {
               plaidAccountId: a.account_id,
               itemId: existingItemForInstitution.id,
-              name: a.name ?? a.official_name ?? 'Account',
+              name: a.name ?? a.official_name ?? "Account",
               officialName: a.official_name || null,
               mask: a.mask || null,
               type: a.type,
@@ -140,7 +136,7 @@ export async function POST(req: NextRequest) {
               availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
               creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
               balanceUpdatedAt: new Date(),
-            }
+            },
           })
         }
       }
@@ -166,7 +162,7 @@ export async function POST(req: NextRequest) {
       where: { plaidAccountId: a.account_id },
       update: {
         itemId: dbItem.id,
-        name: a.name ?? a.official_name ?? 'Account',
+        name: a.name ?? a.official_name ?? "Account",
         officialName: a.official_name || null,
         mask: a.mask || null,
         type: a.type,
@@ -180,7 +176,7 @@ export async function POST(req: NextRequest) {
       create: {
         plaidAccountId: a.account_id,
         itemId: dbItem.id,
-        name: a.name ?? a.official_name ?? 'Account',
+        name: a.name ?? a.official_name ?? "Account",
         officialName: a.official_name || null,
         mask: a.mask || null,
         type: a.type,

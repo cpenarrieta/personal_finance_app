@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * Route-level loading state for dashboard and other pages in the (app) route group
@@ -20,5 +20,5 @@ export default function Loading() {
         <Skeleton className="h-64 w-full" />
       </div>
     </div>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db/prisma'
-import { bulkUpdateTransactionsSchema, safeParseRequestBody } from '@/types/api'
-import { revalidateTag } from 'next/cache'
+import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/db/prisma"
+import { bulkUpdateTransactionsSchema, safeParseRequestBody } from "@/types/api"
+import { revalidateTag } from "next/cache"
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -11,10 +11,10 @@ export async function PATCH(request: NextRequest) {
     if (!parseResult.success) {
       return NextResponse.json(
         {
-          error: 'Invalid request data',
+          error: "Invalid request data",
           details: parseResult.error.message,
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest) {
           tagIds.map((tagId) => ({
             transactionId,
             tagId,
-          }))
+          })),
         )
 
         await prisma.transactionTag.createMany({
@@ -60,18 +60,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Invalidate transaction and dashboard caches
-    revalidateTag("transactions", "max");
-    revalidateTag("dashboard", "max");
+    revalidateTag("transactions", "max")
+    revalidateTag("dashboard", "max")
 
     return NextResponse.json({
       success: true,
       updatedCount: transactionIds.length,
     })
   } catch (error) {
-    console.error('Error bulk updating transactions:', error)
-    return NextResponse.json(
-      { error: 'Failed to bulk update transactions' },
-      { status: 500 }
-    )
+    console.error("Error bulk updating transactions:", error)
+    return NextResponse.json({ error: "Failed to bulk update transactions" }, { status: 500 })
   }
 }

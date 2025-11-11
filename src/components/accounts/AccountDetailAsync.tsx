@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation";
-import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList";
-import { InvestmentTransactionList } from "@/components/investments/transactions/InvestmentTransactionList";
-import { HoldingList } from "@/components/investments/holdings/HoldingList";
-import { format } from "date-fns";
-import { ErrorFallback } from "@/components/shared/ErrorFallback";
+import { notFound } from "next/navigation"
+import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList"
+import { InvestmentTransactionList } from "@/components/investments/transactions/InvestmentTransactionList"
+import { HoldingList } from "@/components/investments/holdings/HoldingList"
+import { format } from "date-fns"
+import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import {
   getAccountById,
   getTransactionsForAccount,
@@ -11,27 +11,27 @@ import {
   getInvestmentTransactionsForAccount,
   getAllCategories,
   getAllTags,
-} from "@/lib/db/queries";
+} from "@/lib/db/queries"
 
 export async function AccountDetailAsync({ id }: { id: string }) {
   try {
-    const account = await getAccountById(id);
+    const account = await getAccountById(id)
 
     if (!account) {
-      notFound();
+      notFound()
     }
 
-    const isInvestmentAccount = account.type === "investment" || account.subtype?.includes("brokerage");
+    const isInvestmentAccount = account.type === "investment" || account.subtype?.includes("brokerage")
 
-    const [categories, tags] = await Promise.all([getAllCategories(), getAllTags()]);
+    const [categories, tags] = await Promise.all([getAllCategories(), getAllTags()])
 
-    let content;
+    let content
 
     if (isInvestmentAccount) {
       const [investmentTransactions, holdings] = await Promise.all([
         getInvestmentTransactionsForAccount(account.id),
         getHoldingsForAccount(account.id),
-      ]);
+      ])
 
       content = (
         <div className="space-y-6">
@@ -44,13 +44,13 @@ export async function AccountDetailAsync({ id }: { id: string }) {
             <InvestmentTransactionList transactions={investmentTransactions} />
           </div>
         </div>
-      );
+      )
     } else {
-      const txs = await getTransactionsForAccount(account.id);
-      const transactions = txs.map((t: typeof txs[0]) => ({
+      const txs = await getTransactionsForAccount(account.id)
+      const transactions = txs.map((t: (typeof txs)[0]) => ({
         ...t,
-        tags: t.tags.map((tt: typeof t.tags[0]) => tt.tag),
-      }));
+        tags: t.tags.map((tt: (typeof t.tags)[0]) => tt.tag),
+      }))
 
       content = (
         <div>
@@ -62,7 +62,7 @@ export async function AccountDetailAsync({ id }: { id: string }) {
             tags={tags}
           />
         </div>
-      );
+      )
     }
 
     return (
@@ -81,7 +81,11 @@ export async function AccountDetailAsync({ id }: { id: string }) {
               <div className="bg-primary/10 rounded-lg p-4 border border-primary/30">
                 <div className="text-sm text-primary mb-1">Current Balance</div>
                 <div className="text-2xl font-bold text-foreground">
-                  ${account.current_balance_number.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  $
+                  {account.current_balance_number.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
               </div>
             )}
@@ -90,7 +94,11 @@ export async function AccountDetailAsync({ id }: { id: string }) {
               <div className="bg-success/10 rounded-lg p-4 border border-success/30">
                 <div className="text-sm text-success mb-1">Available Balance</div>
                 <div className="text-2xl font-bold text-foreground">
-                  ${account.available_balance_number.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  $
+                  {account.available_balance_number.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
               </div>
             )}
@@ -99,7 +107,11 @@ export async function AccountDetailAsync({ id }: { id: string }) {
               <div className="bg-secondary/10 rounded-lg p-4 border border-secondary/30">
                 <div className="text-sm text-secondary mb-1">Credit Limit</div>
                 <div className="text-2xl font-bold text-foreground">
-                  ${account.credit_limit_number.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  $
+                  {account.credit_limit_number.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
               </div>
             )}
@@ -114,15 +126,11 @@ export async function AccountDetailAsync({ id }: { id: string }) {
 
         {content}
       </>
-    );
+    )
   } catch (error) {
-    console.error("Failed to load account details:", error);
+    console.error("Failed to load account details:", error)
     return (
-      <ErrorFallback
-        error={error as Error}
-        title="Failed to load account"
-        description="Unable to fetch account data"
-      />
-    );
+      <ErrorFallback error={error as Error} title="Failed to load account" description="Unable to fetch account data" />
+    )
   }
 }

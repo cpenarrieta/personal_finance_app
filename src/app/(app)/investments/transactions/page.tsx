@@ -1,7 +1,7 @@
-import { Suspense } from "react";
-import { InvestmentTransactionsAsync } from "@/components/investments/transactions/InvestmentTransactionsAsync";
-import { InvestmentTransactionsSkeleton } from "@/components/investments/holdings/HoldingsPortfolioSkeleton";
-import type { Metadata } from "next";
+import { Suspense } from "react"
+import { InvestmentTransactionsAsync } from "@/components/investments/transactions/InvestmentTransactionsAsync"
+import { InvestmentTransactionsSkeleton } from "@/components/investments/holdings/HoldingsPortfolioSkeleton"
+import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "Investment Transactions",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
-};
+}
 
 export default async function InvTxPage() {
   return (
@@ -21,5 +21,5 @@ export default async function InvTxPage() {
         <InvestmentTransactionsAsync />
       </Suspense>
     </div>
-  );
+  )
 }

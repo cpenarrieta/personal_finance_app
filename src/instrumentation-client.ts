@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs"
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -30,14 +30,14 @@ Sentry.init({
   beforeSend(event) {
     // Don't send errors in development
     if (process.env.NODE_ENV === "development") {
-      return null;
+      return null
     }
-    return event;
+    return event
   },
 
   // Set environment
   environment: process.env.NODE_ENV || "development",
-});
+})
 
 // Export router transition tracking for Next.js
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 
 /**
  * Skeleton for Move Transactions page
@@ -17,5 +17,5 @@ export function MoveTransactionsSkeleton() {
       {/* Category dropdown */}
       <Skeleton className="h-10 w-full" />
     </Card>
-  );
+  )
 }

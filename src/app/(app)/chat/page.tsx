@@ -1,5 +1,5 @@
-import { ChatPageClient } from "@/components/chat/ChatPageClient";
-import type { Metadata } from "next";
+import { ChatPageClient } from "@/components/chat/ChatPageClient"
+import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: "AI Chat - Transaction Insights",
@@ -7,12 +7,12 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
-};
+}
 
 /**
  * AI Chat page for asking questions about transactions
  * Uses AI SDK with custom tools to query transaction data
  */
 export default function ChatPage() {
-  return <ChatPageClient />;
+  return <ChatPageClient />
 }

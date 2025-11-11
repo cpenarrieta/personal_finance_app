@@ -1,5 +1,5 @@
-import { Wallet } from "lucide-react";
-import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { Wallet } from "lucide-react"
+import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
 
 export function AccountsMenuSkeleton() {
   return (
@@ -9,5 +9,5 @@ export function AccountsMenuSkeleton() {
         <span>Accounts</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
-  );
+  )
 }

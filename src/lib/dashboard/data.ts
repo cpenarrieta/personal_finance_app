@@ -1,19 +1,15 @@
-import { prisma } from "@/lib/db/prisma";
-import {
-  startOfMonth as dateStartOfMonth,
-  endOfMonth,
-  subMonths,
-} from "date-fns";
-import { cacheTag, cacheLife } from "next/cache";
+import { prisma } from "@/lib/db/prisma"
+import { startOfMonth as dateStartOfMonth, endOfMonth, subMonths } from "date-fns"
+import { cacheTag, cacheLife } from "next/cache"
 
 /**
  * Get dashboard metrics (accounts and holdings)
  * Fetches accounts with balances and all holdings in parallel
  */
 export async function getDashboardMetrics() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("accounts", "holdings", "dashboard");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("accounts", "holdings", "dashboard")
 
   const [accounts, holdings] = await Promise.all([
     prisma.plaidAccount.findMany({
@@ -81,25 +77,25 @@ export async function getDashboardMetrics() {
         },
       },
     }),
-  ]);
+  ])
 
-  return { accounts, holdings };
+  return { accounts, holdings }
 }
 
 /**
  * Get uncategorized transactions count and data
  */
 export async function getUncategorizedTransactions() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("transactions", "dashboard");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions", "dashboard")
 
   const uncategorizedCount = await prisma.transaction.count({
     where: {
       categoryId: null,
       isSplit: false,
     },
-  });
+  })
 
   const uncategorizedTransactions =
     uncategorizedCount > 0
@@ -159,18 +155,18 @@ export async function getUncategorizedTransactions() {
             },
           },
         })
-      : [];
+      : []
 
-  return { uncategorizedCount, uncategorizedTransactions };
+  return { uncategorizedCount, uncategorizedTransactions }
 }
 
 /**
  * Get recent transactions
  */
 export async function getRecentTransactions(limit = 20) {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("transactions", "dashboard");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions", "dashboard")
 
   return prisma.transaction.findMany({
     where: {
@@ -247,19 +243,19 @@ export async function getRecentTransactions(limit = 20) {
         },
       },
     },
-  });
+  })
 }
 
 /**
  * Get last month date range
  */
 export function getLastMonthDateRange() {
-  const now = new Date();
-  const lastMonth = subMonths(now, 1);
-  const lastMonthStart = dateStartOfMonth(lastMonth);
-  const lastMonthEnd = endOfMonth(lastMonth);
+  const now = new Date()
+  const lastMonth = subMonths(now, 1)
+  const lastMonthStart = dateStartOfMonth(lastMonth)
+  const lastMonthEnd = endOfMonth(lastMonth)
 
-  return { lastMonthStart, lastMonthEnd };
+  return { lastMonthStart, lastMonthEnd }
 }
 
 /**
@@ -267,18 +263,18 @@ export function getLastMonthDateRange() {
  * Uses a single optimized raw SQL query for spending and income
  */
 export async function getLastMonthStats() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("transactions", "dashboard");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions", "dashboard")
 
-  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange();
+  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange()
 
   // Optimized: Single raw SQL query to get both spending and income
   // Uses amount_number (already inverted): negative = expense, positive = income
   const [stats] = await prisma.$queryRaw<
     Array<{
-      total_spending: number | null;
-      total_income: number | null;
+      total_spending: number | null
+      total_income: number | null
     }>
   >`
     SELECT
@@ -290,10 +286,10 @@ export async function getLastMonthStats() {
       AND t.date < ${lastMonthEnd}
       AND t."isSplit" = false
       AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
-  `;
+  `
 
-  const totalLastMonthSpending = Number(stats?.total_spending || 0);
-  const totalLastMonthIncome = Number(stats?.total_income || 0);
+  const totalLastMonthSpending = Number(stats?.total_spending || 0)
+  const totalLastMonthIncome = Number(stats?.total_income || 0)
 
   // Fetch all transactions for the month (needed for charts)
   const lastMonthTransactions = await prisma.transaction.findMany({
@@ -350,7 +346,7 @@ export async function getLastMonthStats() {
         },
       },
     },
-  });
+  })
 
   return {
     totalLastMonthSpending,
@@ -358,18 +354,18 @@ export async function getLastMonthStats() {
     lastMonthTransactions,
     lastMonthStart,
     lastMonthEnd,
-  };
+  }
 }
 
 /**
  * Get top expensive transactions from last month
  */
 export async function getTopExpensiveTransactions(limit = 25) {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("transactions", "dashboard");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions", "dashboard")
 
-  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange();
+  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange()
 
   return prisma.transaction.findMany({
     where: {
@@ -458,17 +454,17 @@ export async function getTopExpensiveTransactions(limit = 25) {
         },
       },
     },
-  });
+  })
 }
 
 /**
  * Check if user has any connected Plaid items
  */
 export async function hasConnectedAccounts() {
-  "use cache";
-  cacheLife({ stale: 60 * 60 * 24 });
-  cacheTag("accounts");
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("accounts")
 
-  const itemsCount = await prisma.item.count();
-  return itemsCount > 0;
+  const itemsCount = await prisma.item.count()
+  return itemsCount > 0
 }

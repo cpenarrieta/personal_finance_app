@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 
 /**
  * Skeleton for Manage Categories page
@@ -69,5 +69,5 @@ export function ManageCategoriesSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

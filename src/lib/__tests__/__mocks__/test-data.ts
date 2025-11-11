@@ -8,17 +8,17 @@ export const mockPlaidAccount = {
   type: "depository",
   subtype: "checking",
   balances: {
-    current: 1000.00,
-    available: 950.00,
+    current: 1000.0,
+    available: 950.0,
     limit: null,
     iso_currency_code: "USD",
   },
-};
+}
 
 export const mockPlaidTransaction = {
   transaction_id: "test-transaction-id",
   account_id: "test-account-id",
-  amount: 25.50,
+  amount: 25.5,
   iso_currency_code: "USD",
   date: "2024-01-15",
   authorized_date: "2024-01-14",
@@ -33,7 +33,7 @@ export const mockPlaidTransaction = {
   pending_transaction_id: null,
   logo_url: "https://example.com/logo.png",
   personal_finance_category_icon_url: "https://example.com/icon.png",
-};
+}
 
 export const mockHistoricalTransactionsResponse = {
   data: {
@@ -41,7 +41,7 @@ export const mockHistoricalTransactionsResponse = {
     total_transactions: 1,
     accounts: [mockPlaidAccount],
   },
-};
+}
 
 export const mockTransactionsSyncResponse = {
   data: {
@@ -52,7 +52,7 @@ export const mockTransactionsSyncResponse = {
     next_cursor: "new-cursor-value",
     has_more: false,
   },
-};
+}
 
 export const mockTransactionsSyncResponseWithAdded = {
   data: {
@@ -62,7 +62,7 @@ export const mockTransactionsSyncResponseWithAdded = {
         transaction_id: "new-transaction-id",
         date: "2024-01-16",
         name: "New Transaction",
-        amount: 50.00,
+        amount: 50.0,
       },
     ],
     modified: [],
@@ -71,7 +71,7 @@ export const mockTransactionsSyncResponseWithAdded = {
     next_cursor: "cursor-after-add",
     has_more: false,
   },
-};
+}
 
 export const mockTransactionsSyncResponseWithModified = {
   data: {
@@ -80,7 +80,7 @@ export const mockTransactionsSyncResponseWithModified = {
       {
         ...mockPlaidTransaction,
         pending: false,
-        amount: 26.00,
+        amount: 26.0,
       },
     ],
     removed: [],
@@ -88,7 +88,7 @@ export const mockTransactionsSyncResponseWithModified = {
     next_cursor: "cursor-after-modify",
     has_more: false,
   },
-};
+}
 
 export const mockTransactionsSyncResponseWithRemoved = {
   data: {
@@ -103,13 +103,13 @@ export const mockTransactionsSyncResponseWithRemoved = {
     next_cursor: "cursor-after-remove",
     has_more: false,
   },
-};
+}
 
 export const mockDbTransaction = {
   id: "db-transaction-id",
   plaidTransactionId: "test-transaction-id",
   accountId: "db-account-id",
-  amount: 25.50,
+  amount: 25.5,
   isoCurrencyCode: "USD",
   date: new Date("2024-01-15"),
   authorizedDate: new Date("2024-01-14"),
@@ -122,7 +122,7 @@ export const mockDbTransaction = {
   pendingTransactionId: null,
   logoUrl: "https://example.com/logo.png",
   categoryIconUrl: "https://example.com/icon.png",
-};
+}
 
 // Investment test data
 export const mockPlaidSecurity = {
@@ -131,58 +131,62 @@ export const mockPlaidSecurity = {
   ticker_symbol: "AAPL",
   type: "equity",
   iso_currency_code: "USD",
-};
+}
 
 export const mockPlaidHolding = {
   account_id: "test-investment-account-id",
   security_id: "test-security-id",
   quantity: 10.5,
-  cost_basis: 1500.00,
-  institution_price: 175.50,
+  cost_basis: 1500.0,
+  institution_price: 175.5,
   institution_price_as_of: "2024-01-15",
   iso_currency_code: "USD",
-};
+}
 
 export const mockPlaidInvestmentTransaction = {
   investment_transaction_id: "test-inv-tx-id",
   account_id: "test-investment-account-id",
   security_id: "test-security-id",
   type: "buy",
-  amount: 1000.00,
-  price: 150.00,
+  amount: 1000.0,
+  price: 150.0,
   quantity: 6.66,
-  fees: 5.00,
+  fees: 5.0,
   iso_currency_code: "USD",
   date: "2024-01-10",
   name: "Buy AAPL",
-};
+}
 
 export const mockInvestmentsHoldingsResponse = {
   data: {
     securities: [mockPlaidSecurity],
     holdings: [mockPlaidHolding],
-    accounts: [{
-      ...mockPlaidAccount,
-      account_id: "test-investment-account-id",
-      type: "investment",
-      subtype: "brokerage",
-    }],
+    accounts: [
+      {
+        ...mockPlaidAccount,
+        account_id: "test-investment-account-id",
+        type: "investment",
+        subtype: "brokerage",
+      },
+    ],
   },
-};
+}
 
 export const mockInvestmentsTransactionsResponse = {
   data: {
     investment_transactions: [mockPlaidInvestmentTransaction],
     securities: [mockPlaidSecurity],
-    accounts: [{
-      ...mockPlaidAccount,
-      account_id: "test-investment-account-id",
-      type: "investment",
-      subtype: "brokerage",
-    }],
+    accounts: [
+      {
+        ...mockPlaidAccount,
+        account_id: "test-investment-account-id",
+        type: "investment",
+        subtype: "brokerage",
+      },
+    ],
     total_investment_transactions: 1,
   },
-};
+}
 
 export const mockDbAccount = {
   id: "db-account-1",
@@ -193,7 +197,7 @@ export const mockDbAccount = {
   mask: "5678",
   type: "investment",
   subtype: "brokerage",
-};
+}
 
 export const mockDbSecurity = {
   id: "db-security-1",
@@ -202,17 +206,17 @@ export const mockDbSecurity = {
   tickerSymbol: "AAPL",
   type: "equity",
   isoCurrencyCode: "USD",
-};
+}
 
 export const mockDbHolding = {
   id: "db-holding-1",
   accountId: "db-account-1",
   securityId: "db-security-1",
   quantity: new (require("@prisma/client").Prisma.Decimal)(10.5),
-  costBasis: new (require("@prisma/client").Prisma.Decimal)(1500.00),
-  institutionPrice: new (require("@prisma/client").Prisma.Decimal)(175.50),
+  costBasis: new (require("@prisma/client").Prisma.Decimal)(1500.0),
+  institutionPrice: new (require("@prisma/client").Prisma.Decimal)(175.5),
   institutionPriceAsOf: new Date("2024-01-15"),
   isoCurrencyCode: "USD",
   account: mockDbAccount,
   security: mockDbSecurity,
-};
+}

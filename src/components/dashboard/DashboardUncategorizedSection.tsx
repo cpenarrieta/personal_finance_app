@@ -1,6 +1,6 @@
-import { UncategorizedTransactionsSection } from "@/components/dashboard/UncategorizedTransactionsSection";
-import { getUncategorizedTransactions } from "@/lib/dashboard/data";
-import { ErrorFallback } from "@/components/shared/ErrorFallback";
+import { UncategorizedTransactionsSection } from "@/components/dashboard/UncategorizedTransactionsSection"
+import { getUncategorizedTransactions } from "@/lib/dashboard/data"
+import { ErrorFallback } from "@/components/shared/ErrorFallback"
 
 /**
  * Async Server Component for Uncategorized Transactions
@@ -8,8 +8,7 @@ import { ErrorFallback } from "@/components/shared/ErrorFallback";
  */
 export async function DashboardUncategorizedSection() {
   try {
-    const { uncategorizedCount, uncategorizedTransactions } =
-      await getUncategorizedTransactions();
+    const { uncategorizedCount, uncategorizedTransactions } = await getUncategorizedTransactions()
 
     return (
       <UncategorizedTransactionsSection
@@ -17,15 +16,15 @@ export async function DashboardUncategorizedSection() {
         transactions={uncategorizedTransactions}
         displayLimit={10}
       />
-    );
+    )
   } catch (error) {
-    console.error("Failed to load uncategorized transactions:", error);
+    console.error("Failed to load uncategorized transactions:", error)
     return (
       <ErrorFallback
         error={error as Error}
         title="Failed to load uncategorized transactions"
         description="Unable to fetch uncategorized transaction data"
       />
-    );
+    )
   }
 }

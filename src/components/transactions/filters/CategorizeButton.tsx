@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from "@/components/ui/button";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 
 export function CategorizeButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,8 +29,8 @@ export function CategorizeButton() {
     setMessage(null)
 
     try {
-      const response = await fetch('/api/categorize', {
-        method: 'POST',
+      const response = await fetch("/api/categorize", {
+        method: "POST",
       })
 
       const data = await response.json()
@@ -46,8 +46,8 @@ export function CategorizeButton() {
         setMessage(`✗ Error: ${data.error}`)
       }
     } catch (error) {
-      console.error('Categorization failed:', error)
-      setMessage('✗ Categorization failed. Please try again.')
+      console.error("Categorization failed:", error)
+      setMessage("✗ Categorization failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -57,11 +57,8 @@ export function CategorizeButton() {
     <div className="flex items-center gap-2">
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogTrigger asChild>
-          <Button
-            disabled={isLoading}
-            className="px-6 py-3 bg-primary hover:bg-primary/90"
-          >
-            {isLoading ? '🤖 Categorizing...' : '🤖 Auto-Categorize Transactions'}
+          <Button disabled={isLoading} className="px-6 py-3 bg-primary hover:bg-primary/90">
+            {isLoading ? "🤖 Categorizing..." : "🤖 Auto-Categorize Transactions"}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
@@ -80,9 +77,7 @@ export function CategorizeButton() {
         </AlertDialogContent>
       </AlertDialog>
       {message && (
-        <span className={`text-sm ${message.startsWith('✓') ? 'text-success' : 'text-destructive'}`}>
-          {message}
-        </span>
+        <span className={`text-sm ${message.startsWith("✓") ? "text-success" : "text-destructive"}`}>{message}</span>
       )}
     </div>
   )

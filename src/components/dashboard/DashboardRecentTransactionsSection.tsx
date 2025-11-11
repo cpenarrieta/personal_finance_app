@@ -1,7 +1,7 @@
-import { TransactionTable } from "@/components/dashboard/TransactionTable";
-import { getRecentTransactions } from "@/lib/dashboard/data";
-import { TransitionLink } from "@/components/shared/TransitionLink";
-import { ErrorFallback } from "@/components/shared/ErrorFallback";
+import { TransactionTable } from "@/components/dashboard/TransactionTable"
+import { getRecentTransactions } from "@/lib/dashboard/data"
+import { TransitionLink } from "@/components/shared/TransitionLink"
+import { ErrorFallback } from "@/components/shared/ErrorFallback"
 
 /**
  * Async Server Component for Recent Transactions
@@ -9,7 +9,7 @@ import { ErrorFallback } from "@/components/shared/ErrorFallback";
  */
 export async function DashboardRecentTransactionsSection() {
   try {
-    const recentTransactions = await getRecentTransactions(20);
+    const recentTransactions = await getRecentTransactions(20)
 
     return (
       <div className="space-y-4">
@@ -24,15 +24,15 @@ export async function DashboardRecentTransactionsSection() {
         </div>
         <TransactionTable transactions={recentTransactions} showCategory={true} />
       </div>
-    );
+    )
   } catch (error) {
-    console.error("Failed to load recent transactions:", error);
+    console.error("Failed to load recent transactions:", error)
     return (
       <ErrorFallback
         error={error as Error}
         title="Failed to load recent transactions"
         description="Unable to fetch recent transaction data"
       />
-    );
+    )
   }
 }

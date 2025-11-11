@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs"
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -16,9 +16,9 @@ Sentry.init({
   beforeSend(event) {
     // Don't send errors in development
     if (process.env.NODE_ENV === "development") {
-      return null;
+      return null
     }
-    return event;
+    return event
   },
 
   // Set environment
@@ -26,4 +26,4 @@ Sentry.init({
 
   // Optionally disable in development
   enabled: process.env.NODE_ENV === "production",
-});
+})

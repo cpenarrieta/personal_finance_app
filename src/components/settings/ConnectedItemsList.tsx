@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import PlaidLinkButton from "@/components/sync/PlaidLinkButton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Building2 } from "lucide-react";
+import PlaidLinkButton from "@/components/sync/PlaidLinkButton"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { AlertCircle, Building2 } from "lucide-react"
 
 interface ConnectedItemsListProps {
   items: Array<{
@@ -31,14 +31,14 @@ export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
           <p className="text-muted-foreground">No connected accounts found.</p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
     <div className="space-y-4">
       {items.map((item) => {
-        const needsReauth = item.status === "ITEM_LOGIN_REQUIRED";
-        const institutionName = item.institution?.name || "Unknown Institution";
+        const needsReauth = item.status === "ITEM_LOGIN_REQUIRED"
+        const institutionName = item.institution?.name || "Unknown Institution"
 
         return (
           <Card key={item.id}>
@@ -83,10 +83,7 @@ export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
                 <p className="text-sm font-medium text-foreground">Connected Accounts:</p>
                 <div className="grid gap-2">
                   {item.accounts.map((account) => (
-                    <div
-                      key={account.id}
-                      className="flex justify-between items-center p-2 rounded-md bg-muted/50"
-                    >
+                    <div key={account.id} className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                       <span className="text-sm text-foreground">{account.name}</span>
                       <Badge variant="outline" className="text-xs">
                         {account.subtype || account.type}
@@ -97,8 +94,8 @@ export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
               </div>
             </CardContent>
           </Card>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

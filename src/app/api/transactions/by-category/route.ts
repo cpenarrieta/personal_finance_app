@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
-import type { Prisma } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/db/prisma"
+import type { Prisma } from "@prisma/client"
 
 /**
  * Get transactions by category and optional subcategory
@@ -10,27 +10,23 @@ import type { Prisma } from "@prisma/client";
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const categoryId = searchParams.get("categoryId");
-    const subcategoryId = searchParams.get("subcategoryId");
+    const searchParams = request.nextUrl.searchParams
+    const categoryId = searchParams.get("categoryId")
+    const subcategoryId = searchParams.get("subcategoryId")
 
     if (!categoryId) {
-      return NextResponse.json(
-        { error: "Category ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Category ID is required" }, { status: 400 })
     }
 
     // Build the where clause with proper typing
     const whereClause: Prisma.TransactionWhereInput = {
       categoryId: categoryId,
       isSplit: false, // Filter out parent transactions that have been split
-    };
+    }
 
     // If subcategoryId is provided, filter by it (can be null for "no subcategory")
     if (subcategoryId !== null && subcategoryId !== undefined) {
-      whereClause.subcategoryId =
-        subcategoryId === "null" ? null : subcategoryId;
+      whereClause.subcategoryId = subcategoryId === "null" ? null : subcategoryId
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -104,20 +100,17 @@ export async function GET(request: NextRequest) {
       orderBy: {
         date: "desc",
       },
-    });
+    })
 
     // Flatten tags structure
-    const transactionsWithFlatTags = transactions.map((t: typeof transactions[0]) => ({
+    const transactionsWithFlatTags = transactions.map((t: (typeof transactions)[0]) => ({
       ...t,
-      tags: t.tags.map((tt: typeof t.tags[0]) => tt.tag),
-    }));
+      tags: t.tags.map((tt: (typeof t.tags)[0]) => tt.tag),
+    }))
 
-    return NextResponse.json(transactionsWithFlatTags);
+    return NextResponse.json(transactionsWithFlatTags)
   } catch (error) {
-    console.error("Error fetching transactions by category:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch transactions" },
-      { status: 500 }
-    );
+    console.error("Error fetching transactions by category:", error)
+    return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 })
   }
 }

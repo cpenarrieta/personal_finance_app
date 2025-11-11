@@ -1,16 +1,16 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
-import { CategoryGroupType } from "@prisma/client";
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/db/prisma"
+import { CategoryGroupType } from "@prisma/client"
 
 export async function PUT(request: Request) {
   try {
-    const body = await request.json();
+    const body = await request.json()
     const { updates } = body as {
-      updates: Array<{ id: string; groupType: CategoryGroupType | null; displayOrder: number | null }>;
-    };
+      updates: Array<{ id: string; groupType: CategoryGroupType | null; displayOrder: number | null }>
+    }
 
     if (!updates || !Array.isArray(updates)) {
-      return NextResponse.json({ error: "Invalid updates format" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid updates format" }, { status: 400 })
     }
 
     // Update categories in a transaction
@@ -22,13 +22,13 @@ export async function PUT(request: Request) {
             groupType: update.groupType,
             displayOrder: update.displayOrder,
           },
-        })
-      )
-    );
+        }),
+      ),
+    )
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error updating category order:", error);
-    return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+    console.error("Error updating category order:", error)
+    return NextResponse.json({ error: "Failed to update" }, { status: 500 })
   }
 }

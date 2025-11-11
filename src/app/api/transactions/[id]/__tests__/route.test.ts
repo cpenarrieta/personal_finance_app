@@ -10,13 +10,13 @@
  * 6. Error handling
  */
 
-import { NextRequest } from 'next/server'
-import { PATCH, DELETE } from '../route'
-import * as prismaModule from '@/lib/db/prisma'
-import * as nextCache from 'next/cache'
+import { NextRequest } from "next/server"
+import { PATCH, DELETE } from "../route"
+import * as prismaModule from "@/lib/db/prisma"
+import * as nextCache from "next/cache"
 
 // Mock modules
-jest.mock('@/lib/db/prisma', () => ({
+jest.mock("@/lib/db/prisma", () => ({
   prisma: {
     transaction: {
       update: jest.fn(),
@@ -31,11 +31,11 @@ jest.mock('@/lib/db/prisma', () => ({
   },
 }))
 
-jest.mock('next/cache', () => ({
+jest.mock("next/cache", () => ({
   revalidateTag: jest.fn(),
 }))
 
-describe('Transaction [id] API', () => {
+describe("Transaction [id] API", () => {
   const createMockRequest = (body: object) => {
     const bodyText = JSON.stringify(body)
     return {
@@ -50,29 +50,27 @@ describe('Transaction [id] API', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.spyOn(console, 'error').mockImplementation()
+    jest.spyOn(console, "error").mockImplementation()
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
   })
 
-  describe('PATCH - Update Transaction', () => {
-    it('should update transaction name', async () => {
+  describe("PATCH - Update Transaction", () => {
+    it("should update transaction name", async () => {
       // Arrange
-      const transactionId = 'tx-1'
-      const updateData = { name: 'Updated Transaction Name' }
+      const transactionId = "tx-1"
+      const updateData = { name: "Updated Transaction Name" }
       const request = createMockRequest(updateData)
       const params = createMockParams(transactionId)
 
       const updatedTransaction = {
         id: transactionId,
-        name: 'Updated Transaction Name',
+        name: "Updated Transaction Name",
       }
 
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(
-        updatedTransaction
-      )
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(updatedTransaction)
 
       // Act
       const response = await PATCH(request, { params })
@@ -83,31 +81,29 @@ describe('Transaction [id] API', () => {
       expect(data).toEqual(updatedTransaction)
       expect(prismaModule.prisma.transaction.update).toHaveBeenCalledWith({
         where: { id: transactionId },
-        data: { name: 'Updated Transaction Name' },
+        data: { name: "Updated Transaction Name" },
       })
-      expect(nextCache.revalidateTag).toHaveBeenCalledWith('transactions', 'max')
-      expect(nextCache.revalidateTag).toHaveBeenCalledWith('dashboard', 'max')
+      expect(nextCache.revalidateTag).toHaveBeenCalledWith("transactions", "max")
+      expect(nextCache.revalidateTag).toHaveBeenCalledWith("dashboard", "max")
     })
 
-    it('should update transaction category and subcategory', async () => {
+    it("should update transaction category and subcategory", async () => {
       // Arrange
-      const transactionId = 'tx-1'
+      const transactionId = "tx-1"
       const updateData = {
-        categoryId: 'cat-1',
-        subcategoryId: 'subcat-1',
+        categoryId: "cat-1",
+        subcategoryId: "subcat-1",
       }
       const request = createMockRequest(updateData)
       const params = createMockParams(transactionId)
 
       const updatedTransaction = {
         id: transactionId,
-        categoryId: 'cat-1',
-        subcategoryId: 'subcat-1',
+        categoryId: "cat-1",
+        subcategoryId: "subcat-1",
       }
 
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(
-        updatedTransaction
-      )
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(updatedTransaction)
 
       // Act
       const response = await PATCH(request, { params })
@@ -117,15 +113,15 @@ describe('Transaction [id] API', () => {
       expect(prismaModule.prisma.transaction.update).toHaveBeenCalledWith({
         where: { id: transactionId },
         data: {
-          category: { connect: { id: 'cat-1' } },
-          subcategory: { connect: { id: 'subcat-1' } },
+          category: { connect: { id: "cat-1" } },
+          subcategory: { connect: { id: "subcat-1" } },
         },
       })
     })
 
-    it('should disconnect category when set to null', async () => {
+    it("should disconnect category when set to null", async () => {
       // Arrange
-      const transactionId = 'tx-1'
+      const transactionId = "tx-1"
       const updateData = { categoryId: null }
       const request = createMockRequest(updateData)
       const params = createMockParams(transactionId)
@@ -135,9 +131,7 @@ describe('Transaction [id] API', () => {
         categoryId: null,
       }
 
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(
-        updatedTransaction
-      )
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(updatedTransaction)
 
       // Act
       const response = await PATCH(request, { params })
@@ -152,24 +146,18 @@ describe('Transaction [id] API', () => {
       })
     })
 
-    it('should update transaction tags', async () => {
+    it("should update transaction tags", async () => {
       // Arrange
-      const transactionId = 'tx-1'
-      const updateData = { tagIds: ['tag-1', 'tag-2'] }
+      const transactionId = "tx-1"
+      const updateData = { tagIds: ["tag-1", "tag-2"] }
       const request = createMockRequest(updateData)
       const params = createMockParams(transactionId)
 
       const updatedTransaction = { id: transactionId }
 
-      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue(
-        { count: 1 }
-      )
-      ;(prismaModule.prisma.transactionTag.createMany as jest.Mock).mockResolvedValue(
-        { count: 2 }
-      )
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(
-        updatedTransaction
-      )
+      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue({ count: 1 })
+      ;(prismaModule.prisma.transactionTag.createMany as jest.Mock).mockResolvedValue({ count: 2 })
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(updatedTransaction)
 
       // Act
       const response = await PATCH(request, { params })
@@ -181,27 +169,23 @@ describe('Transaction [id] API', () => {
       })
       expect(prismaModule.prisma.transactionTag.createMany).toHaveBeenCalledWith({
         data: [
-          { transactionId, tagId: 'tag-1' },
-          { transactionId, tagId: 'tag-2' },
+          { transactionId, tagId: "tag-1" },
+          { transactionId, tagId: "tag-2" },
         ],
       })
     })
 
-    it('should remove all tags when tagIds is empty array', async () => {
+    it("should remove all tags when tagIds is empty array", async () => {
       // Arrange
-      const transactionId = 'tx-1'
+      const transactionId = "tx-1"
       const updateData = { tagIds: [] }
       const request = createMockRequest(updateData)
       const params = createMockParams(transactionId)
 
       const updatedTransaction = { id: transactionId }
 
-      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue(
-        { count: 2 }
-      )
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(
-        updatedTransaction
-      )
+      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue({ count: 2 })
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(updatedTransaction)
 
       // Act
       const response = await PATCH(request, { params })
@@ -214,21 +198,19 @@ describe('Transaction [id] API', () => {
       expect(prismaModule.prisma.transactionTag.createMany).not.toHaveBeenCalled()
     })
 
-    it('should update notes', async () => {
+    it("should update notes", async () => {
       // Arrange
-      const transactionId = 'tx-1'
-      const updateData = { notes: 'Updated notes' }
+      const transactionId = "tx-1"
+      const updateData = { notes: "Updated notes" }
       const request = createMockRequest(updateData)
       const params = createMockParams(transactionId)
 
       const updatedTransaction = {
         id: transactionId,
-        notes: 'Updated notes',
+        notes: "Updated notes",
       }
 
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(
-        updatedTransaction
-      )
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(updatedTransaction)
 
       // Act
       const response = await PATCH(request, { params })
@@ -237,25 +219,23 @@ describe('Transaction [id] API', () => {
       expect(response.status).toBe(200)
       expect(prismaModule.prisma.transaction.update).toHaveBeenCalledWith({
         where: { id: transactionId },
-        data: { notes: 'Updated notes' },
+        data: { notes: "Updated notes" },
       })
     })
 
-    it('should handle unknown fields gracefully (Zod strips them)', async () => {
+    it("should handle unknown fields gracefully (Zod strips them)", async () => {
       // Arrange
-      const transactionId = 'tx-1'
-      const updateData = { name: 'Valid Name', invalidField: 'invalid' }
+      const transactionId = "tx-1"
+      const updateData = { name: "Valid Name", invalidField: "invalid" }
       const request = createMockRequest(updateData)
       const params = createMockParams(transactionId)
 
       const updatedTransaction = {
         id: transactionId,
-        name: 'Valid Name',
+        name: "Valid Name",
       }
 
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(
-        updatedTransaction
-      )
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue(updatedTransaction)
 
       // Act
       const response = await PATCH(request, { params })
@@ -265,17 +245,15 @@ describe('Transaction [id] API', () => {
       expect(response.status).toBe(200)
     })
 
-    it('should return 500 when update fails', async () => {
+    it("should return 500 when update fails", async () => {
       // Arrange
-      const transactionId = 'tx-1'
-      const updateData = { name: 'Updated Name' }
+      const transactionId = "tx-1"
+      const updateData = { name: "Updated Name" }
       const request = createMockRequest(updateData)
       const params = createMockParams(transactionId)
 
-      const dbError = new Error('Database error')
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockRejectedValue(
-        dbError
-      )
+      const dbError = new Error("Database error")
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockRejectedValue(dbError)
 
       // Act
       const response = await PATCH(request, { params })
@@ -283,36 +261,27 @@ describe('Transaction [id] API', () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: 'Failed to update transaction' })
-      expect(console.error).toHaveBeenCalledWith(
-        'Error updating transaction:',
-        dbError
-      )
+      expect(data).toEqual({ error: "Failed to update transaction" })
+      expect(console.error).toHaveBeenCalledWith("Error updating transaction:", dbError)
     })
   })
 
-  describe('DELETE - Delete Transaction', () => {
-    it('should delete a transaction without child transactions', async () => {
+  describe("DELETE - Delete Transaction", () => {
+    it("should delete a transaction without child transactions", async () => {
       // Arrange
-      const transactionId = 'tx-1'
+      const transactionId = "tx-1"
       const request = {} as NextRequest
       const params = createMockParams(transactionId)
 
       const mockTransaction = {
         id: transactionId,
-        name: 'Test Transaction',
+        name: "Test Transaction",
         childTransactions: [],
       }
 
-      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(
-        mockTransaction
-      )
-      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue(
-        { count: 1 }
-      )
-      ;(prismaModule.prisma.transaction.delete as jest.Mock).mockResolvedValue(
-        mockTransaction
-      )
+      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(mockTransaction)
+      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue({ count: 1 })
+      ;(prismaModule.prisma.transaction.delete as jest.Mock).mockResolvedValue(mockTransaction)
 
       // Act
       const response = await DELETE(request, { params })
@@ -327,37 +296,29 @@ describe('Transaction [id] API', () => {
       expect(prismaModule.prisma.transaction.delete).toHaveBeenCalledWith({
         where: { id: transactionId },
       })
-      expect(nextCache.revalidateTag).toHaveBeenCalledWith('transactions', 'max')
-      expect(nextCache.revalidateTag).toHaveBeenCalledWith('dashboard', 'max')
+      expect(nextCache.revalidateTag).toHaveBeenCalledWith("transactions", "max")
+      expect(nextCache.revalidateTag).toHaveBeenCalledWith("dashboard", "max")
     })
 
-    it('should delete child transactions for split transactions', async () => {
+    it("should delete child transactions for split transactions", async () => {
       // Arrange
-      const transactionId = 'tx-1'
+      const transactionId = "tx-1"
       const request = {} as NextRequest
       const params = createMockParams(transactionId)
 
       const mockTransaction = {
         id: transactionId,
-        name: 'Split Parent Transaction',
+        name: "Split Parent Transaction",
         childTransactions: [
-          { id: 'child-1', parentTransactionId: transactionId },
-          { id: 'child-2', parentTransactionId: transactionId },
+          { id: "child-1", parentTransactionId: transactionId },
+          { id: "child-2", parentTransactionId: transactionId },
         ],
       }
 
-      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(
-        mockTransaction
-      )
-      ;(prismaModule.prisma.transaction.deleteMany as jest.Mock).mockResolvedValue(
-        { count: 2 }
-      )
-      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue(
-        { count: 0 }
-      )
-      ;(prismaModule.prisma.transaction.delete as jest.Mock).mockResolvedValue(
-        mockTransaction
-      )
+      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(mockTransaction)
+      ;(prismaModule.prisma.transaction.deleteMany as jest.Mock).mockResolvedValue({ count: 2 })
+      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue({ count: 0 })
+      ;(prismaModule.prisma.transaction.delete as jest.Mock).mockResolvedValue(mockTransaction)
 
       // Act
       const response = await DELETE(request, { params })
@@ -374,15 +335,13 @@ describe('Transaction [id] API', () => {
       })
     })
 
-    it('should return 404 when transaction does not exist', async () => {
+    it("should return 404 when transaction does not exist", async () => {
       // Arrange
-      const transactionId = 'non-existent-tx'
+      const transactionId = "non-existent-tx"
       const request = {} as NextRequest
       const params = createMockParams(transactionId)
 
-      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(
-        null
-      )
+      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(null)
 
       // Act
       const response = await DELETE(request, { params })
@@ -390,33 +349,27 @@ describe('Transaction [id] API', () => {
 
       // Assert
       expect(response.status).toBe(404)
-      expect(data).toEqual({ error: 'Transaction not found' })
+      expect(data).toEqual({ error: "Transaction not found" })
       expect(prismaModule.prisma.transaction.delete).not.toHaveBeenCalled()
     })
 
-    it('should return 500 when delete fails', async () => {
+    it("should return 500 when delete fails", async () => {
       // Arrange
-      const transactionId = 'tx-1'
+      const transactionId = "tx-1"
       const request = {} as NextRequest
       const params = createMockParams(transactionId)
 
       const mockTransaction = {
         id: transactionId,
-        name: 'Test Transaction',
+        name: "Test Transaction",
         childTransactions: [],
       }
 
-      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(
-        mockTransaction
-      )
-      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue(
-        { count: 0 }
-      )
+      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(mockTransaction)
+      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue({ count: 0 })
 
-      const dbError = new Error('Database error')
-      ;(prismaModule.prisma.transaction.delete as jest.Mock).mockRejectedValue(
-        dbError
-      )
+      const dbError = new Error("Database error")
+      ;(prismaModule.prisma.transaction.delete as jest.Mock).mockRejectedValue(dbError)
 
       // Act
       const response = await DELETE(request, { params })
@@ -424,34 +377,25 @@ describe('Transaction [id] API', () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: 'Failed to delete transaction' })
-      expect(console.error).toHaveBeenCalledWith(
-        'Error deleting transaction:',
-        dbError
-      )
+      expect(data).toEqual({ error: "Failed to delete transaction" })
+      expect(console.error).toHaveBeenCalledWith("Error deleting transaction:", dbError)
     })
 
-    it('should handle deletion when transaction has no tags', async () => {
+    it("should handle deletion when transaction has no tags", async () => {
       // Arrange
-      const transactionId = 'tx-1'
+      const transactionId = "tx-1"
       const request = {} as NextRequest
       const params = createMockParams(transactionId)
 
       const mockTransaction = {
         id: transactionId,
-        name: 'Transaction Without Tags',
+        name: "Transaction Without Tags",
         childTransactions: [],
       }
 
-      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(
-        mockTransaction
-      )
-      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue(
-        { count: 0 }
-      )
-      ;(prismaModule.prisma.transaction.delete as jest.Mock).mockResolvedValue(
-        mockTransaction
-      )
+      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue(mockTransaction)
+      ;(prismaModule.prisma.transactionTag.deleteMany as jest.Mock).mockResolvedValue({ count: 0 })
+      ;(prismaModule.prisma.transaction.delete as jest.Mock).mockResolvedValue(mockTransaction)
 
       // Act
       const response = await DELETE(request, { params })

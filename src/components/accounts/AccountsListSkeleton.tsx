@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * Skeleton loader for accounts list
@@ -29,5 +29,5 @@ export function AccountsListSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }

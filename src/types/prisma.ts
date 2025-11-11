@@ -5,7 +5,7 @@
  * Use these types throughout your application for consistency and type safety.
  */
 
-import { Prisma } from '@prisma/client'
+import { Prisma } from "@prisma/client"
 
 // ============================================================================
 // TRANSACTION TYPES
@@ -43,9 +43,7 @@ export const transactionWithRelations = Prisma.validator<Prisma.TransactionDefau
   },
 })
 
-export type TransactionWithRelations = Prisma.TransactionGetPayload<
-  typeof transactionWithRelations
->
+export type TransactionWithRelations = Prisma.TransactionGetPayload<typeof transactionWithRelations>
 
 /**
  * Transaction with account only
@@ -57,9 +55,7 @@ export const transactionWithAccount = Prisma.validator<Prisma.TransactionDefault
   },
 })
 
-export type TransactionWithAccount = Prisma.TransactionGetPayload<
-  typeof transactionWithAccount
->
+export type TransactionWithAccount = Prisma.TransactionGetPayload<typeof transactionWithAccount>
 
 // ============================================================================
 // PLAID ACCOUNT TYPES (Bank/Financial Accounts)
@@ -95,9 +91,7 @@ export const plaidAccountWithTransactionCount = Prisma.validator<Prisma.PlaidAcc
   },
 })
 
-export type PlaidAccountWithTransactionCount = Prisma.PlaidAccountGetPayload<
-  typeof plaidAccountWithTransactionCount
->
+export type PlaidAccountWithTransactionCount = Prisma.PlaidAccountGetPayload<typeof plaidAccountWithTransactionCount>
 
 // Legacy aliases for backward compatibility (deprecated - use PlaidAccount types)
 /** @deprecated Use plaidAccountWithRelations instead */
@@ -136,15 +130,13 @@ export const categoryWithSubcategories = Prisma.validator<Prisma.CategoryDefault
   include: {
     subcategories: {
       orderBy: {
-        name: 'asc' as const,
+        name: "asc" as const,
       },
     },
   },
 })
 
-export type CategoryWithSubcategories = Prisma.CategoryGetPayload<
-  typeof categoryWithSubcategories
->
+export type CategoryWithSubcategories = Prisma.CategoryGetPayload<typeof categoryWithSubcategories>
 
 /**
  * Category with transaction count
@@ -159,9 +151,7 @@ export const categoryWithCount = Prisma.validator<Prisma.CategoryDefaultArgs>()(
   },
 })
 
-export type CategoryWithCount = Prisma.CategoryGetPayload<
-  typeof categoryWithCount
->
+export type CategoryWithCount = Prisma.CategoryGetPayload<typeof categoryWithCount>
 
 // ============================================================================
 // TAG TYPES
