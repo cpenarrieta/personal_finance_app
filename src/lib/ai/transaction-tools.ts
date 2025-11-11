@@ -7,6 +7,9 @@ import { tool } from "ai";
 import { z } from "zod";
 import { getAllTransactions } from "@/lib/db/queries";
 
+// Type for a single transaction from getAllTransactions
+type Transaction = Awaited<ReturnType<typeof getAllTransactions>>[number];
+
 /**
  * Get transactions within a date range with optional filters
  */
@@ -42,7 +45,7 @@ export const getTransactionsByDateRange = tool({
   }) => {
     const transactions = await getAllTransactions();
 
-    const filtered = transactions.filter((t) => {
+    const filtered = transactions.filter((t: Transaction) => {
       const date = new Date(t.date_string);
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -60,7 +63,7 @@ export const getTransactionsByDateRange = tool({
     });
 
     // Return simplified data for the AI
-    return filtered.map((t) => ({
+    return filtered.map((t: Transaction) => ({
       date: t.date_string,
       name: t.name,
       merchant: t.merchantName,
@@ -107,7 +110,7 @@ export const getSpendingByCategory = tool({
     const transactions = await getAllTransactions();
 
     // Filter by date range
-    const filtered = transactions.filter((t) => {
+    const filtered = transactions.filter((t: Transaction) => {
       const date = new Date(t.date_string);
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -120,7 +123,7 @@ export const getSpendingByCategory = tool({
       { name: string; total: number; count: number; transactions: number[] }
     >();
 
-    filtered.forEach((t) => {
+    filtered.forEach((t: Transaction) => {
       const categoryName = t.category?.name || "Uncategorized";
       const existing = categoryMap.get(categoryName);
 
@@ -184,7 +187,7 @@ export const getSpendingByMerchant = tool({
     const transactions = await getAllTransactions();
 
     // Filter by date range and merchants only
-    const filtered = transactions.filter((t) => {
+    const filtered = transactions.filter((t: Transaction) => {
       const date = new Date(t.date_string);
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -197,7 +200,7 @@ export const getSpendingByMerchant = tool({
       { name: string; total: number; count: number }
     >();
 
-    filtered.forEach((t) => {
+    filtered.forEach((t: Transaction) => {
       const merchantName = t.merchantName!;
       const existing = merchantMap.get(merchantName);
 
@@ -247,7 +250,7 @@ export const getTotalSpending = tool({
     const transactions = await getAllTransactions();
 
     // Filter by date range
-    const filtered = transactions.filter((t) => {
+    const filtered = transactions.filter((t: Transaction) => {
       const date = new Date(t.date_string);
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -258,7 +261,7 @@ export const getTotalSpending = tool({
     let totalExpenses = 0;
     let totalIncome = 0;
 
-    filtered.forEach((t) => {
+    filtered.forEach((t: Transaction) => {
       if (t.amount_number < 0) {
         totalExpenses += Math.abs(t.amount_number);
       } else {
@@ -307,7 +310,7 @@ export const getSpendingTrends = tool({
     const transactions = await getAllTransactions();
 
     // Filter by date range and optional category
-    const filtered = transactions.filter((t) => {
+    const filtered = transactions.filter((t: Transaction) => {
       const date = new Date(t.date_string);
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -324,7 +327,7 @@ export const getSpendingTrends = tool({
       { expenses: number; income: number; count: number }
     >();
 
-    filtered.forEach((t) => {
+    filtered.forEach((t: Transaction) => {
       const date = new Date(t.date_string);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 

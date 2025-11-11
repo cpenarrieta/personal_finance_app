@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2, Bot, User } from "lucide-react";
+import { Send, Bot, User } from "lucide-react";
 import { useRef, useEffect, useState, type FormEvent } from "react";
 
 export function ChatPageClient() {
