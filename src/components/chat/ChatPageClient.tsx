@@ -4,20 +4,29 @@ import { useChat } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Loader2, Bot, User } from "lucide-react";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 
 export function ChatPageClient() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
-      api: "/api/chat",
-    });
-
+  const { messages, sendMessage } = useChat();
+  const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    sendMessage({ text: input });
+    setInput("");
+  };
+
+  const handleSuggestionClick = (text: string) => {
+    setInput(text);
+  };
 
   return (
     <div className="flex h-[calc(100vh-12rem)] flex-col">
@@ -51,12 +60,9 @@ export function ChatPageClient() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const event = {
-                      target: { value: "How much did I spend last month?" },
-                    } as React.ChangeEvent<HTMLInputElement>;
-                    handleInputChange(event);
-                  }}
+                  onClick={() =>
+                    handleSuggestionClick("How much did I spend last month?")
+                  }
                   className="text-xs"
                 >
                   💰 Total spending last month
@@ -64,14 +70,11 @@ export function ChatPageClient() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const event = {
-                      target: {
-                        value: "What are my top 5 spending categories?",
-                      },
-                    } as React.ChangeEvent<HTMLInputElement>;
-                    handleInputChange(event);
-                  }}
+                  onClick={() =>
+                    handleSuggestionClick(
+                      "What are my top 5 spending categories?"
+                    )
+                  }
                   className="text-xs"
                 >
                   📊 Top categories
@@ -79,14 +82,11 @@ export function ChatPageClient() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const event = {
-                      target: {
-                        value: "Show me my spending trend over the last 3 months",
-                      },
-                    } as React.ChangeEvent<HTMLInputElement>;
-                    handleInputChange(event);
-                  }}
+                  onClick={() =>
+                    handleSuggestionClick(
+                      "Show me my spending trend over the last 3 months"
+                    )
+                  }
                   className="text-xs"
                 >
                   📈 Spending trends
@@ -96,64 +96,69 @@ export function ChatPageClient() {
           </div>
         ) : (
           <>
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-3 ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                {message.role === "assistant" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
-                    <Bot className="h-5 w-5 text-primary-foreground" />
-                  </div>
-                )}
+            {messages.map((message) => {
+              // Extract text content from message parts
+              const textContent = message.parts
+                .filter((part: any) => part.type === "text")
+                .map((part: any) => part.text || "")
+                .join("");
 
+              // Get tool calls for debugging
+              const toolCalls = message.parts.filter((part: any) =>
+                part.type.startsWith("tool-")
+              );
+
+              return (
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground"
+                  key={message.id}
+                  className={`flex gap-3 ${
+                    message.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  {message.role === "assistant" && (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
+                      <Bot className="h-5 w-5 text-primary-foreground" />
+                    </div>
+                  )}
+
+                  <div
+                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground"
+                    }`}
+                  >
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <div className="whitespace-pre-wrap">{textContent}</div>
+                    </div>
+
+                    {/* Show tool invocations for debugging */}
+                    {toolCalls.length > 0 && (
+                      <div className="mt-2 space-y-1 border-t border-border pt-2">
+                        {toolCalls.map((tool: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="text-xs text-muted-foreground"
+                          >
+                            🔧{" "}
+                            {tool.type
+                              .replace("tool-", "")
+                              .replace(/([A-Z])/g, " $1")}
+                            {tool.type.includes("output-available") && " ✓"}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Show tool invocations for debugging */}
-                  {message.toolInvocations && (
-                    <div className="mt-2 space-y-1 border-t border-border pt-2">
-                      {message.toolInvocations.map((tool) => (
-                        <div
-                          key={tool.toolCallId}
-                          className="text-xs text-muted-foreground"
-                        >
-                          🔧 {tool.toolName}
-                          {tool.state === "result" && " ✓"}
-                        </div>
-                      ))}
+                  {message.role === "user" && (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
+                      <User className="h-5 w-5 text-secondary-foreground" />
                     </div>
                   )}
                 </div>
-
-                {message.role === "user" && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
-                    <User className="h-5 w-5 text-secondary-foreground" />
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {isLoading && (
-              <div className="flex gap-3 justify-start">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
-                  <Bot className="h-5 w-5 text-primary-foreground" />
-                </div>
-                <div className="max-w-[80%] rounded-lg bg-muted px-4 py-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                </div>
-              </div>
-            )}
+              );
+            })}
 
             <div ref={messagesEndRef} />
           </>
@@ -161,23 +166,15 @@ export function ChatPageClient() {
       </div>
 
       {/* Input Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="mt-4 flex gap-2"
-      >
+      <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
         <Input
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about your transactions..."
-          disabled={isLoading}
           className="flex-1"
         />
-        <Button type="submit" disabled={isLoading || !input.trim()}>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
+        <Button type="submit" disabled={!input.trim()}>
+          <Send className="h-4 w-4" />
         </Button>
       </form>
     </div>

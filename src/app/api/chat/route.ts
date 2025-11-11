@@ -4,7 +4,7 @@
  */
 
 import { openai } from "@ai-sdk/openai";
-import { streamText, convertToCoreMessages } from "ai";
+import { streamText, convertToCoreMessages, stepCountIs } from "ai";
 import { transactionTools } from "@/lib/ai/transaction-tools";
 
 export const maxDuration = 30;
@@ -42,10 +42,10 @@ Example responses:
 - "Your top 3 spending categories were: 1) Groceries ($890), 2) Restaurants ($650), 3) Gas ($320)"
 - "You've spent $245 at Starbucks over the past 3 months - that's about $82/month!"`,
       tools: transactionTools,
-      maxSteps: 10, // Allow multi-step tool usage
+      stopWhen: [stepCountIs(10)], // Allow up to 10 tool calls
     });
 
-    return result.toDataStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("Chat API error:", error);
     return new Response(

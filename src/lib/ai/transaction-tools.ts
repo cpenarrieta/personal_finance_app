@@ -13,7 +13,7 @@ import { getAllTransactions } from "@/lib/db/queries";
 export const getTransactionsByDateRange = tool({
   description:
     "Get bank transactions within a specific date range. Optionally filter by category name or merchant. Use this to answer questions like 'How much did I spend last month?' or 'Show me food transactions in January'.",
-  parameters: z.object({
+  inputSchema: z.object({
     startDate: z
       .string()
       .describe("Start date in YYYY-MM-DD format (e.g., 2024-01-01)"),
@@ -29,7 +29,17 @@ export const getTransactionsByDateRange = tool({
       .optional()
       .describe("Filter by merchant name (e.g., 'Starbucks', 'Amazon')"),
   }),
-  execute: async ({ startDate, endDate, categoryName, merchantName }) => {
+  execute: async ({
+    startDate,
+    endDate,
+    categoryName,
+    merchantName,
+  }: {
+    startDate: string;
+    endDate: string;
+    categoryName?: string;
+    merchantName?: string;
+  }) => {
     const transactions = await getAllTransactions();
 
     const filtered = transactions.filter((t) => {
@@ -69,7 +79,7 @@ export const getTransactionsByDateRange = tool({
 export const getSpendingByCategory = tool({
   description:
     "Get total spending grouped by category for a date range. Returns aggregated spending data. Use this to answer questions like 'What are my top spending categories?' or 'How much did I spend on food vs shopping?'",
-  parameters: z.object({
+  inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
     limit: z
@@ -83,7 +93,17 @@ export const getSpendingByCategory = tool({
       .default("amount")
       .describe("Sort by total amount or transaction count"),
   }),
-  execute: async ({ startDate, endDate, limit, sortBy }) => {
+  execute: async ({
+    startDate,
+    endDate,
+    limit = 10,
+    sortBy = "amount",
+  }: {
+    startDate: string;
+    endDate: string;
+    limit?: number;
+    sortBy?: "amount" | "count";
+  }) => {
     const transactions = await getAllTransactions();
 
     // Filter by date range
@@ -143,7 +163,7 @@ export const getSpendingByCategory = tool({
 export const getSpendingByMerchant = tool({
   description:
     "Get total spending grouped by merchant for a date range. Use this to answer questions like 'Where do I spend the most money?' or 'How much have I spent at Starbucks?'",
-  parameters: z.object({
+  inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
     limit: z
@@ -152,7 +172,15 @@ export const getSpendingByMerchant = tool({
       .default(10)
       .describe("Number of top merchants to return (default: 10)"),
   }),
-  execute: async ({ startDate, endDate, limit }) => {
+  execute: async ({
+    startDate,
+    endDate,
+    limit = 10,
+  }: {
+    startDate: string;
+    endDate: string;
+    limit?: number;
+  }) => {
     const transactions = await getAllTransactions();
 
     // Filter by date range and merchants only
@@ -205,11 +233,17 @@ export const getSpendingByMerchant = tool({
 export const getTotalSpending = tool({
   description:
     "Get total spending, income, and net for a date range. Use this to answer questions like 'How much did I spend last month?' or 'What's my net income for the year?'",
-  parameters: z.object({
+  inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
   }),
-  execute: async ({ startDate, endDate }) => {
+  execute: async ({
+    startDate,
+    endDate,
+  }: {
+    startDate: string;
+    endDate: string;
+  }) => {
     const transactions = await getAllTransactions();
 
     // Filter by date range
@@ -251,7 +285,7 @@ export const getTotalSpending = tool({
 export const getSpendingTrends = tool({
   description:
     "Get spending trends broken down by month. Use this to answer questions like 'Show me my spending trend over the last 6 months' or 'How does my spending vary by month?'",
-  parameters: z.object({
+  inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
     categoryName: z
@@ -261,7 +295,15 @@ export const getSpendingTrends = tool({
         "Optional: filter by category name to see trends for a specific category"
       ),
   }),
-  execute: async ({ startDate, endDate, categoryName }) => {
+  execute: async ({
+    startDate,
+    endDate,
+    categoryName,
+  }: {
+    startDate: string;
+    endDate: string;
+    categoryName?: string;
+  }) => {
     const transactions = await getAllTransactions();
 
     // Filter by date range and optional category
