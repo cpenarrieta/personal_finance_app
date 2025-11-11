@@ -5,6 +5,11 @@ import { SearchableTransactionList } from "@/components/transactions/list/Search
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal";
 import { Button } from "@/components/ui/button";
 import { Download, Sheet } from "lucide-react";
+import { toast } from "sonner";
+import {
+  downloadTransactionsCSV,
+  copyTransactionsForGoogleSheets,
+} from "@/lib/transactions/export";
 import type {
   TransactionForClient,
   CategoryForClient,
@@ -39,41 +44,17 @@ export function TransactionsPageClient({
     const filteredIds = filteredTransactionIdsRef.current;
 
     if (filteredIds.length === 0) {
-      alert("No transactions to export");
+      toast.error("No transactions to export");
       return;
     }
 
     setIsDownloading(true);
     try {
-      const response = await fetch("/api/transactions/export/csv", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ transactionIds: filteredIds }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to download CSV");
-      }
-
-      // Create blob from response
-      const blob = await response.blob();
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `transactions-${new Date().toISOString().split("T")[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-
-      // Cleanup
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await downloadTransactionsCSV(filteredIds);
+      toast.success(`Downloaded ${filteredIds.length} transaction(s) to CSV`);
     } catch (error) {
       console.error("Error downloading CSV:", error);
-      alert("Failed to download CSV. Please try again.");
+      toast.error("Failed to download CSV. Please try again.");
     } finally {
       setIsDownloading(false);
     }
@@ -83,76 +64,19 @@ export function TransactionsPageClient({
     const filteredIds = filteredTransactionIdsRef.current;
 
     if (filteredIds.length === 0) {
-      alert("No transactions to copy");
+      toast.error("No transactions to copy");
       return;
     }
 
     setIsCopying(true);
     try {
-      // Reuse the CSV endpoint
-      const response = await fetch("/api/transactions/export/csv", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ transactionIds: filteredIds }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch CSV data");
-      }
-
-      // Get CSV text
-      const csvText = await response.text();
-
-      // Convert CSV to TSV (tab-separated values for Google Sheets)
-      // Parse CSV properly handling quoted fields
-      const lines = csvText.split("\n");
-      const tsvLines = lines.map((line) => {
-        if (!line.trim()) return "";
-
-        const fields: string[] = [];
-        let currentField = "";
-        let inQuotes = false;
-
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-
-          if (char === '"') {
-            // Handle escaped quotes ("")
-            if (inQuotes && line[i + 1] === '"') {
-              currentField += '"';
-              i++; // Skip next quote
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === "," && !inQuotes) {
-            // End of field
-            fields.push(currentField.replace(/\t/g, " ").replace(/\n/g, " "));
-            currentField = "";
-          } else {
-            currentField += char;
-          }
-        }
-
-        // Add last field
-        fields.push(currentField.replace(/\t/g, " ").replace(/\n/g, " "));
-
-        // Join with tabs
-        return fields.join("\t");
-      });
-
-      const tsvContent = tsvLines.join("\n");
-
-      // Copy to clipboard
-      await navigator.clipboard.writeText(tsvContent);
-
-      alert(
-        `Copied ${filteredIds.length} transaction(s) to clipboard!\n\nNow:\n1. Open Google Sheets\n2. Click on cell A1\n3. Paste (Ctrl+V or Cmd+V)`
+      await copyTransactionsForGoogleSheets(filteredIds);
+      toast.success(
+        `Copied ${filteredIds.length} transaction(s) to clipboard! Paste into Google Sheets (Ctrl+V or Cmd+V)`
       );
     } catch (error) {
       console.error("Error copying for Google Sheets:", error);
-      alert("Failed to copy to clipboard. Please try again.");
+      toast.error("Failed to copy to clipboard. Please try again.");
     } finally {
       setIsCopying(false);
     }
