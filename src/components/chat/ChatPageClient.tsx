@@ -92,9 +92,10 @@ export function ChatPageClient() {
               const toolCalls = message.parts.filter((part) => part.type.startsWith("tool-"))
 
               // Find chart tool calls with output
-              const chartCalls = message.parts.filter(
-                (part) => part.type === "tool-renderChart-output-available" && part.output,
-              )
+              const chartCalls = message.parts.filter((part) => {
+                const partType = part.type as string
+                return partType === "tool-renderChart-output-available" && "output" in part
+              })
 
               return (
                 <div key={message.id} className="flex flex-col gap-3">
@@ -137,8 +138,7 @@ export function ChatPageClient() {
                   {/* Render charts */}
                   {chartCalls.length > 0 &&
                     chartCalls.map((chartCall, idx) => {
-                      const chartData =
-                        chartCall.type === "tool-renderChart-output-available" ? chartCall.output : null
+                      const chartData = "output" in chartCall ? (chartCall.output as any) : null
 
                       if (!chartData) return null
 

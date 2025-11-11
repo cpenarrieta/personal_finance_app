@@ -1,21 +1,6 @@
 "use client"
 
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  Area,
-  AreaChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-} from "recharts"
+import { Bar, BarChart, Line, LineChart, Pie, PieChart, Area, AreaChart, XAxis, YAxis, CartesianGrid, Cell, Legend } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import type { ChartConfig } from "@/components/ui/chart"
 
@@ -94,7 +79,7 @@ export function ChartRenderer({
       </div>
 
       <ChartContainer config={chartConfig} className="h-[300px] w-full">
-        {type === "bar" && (
+        {type === "bar" ? (
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
@@ -116,9 +101,7 @@ export function ChartRenderer({
               ))}
             </Bar>
           </BarChart>
-        )}
-
-        {type === "line" && (
+        ) : type === "line" ? (
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
@@ -136,9 +119,7 @@ export function ChartRenderer({
             <ChartTooltip content={<ChartTooltipContent />} formatter={(value) => formatValueFn(value as number)} />
             <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
           </LineChart>
-        )}
-
-        {type === "area" && (
+        ) : type === "area" ? (
           <AreaChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
@@ -162,9 +143,7 @@ export function ChartRenderer({
               fillOpacity={0.2}
             />
           </AreaChart>
-        )}
-
-        {type === "pie" && (
+        ) : (
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent />} formatter={(value) => formatValueFn(value as number)} />
             <Pie
