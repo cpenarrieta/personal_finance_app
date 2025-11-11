@@ -18,6 +18,7 @@ const breadcrumbConfig: Record<string, string> = {
   '/investments': 'Investments',
   '/investments/holdings': 'Holdings',
   '/investments/transactions': 'Transactions',
+  '/chat': 'AI Chat',
   '/settings': 'Settings',
   '/settings/connections': 'Connections',
   '/settings/manage-categories': 'Categories',
