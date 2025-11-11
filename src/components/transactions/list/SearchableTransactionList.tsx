@@ -697,7 +697,7 @@ export function SearchableTransactionList({
 
         <div className="bg-white p-4 rounded-lg shadow-sm border">
           <div className="text-sm text-muted-foreground mb-1">Total Expenses</div>
-          <div className="text-2xl font-bold text-destructive">
+          <div className="text-2xl font-bold">
             -$
             {formatAmount(totals.expenses)}
           </div>

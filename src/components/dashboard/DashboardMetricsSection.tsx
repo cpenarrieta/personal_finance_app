@@ -39,7 +39,6 @@ export async function DashboardMetricsSection() {
           value={`$${formatAmount(totalLastMonthSpending)}`}
           subtitle={format(lastMonthStart, "MMMM yyyy")}
           icon={ArrowDownCircle}
-          valueClassName="text-destructive"
         />
         <MetricCard
           title="Last Month Income"

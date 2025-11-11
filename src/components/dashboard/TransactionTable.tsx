@@ -96,7 +96,7 @@ export function TransactionTable({ transactions, showCategory = true }: Transact
                 )}
                 <TableCell>{transaction.account.name}</TableCell>
                 <TableCell className="text-right font-medium">
-                  <span className={amount < 0 ? "text-destructive" : "text-success"}>
+                  <span className={amount >= 0 ? "text-success" : ""}>
                     {amount < 0 ? "-" : "+"}${formatAmount(amount)}
                   </span>
                 </TableCell>

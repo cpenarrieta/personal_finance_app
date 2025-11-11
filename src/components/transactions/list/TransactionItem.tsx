@@ -115,7 +115,7 @@ export function TransactionItem({
 
             {/* Amount and Actions */}
             <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-              <div className={`text-lg font-semibold ${t.amount_number < 0 ? "text-destructive" : "text-success"}`}>
+              <div className={`text-lg font-semibold ${t.amount_number >= 0 ? "text-success" : ""}`}>
                 {t.amount_number < 0 ? "-" : "+"}${formatAmount(t.amount_number)}
               </div>
               {t.isoCurrencyCode && <div className="text-xs text-muted-foreground">{t.isoCurrencyCode}</div>}

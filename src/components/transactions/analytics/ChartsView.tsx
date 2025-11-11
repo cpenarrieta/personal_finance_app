@@ -892,10 +892,10 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                             item.name === "Income"
                               ? "text-success"
                               : item.name === "Expenses"
-                                ? "text-destructive"
+                                ? ""
                                 : item.value >= 0
                                   ? "text-success"
-                                  : "text-destructive"
+                                  : ""
                           }`}
                         >
                           {item.name !== "Net" && item.name === "Expenses" ? "-" : item.value >= 0 ? "+" : ""}$
