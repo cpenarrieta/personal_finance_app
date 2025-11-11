@@ -18,7 +18,7 @@ interface GenericSyncButtonProps {
   action: () => Promise<void>
   idleText: string
   pendingText: string
-  variant?: 'default' | 'outline' | 'destructive' | 'secondary' | 'ghost' | 'link'
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
   className?: string
   requireConfirmation?: boolean
   confirmationTitle?: string

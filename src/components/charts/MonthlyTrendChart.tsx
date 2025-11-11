@@ -13,11 +13,7 @@ import {
 } from "recharts"
 
 interface MonthlyTrendChartProps {
-  data: {
-    month: string
-    spending: number
-    income: number
-  }[]
+  data: Array<{ month: string; spending: number; income: number }>
 }
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {

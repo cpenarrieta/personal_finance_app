@@ -7,23 +7,20 @@ import { AlertCircle, Building2 } from "lucide-react";
 
 interface ConnectedItemsListProps {
   items: Array<{
-    id: string;
-    plaidItemId: string;
-    accessToken: string;
-    status: string | null;
-    created_at_string: string | null;
+    id: string
+    accessToken: string
+    status: string
     institution: {
-      name: string;
-      logoUrl: string | null;
-      shortName: string | null;
-    } | null;
+      name: string
+      logoUrl: string | null
+    } | null
     accounts: Array<{
-      id: string;
-      name: string;
-      type: string;
-      subtype: string | null;
-    }>;
-  }>;
+      id: string
+      name: string
+      type: string
+      subtype: string | null
+    }>
+  }>
 }
 
 export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {

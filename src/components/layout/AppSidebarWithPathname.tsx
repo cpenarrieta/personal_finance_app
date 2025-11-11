@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 
 interface AppSidebarWithPathnameProps {
-  accountsSlot: React.ReactNode;
+  accountsSlot: React.ReactNode
 }
 
 export function AppSidebarWithPathname({ accountsSlot }: AppSidebarWithPathnameProps) {

@@ -12,11 +12,7 @@ import {
 } from "recharts"
 
 interface SpendingByCategoryChartProps {
-  data: {
-    name: string
-    value: number
-    color: string
-  }[]
+  data: Array<{ name: string; value: number }>
   title?: string
 }
 

@@ -5,9 +5,9 @@ import { authClient } from "@/lib/auth/auth-client";
 import { useState } from "react";
 
 interface LogoutButtonProps {
-  variant?: "default" | "outline" | "ghost" | "destructive";
-  size?: "default" | "sm" | "lg" | "icon";
-  className?: string;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  size?: "default" | "sm" | "lg" | "icon"
+  className?: string
 }
 
 export function LogoutButton({

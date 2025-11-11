@@ -3,9 +3,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 interface ErrorFallbackProps {
-  error?: Error;
-  title?: string;
-  description?: string;
+  error?: Error
+  title?: string
+  description?: string
 }
 
 /**

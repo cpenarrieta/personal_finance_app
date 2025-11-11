@@ -9,24 +9,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { TransactionForClient, CategoryForClient } from "@/types";
+import type { TransactionForClient, CategoryForClient, SubcategoryForClient } from "@/types";
 
 interface TransactionActionBarProps {
-  filteredTransactions: TransactionForClient[];
-  totalTransactions: number;
-  categories: CategoryForClient[];
-  showBulkUpdate: boolean;
-  onToggleBulkUpdate: () => void;
-  bulkCategoryId: string;
-  bulkSubcategoryId: string;
-  setBulkCategoryId: (id: string) => void;
-  setBulkSubcategoryId: (id: string) => void;
-  selectedTransactions: Set<string>;
-  isBulkUpdating: boolean;
-  onSelectAll: () => void;
-  onDeselectAll: () => void;
-  onBulkUpdate: () => void;
-  availableSubcategories: Array<{ id: string; name: string }>;
+  filteredTransactions: TransactionForClient[]
+  totalTransactions: number
+  categories: CategoryForClient[]
+  showBulkUpdate: boolean
+  onToggleBulkUpdate: () => void
+  bulkCategoryId: string
+  bulkSubcategoryId: string
+  setBulkCategoryId: (value: string) => void
+  setBulkSubcategoryId: (value: string) => void
+  selectedTransactions: Set<string>
+  isBulkUpdating: boolean
+  onSelectAll: () => void
+  onDeselectAll: () => void
+  onBulkUpdate: () => void
+  availableSubcategories: SubcategoryForClient[]
 }
 
 export function TransactionActionBar({

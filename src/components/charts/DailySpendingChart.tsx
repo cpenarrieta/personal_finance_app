@@ -12,10 +12,7 @@ import {
 } from "recharts"
 
 interface DailySpendingChartProps {
-  data: {
-    day: string
-    spending: number
-  }[]
+  data: Array<{ day: string; spending: number }>
 }
 
 export function DailySpendingChart({ data }: DailySpendingChartProps) {

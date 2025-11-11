@@ -119,3 +119,40 @@ export {
   type InvestmentTransactionForClient,
   CategoryGroupType,
 } from "./client";
+
+// Re-export UI state types
+export {
+  // Date range types
+  type DateRange,
+  type DateRangeOption,
+  DATE_RANGE_OPTIONS,
+
+  // Chart types
+  type ChartTab,
+  type ChartViewMode,
+
+  // Holdings/Investment UI types
+  type HoldingsGroupBy,
+  type HoldingsSortBy,
+
+  // View state types
+  type ViewState,
+  type PaginationState,
+  type SelectionState,
+
+  // Modal state types
+  type ModalState,
+  type DialogAction,
+
+  // Filter state types
+  type FilterState,
+  type SortState,
+
+  // Theme types
+  type ThemeMode,
+
+  // Helper functions
+  getDateRangeLabel,
+  createPaginationState,
+  createSelectionState,
+} from "./ui";

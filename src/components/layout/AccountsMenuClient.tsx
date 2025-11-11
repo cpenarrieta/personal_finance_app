@@ -12,21 +12,23 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
-type Account = {
-  id: string;
-  name: string;
-  item: {
-    institution: {
-      id: string;
-      name: string;
-      logoUrl: string | null;
-    } | null;
-  };
-};
-
 interface AccountsMenuClientProps {
-  accounts: Account[];
+  accounts: Array<{
+    id: string;
+    name: string;
+    type: string;
+    mask: string | null;
+    item: {
+      institution: {
+        id: string;
+        name: string;
+        logoUrl: string | null;
+      } | null;
+    };
+  }>;
 }
+
+type Account = AccountsMenuClientProps["accounts"][number];
 
 export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
   const pathname = usePathname();

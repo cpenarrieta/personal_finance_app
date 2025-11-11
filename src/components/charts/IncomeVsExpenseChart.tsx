@@ -13,11 +13,7 @@ import {
 } from "recharts"
 
 interface IncomeVsExpenseChartProps {
-  data: {
-    month: string
-    income: number
-    expenses: number
-  }[]
+  data: Array<{ month: string; income: number; expenses: number }>
 }
 
 export function IncomeVsExpenseChart({ data }: IncomeVsExpenseChartProps) {

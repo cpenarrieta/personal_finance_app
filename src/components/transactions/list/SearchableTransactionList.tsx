@@ -26,9 +26,12 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
-  SearchableTransactionListProps,
   TransactionForClient,
+  CategoryForClient,
+  TagForClient,
+  PlaidAccountForClient,
 } from "@/types";
+import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params";
 import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { TagSelector } from "@/components/transactions/filters/TagSelector";
@@ -40,6 +43,16 @@ import { useTransactionSort } from "@/hooks/useTransactionSort";
 import { useBulkTransactionOperations } from "@/hooks/useBulkTransactionOperations";
 import { useCategoryToggle } from "@/hooks/useCategoryToggle";
 import { transactionFiltersToUrlParams } from "@/lib/transactions/url-params";
+
+interface SearchableTransactionListProps {
+  transactions: TransactionForClient[];
+  showAccount?: boolean;
+  categories: CategoryForClient[];
+  tags: TagForClient[];
+  accounts?: PlaidAccountForClient[];
+  initialFilters?: TransactionFiltersFromUrl;
+  onFilteredTransactionsChange?: (transactionIds: string[]) => void;
+}
 
 export function SearchableTransactionList({
   transactions,

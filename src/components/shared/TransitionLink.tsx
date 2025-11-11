@@ -3,14 +3,15 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import type { ComponentPropsWithoutRef } from "react";
 
-type ButtonProps = ComponentPropsWithoutRef<typeof Button>;
-
-interface TransitionLinkProps extends Omit<ButtonProps, "onClick"> {
-  href: string;
-  children: React.ReactNode;
-  loadingText?: string;
+interface TransitionLinkProps {
+  href: string
+  children: React.ReactNode
+  loadingText?: string
+  disabled?: boolean
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  size?: "default" | "sm" | "lg" | "icon"
+  className?: string
 }
 
 /**
@@ -22,7 +23,9 @@ export function TransitionLink({
   children,
   loadingText = "Loading...",
   disabled,
-  ...props
+  variant,
+  size,
+  className,
 }: TransitionLinkProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -37,7 +40,9 @@ export function TransitionLink({
     <Button
       onClick={handleClick}
       disabled={disabled || isPending}
-      {...props}
+      variant={variant}
+      size={size}
+      className={className}
     >
       {isPending ? loadingText : children}
     </Button>

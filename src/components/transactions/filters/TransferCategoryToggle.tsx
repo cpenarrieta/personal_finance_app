@@ -5,9 +5,9 @@ import { Label } from "@/components/ui/label";
 import { useTransition } from "react";
 
 interface TransferCategoryToggleProps {
-  categoryId: string;
-  isTransferCategory: boolean;
-  updateAction: (formData: FormData) => Promise<void>;
+  categoryId: string
+  isTransferCategory: boolean
+  updateAction: (formData: FormData) => Promise<void>
 }
 
 export function TransferCategoryToggle({

@@ -12,11 +12,7 @@ import {
 } from "recharts"
 
 interface SubcategoryChartProps {
-  data: {
-    name: string
-    value: number
-    color: string
-  }[]
+  data: Array<{ name: string; value: number }>
 }
 
 export function SubcategoryChart({ data }: SubcategoryChartProps) {

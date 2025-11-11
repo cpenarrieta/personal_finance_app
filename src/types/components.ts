@@ -1,187 +1,59 @@
 /**
- * Component prop types and UI-specific types
+ * Shared data structures and types used across multiple components
  *
- * This file contains types used specifically in React components
+ * This file contains ONLY shared data structures, not component-specific props.
+ * Component props should be defined inline within the component file.
+ *
+ * Use this file for:
+ * - Shared data structures used by multiple components (e.g., SplitItem)
+ * - Common type aliases (e.g., ChartDataPoint)
+ * - Reusable data shapes
+ *
+ * DO NOT use this file for:
+ * - Component-specific props (define those in the component file)
  */
 
-import type { CategoryWithSubcategories } from "./api";
-import type {
-  TransactionForClient,
-  CategoryForClient,
-  TagForClient,
-  HoldingForClient,
-  InvestmentTransactionForClient,
-} from "./client";
-import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params";
-
 // ============================================================================
-// TRANSACTION COMPONENT TYPES
+// TRANSACTION SHARED TYPES
 // ============================================================================
 
-export interface TransactionListProps {
-  transactions: TransactionForClient[];
-  showAccount?: boolean;
-}
-
-export interface TransactionItemProps {
-  transaction: TransactionForClient;
-  onClick?: (transaction: TransactionForClient) => void;
-}
-
-export interface TransactionDetailViewProps {
-  transaction: TransactionForClient;
-  categories: CategoryForClient[];
-  tags: TagForClient[];
-}
-
-export interface EditTransactionModalProps {
-  transaction: TransactionForClient;
-  onClose: () => void;
-  onSuccess?: () => void;
-  categories: CategoryForClient[];
-  tags: TagForClient[];
-}
-
-export interface SearchableTransactionListProps {
-  transactions: TransactionForClient[];
-  showAccount?: boolean;
-  categories: CategoryForClient[];
-  tags: TagForClient[];
-  accounts?: Array<{
-    id: string;
-    name: string;
-    type: string;
-    mask?: string | null;
-  }>;
-  initialFilters?: TransactionFiltersFromUrl;
-  onFilteredTransactionsChange?: (transactionIds: string[]) => void;
+/**
+ * Structure for split transaction items
+ * Used by SplitTransactionModal and split transaction API
+ */
+export interface SplitItem {
+  amount: string;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  notes: string;
+  description: string;
 }
 
 // ============================================================================
-// CATEGORY COMPONENT TYPES
+// CHART SHARED TYPES
 // ============================================================================
 
-export interface CategorySelectorProps {
-  categories: CategoryWithSubcategories[];
-  selectedCategoryId?: string | null;
-  selectedSubcategoryId?: string | null;
-  onCategoryChange: (categoryId: string | null) => void;
-  onSubcategoryChange: (subcategoryId: string | null) => void;
-}
-
-export interface CategoryBadgeProps {
-  category: {
-    id: string;
-    name: string;
-    imageUrl?: string | null;
-  };
-  subcategory?: {
-    id: string;
-    name: string;
-    imageUrl?: string | null;
-  } | null;
-  size?: "sm" | "md" | "lg";
-}
-
-// ============================================================================
-// TAG COMPONENT TYPES
-// ============================================================================
-
-export interface TagSelectorProps {
-  availableTags: TagForClient[];
-  selectedTagIds: string[];
-  onToggleTag: (tagId: string) => void;
-  onCreateTag?: () => void;
-}
-
-export interface TagBadgeProps {
-  tag: TagForClient;
-  size?: "sm" | "md" | "lg";
-  onRemove?: (tagId: string) => void;
-}
-
-export interface TagListProps {
-  tags: TagForClient[];
-  onTagClick?: (tag: TagForClient) => void;
-}
-
-// ============================================================================
-// ACCOUNT COMPONENT TYPES
-// ============================================================================
-
-export interface AccountCardProps {
-  account: {
-    id: string;
-    name: string;
-    officialName?: string | null;
-    type: string;
-    subtype?: string | null;
-    mask?: string | null;
-    currentBalance?: string | null;
-    availableBalance?: string | null;
-    creditLimit?: string | null;
-    balanceUpdatedAt?: string | null;
-  };
-  onClick?: (accountId: string) => void;
-}
-
-export interface AccountSelectorProps {
-  accounts: Array<{
-    id: string;
-    name: string;
-    type: string;
-    mask?: string | null;
-  }>;
-  selectedAccountId?: string | null;
-  onAccountChange: (accountId: string | null) => void;
-}
-
-// ============================================================================
-// INVESTMENT COMPONENT TYPES
-// ============================================================================
-
-export interface HoldingListProps {
-  holdings: HoldingForClient[];
-}
-
-export interface HoldingItemProps {
-  holding: HoldingForClient;
-  onClick?: (holding: HoldingForClient) => void;
-}
-
-export interface InvestmentTransactionListProps {
-  transactions: InvestmentTransactionForClient[];
-}
-
-export interface InvestmentTransactionItemProps {
-  transaction: InvestmentTransactionForClient;
-  onClick?: (transaction: InvestmentTransactionForClient) => void;
-}
-
-// ============================================================================
-// ANALYTICS COMPONENT TYPES
-// ============================================================================
-
+/**
+ * Generic chart data point structure
+ */
 export interface ChartDataPoint {
   name: string;
   value: number;
   label?: string;
 }
 
-export interface TransactionAnalyticsProps {
-  transactions: TransactionForClient[];
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
-}
-
+/**
+ * Pie chart data structure
+ */
 export interface PieChartData {
   name: string;
   value: number;
   color?: string;
 }
 
+/**
+ * Bar chart data structure
+ */
 export interface BarChartData {
   name: string;
   amount: number;
@@ -189,9 +61,12 @@ export interface BarChartData {
 }
 
 // ============================================================================
-// FILTER & SEARCH TYPES
+// FILTER & SEARCH SHARED TYPES
 // ============================================================================
 
+/**
+ * Generic transaction filter structure
+ */
 export interface TransactionFilters {
   accountId?: string | null;
   categoryId?: string | null;
@@ -205,72 +80,21 @@ export interface TransactionFilters {
   pending?: boolean;
 }
 
-export interface DateRangePickerProps {
-  startDate?: Date | null;
-  endDate?: Date | null;
-  onStartDateChange: (date: Date | null) => void;
-  onEndDateChange: (date: Date | null) => void;
-}
-
-export interface AmountRangeInputProps {
-  minAmount?: number | null;
-  maxAmount?: number | null;
-  onMinAmountChange: (amount: number | null) => void;
-  onMaxAmountChange: (amount: number | null) => void;
-}
-
 // ============================================================================
-// BUTTON & ACTION COMPONENT TYPES
+// FORM SHARED TYPES
 // ============================================================================
 
-export interface SyncButtonProps {
-  onSyncComplete?: () => void;
-  disabled?: boolean;
-}
-
-export interface DeleteButtonProps {
-  itemId: string;
-  itemType: "transaction" | "category" | "tag" | "account";
-  onDeleteComplete?: () => void;
-  confirmMessage?: string;
-}
-
-export interface CategorizeButtonProps {
-  transactionId?: string;
-  onCategorizeComplete?: () => void;
-}
-
-// ============================================================================
-// MODAL & DIALOG TYPES
-// ============================================================================
-
-export interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: React.ReactNode;
-}
-
-export interface ConfirmDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  variant?: "danger" | "warning" | "info";
-}
-
-// ============================================================================
-// FORM TYPES
-// ============================================================================
-
+/**
+ * Form field error structure
+ */
 export interface FormFieldError {
   field: string;
   message: string;
 }
 
+/**
+ * Generic form state
+ */
 export interface FormState<T> {
   values: T;
   errors: FormFieldError[];
@@ -279,39 +103,43 @@ export interface FormState<T> {
 }
 
 // ============================================================================
-// UTILITY TYPES
+// UTILITY SHARED TYPES
 // ============================================================================
 
+/**
+ * Loading state enum
+ */
 export type LoadingState = "idle" | "loading" | "success" | "error";
 
+/**
+ * Async data wrapper
+ */
 export interface AsyncData<T> {
   data: T | null;
   loading: boolean;
   error: Error | null;
 }
 
+/**
+ * Sort direction
+ */
 export type SortDirection = "asc" | "desc";
 
+/**
+ * Generic sort configuration
+ */
 export interface SortConfig<T extends string = string> {
   field: T;
   direction: SortDirection;
 }
 
 // ============================================================================
-// PLAID COMPONENT TYPES
+// NAVIGATION SHARED TYPES
 // ============================================================================
 
-export interface PlaidLinkButtonProps {
-  onSuccess?: () => void;
-  onExit?: () => void;
-  children?: React.ReactNode;
-  className?: string;
-}
-
-// ============================================================================
-// NAVIGATION TYPES
-// ============================================================================
-
+/**
+ * Navigation item structure
+ */
 export interface NavItem {
   label: string;
   href: string;
@@ -319,11 +147,10 @@ export interface NavItem {
   badge?: number | string;
 }
 
+/**
+ * Breadcrumb item structure
+ */
 export interface BreadcrumbItem {
   label: string;
   href?: string;
-}
-
-export interface BreadcrumbsProps {
-  items: BreadcrumbItem[];
 }

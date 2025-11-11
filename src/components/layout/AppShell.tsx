@@ -8,9 +8,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 interface AppShellProps {
-  children: React.ReactNode;
-  sidebarSlot: React.ReactNode;
-  breadcrumbsSlot: React.ReactNode;
+  children: React.ReactNode
+  sidebarSlot: React.ReactNode
+  breadcrumbsSlot: React.ReactNode
 }
 
 export function AppShell({ children, sidebarSlot, breadcrumbsSlot }: AppShellProps) {

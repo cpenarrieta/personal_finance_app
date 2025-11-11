@@ -52,6 +52,11 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
+interface AppSidebarProps {
+  accountsSlot: React.ReactNode
+  pathname: string
+}
+
 // Static nav items (accounts section will be passed as slot)
 const getStaticNavItems = () => {
   return [
@@ -245,11 +250,6 @@ function ThemeToggle() {
       <span className="sr-only">Toggle theme</span>
     </Button>
   );
-}
-
-interface AppSidebarProps {
-  accountsSlot: React.ReactNode;
-  pathname: string;
 }
 
 export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
