@@ -257,6 +257,14 @@ export async function syncItemTransactions(
       const isNew = !existing
       const transactionData = buildTransactionData(t)
 
+      // Log transaction details for historical tracking
+      console.log(`    ${isNew ? "➕ NEW" : "🔄 UPDATE"} [HISTORICAL]`)
+      console.log(`       Date: ${t.date} | Account: ${t.account_id}`)
+      console.log(`       Name: ${t.name}`)
+      console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
+      console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
+      console.log(`       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`)
+
       await prisma.transaction.upsert({
         where: { plaidTransactionId: existing?.plaidTransactionId || t.transaction_id },
         update: {
@@ -272,7 +280,6 @@ export async function syncItemTransactions(
 
       if (isNew) {
         stats.transactionsAdded++
-        console.log(`    ➕ ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
       }
     }
     console.log(`  ✓ Processed ${stats.transactionsAdded} new transaction(s)`)
@@ -339,6 +346,14 @@ export async function syncItemTransactions(
       stats.transactionsAdded++
       const transactionData = buildTransactionData(t)
 
+      // Log transaction details for historical tracking
+      console.log(`    ➕ NEW [ADDED]`)
+      console.log(`       Date: ${t.date} | Account: ${t.account_id}`)
+      console.log(`       Name: ${t.name}`)
+      console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
+      console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
+      console.log(`       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`)
+
       await prisma.transaction.upsert({
         where: { plaidTransactionId: t.transaction_id },
         update: {
@@ -351,7 +366,6 @@ export async function syncItemTransactions(
           ...transactionData,
         },
       })
-      console.log(`    ➕ ${t.date} | ${t.name} | $${t.amount}`)
     }
 
     // Modified transactions (e.g., pending -> posted)
@@ -365,11 +379,18 @@ export async function syncItemTransactions(
       stats.transactionsModified++
       const transactionData = buildTransactionData(t)
 
+      // Log transaction details for historical tracking
+      console.log(`    📝 MODIFIED [UPDATE]`)
+      console.log(`       Date: ${t.date} | Account: ${t.account_id}`)
+      console.log(`       Name: ${t.name}`)
+      console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
+      console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
+      console.log(`       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`)
+
       await prisma.transaction.update({
         where: { plaidTransactionId: t.transaction_id },
         data: transactionData,
       })
-      console.log(`    📝 ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
     }
 
     // Removed transactions
