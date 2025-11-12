@@ -3,13 +3,17 @@ import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareSpendingByCategory } from "@/lib/dashboard/calculations"
 import { ChartErrorFallback } from "@/components/shared/ErrorFallback"
 
+interface SpendingByCategoryChartAsyncProps {
+  monthsBack?: number
+}
+
 /**
  * Async Server Component for Spending by Category Chart
  * Fetches and processes data independently with error handling
  */
-export async function SpendingByCategoryChartAsync() {
+export async function SpendingByCategoryChartAsync({ monthsBack = 1 }: SpendingByCategoryChartAsyncProps) {
   try {
-    const { lastMonthTransactions } = await getLastMonthStats()
+    const { lastMonthTransactions } = await getLastMonthStats(monthsBack)
     const spendingByCategory = prepareSpendingByCategory(lastMonthTransactions, 10)
 
     return <SpendingByCategoryChart data={spendingByCategory} />
