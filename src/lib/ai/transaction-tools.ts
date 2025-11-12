@@ -106,8 +106,8 @@ export const getSpendingByCategory = tool({
       console.log("  Filtered by date range:", filtered.length)
 
       // Count expenses vs income
-      const expenseCount = filtered.filter((t) => t.amount_number < 0).length
-      const incomeCount = filtered.filter((t) => t.amount_number >= 0).length
+      const expenseCount = filtered.filter((t: Transaction) => t.amount_number < 0).length
+      const incomeCount = filtered.filter((t: Transaction) => t.amount_number >= 0).length
       console.log("  Expenses:", expenseCount, "| Income:", incomeCount)
 
       // Group by category (only expenses - negative amounts)
