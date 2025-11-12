@@ -103,33 +103,43 @@ export const getSpendingByCategory = tool({
         const end = new Date(endDate)
         return date >= start && date <= end
       })
+      console.log("  Filtered by date range:", filtered.length)
 
-      // Group by category
+      // Count expenses vs income
+      const expenseCount = filtered.filter((t) => t.amount_number < 0).length
+      const incomeCount = filtered.filter((t) => t.amount_number >= 0).length
+      console.log("  Expenses:", expenseCount, "| Income:", incomeCount)
+
+      // Group by category (only expenses - negative amounts)
       const categoryMap = new Map<string, { name: string; total: number; count: number; transactions: number[] }>()
 
       filtered.forEach((t: Transaction) => {
+        // Only include expenses (negative amounts)
+        if (t.amount_number >= 0) return
+
         const categoryName = t.category?.name || "Uncategorized"
+        const expenseAmount = Math.abs(t.amount_number) // Convert to positive for spending
         const existing = categoryMap.get(categoryName)
 
         if (existing) {
-          existing.total += t.amount_number
+          existing.total += expenseAmount
           existing.count += 1
-          existing.transactions.push(t.amount_number)
+          existing.transactions.push(expenseAmount)
         } else {
           categoryMap.set(categoryName, {
             name: categoryName,
-            total: t.amount_number,
+            total: expenseAmount,
             count: 1,
-            transactions: [t.amount_number],
+            transactions: [expenseAmount],
           })
         }
       })
 
-      // Convert to array and sort
+      // Convert to array and sort (highest spending first)
       const categoryData = Array.from(categoryMap.values())
       categoryData.sort((a, b) => {
         if (sortBy === "amount") {
-          return b.total - a.total
+          return b.total - a.total // Sort by highest spending
         }
         return b.count - a.count
       })
@@ -143,6 +153,7 @@ export const getSpendingByCategory = tool({
       }))
 
       console.log("  Returning result:", result.length, "categories")
+      console.log("  Top categories:", result.map((r) => `${r.category}: $${r.totalSpent}`).join(", "))
       return result
     } catch (error) {
       console.error("  ❌ ERROR in getSpendingByCategory:", error)
