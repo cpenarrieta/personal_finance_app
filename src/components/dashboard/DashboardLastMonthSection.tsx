@@ -33,8 +33,6 @@ function ChartSkeleton() {
  * Shows header immediately while charts stream in independently
  */
 export async function DashboardLastMonthSection({ monthsBack = 1 }: DashboardLastMonthSectionProps) {
-  const { lastMonthStart } = await getLastMonthStats(monthsBack)
-
   // Generate period labels
   const periodLabel = monthsBack === 1 ? "Last Month Overview" : `Last ${monthsBack} Months Overview`
   const now = new Date()

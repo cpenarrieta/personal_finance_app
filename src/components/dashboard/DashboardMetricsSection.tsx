@@ -17,7 +17,7 @@ interface DashboardMetricsSectionProps {
  */
 export async function DashboardMetricsSection({ monthsBack = 1 }: DashboardMetricsSectionProps) {
   try {
-    const [{ accounts, holdings }, { totalLastMonthSpending, totalLastMonthIncome, lastMonthStart }] =
+    const [{ accounts, holdings }, { totalLastMonthSpending, totalLastMonthIncome }] =
       await Promise.all([getDashboardMetrics(), getLastMonthStats(monthsBack)])
 
     const totalCurrent = calculateTotalBalance(accounts)

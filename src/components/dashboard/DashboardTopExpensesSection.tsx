@@ -13,10 +13,7 @@ interface DashboardTopExpensesSectionProps {
  */
 export async function DashboardTopExpensesSection({ monthsBack = 1 }: DashboardTopExpensesSectionProps) {
   try {
-    const [topExpensiveTransactions, { lastMonthStart }] = await Promise.all([
-      getTopExpensiveTransactions(monthsBack, 25),
-      getLastMonthStats(monthsBack),
-    ])
+    const topExpensiveTransactions = await getTopExpensiveTransactions(monthsBack, 25)
 
     // Generate period labels
     const now = new Date()
