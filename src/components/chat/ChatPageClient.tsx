@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Send, Bot, User } from "lucide-react"
 import { useRef, useEffect, useState, type FormEvent } from "react"
 import type { MyUIMessage } from "@/app/api/chat/route"
+import { ChartRenderer } from "@/components/chat/ChartRenderer"
 
 export function ChatPageClient() {
   const { messages, sendMessage } = useChat<MyUIMessage>({})
@@ -62,15 +63,15 @@ export function ChatPageClient() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleSuggestionClick("What are my top 5 spending categories?")}
+                  onClick={() => handleSuggestionClick("Show me a chart of my top 5 spending categories")}
                   className="text-xs"
                 >
-                  📊 Top categories
+                  📊 Top categories chart
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleSuggestionClick("Show me my spending trend over the last 3 months")}
+                  onClick={() => handleSuggestionClick("Show me my spending trend over the last 6 months")}
                   className="text-xs"
                 >
                   📈 Spending trends
@@ -87,47 +88,74 @@ export function ChatPageClient() {
                 .map((part) => (part.type === "text" ? part.text : ""))
                 .join("")
 
-              // Get tool calls for debugging
+              // Get tool calls for rendering
               const toolCalls = message.parts.filter((part) => part.type.startsWith("tool-"))
 
+              // Find chart tool calls with output
+              const chartCalls = message.parts.filter((part) => {
+                const partType = part.type as string
+                return partType === "tool-renderChart-output-available" && "output" in part
+              })
+
               return (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {message.role === "assistant" && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
-                      <Bot className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                  )}
+                <div key={message.id} className="flex flex-col gap-3">
+                  <div className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                    {message.role === "assistant" && (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary">
+                        <Bot className="h-5 w-5 text-primary-foreground" />
+                      </div>
+                    )}
 
-                  <div
-                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                      message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                    }`}
-                  >
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
-                      <div className="whitespace-pre-wrap">{textContent}</div>
+                    <div
+                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                      }`}
+                    >
+                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                        <div className="whitespace-pre-wrap">{textContent}</div>
+                      </div>
+
+                      {/* Show tool invocations for debugging */}
+                      {toolCalls.length > 0 && (
+                        <div className="mt-2 space-y-1 border-t border-border pt-2">
+                          {toolCalls.map((tool, idx) => (
+                            <div key={idx} className="text-xs text-muted-foreground">
+                              🔧 {tool.type.replace("tool-", "").replace(/([A-Z])/g, " $1")}
+                              {tool.type.includes("output-available") && " ✓"}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Show tool invocations for debugging */}
-                    {toolCalls.length > 0 && (
-                      <div className="mt-2 space-y-1 border-t border-border pt-2">
-                        {toolCalls.map((tool, idx) => (
-                          <div key={idx} className="text-xs text-muted-foreground">
-                            🔧 {tool.type.replace("tool-", "").replace(/([A-Z])/g, " $1")}
-                            {tool.type.includes("output-available") && " ✓"}
-                          </div>
-                        ))}
+                    {message.role === "user" && (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
+                        <User className="h-5 w-5 text-secondary-foreground" />
                       </div>
                     )}
                   </div>
 
-                  {message.role === "user" && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
-                      <User className="h-5 w-5 text-secondary-foreground" />
-                    </div>
-                  )}
+                  {/* Render charts */}
+                  {chartCalls.length > 0 &&
+                    chartCalls.map((chartCall, idx) => {
+                      const chartData = "output" in chartCall ? (chartCall.output as any) : null
+
+                      if (!chartData) return null
+
+                      return (
+                        <div key={`chart-${idx}`} className="w-full">
+                          <ChartRenderer
+                            type={chartData.type}
+                            title={chartData.title}
+                            description={chartData.description}
+                            data={chartData.data}
+                            xAxisLabel={chartData.xAxisLabel}
+                            yAxisLabel={chartData.yAxisLabel}
+                            formatValue={chartData.formatValue}
+                          />
+                        </div>
+                      )
+                    })}
                 </div>
               )
             })}

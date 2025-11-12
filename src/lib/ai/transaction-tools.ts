@@ -318,6 +318,63 @@ export const getSpendingTrends = tool({
 })
 
 /**
+ * Render a chart visualization
+ */
+export const renderChart = tool({
+  description:
+    "Render a chart to visualize data. Use this when the user asks for a chart or when data would be better understood visually. Supports bar, line, pie, and area charts.",
+  inputSchema: z.object({
+    type: z.enum(["bar", "line", "pie", "area"]).describe("The type of chart to render"),
+    title: z.string().describe("Chart title"),
+    description: z.string().optional().describe("Brief description of what the chart shows"),
+    data: z
+      .array(
+        z.object({
+          label: z.string().describe("Label for this data point (e.g., category name, month)"),
+          value: z.number().describe("Numeric value"),
+          color: z.string().optional().describe("Optional hex color for this data point"),
+        }),
+      )
+      .describe("Array of data points to visualize"),
+    xAxisLabel: z.string().optional().describe("Label for X axis (for bar/line/area charts)"),
+    yAxisLabel: z.string().optional().describe("Label for Y axis (for bar/line/area charts)"),
+    formatValue: z
+      .enum(["currency", "number", "percentage"])
+      .optional()
+      .default("currency")
+      .describe("How to format values in the chart"),
+  }),
+  execute: async ({
+    type,
+    title,
+    description,
+    data,
+    xAxisLabel,
+    yAxisLabel,
+    formatValue = "currency",
+  }: {
+    type: "bar" | "line" | "pie" | "area"
+    title: string
+    description?: string
+    data: Array<{ label: string; value: number; color?: string }>
+    xAxisLabel?: string
+    yAxisLabel?: string
+    formatValue?: "currency" | "number" | "percentage"
+  }) => {
+    // Return the chart configuration for the frontend to render
+    return {
+      type,
+      title,
+      description,
+      data,
+      xAxisLabel,
+      yAxisLabel,
+      formatValue,
+    }
+  },
+})
+
+/**
  * All available transaction tools
  */
 export const transactionTools = {
@@ -326,4 +383,5 @@ export const transactionTools = {
   getSpendingByMerchant,
   getTotalSpending,
   getSpendingTrends,
+  renderChart,
 }
