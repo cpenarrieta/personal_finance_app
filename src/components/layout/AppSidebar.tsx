@@ -20,7 +20,6 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -321,7 +320,6 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
       <SidebarFooter className="group-data-[collapsible=icon]:hidden">
         <div className="space-y-2 p-2">
           <SyncDropdown />
