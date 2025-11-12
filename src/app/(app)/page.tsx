@@ -11,6 +11,7 @@ import { DashboardUncategorizedSection } from "@/components/dashboard/DashboardU
 import { DashboardRecentTransactionsSection } from "@/components/dashboard/DashboardRecentTransactionsSection"
 import { DashboardLastMonthSection } from "@/components/dashboard/DashboardLastMonthSection"
 import { DashboardTopExpensesSection } from "@/components/dashboard/DashboardTopExpensesSection"
+import { MonthFilter } from "@/components/dashboard/MonthFilter"
 
 // Skeleton loaders
 import {
@@ -29,16 +30,27 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function Page() {
+interface PageProps {
+  searchParams: Promise<{ months?: string }>
+}
+
+export default async function Page({ searchParams }: PageProps) {
   // Check if user has connected Plaid accounts
   if (!(await hasConnectedAccounts())) {
     redirect("/connect-account")
   }
 
+  // Parse month filter from searchParams
+  const params = await searchParams
+  const monthsParam = params.months || "1"
+  const monthsBack = ["1", "2", "3", "6"].includes(monthsParam) ? parseInt(monthsParam, 10) : 1
+
   return (
     <div className="space-y-6">
+      <MonthFilter />
+
       <Suspense fallback={<MetricCardsSkeleton />}>
-        <DashboardMetricsSection />
+        <DashboardMetricsSection monthsBack={monthsBack} />
       </Suspense>
 
       <Suspense fallback={<UncategorizedSectionSkeleton />}>
@@ -62,7 +74,7 @@ export default async function Page() {
           </SectionSkeleton>
         }
       >
-        <DashboardLastMonthSection />
+        <DashboardLastMonthSection monthsBack={monthsBack} />
       </Suspense>
 
       <Suspense
@@ -72,7 +84,7 @@ export default async function Page() {
           </SectionSkeleton>
         }
       >
-        <DashboardTopExpensesSection />
+        <DashboardTopExpensesSection monthsBack={monthsBack} />
       </Suspense>
     </div>
   )

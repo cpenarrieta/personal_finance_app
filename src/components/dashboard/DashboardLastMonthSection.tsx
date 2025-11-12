@@ -1,11 +1,14 @@
-import { format } from "date-fns"
+import { format, startOfMonth, subMonths } from "date-fns"
 import { Suspense } from "react"
-import { getLastMonthStats } from "@/lib/dashboard/data"
 import { SpendingByCategoryChartAsync } from "@/components/dashboard/charts/SpendingByCategoryChartAsync"
 import { SubcategoryChartAsync } from "@/components/dashboard/charts/SubcategoryChartAsync"
 import { DailySpendingChartAsync } from "@/components/dashboard/charts/DailySpendingChartAsync"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
+interface DashboardLastMonthSectionProps {
+  monthsBack?: number
+}
 
 /**
  * Skeleton for individual chart
@@ -28,24 +31,29 @@ function ChartSkeleton() {
  * Server Component for Last Month Overview section header
  * Shows header immediately while charts stream in independently
  */
-export async function DashboardLastMonthSection() {
-  const { lastMonthStart } = await getLastMonthStats()
+export async function DashboardLastMonthSection({ monthsBack = 1 }: DashboardLastMonthSectionProps) {
+  // Generate period labels
+  const periodLabel = monthsBack === 1 ? "Last Month Overview" : `Last ${monthsBack} Months Overview`
+  const now = new Date()
+  const endMonth = format(subMonths(now, 1), "MMMM yyyy")
+  const startMonth = format(startOfMonth(subMonths(now, monthsBack)), "MMMM yyyy")
+  const subtitle = monthsBack === 1 ? `${endMonth} Financial Analysis` : `${startMonth} - ${endMonth} Financial Analysis`
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-semibold">Last Month Overview</h2>
-        <p className="text-muted-foreground">{format(lastMonthStart, "MMMM yyyy")} Financial Analysis</p>
+        <h2 className="text-2xl font-semibold">{periodLabel}</h2>
+        <p className="text-muted-foreground">{subtitle}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Suspense fallback={<ChartSkeleton />}>
-          <SpendingByCategoryChartAsync />
+          <SpendingByCategoryChartAsync monthsBack={monthsBack} />
         </Suspense>
         <Suspense fallback={<ChartSkeleton />}>
-          <SubcategoryChartAsync />
+          <SubcategoryChartAsync monthsBack={monthsBack} />
         </Suspense>
         <Suspense fallback={<ChartSkeleton />}>
-          <DailySpendingChartAsync />
+          <DailySpendingChartAsync monthsBack={monthsBack} />
         </Suspense>
       </div>
     </div>

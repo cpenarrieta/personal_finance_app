@@ -247,27 +247,31 @@ export async function getRecentTransactions(limit = 20) {
 }
 
 /**
- * Get last month date range
+ * Get date range for the last N full months
+ * @param monthsBack Number of full months to go back (1, 2, 3, or 6)
+ * @returns Start and end dates for the period
  */
-export function getLastMonthDateRange() {
+export function getLastMonthDateRange(monthsBack: number = 1) {
   const now = new Date()
-  const lastMonth = subMonths(now, 1)
-  const lastMonthStart = dateStartOfMonth(lastMonth)
-  const lastMonthEnd = endOfMonth(lastMonth)
+  // Start from the beginning of N months ago
+  const periodStart = dateStartOfMonth(subMonths(now, monthsBack))
+  // End at the end of last month
+  const periodEnd = endOfMonth(subMonths(now, 1))
 
-  return { lastMonthStart, lastMonthEnd }
+  return { lastMonthStart: periodStart, lastMonthEnd: periodEnd }
 }
 
 /**
- * Get last month statistics (spending, income, and transactions)
+ * Get statistics for the last N full months (spending, income, and transactions)
  * Uses a single optimized raw SQL query for spending and income
+ * @param monthsBack Number of full months to include (1, 2, 3, or 6)
  */
-export async function getLastMonthStats() {
+export async function getLastMonthStats(monthsBack: number = 1) {
   "use cache"
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
 
-  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange()
+  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange(monthsBack)
 
   // Optimized: Single raw SQL query to get both spending and income
   // Uses amount_number (already inverted): negative = expense, positive = income
@@ -358,14 +362,16 @@ export async function getLastMonthStats() {
 }
 
 /**
- * Get top expensive transactions from last month
+ * Get top expensive transactions from the last N full months
+ * @param monthsBack Number of full months to include (1, 2, 3, or 6)
+ * @param limit Maximum number of transactions to return
  */
-export async function getTopExpensiveTransactions(limit = 25) {
+export async function getTopExpensiveTransactions(monthsBack: number = 1, limit = 25) {
   "use cache"
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
 
-  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange()
+  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange(monthsBack)
 
   return prisma.transaction.findMany({
     where: {
