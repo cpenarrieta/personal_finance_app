@@ -1,6 +1,6 @@
 import { format, startOfMonth, subMonths } from "date-fns"
 import { TransactionTable } from "@/components/dashboard/TransactionTable"
-import { getTopExpensiveTransactions, getLastMonthStats } from "@/lib/dashboard/data"
+import { getTopExpensiveTransactions } from "@/lib/dashboard/data"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 
 interface DashboardTopExpensesSectionProps {

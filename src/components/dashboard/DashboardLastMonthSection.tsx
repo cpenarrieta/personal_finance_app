@@ -1,6 +1,5 @@
 import { format, startOfMonth, subMonths } from "date-fns"
 import { Suspense } from "react"
-import { getLastMonthStats } from "@/lib/dashboard/data"
 import { SpendingByCategoryChartAsync } from "@/components/dashboard/charts/SpendingByCategoryChartAsync"
 import { SubcategoryChartAsync } from "@/components/dashboard/charts/SubcategoryChartAsync"
 import { DailySpendingChartAsync } from "@/components/dashboard/charts/DailySpendingChartAsync"
