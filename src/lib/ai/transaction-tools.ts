@@ -89,53 +89,65 @@ export const getSpendingByCategory = tool({
     limit?: number
     sortBy?: "amount" | "count"
   }) => {
-    const transactions = await getAllTransactions()
+    console.log("\n🔧 [getSpendingByCategory] EXECUTING")
+    console.log("  Input:", { startDate, endDate, limit, sortBy })
 
-    // Filter by date range
-    const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string)
-      const start = new Date(startDate)
-      const end = new Date(endDate)
-      return date >= start && date <= end
-    })
+    try {
+      const transactions = await getAllTransactions()
+      console.log("  Fetched transactions:", transactions.length)
 
-    // Group by category
-    const categoryMap = new Map<string, { name: string; total: number; count: number; transactions: number[] }>()
+      // Filter by date range
+      const filtered = transactions.filter((t: Transaction) => {
+        const date = new Date(t.date_string)
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+        return date >= start && date <= end
+      })
 
-    filtered.forEach((t: Transaction) => {
-      const categoryName = t.category?.name || "Uncategorized"
-      const existing = categoryMap.get(categoryName)
+      // Group by category
+      const categoryMap = new Map<string, { name: string; total: number; count: number; transactions: number[] }>()
 
-      if (existing) {
-        existing.total += t.amount_number
-        existing.count += 1
-        existing.transactions.push(t.amount_number)
-      } else {
-        categoryMap.set(categoryName, {
-          name: categoryName,
-          total: t.amount_number,
-          count: 1,
-          transactions: [t.amount_number],
-        })
-      }
-    })
+      filtered.forEach((t: Transaction) => {
+        const categoryName = t.category?.name || "Uncategorized"
+        const existing = categoryMap.get(categoryName)
 
-    // Convert to array and sort
-    const categoryData = Array.from(categoryMap.values())
-    categoryData.sort((a, b) => {
-      if (sortBy === "amount") {
-        return b.total - a.total
-      }
-      return b.count - a.count
-    })
+        if (existing) {
+          existing.total += t.amount_number
+          existing.count += 1
+          existing.transactions.push(t.amount_number)
+        } else {
+          categoryMap.set(categoryName, {
+            name: categoryName,
+            total: t.amount_number,
+            count: 1,
+            transactions: [t.amount_number],
+          })
+        }
+      })
 
-    // Return top N categories
-    return categoryData.slice(0, limit).map((c) => ({
-      category: c.name,
-      totalSpent: Number(c.total.toFixed(2)),
-      transactionCount: c.count,
-      averageTransaction: Number((c.total / c.count).toFixed(2)),
-    }))
+      // Convert to array and sort
+      const categoryData = Array.from(categoryMap.values())
+      categoryData.sort((a, b) => {
+        if (sortBy === "amount") {
+          return b.total - a.total
+        }
+        return b.count - a.count
+      })
+
+      // Return top N categories
+      const result = categoryData.slice(0, limit).map((c) => ({
+        category: c.name,
+        totalSpent: Number(c.total.toFixed(2)),
+        transactionCount: c.count,
+        averageTransaction: Number((c.total / c.count).toFixed(2)),
+      }))
+
+      console.log("  Returning result:", result.length, "categories")
+      return result
+    } catch (error) {
+      console.error("  ❌ ERROR in getSpendingByCategory:", error)
+      throw error
+    }
   },
 })
 
@@ -205,37 +217,49 @@ export const getTotalSpending = tool({
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
   }),
   execute: async ({ startDate, endDate }: { startDate: string; endDate: string }) => {
-    const transactions = await getAllTransactions()
+    console.log("\n💰 [getTotalSpending] EXECUTING")
+    console.log("  Input:", { startDate, endDate })
 
-    // Filter by date range
-    const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string)
-      const start = new Date(startDate)
-      const end = new Date(endDate)
-      return date >= start && date <= end
-    })
+    try {
+      const transactions = await getAllTransactions()
+      console.log("  Fetched transactions:", transactions.length)
 
-    // Calculate totals (negative = expense, positive = income)
-    let totalExpenses = 0
-    let totalIncome = 0
+      // Filter by date range
+      const filtered = transactions.filter((t: Transaction) => {
+        const date = new Date(t.date_string)
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+        return date >= start && date <= end
+      })
 
-    filtered.forEach((t: Transaction) => {
-      if (t.amount_number < 0) {
-        totalExpenses += Math.abs(t.amount_number)
-      } else {
-        totalIncome += t.amount_number
+      // Calculate totals (negative = expense, positive = income)
+      let totalExpenses = 0
+      let totalIncome = 0
+
+      filtered.forEach((t: Transaction) => {
+        if (t.amount_number < 0) {
+          totalExpenses += Math.abs(t.amount_number)
+        } else {
+          totalIncome += t.amount_number
+        }
+      })
+
+      const result = {
+        totalExpenses: Number(totalExpenses.toFixed(2)),
+        totalIncome: Number(totalIncome.toFixed(2)),
+        netAmount: Number((totalIncome - totalExpenses).toFixed(2)),
+        transactionCount: filtered.length,
+        dateRange: {
+          start: startDate,
+          end: endDate,
+        },
       }
-    })
 
-    return {
-      totalExpenses: Number(totalExpenses.toFixed(2)),
-      totalIncome: Number(totalIncome.toFixed(2)),
-      netAmount: Number((totalIncome - totalExpenses).toFixed(2)),
-      transactionCount: filtered.length,
-      dateRange: {
-        start: startDate,
-        end: endDate,
-      },
+      console.log("  Returning result:", result)
+      return result
+    } catch (error) {
+      console.error("  ❌ ERROR in getTotalSpending:", error)
+      throw error
     }
   },
 })
@@ -361,8 +385,13 @@ export const renderChart = tool({
     yAxisLabel?: string
     formatValue?: "currency" | "number" | "percentage"
   }) => {
+    console.log("\n📊 [renderChart] EXECUTING")
+    console.log("  Type:", type)
+    console.log("  Title:", title)
+    console.log("  Data points:", data.length)
+
     // Return the chart configuration for the frontend to render
-    return {
+    const result = {
       type,
       title,
       description,
@@ -371,6 +400,9 @@ export const renderChart = tool({
       yAxisLabel,
       formatValue,
     }
+
+    console.log("  Returning chart config:", JSON.stringify(result, null, 2))
+    return result
   },
 })
 

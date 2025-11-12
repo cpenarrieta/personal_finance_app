@@ -31,15 +31,15 @@ export function ChatPageClient() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] flex-col">
+    <div className="flex flex-col h-[calc(100vh-9rem)]">
       {/* Header */}
-      <div className="mb-4">
+      <div className="mb-4 shrink-0">
         <h1 className="text-2xl font-semibold text-foreground">AI Transaction Insights</h1>
         <p className="text-sm text-muted-foreground">Ask me anything about your spending and transactions</p>
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto rounded-lg border border-border bg-background p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center space-y-4">
@@ -94,7 +94,7 @@ export function ChatPageClient() {
               // Find chart tool calls with output
               const chartCalls = message.parts.filter((part) => {
                 const partType = part.type as string
-                return partType === "tool-renderChart-output-available" && "output" in part
+                return partType.includes("renderChart") && "output" in part
               })
 
               return (
@@ -166,7 +166,7 @@ export function ChatPageClient() {
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2 shrink-0">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
