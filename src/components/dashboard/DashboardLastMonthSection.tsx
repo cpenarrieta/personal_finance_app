@@ -31,13 +31,24 @@ function ChartSkeleton() {
  * Server Component for Last Month Overview section header
  * Shows header immediately while charts stream in independently
  */
-export async function DashboardLastMonthSection({ monthsBack = 1 }: DashboardLastMonthSectionProps) {
+export async function DashboardLastMonthSection({ monthsBack = 0 }: DashboardLastMonthSectionProps) {
   // Generate period labels
-  const periodLabel = monthsBack === 1 ? "Last Month Overview" : `Last ${monthsBack} Months Overview`
   const now = new Date()
-  const endMonth = format(subMonths(now, 1), "MMMM yyyy")
-  const startMonth = format(startOfMonth(subMonths(now, monthsBack)), "MMMM yyyy")
-  const subtitle = monthsBack === 1 ? `${endMonth} Financial Analysis` : `${startMonth} - ${endMonth} Financial Analysis`
+  let periodLabel: string
+  let subtitle: string
+
+  if (monthsBack === 0) {
+    periodLabel = "Current Month Overview"
+    subtitle = `${format(now, "MMMM yyyy")} Financial Analysis`
+  } else if (monthsBack === 1) {
+    periodLabel = "Last Month Overview"
+    subtitle = `${format(subMonths(now, 1), "MMMM yyyy")} Financial Analysis`
+  } else {
+    periodLabel = `Last ${monthsBack} Months Overview`
+    const endMonth = format(subMonths(now, 1), "MMMM yyyy")
+    const startMonth = format(startOfMonth(subMonths(now, monthsBack)), "MMMM yyyy")
+    subtitle = `${startMonth} - ${endMonth} Financial Analysis`
+  }
 
   return (
     <div className="space-y-4">

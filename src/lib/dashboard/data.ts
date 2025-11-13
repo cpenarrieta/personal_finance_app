@@ -248,14 +248,21 @@ export async function getRecentTransactions(limit = 20) {
 
 /**
  * Get date range for the last N full months
- * @param monthsBack Number of full months to go back (1, 2, 3, or 6)
+ * @param monthsBack Number of full months to go back (0 = current month, 1, 2, 3, or 6)
  * @returns Start and end dates for the period
  */
-export function getLastMonthDateRange(monthsBack: number = 1) {
+export function getLastMonthDateRange(monthsBack: number = 0) {
   const now = new Date()
-  // Start from the beginning of N months ago
+
+  if (monthsBack === 0) {
+    // Current month: from start of current month to today
+    const periodStart = dateStartOfMonth(now)
+    const periodEnd = now
+    return { lastMonthStart: periodStart, lastMonthEnd: periodEnd }
+  }
+
+  // Last N full months: from beginning of N months ago to end of last month
   const periodStart = dateStartOfMonth(subMonths(now, monthsBack))
-  // End at the end of last month
   const periodEnd = endOfMonth(subMonths(now, 1))
 
   return { lastMonthStart: periodStart, lastMonthEnd: periodEnd }
@@ -264,9 +271,9 @@ export function getLastMonthDateRange(monthsBack: number = 1) {
 /**
  * Get statistics for the last N full months (spending, income, and transactions)
  * Uses a single optimized raw SQL query for spending and income
- * @param monthsBack Number of full months to include (1, 2, 3, or 6)
+ * @param monthsBack Number of full months to include (0 = current month, 1, 2, 3, or 6)
  */
-export async function getLastMonthStats(monthsBack: number = 1) {
+export async function getLastMonthStats(monthsBack: number = 0) {
   "use cache"
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
@@ -363,10 +370,10 @@ export async function getLastMonthStats(monthsBack: number = 1) {
 
 /**
  * Get top expensive transactions from the last N full months
- * @param monthsBack Number of full months to include (1, 2, 3, or 6)
+ * @param monthsBack Number of full months to include (0 = current month, 1, 2, 3, or 6)
  * @param limit Maximum number of transactions to return
  */
-export async function getTopExpensiveTransactions(monthsBack: number = 1, limit = 25) {
+export async function getTopExpensiveTransactions(monthsBack: number = 0, limit = 25) {
   "use cache"
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
@@ -477,22 +484,37 @@ export async function hasConnectedAccounts() {
 
 /**
  * Get stats with trends comparing current period to previous period
- * @param monthsBack Number of full months to include (1, 2, 3, or 6)
+ * @param monthsBack Number of full months to include (0 = current month, 1, 2, 3, or 6)
  */
-export async function getStatsWithTrends(monthsBack: number = 1) {
+export async function getStatsWithTrends(monthsBack: number = 0) {
   "use cache"
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions", "dashboard")
 
   const now = new Date()
 
-  // Current period
-  const currentPeriodStart = dateStartOfMonth(subMonths(now, monthsBack))
-  const currentPeriodEnd = endOfMonth(subMonths(now, 1))
+  let currentPeriodStart: Date
+  let currentPeriodEnd: Date
+  let previousPeriodStart: Date
+  let previousPeriodEnd: Date
 
-  // Previous period (same length)
-  const previousPeriodStart = dateStartOfMonth(subMonths(now, monthsBack * 2))
-  const previousPeriodEnd = endOfMonth(subMonths(now, monthsBack + 1))
+  if (monthsBack === 0) {
+    // Current month: from start of current month to today
+    currentPeriodStart = dateStartOfMonth(now)
+    currentPeriodEnd = now
+
+    // Previous period: last full month
+    previousPeriodStart = dateStartOfMonth(subMonths(now, 1))
+    previousPeriodEnd = endOfMonth(subMonths(now, 1))
+  } else {
+    // Last N full months
+    currentPeriodStart = dateStartOfMonth(subMonths(now, monthsBack))
+    currentPeriodEnd = endOfMonth(subMonths(now, 1))
+
+    // Previous period (same length)
+    previousPeriodStart = dateStartOfMonth(subMonths(now, monthsBack * 2))
+    previousPeriodEnd = endOfMonth(subMonths(now, monthsBack + 1))
+  }
 
   // Get stats for both periods
   const [currentStats, previousStats] = await Promise.all([

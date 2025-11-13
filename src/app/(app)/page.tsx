@@ -39,8 +39,8 @@ export default async function Page({ searchParams }: PageProps) {
 
   // Parse month filter from searchParams
   const params = await searchParams
-  const monthsParam = params.months || "1"
-  const monthsBack = ["1", "2", "3", "6"].includes(monthsParam) ? parseInt(monthsParam, 10) : 1
+  const monthsParam = params.months || "0"
+  const monthsBack = ["0", "1", "2", "3", "6"].includes(monthsParam) ? parseInt(monthsParam, 10) : 0
 
   return (
     <div className="space-y-6">

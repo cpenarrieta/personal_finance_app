@@ -15,7 +15,7 @@ interface DashboardMetricsSectionProps {
  * Displays all 6 metric cards (balance, investments, spending, income, net, transaction count)
  * Fetches data independently with "use cache" and error handling
  */
-export async function DashboardMetricsSection({ monthsBack = 1 }: DashboardMetricsSectionProps) {
+export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetricsSectionProps) {
   try {
     const [{ accounts, holdings }, statsWithTrends, { uncategorizedCount }] = await Promise.all([
       getDashboardMetrics(),
@@ -30,11 +30,22 @@ export async function DashboardMetricsSection({ monthsBack = 1 }: DashboardMetri
     const netIncome = current.income - current.spending
 
     // Generate period labels
-    const periodLabel = monthsBack === 1 ? "Last Month" : `Last ${monthsBack} Months`
     const now = new Date()
-    const endMonth = format(subMonths(now, 1), "MMM yyyy")
-    const startMonth = format(startOfMonth(subMonths(now, monthsBack)), "MMM yyyy")
-    const subtitle = monthsBack === 1 ? endMonth : `${startMonth} - ${endMonth}`
+    let periodLabel: string
+    let subtitle: string
+
+    if (monthsBack === 0) {
+      periodLabel = "Current Month"
+      subtitle = format(now, "MMM yyyy")
+    } else if (monthsBack === 1) {
+      periodLabel = "Last Month"
+      subtitle = format(subMonths(now, 1), "MMM yyyy")
+    } else {
+      periodLabel = `Last ${monthsBack} Months`
+      const endMonth = format(subMonths(now, 1), "MMM yyyy")
+      const startMonth = format(startOfMonth(subMonths(now, monthsBack)), "MMM yyyy")
+      subtitle = `${startMonth} - ${endMonth}`
+    }
 
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

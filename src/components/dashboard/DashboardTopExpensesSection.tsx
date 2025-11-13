@@ -11,17 +11,31 @@ interface DashboardTopExpensesSectionProps {
  * Async Server Component for Top Expenses
  * Fetches top expensive transactions independently with "use cache" and error handling
  */
-export async function DashboardTopExpensesSection({ monthsBack = 1 }: DashboardTopExpensesSectionProps) {
+export async function DashboardTopExpensesSection({ monthsBack = 0 }: DashboardTopExpensesSectionProps) {
   try {
     const topExpensiveTransactions = await getTopExpensiveTransactions(monthsBack, 25)
 
     // Generate period labels
     const now = new Date()
-    const endMonth = format(subMonths(now, 1), "MMMM yyyy")
-    const startMonth = format(startOfMonth(subMonths(now, monthsBack)), "MMMM yyyy")
-    const periodLabel = monthsBack === 1 ? endMonth : `${startMonth} - ${endMonth}`
-    const title = `Top Expenses ${periodLabel}`
-    const subtitle = `Most expensive transactions in ${periodLabel.toLowerCase()}`
+    let periodLabel: string
+    let title: string
+    let subtitle: string
+
+    if (monthsBack === 0) {
+      periodLabel = format(now, "MMMM yyyy")
+      title = `Top Expenses ${periodLabel}`
+      subtitle = `Most expensive transactions in ${periodLabel.toLowerCase()}`
+    } else if (monthsBack === 1) {
+      periodLabel = format(subMonths(now, 1), "MMMM yyyy")
+      title = `Top Expenses ${periodLabel}`
+      subtitle = `Most expensive transactions in ${periodLabel.toLowerCase()}`
+    } else {
+      const endMonth = format(subMonths(now, 1), "MMMM yyyy")
+      const startMonth = format(startOfMonth(subMonths(now, monthsBack)), "MMMM yyyy")
+      periodLabel = `${startMonth} - ${endMonth}`
+      title = `Top Expenses ${periodLabel}`
+      subtitle = `Most expensive transactions in ${periodLabel.toLowerCase()}`
+    }
 
     return (
       <div className="space-y-4">
