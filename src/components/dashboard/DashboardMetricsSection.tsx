@@ -84,7 +84,7 @@ export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetri
         />
         <MetricCard
           title="Net Income"
-          value={`${netIncome >= 0 ? "+" : ""}$${formatAmount(Math.abs(netIncome))}`}
+          value={`${netIncome >= 0 ? "+" : "-"}$${formatAmount(Math.abs(netIncome))}`}
           subtitle={subtitle}
           icon={PiggyBank}
           valueClassName={netIncome >= 0 ? "text-success" : "text-destructive"}
