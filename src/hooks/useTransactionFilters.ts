@@ -120,7 +120,14 @@ export function useTransactionFilters({
       }
       case "custom":
         if (customStartDate && customEndDate) {
-          return { start: new Date(customStartDate), end: new Date(customEndDate) }
+          // Parse dates at midnight local time (not UTC) to avoid timezone shifts
+          const startParts = customStartDate.split("-").map(Number)
+          const endParts = customEndDate.split("-").map(Number)
+
+          const start = new Date(startParts[0]!, startParts[1]! - 1, startParts[2]!, 0, 0, 0, 0)
+          const end = new Date(endParts[0]!, endParts[1]! - 1, endParts[2]!, 23, 59, 59, 999)
+
+          return { start, end }
         }
         return null
       case "all":
@@ -226,6 +233,8 @@ export function useTransactionFilters({
   const hasActiveFilters = useMemo(() => {
     const baseFilters =
       dateRange !== defaultDateRange ||
+      customStartDate !== "" ||
+      customEndDate !== "" ||
       selectedCategoryIds.size > 0 ||
       selectedSubcategoryIds.size > 0 ||
       excludedCategoryIds.size > 0 ||
@@ -242,6 +251,8 @@ export function useTransactionFilters({
     return baseFilters || optionalFilters
   }, [
     dateRange,
+    customStartDate,
+    customEndDate,
     selectedCategoryIds,
     selectedSubcategoryIds,
     excludedCategoryIds,

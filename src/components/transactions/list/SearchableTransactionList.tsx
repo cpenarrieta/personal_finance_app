@@ -324,12 +324,19 @@ export function SearchableTransactionList({
                     />
                   </svg>
                   {filters.customStartDate && filters.customEndDate
-                    ? `${format(
-                        new Date(filters.customStartDate),
-                        "PP",
-                      )} - ${format(new Date(filters.customEndDate), "PP")}`
+                    ? (() => {
+                        // Parse dates at midnight local time to avoid timezone shifts
+                        const parseLocalDate = (dateStr: string) => {
+                          const parts = dateStr.split("-").map(Number)
+                          return new Date(parts[0]!, parts[1]! - 1, parts[2]!)
+                        }
+                        return `${format(parseLocalDate(filters.customStartDate), "PP")} - ${format(parseLocalDate(filters.customEndDate), "PP")}`
+                      })()
                     : filters.customStartDate
-                      ? `${format(new Date(filters.customStartDate), "PP")} - End date`
+                      ? (() => {
+                          const parts = filters.customStartDate.split("-").map(Number)
+                          return `${format(new Date(parts[0]!, parts[1]! - 1, parts[2]!), "PP")} - End date`
+                        })()
                       : "Select date range"}
                 </Button>
               </PopoverTrigger>
@@ -338,15 +345,30 @@ export function SearchableTransactionList({
                   mode="range"
                   selected={
                     filters.customStartDate || filters.customEndDate
-                      ? {
-                          from: filters.customStartDate ? new Date(filters.customStartDate) : undefined,
-                          to: filters.customEndDate ? new Date(filters.customEndDate) : undefined,
-                        }
+                      ? (() => {
+                          // Parse dates at midnight local time to avoid timezone shifts
+                          const parseLocalDate = (dateStr: string) => {
+                            const parts = dateStr.split("-").map(Number)
+                            return new Date(parts[0]!, parts[1]! - 1, parts[2]!)
+                          }
+                          return {
+                            from: filters.customStartDate ? parseLocalDate(filters.customStartDate) : undefined,
+                            to: filters.customEndDate ? parseLocalDate(filters.customEndDate) : undefined,
+                          }
+                        })()
                       : undefined
                   }
                   onSelect={(range) => {
-                    filters.setCustomStartDate(range?.from ? format(range.from, "yyyy-MM-dd") : "")
-                    filters.setCustomEndDate(range?.to ? format(range.to, "yyyy-MM-dd") : "")
+                    // Format dates to yyyy-MM-dd in local timezone to avoid timezone shifts
+                    const formatLocalDate = (date: Date) => {
+                      const year = date.getFullYear()
+                      const month = String(date.getMonth() + 1).padStart(2, "0")
+                      const day = String(date.getDate()).padStart(2, "0")
+                      return `${year}-${month}-${day}`
+                    }
+
+                    filters.setCustomStartDate(range?.from ? formatLocalDate(range.from) : "")
+                    filters.setCustomEndDate(range?.to ? formatLocalDate(range.to) : "")
                   }}
                   numberOfMonths={2}
                   weekStartsOn={1}
