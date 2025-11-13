@@ -1,22 +1,16 @@
-import { UncategorizedTransactionsSection } from "@/components/dashboard/UncategorizedTransactionsSection"
+import { UncategorizedBanner } from "@/components/dashboard/UncategorizedBanner"
 import { getUncategorizedTransactions } from "@/lib/dashboard/data"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 
 /**
- * Async Server Component for Uncategorized Transactions
- * Fetches uncategorized transactions independently with "use cache" and error handling
+ * Async Server Component for Uncategorized Transactions Banner
+ * Fetches uncategorized count independently with "use cache" and error handling
  */
 export async function DashboardUncategorizedSection() {
   try {
-    const { uncategorizedCount, uncategorizedTransactions } = await getUncategorizedTransactions()
+    const { uncategorizedCount } = await getUncategorizedTransactions()
 
-    return (
-      <UncategorizedTransactionsSection
-        count={uncategorizedCount}
-        transactions={uncategorizedTransactions}
-        displayLimit={10}
-      />
-    )
+    return <UncategorizedBanner count={uncategorizedCount} />
   } catch (error) {
     console.error("Failed to load uncategorized transactions:", error)
     return (

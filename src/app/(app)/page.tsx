@@ -7,8 +7,6 @@ import { hasConnectedAccounts } from "@/lib/dashboard/data"
 
 // Async Server Components
 import { DashboardMetricsSection } from "@/components/dashboard/DashboardMetricsSection"
-import { DashboardUncategorizedSection } from "@/components/dashboard/DashboardUncategorizedSection"
-import { DashboardRecentTransactionsSection } from "@/components/dashboard/DashboardRecentTransactionsSection"
 import { DashboardLastMonthSection } from "@/components/dashboard/DashboardLastMonthSection"
 import { DashboardTopExpensesSection } from "@/components/dashboard/DashboardTopExpensesSection"
 import { MonthFilter } from "@/components/dashboard/MonthFilter"
@@ -16,10 +14,9 @@ import { MonthFilter } from "@/components/dashboard/MonthFilter"
 // Skeleton loaders
 import {
   MetricCardsSkeleton,
-  UncategorizedSectionSkeleton,
-  TransactionTableSkeleton,
   ChartsSkeleton,
   SectionSkeleton,
+  TransactionTableSkeleton,
 } from "@/components/dashboard/DashboardSkeletons"
 
 export const metadata: Metadata = {
@@ -51,20 +48,6 @@ export default async function Page({ searchParams }: PageProps) {
 
       <Suspense fallback={<MetricCardsSkeleton />}>
         <DashboardMetricsSection monthsBack={monthsBack} />
-      </Suspense>
-
-      <Suspense fallback={<UncategorizedSectionSkeleton />}>
-        <DashboardUncategorizedSection />
-      </Suspense>
-
-      <Suspense
-        fallback={
-          <SectionSkeleton title subtitle button>
-            <TransactionTableSkeleton rows={20} />
-          </SectionSkeleton>
-        }
-      >
-        <DashboardRecentTransactionsSection />
       </Suspense>
 
       <Suspense

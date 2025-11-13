@@ -1,7 +1,7 @@
 import { formatAmount } from "@/lib/utils"
-import { Wallet, TrendingUp, ArrowUpCircle, ArrowDownCircle, PiggyBank } from "lucide-react"
+import { Wallet, TrendingUp, ArrowUpCircle, ArrowDownCircle, PiggyBank, Receipt } from "lucide-react"
 import { MetricCard } from "@/components/shared/MetricCard"
-import { getDashboardMetrics, getLastMonthStats } from "@/lib/dashboard/data"
+import { getDashboardMetrics, getStatsWithTrends, getUncategorizedTransactions } from "@/lib/dashboard/data"
 import { calculateTotalBalance, calculateInvestmentValue } from "@/lib/dashboard/calculations"
 import { format, subMonths, startOfMonth } from "date-fns"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
@@ -12,17 +12,22 @@ interface DashboardMetricsSectionProps {
 
 /**
  * Async Server Component for Dashboard Metrics
- * Displays all 5 metric cards (balance, investments, spending, income, net)
+ * Displays all 6 metric cards (balance, investments, spending, income, net, transaction count)
  * Fetches data independently with "use cache" and error handling
  */
 export async function DashboardMetricsSection({ monthsBack = 1 }: DashboardMetricsSectionProps) {
   try {
-    const [{ accounts, holdings }, { totalLastMonthSpending, totalLastMonthIncome }] =
-      await Promise.all([getDashboardMetrics(), getLastMonthStats(monthsBack)])
+    const [{ accounts, holdings }, statsWithTrends, { uncategorizedCount }] = await Promise.all([
+      getDashboardMetrics(),
+      getStatsWithTrends(monthsBack),
+      getUncategorizedTransactions(),
+    ])
 
     const totalCurrent = calculateTotalBalance(accounts)
     const totalInvestmentValue = calculateInvestmentValue(holdings)
-    const netIncome = totalLastMonthIncome - totalLastMonthSpending
+
+    const { current } = statsWithTrends
+    const netIncome = current.income - current.spending
 
     // Generate period labels
     const periodLabel = monthsBack === 1 ? "Last Month" : `Last ${monthsBack} Months`
@@ -32,7 +37,7 @@ export async function DashboardMetricsSection({ monthsBack = 1 }: DashboardMetri
     const subtitle = monthsBack === 1 ? endMonth : `${startMonth} - ${endMonth}`
 
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <MetricCard
           title="Total Balance"
           value={`$${formatAmount(totalCurrent)}`}
@@ -46,14 +51,22 @@ export async function DashboardMetricsSection({ monthsBack = 1 }: DashboardMetri
           icon={TrendingUp}
         />
         <MetricCard
+          title={`${periodLabel} Transactions`}
+          value={current.transactionCount}
+          subtitle={subtitle}
+          icon={Receipt}
+          uncategorizedCount={uncategorizedCount}
+          href="/transactions"
+        />
+        <MetricCard
           title={`${periodLabel} Spending`}
-          value={`$${formatAmount(totalLastMonthSpending)}`}
+          value={`$${formatAmount(current.spending)}`}
           subtitle={subtitle}
           icon={ArrowDownCircle}
         />
         <MetricCard
           title={`${periodLabel} Income`}
-          value={`$${formatAmount(totalLastMonthIncome)}`}
+          value={`$${formatAmount(current.income)}`}
           subtitle={subtitle}
           icon={ArrowUpCircle}
           valueClassName="text-success"

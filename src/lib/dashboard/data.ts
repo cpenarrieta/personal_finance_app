@@ -474,3 +474,79 @@ export async function hasConnectedAccounts() {
   const itemsCount = await prisma.item.count()
   return itemsCount > 0
 }
+
+/**
+ * Get stats with trends comparing current period to previous period
+ * @param monthsBack Number of full months to include (1, 2, 3, or 6)
+ */
+export async function getStatsWithTrends(monthsBack: number = 1) {
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions", "dashboard")
+
+  const now = new Date()
+
+  // Current period
+  const currentPeriodStart = dateStartOfMonth(subMonths(now, monthsBack))
+  const currentPeriodEnd = endOfMonth(subMonths(now, 1))
+
+  // Previous period (same length)
+  const previousPeriodStart = dateStartOfMonth(subMonths(now, monthsBack * 2))
+  const previousPeriodEnd = endOfMonth(subMonths(now, monthsBack + 1))
+
+  // Get stats for both periods
+  const [currentStats, previousStats] = await Promise.all([
+    prisma.$queryRaw<
+      Array<{
+        total_spending: number | null
+        total_income: number | null
+        transaction_count: bigint
+      }>
+    >`
+      SELECT
+        CAST(SUM(CASE WHEN t.amount_number < 0 THEN ABS(t.amount_number) ELSE 0 END) AS double precision) as total_spending,
+        CAST(SUM(CASE WHEN t.amount_number > 0 THEN t.amount_number ELSE 0 END) AS double precision) as total_income,
+        COUNT(*) as transaction_count
+      FROM "Transaction" t
+      LEFT JOIN "Category" c ON t."categoryId" = c.id
+      WHERE t.date >= ${currentPeriodStart}
+        AND t.date < ${currentPeriodEnd}
+        AND t."isSplit" = false
+        AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+    `,
+    prisma.$queryRaw<
+      Array<{
+        total_spending: number | null
+        total_income: number | null
+        transaction_count: bigint
+      }>
+    >`
+      SELECT
+        CAST(SUM(CASE WHEN t.amount_number < 0 THEN ABS(t.amount_number) ELSE 0 END) AS double precision) as total_spending,
+        CAST(SUM(CASE WHEN t.amount_number > 0 THEN t.amount_number ELSE 0 END) AS double precision) as total_income,
+        COUNT(*) as transaction_count
+      FROM "Transaction" t
+      LEFT JOIN "Category" c ON t."categoryId" = c.id
+      WHERE t.date >= ${previousPeriodStart}
+        AND t.date < ${previousPeriodEnd}
+        AND t."isSplit" = false
+        AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+    `,
+  ])
+
+  const current = currentStats[0]
+  const previous = previousStats[0]
+
+  return {
+    current: {
+      spending: Number(current?.total_spending || 0),
+      income: Number(current?.total_income || 0),
+      transactionCount: Number(current?.transaction_count || 0),
+    },
+    previous: {
+      spending: Number(previous?.total_spending || 0),
+      income: Number(previous?.total_income || 0),
+      transactionCount: Number(previous?.transaction_count || 0),
+    },
+  }
+}

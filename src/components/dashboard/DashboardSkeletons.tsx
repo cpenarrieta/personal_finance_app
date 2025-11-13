@@ -2,12 +2,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 /**
- * Skeleton for metric cards (5 cards in grid)
+ * Skeleton for metric cards (6 cards in 3-column grid)
  */
 export function MetricCardsSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-      {Array.from({ length: 5 }).map((_, i) => (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
         <Card key={i}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <Skeleton className="h-4 w-24" />
@@ -24,28 +24,20 @@ export function MetricCardsSkeleton() {
 }
 
 /**
- * Skeleton for uncategorized transactions section
+ * Skeleton for uncategorized banner
  */
 export function UncategorizedSectionSkeleton() {
   return (
-    <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-64" />
-          <Skeleton className="h-4 w-80" />
-        </div>
-        <Skeleton className="h-10 w-32" />
-      </div>
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex justify-between items-center py-2">
-            <div className="space-y-1">
-              <Skeleton className="h-5 w-48" />
-              <Skeleton className="h-4 w-32" />
-            </div>
-            <Skeleton className="h-5 w-20" />
+    <div className="rounded-lg border p-4">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-4 w-4" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-5 w-64" />
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-80" />
+            <Skeleton className="h-8 w-32" />
           </div>
-        ))}
+        </div>
       </div>
     </div>
   )

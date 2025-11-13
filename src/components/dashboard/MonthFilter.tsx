@@ -32,7 +32,6 @@ export function MonthFilter() {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-muted-foreground">Time Period:</span>
       <Tabs value={currentMonths} onValueChange={handleMonthChange}>
         <TabsList>
           {MONTH_OPTIONS.map((option) => (
