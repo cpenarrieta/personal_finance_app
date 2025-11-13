@@ -232,7 +232,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
   return (
     <div className="space-y-4 overflow-hidden">
       {/* Controls */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-card p-4 rounded-lg shadow-sm border overflow-hidden">
         <h2 className="text-lg font-semibold mb-3">Filters & Controls</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -298,12 +298,12 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
       {/* Portfolio Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 overflow-hidden">
-        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-card p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Portfolio Value</div>
           <div className="text-2xl font-bold text-foreground">${formatAmount(portfolioStats.totalValue)}</div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-card p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Total Gain/Loss</div>
           <div
             className={`text-2xl font-bold ${portfolioStats.totalGainLoss >= 0 ? "text-success" : "text-destructive"}`}
@@ -316,7 +316,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-card p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Best Performer</div>
           {portfolioStats.bestPerformer ? (
             <>
@@ -328,7 +328,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           )}
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-card p-4 rounded-lg shadow-sm border overflow-hidden">
           <div className="text-sm text-muted-foreground mb-1">Worst Performer</div>
           {portfolioStats.worstPerformer ? (
             <>
@@ -347,7 +347,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
       {/* Allocation Chart */}
       {allocationData.length > 0 && (
-        <div className="bg-white p-4 rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-card p-4 rounded-lg shadow-sm border overflow-hidden">
           <h3 className="text-lg font-semibold mb-3">Portfolio Allocation</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
             <div className="flex justify-center">
@@ -394,7 +394,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
       )}
 
       {/* Holdings Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-card rounded-lg shadow-sm border overflow-hidden">
         <div className="p-4 border-b">
           <h3 className="text-lg font-semibold">Holdings</h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -447,7 +447,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-border">
+            <tbody className="bg-card divide-y divide-border">
               {sortedHoldings.map((holding) => (
                 <tr key={holding.id} className="hover:bg-muted/50">
                   <td className="px-3 py-3">
