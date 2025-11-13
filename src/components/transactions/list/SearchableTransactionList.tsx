@@ -254,7 +254,7 @@ export function SearchableTransactionList({
   return (
     <div className="space-y-4">
       {/* Search Bar - Full Width at Top */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
+      <div className="bg-card p-4 rounded-lg shadow-sm border">
         <div className="relative">
           <Input
             type="text"
@@ -292,7 +292,7 @@ export function SearchableTransactionList({
       </div>
 
       {/* Filters Section */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border space-y-4">
+      <div className="bg-card p-4 rounded-lg shadow-sm border space-y-4">
         {/* Primary Filters Row */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Date Range */}
@@ -397,13 +397,13 @@ export function SearchableTransactionList({
 
             {/* Dropdown Menu */}
             {filters.showCategoryDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
+              <div className="absolute top-full left-0 mt-1 w-80 bg-card border border-border rounded-md shadow-lg z-10 max-h-96 overflow-y-auto">
                 <div className="p-3">
-                  <div className="mb-3 pb-3 border-b border-gray-200">
+                  <div className="mb-3 pb-3 border-b border-border">
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Include Categories</h4>
                     {sortedCategories.map((category) => (
                       <div key={category.id} className="mb-2">
-                        <label className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <label className="flex items-center p-2 hover:bg-muted rounded cursor-pointer">
                           <Checkbox
                             checked={filters.selectedCategoryIds.has(category.id)}
                             onCheckedChange={() => toggleCategory(category.id)}
@@ -417,7 +417,7 @@ export function SearchableTransactionList({
                               {category.subcategories.map((sub) => (
                                 <label
                                   key={sub.id}
-                                  className="flex items-center p-1 hover:bg-gray-50 rounded cursor-pointer"
+                                  className="flex items-center p-1 hover:bg-muted rounded cursor-pointer"
                                 >
                                   <Checkbox
                                     checked={filters.selectedSubcategoryIds.has(sub.id)}
@@ -435,10 +435,7 @@ export function SearchableTransactionList({
                   <div>
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Exclude Categories</h4>
                     {sortedCategories.map((category) => (
-                      <label
-                        key={category.id}
-                        className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
-                      >
+                      <label key={category.id} className="flex items-center p-2 hover:bg-muted rounded cursor-pointer">
                         <Checkbox
                           checked={filters.excludedCategoryIds.has(category.id)}
                           onCheckedChange={() => toggleExcludedCategory(category.id)}
@@ -687,7 +684,7 @@ export function SearchableTransactionList({
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="bg-card p-4 rounded-lg shadow-sm border">
           <div className="text-sm text-muted-foreground mb-1">Total Income</div>
           <div className="text-2xl font-bold text-success">
             +$
@@ -695,7 +692,7 @@ export function SearchableTransactionList({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="bg-card p-4 rounded-lg shadow-sm border">
           <div className="text-sm text-muted-foreground mb-1">Total Expenses</div>
           <div className="text-2xl font-bold">
             -$
@@ -703,7 +700,7 @@ export function SearchableTransactionList({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
+        <div className="bg-card p-4 rounded-lg shadow-sm border">
           <div className="text-sm text-muted-foreground mb-1">Net Balance</div>
           <div className={`text-2xl font-bold ${totals.netBalance >= 0 ? "text-success" : "text-destructive"}`}>
             {totals.netBalance >= 0 ? "+" : ""}${formatAmount(Math.abs(totals.netBalance))}
@@ -738,7 +735,7 @@ export function SearchableTransactionList({
           />
 
           {/* Transaction List */}
-          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+          <div className="bg-card rounded-lg shadow-sm border overflow-hidden">
             {filteredTransactions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 {filters.searchQuery ? "No transactions found matching your search." : "No transactions found."}

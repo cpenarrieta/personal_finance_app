@@ -144,22 +144,22 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
           <TagSelector tags={tags} selectedTagIds={selectedTagIds} onToggleTag={toggleTag} />
 
           {/* Transaction Details (Read-only) */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Transaction Details</h3>
+          <div className="bg-muted rounded-lg p-4 space-y-2">
+            <h3 className="text-sm font-medium text-foreground mb-2">Transaction Details</h3>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-gray-600">Transaction ID:</div>
+              <div className="text-muted-foreground">Transaction ID:</div>
               <div className="font-medium font-mono text-xs">{transaction.id}</div>
-              <div className="text-gray-600">Amount:</div>
+              <div className="text-muted-foreground">Amount:</div>
               <div className="font-medium">${formatAmount(transaction.amount_number)}</div>
-              <div className="text-gray-600">Account:</div>
+              <div className="text-muted-foreground">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>
-              <div className="text-gray-600">Transaction Date:</div>
+              <div className="text-muted-foreground">Transaction Date:</div>
               <div className="font-medium">{format(new Date(transaction.date_string), "MMM d yyyy")}</div>
-              <div className="text-gray-600">Creation Date:</div>
+              <div className="text-muted-foreground">Creation Date:</div>
               <div className="font-medium">{format(new Date(transaction.created_at_string), "MMM d yyyy, h:mm a")}</div>
               {transaction.merchantName && (
                 <>
-                  <div className="text-gray-600">Merchant:</div>
+                  <div className="text-muted-foreground">Merchant:</div>
                   <div className="font-medium">{transaction.merchantName}</div>
                 </>
               )}

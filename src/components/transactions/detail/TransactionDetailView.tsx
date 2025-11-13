@@ -61,7 +61,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header Card */}
-      <div className="bg-white rounded-lg shadow-md border overflow-hidden">
+      <div className="bg-card rounded-lg shadow-md border overflow-hidden">
         {/* Header with Logo/Icon */}
         <div className="bg-primary p-6 text-primary-foreground">
           <div className="flex items-start gap-4">

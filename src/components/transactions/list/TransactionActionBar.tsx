@@ -43,7 +43,7 @@ export function TransactionActionBar({
   return (
     <>
       {/* Action Bar */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
+      <div className="bg-card p-4 rounded-lg shadow-sm border">
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             Showing {filteredTransactions.length} of {totalTransactions} transactions
@@ -72,7 +72,7 @@ export function TransactionActionBar({
           </div>
 
           {selectedTransactions.size > 0 && (
-            <div className="bg-white rounded-lg p-4 mb-4">
+            <div className="bg-card rounded-lg p-4 mb-4">
               <p className="text-sm text-muted-foreground mb-3">
                 Selected {selectedTransactions.size} transaction
                 {selectedTransactions.size !== 1 ? "s" : ""}
