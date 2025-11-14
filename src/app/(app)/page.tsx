@@ -3,7 +3,12 @@ import { Suspense } from "react"
 import type { Metadata } from "next"
 
 // Dashboard modules
-import { hasConnectedAccounts } from "@/lib/dashboard/data"
+import {
+  hasConnectedAccounts,
+  getStatsWithTrends,
+  getTopExpensiveTransactions,
+  getLastMonthStats,
+} from "@/lib/dashboard/data"
 
 // Async Server Components
 import { DashboardMetricsSection } from "@/components/dashboard/DashboardMetricsSection"
@@ -41,6 +46,27 @@ export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams
   const monthsParam = params.months || "0"
   const monthsBack = ["0", "1", "2", "3", "6"].includes(monthsParam) ? parseInt(monthsParam, 10) : 0
+
+  // Pre-fetch data for all tabs on initial load to warm cache
+  // Fire-and-forget - don't await, best-effort cache warming
+  if (monthsBack === 0) {
+    Promise.all([
+      getStatsWithTrends(1),
+      getStatsWithTrends(2),
+      getStatsWithTrends(3),
+      getStatsWithTrends(6),
+      getTopExpensiveTransactions(1, 25),
+      getTopExpensiveTransactions(2, 25),
+      getTopExpensiveTransactions(3, 25),
+      getTopExpensiveTransactions(6, 25),
+      getLastMonthStats(1),
+      getLastMonthStats(2),
+      getLastMonthStats(3),
+      getLastMonthStats(6),
+    ]).catch(() => {
+      // Silently ignore errors - cache warming is best-effort
+    })
+  }
 
   return (
     <div className="space-y-6">
