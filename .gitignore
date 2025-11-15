@@ -60,3 +60,11 @@ logs/
 # Sentry
 .sentryclirc
 .sentry/
+
+# React Native / Expo
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/.expo-shared/
+mobile/android/
+mobile/ios/
