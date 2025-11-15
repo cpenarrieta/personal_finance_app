@@ -16,6 +16,7 @@ export interface TransactionSyncStats {
   transactionsAdded: number
   transactionsModified: number
   transactionsRemoved: number
+  newTransactionIds: string[] // IDs of newly added transactions for categorization
 }
 
 export interface InvestmentSyncStats {
@@ -203,6 +204,7 @@ export async function syncItemTransactions(
     transactionsAdded: 0,
     transactionsModified: 0,
     transactionsRemoved: 0,
+    newTransactionIds: [],
   }
 
   // First, if no cursor exists, do a historical fetch to get older data
@@ -265,7 +267,7 @@ export async function syncItemTransactions(
       console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
       console.log(`       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`)
 
-      await prisma.transaction.upsert({
+      const upsertedTransaction = await prisma.transaction.upsert({
         where: { plaidTransactionId: existing?.plaidTransactionId || t.transaction_id },
         update: {
           account: { connect: { plaidAccountId: t.account_id } },
@@ -276,10 +278,12 @@ export async function syncItemTransactions(
           account: { connect: { plaidAccountId: t.account_id } },
           ...transactionData,
         },
+        select: { id: true },
       })
 
       if (isNew) {
         stats.transactionsAdded++
+        stats.newTransactionIds.push(upsertedTransaction.id)
       }
     }
     console.log(`  ✓ Processed ${stats.transactionsAdded} new transaction(s)`)
@@ -354,7 +358,7 @@ export async function syncItemTransactions(
       console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
       console.log(`       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`)
 
-      await prisma.transaction.upsert({
+      const upsertedTransaction = await prisma.transaction.upsert({
         where: { plaidTransactionId: t.transaction_id },
         update: {
           account: { connect: { plaidAccountId: t.account_id } },
@@ -365,7 +369,10 @@ export async function syncItemTransactions(
           account: { connect: { plaidAccountId: t.account_id } },
           ...transactionData,
         },
+        select: { id: true },
       })
+
+      stats.newTransactionIds.push(upsertedTransaction.id)
     }
 
     // Modified transactions (e.g., pending -> posted)
@@ -569,6 +576,7 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
     transactionsAdded: 0,
     transactionsModified: 0,
     transactionsRemoved: 0,
+    newTransactionIds: [],
     securitiesAdded: 0,
     holdingsAdded: 0,
     holdingsUpdated: 0,
@@ -591,6 +599,7 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
       transactionsAdded: 0,
       transactionsModified: 0,
       transactionsRemoved: 0,
+      newTransactionIds: [],
       securitiesAdded: 0,
       holdingsAdded: 0,
       holdingsUpdated: 0,
@@ -634,6 +643,7 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
     totalStats.transactionsAdded += itemStats.transactionsAdded
     totalStats.transactionsModified += itemStats.transactionsModified
     totalStats.transactionsRemoved += itemStats.transactionsRemoved
+    totalStats.newTransactionIds.push(...itemStats.newTransactionIds)
     totalStats.securitiesAdded += itemStats.securitiesAdded
     totalStats.holdingsAdded += itemStats.holdingsAdded
     totalStats.holdingsUpdated += itemStats.holdingsUpdated

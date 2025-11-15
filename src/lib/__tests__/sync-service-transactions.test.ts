@@ -312,13 +312,14 @@ describe("syncItemTransactions - Basic Path", () => {
 
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
-      ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({})
+      ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({ id: "test-transaction-id" })
 
       // Act
       const result = await syncItemTransactions(itemId, accessToken, lastCursor)
 
       // Assert
       expect(result.stats.transactionsAdded).toBe(1)
+      expect(result.stats.newTransactionIds).toEqual(["test-transaction-id"])
       expect(prismaModule.prisma.transaction.upsert).toHaveBeenCalledWith({
         where: { plaidTransactionId: "new-transaction-id" },
         update: expect.objectContaining({
@@ -330,6 +331,7 @@ describe("syncItemTransactions - Basic Path", () => {
           name: "New Transaction",
           amount: expect.any(Prisma.Decimal),
         }),
+        select: { id: true },
       })
     })
   })
@@ -471,13 +473,14 @@ describe("syncItemTransactions - Basic Path", () => {
 
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
-      ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({})
+      ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({ id: "test-transaction-id" })
 
       // Act
       const result = await syncItemTransactions(itemId, accessToken, lastCursor)
 
       // Assert
       expect(result.stats.transactionsAdded).toBe(1)
+      expect(result.stats.newTransactionIds).toEqual(["test-transaction-id"])
       expect(prismaModule.prisma.transaction.upsert).toHaveBeenCalledWith({
         where: { plaidTransactionId: transactionWithNulls.transaction_id },
         update: expect.objectContaining({
@@ -494,6 +497,7 @@ describe("syncItemTransactions - Basic Path", () => {
           plaidCategory: null,
           plaidSubcategory: null,
         }),
+        select: { id: true },
       })
     })
   })

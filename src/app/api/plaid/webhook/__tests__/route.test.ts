@@ -14,6 +14,7 @@ import { POST } from "../route"
 import * as plaidModule from "@/lib/api/plaid"
 import * as prismaModule from "@/lib/db/prisma"
 import * as syncServiceModule from "@/lib/sync/sync-service"
+import * as aiCategorizationModule from "@/lib/ai/categorize-transaction"
 import * as nextCache from "next/cache"
 
 // Mock modules
@@ -27,6 +28,7 @@ jest.mock("@/lib/db/prisma", () => ({
   },
 }))
 jest.mock("@/lib/sync/sync-service")
+jest.mock("@/lib/ai/categorize-transaction")
 jest.mock("next/cache", () => ({
   revalidateTag: jest.fn(),
 }))
@@ -48,6 +50,7 @@ describe("Plaid Webhook API", () => {
     transactionsAdded: 5,
     transactionsModified: 2,
     transactionsRemoved: 1,
+    newTransactionIds: [],
   }
 
   beforeEach(() => {
@@ -65,6 +68,9 @@ describe("Plaid Webhook API", () => {
       stats: mockSyncStats,
       newCursor: "new-cursor",
     })
+
+    // Mock AI categorization
+    ;(aiCategorizationModule.categorizeAndApply as jest.Mock).mockResolvedValue(undefined)
 
     // Suppress console logs during tests
     jest.spyOn(console, "log").mockImplementation()
