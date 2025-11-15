@@ -1,7 +1,7 @@
 /**
  * Login screen with OAuth providers
  */
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   View,
   Text,

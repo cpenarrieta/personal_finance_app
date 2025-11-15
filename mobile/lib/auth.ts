@@ -2,7 +2,6 @@
  * Authentication utilities for Better Auth OAuth
  */
 import * as WebBrowser from 'expo-web-browser'
-import * as AuthSession from 'expo-auth-session'
 import { config } from '../config'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 

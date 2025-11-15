@@ -30,3 +30,6 @@ pnpm-lock.yaml
 
 # OS files
 .DS_Store
+
+# React Native / Expo (separate project)
+mobile

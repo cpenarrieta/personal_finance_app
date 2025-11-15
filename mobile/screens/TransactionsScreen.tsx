@@ -1,7 +1,7 @@
 /**
  * Transactions list screen
  */
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  type ListRenderItem,
 } from 'react-native'
 import { fetchTransactions, signOut } from '../lib/auth'
 
@@ -203,7 +204,7 @@ export default function TransactionsScreen({ onLogout }: TransactionsScreenProps
       <FlatList
         data={transactions}
         renderItem={renderTransaction}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: Transaction) => item.id}
         contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl

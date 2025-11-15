@@ -2,7 +2,7 @@
  * Main app component
  * Handles authentication state and navigation
  */
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { ActivityIndicator, View, StyleSheet } from 'react-native'
 import LoginScreen from './screens/LoginScreen'
