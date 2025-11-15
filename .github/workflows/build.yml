@@ -3,9 +3,13 @@ name: Type Check and Build
 on:
   push:
     branches: [ "main" ]
-    
+
   pull_request:
     branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   # Check which files changed to conditionally run jobs
