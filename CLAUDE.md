@@ -198,7 +198,7 @@ Single-user app with email-gating. Only `ALLOWED_EMAILS` (env var) can access. B
 
 ## Important Rules
 
-- **Never run** `npm run dev` or `npm run categorize:gpt`
+- **Never run** `npm run dev`
 - **Migrations**: Use `migrate dev`, never `db push`. Always commit migration files
 - **Caching**: Queries use Next.js 16 `"use cache"` with `cacheTag()` for invalidation
 - **Async params**: Always `await params` in Next.js 16 pages

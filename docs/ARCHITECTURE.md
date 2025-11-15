@@ -25,7 +25,6 @@
 ### 4. Transaction Categorization
 - **Plaid categories**: Stored in `plaidCategory`, `plaidSubcategory` (reference only, not used)
 - **Custom**: User assigns via `categoryId`, `subcategoryId`
-- **AI**: `scripts/auto-categorize-gpt.ts` (GPT-4o-mini, batches of 20)
 
 ## Key Features
 
@@ -62,7 +61,7 @@ src/
 │   └── syncPrices.ts             # Alpha Vantage
 ├── types/                        # TypeScript types
 └── proxy.ts                      # Auth proxy (Next.js 16)
-scripts/                          # Sync, categorization scripts
+scripts/                          # Sync scripts
 prisma/                           # Schema and migrations
 ```
 
@@ -84,10 +83,3 @@ prisma/                           # Schema and migrations
 - **Balances**: Updated every sync
 - **Holdings**: Snapshot-based (deleted if not in Plaid response)
 - **Preserves**: User renames, custom prices (when Plaid = 0)
-
-### AI Categorization
-- **Model**: OpenAI GPT-4o-mini (JSON mode)
-- **Batches**: 20 transactions per batch
-- **Input**: Name, merchant, amount, Plaid categories, notes
-- **Confidence**: >50% to assign
-- **Script**: `scripts/auto-categorize-gpt.ts`

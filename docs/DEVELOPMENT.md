@@ -14,7 +14,7 @@ npx prisma generate                        # Generate Prisma Client
 npx prisma studio                          # Database GUI
 
 # Plaid Sync
-npm run sync                    # Incremental sync (NEVER run categorize:gpt)
+npm run sync                    # Incremental sync
 ```
 
 ## Environment (.env)
