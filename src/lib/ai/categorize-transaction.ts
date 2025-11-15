@@ -22,8 +22,6 @@ const CategorizationResultSchema = z.object({
   reasoning: z.string().describe("Brief explanation for the categorization decision"),
 })
 
-type CategorizationResult = z.infer<typeof CategorizationResultSchema>
-
 /**
  * Fetch transactions from the last 2 months for context
  */
@@ -129,7 +127,7 @@ async function getSimilarTransactions(
   })
 
   // Filter by amount tolerance
-  return similarTransactions.filter((t) => {
+  return similarTransactions.filter((t: { amount: Prisma.Decimal }) => {
     const diff = Math.abs(Math.abs(t.amount.toNumber()) - Math.abs(amountNum))
     return diff <= amountTolerance
   })
@@ -197,8 +195,8 @@ export async function categorizeTransaction(transactionId: string): Promise<{
 
     // Build prompt context
     const categoriesContext = categories
-      .map((cat) => {
-        const subs = cat.subcategories.map((s) => s.name).join(", ")
+      .map((cat: { name: string; subcategories: Array<{ name: string }> }) => {
+        const subs = cat.subcategories.map((s: { name: string }) => s.name).join(", ")
         return `${cat.name}: [${subs || "no subcategories"}]`
       })
       .join("\n")
@@ -206,10 +204,17 @@ export async function categorizeTransaction(transactionId: string): Promise<{
     const similarContext =
       similarTransactions.length > 0
         ? similarTransactions
-            .map((t) => {
-              const amt = Math.abs(t.amount.toNumber()).toFixed(2)
-              return `  - "${t.name}" | $${amt} | Category: ${t.category?.name || "N/A"}${t.subcategory ? ` > ${t.subcategory.name}` : ""}`
-            })
+            .map(
+              (t: {
+                name: string
+                amount: Prisma.Decimal
+                category: { name: string } | null
+                subcategory: { name: string } | null
+              }) => {
+                const amt = Math.abs(t.amount.toNumber()).toFixed(2)
+                return `  - "${t.name}" | $${amt} | Category: ${t.category?.name || "N/A"}${t.subcategory ? ` > ${t.subcategory.name}` : ""}`
+              },
+            )
             .join("\n")
         : "  No similar transactions found"
 
@@ -217,10 +222,18 @@ export async function categorizeTransaction(transactionId: string): Promise<{
       recentHistory.length > 0
         ? recentHistory
             .slice(0, 20) // Use top 20 for context
-            .map((t) => {
-              const amt = Math.abs(t.amount.toNumber()).toFixed(2)
-              return `  - "${t.merchantName || t.name}" | $${amt} | ${t.category?.name || "N/A"}${t.subcategory ? ` > ${t.subcategory.name}` : ""}`
-            })
+            .map(
+              (t: {
+                name: string
+                merchantName: string | null
+                amount: Prisma.Decimal
+                category: { name: string } | null
+                subcategory: { name: string } | null
+              }) => {
+                const amt = Math.abs(t.amount.toNumber()).toFixed(2)
+                return `  - "${t.merchantName || t.name}" | $${amt} | ${t.category?.name || "N/A"}${t.subcategory ? ` > ${t.subcategory.name}` : ""}`
+              },
+            )
             .join("\n")
         : "  No recent history"
 
@@ -282,14 +295,14 @@ Provide your categorization decision with confidence and reasoning.`
     }
 
     // Find the category and subcategory IDs
-    const category = categories.find((c) => c.name === categorization.categoryName)
+    const category = categories.find((c: { name: string }) => c.name === categorization.categoryName)
     if (!category) {
       console.error(`Category "${categorization.categoryName}" not found`)
       return null
     }
 
     const subcategory = categorization.subcategoryName
-      ? category.subcategories.find((s) => s.name === categorization.subcategoryName)
+      ? category.subcategories.find((s: { name: string }) => s.name === categorization.subcategoryName)
       : null
 
     return {
