@@ -29,7 +29,6 @@ jobs:
           filters: |
             mobile:
               - 'mobile/**'
-              - 'shared-types/**'
 
   nextjs-type-check-and-build:
     name: Next.js - Type Check and Build
