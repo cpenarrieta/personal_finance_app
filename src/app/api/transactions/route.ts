@@ -6,6 +6,89 @@ import { Prisma } from "@prisma/client"
 import { nanoid } from "nanoid"
 import { revalidateTag } from "next/cache"
 
+/**
+ * GET /api/transactions - Fetch recent transactions
+ * Returns last 100 transactions ordered by date (descending)
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 500) // Max 500
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        isSplit: false, // Filter out parent transactions that have been split
+      },
+      orderBy: { date: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        plaidTransactionId: true,
+        accountId: true,
+        amount_number: true,
+        isoCurrencyCode: true,
+        date_string: true,
+        authorized_date_string: true,
+        pending: true,
+        merchantName: true,
+        name: true,
+        plaidCategory: true,
+        plaidSubcategory: true,
+        paymentChannel: true,
+        logoUrl: true,
+        categoryIconUrl: true,
+        categoryId: true,
+        subcategoryId: true,
+        notes: true,
+        isSplit: true,
+        isManual: true,
+        created_at_string: true,
+        updated_at_string: true,
+        account: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            mask: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+            isTransferCategory: true,
+          },
+        },
+        subcategory: {
+          select: {
+            id: true,
+            categoryId: true,
+            name: true,
+            imageUrl: true,
+          },
+        },
+        tags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                color: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return NextResponse.json({ transactions, count: transactions.length })
+  } catch (error) {
+    console.error("Error fetching transactions:", error)
+    return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 })
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Validate request body with Zod
