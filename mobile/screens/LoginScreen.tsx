@@ -2,14 +2,7 @@
  * Login screen with OAuth providers
  */
 import { useState } from 'react'
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
 import { signInWithGoogle, signInWithGitHub } from '../lib/auth'
 
 interface LoginScreenProps {
@@ -90,9 +83,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.note}>
-          Note: Only authorized email addresses can access this app
-        </Text>
+        <Text style={styles.note}>Note: Only authorized email addresses can access this app</Text>
       </View>
     </View>
   )

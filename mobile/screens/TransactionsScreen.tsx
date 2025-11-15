@@ -98,9 +98,7 @@ export default function TransactionsScreen({ onLogout }: TransactionsScreenProps
         <View style={styles.transactionLeft}>
           {item.category?.imageUrl && (
             <View style={styles.categoryIcon}>
-              <Text style={styles.categoryEmoji}>
-                {item.category.imageUrl}
-              </Text>
+              <Text style={styles.categoryEmoji}>{item.category.imageUrl}</Text>
             </View>
           )}
           <View style={styles.transactionDetails}>
@@ -145,12 +143,7 @@ export default function TransactionsScreen({ onLogout }: TransactionsScreenProps
         </View>
 
         <View style={styles.transactionRight}>
-          <Text
-            style={[
-              styles.amount,
-              isExpense ? styles.amountExpense : styles.amountIncome,
-            ]}
-          >
+          <Text style={[styles.amount, isExpense ? styles.amountExpense : styles.amountIncome]}>
             {formatAmount(item.amount_number, item.isoCurrencyCode)}
           </Text>
           <Text style={styles.date}>{formatDate(item.date_string)}</Text>
@@ -192,9 +185,7 @@ export default function TransactionsScreen({ onLogout }: TransactionsScreenProps
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Transactions</Text>
-          <Text style={styles.headerSubtitle}>
-            {transactions.length} recent transactions
-          </Text>
+          <Text style={styles.headerSubtitle}>{transactions.length} recent transactions</Text>
         </View>
         <TouchableOpacity style={styles.headerButton} onPress={handleLogout}>
           <Text style={styles.headerButtonText}>Logout</Text>

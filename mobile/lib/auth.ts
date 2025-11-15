@@ -18,10 +18,7 @@ export async function signInWithGoogle() {
     // Open the OAuth URL in a browser
     const authUrl = `${config.API_URL}/api/auth/login/google`
 
-    const result = await WebBrowser.openAuthSessionAsync(
-      authUrl,
-      `${config.REDIRECT_SCHEME}://`
-    )
+    const result = await WebBrowser.openAuthSessionAsync(authUrl, `${config.REDIRECT_SCHEME}://`)
 
     if (result.type === 'success') {
       // Session cookie is automatically set by Better Auth
@@ -44,10 +41,7 @@ export async function signInWithGitHub() {
   try {
     const authUrl = `${config.API_URL}/api/auth/login/github`
 
-    const result = await WebBrowser.openAuthSessionAsync(
-      authUrl,
-      `${config.REDIRECT_SCHEME}://`
-    )
+    const result = await WebBrowser.openAuthSessionAsync(authUrl, `${config.REDIRECT_SCHEME}://`)
 
     if (result.type === 'success') {
       await AsyncStorage.setItem(SESSION_KEY, 'true')
@@ -94,12 +88,9 @@ export async function isAuthenticated(): Promise<boolean> {
  */
 export async function fetchTransactions(limit = 100) {
   try {
-    const response = await fetch(
-      `${config.API_URL}/api/transactions?limit=${limit}`,
-      {
-        credentials: 'include', // Include cookies
-      }
-    )
+    const response = await fetch(`${config.API_URL}/api/transactions?limit=${limit}`, {
+      credentials: 'include', // Include cookies
+    })
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
