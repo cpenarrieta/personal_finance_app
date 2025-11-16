@@ -11,7 +11,9 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx}\"",
     "test": "jest",
-    "test:contract": "jest lib/__tests__/api.test.ts"
+    "test:contract": "jest lib/__tests__/api.test.ts",
+    "test:contract:local": "API_URL=http://localhost:3000 npm run test:contract",
+    "test:contract:dev": "npm run test:contract"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
