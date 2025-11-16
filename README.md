@@ -74,7 +74,7 @@ This application provides a comprehensive solution for managing your personal fi
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/cpenarrieta/personal_finance_app.git
    cd personal_finance_app
    ```
 

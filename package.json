@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "license": "CC-BY-NC-SA-4.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cpenarrieta/personal_finance_app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cpenarrieta/personal_finance_app/issues"
+  },
+  "homepage": "https://github.com/cpenarrieta/personal_finance_app#readme",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
