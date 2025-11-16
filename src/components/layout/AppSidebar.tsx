@@ -280,10 +280,10 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
+        <Link href="/" className="flex items-center gap-2 px-2 py-2 hover:opacity-80 transition-opacity">
           <Wallet className="h-6 w-6 text-primary" />
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">Personal Finance</span>
-        </div>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
