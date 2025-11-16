@@ -3,7 +3,19 @@
 import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Home, Receipt, TrendingUp, Settings, ChevronDown, RefreshCw, Moon, Sun, Wallet, Bot, ClipboardCheck } from "lucide-react"
+import {
+  Home,
+  Receipt,
+  TrendingUp,
+  Settings,
+  ChevronDown,
+  RefreshCw,
+  Moon,
+  Sun,
+  Wallet,
+  Bot,
+  ClipboardCheck,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -20,6 +32,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -62,6 +75,7 @@ const getStaticNavItems = () => {
     {
       title: "Investments",
       icon: TrendingUp,
+      defaultHref: "/investments/holdings",
       items: [
         {
           title: "Holdings",
@@ -81,6 +95,7 @@ const getStaticNavItems = () => {
     {
       title: "Settings",
       icon: Settings,
+      defaultHref: "/settings/connections",
       items: [
         {
           title: "Connections",
@@ -233,6 +248,7 @@ function ThemeToggle() {
 }
 
 export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
+  const { state } = useSidebar()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
   const navItems = useMemo(() => getStaticNavItems(), [])
 
@@ -279,27 +295,44 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
                   ? pathname === item.href
                   : item.items?.some((subItem) => pathname === subItem.href)
 
+                const isCollapsed = state === "collapsed"
+
                 const menuItem = item.items ? (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton onClick={() => toggleMenu(item.title)} isActive={isActive} tooltip={item.title}>
-                      {item.icon && <item.icon />}
-                      <span>{item.title}</span>
-                      <ChevronDown
-                        className={`ml-auto h-4 w-4 transition-transform ${openMenus[item.title] ? "rotate-180" : ""}`}
-                      />
-                    </SidebarMenuButton>
-                    {openMenus[item.title] && (
-                      <SidebarMenuSub>
-                        {item.items.map((subItem, index) => (
-                          <SidebarMenuSubItem key={subItem.href || `${subItem.title}-${index}`}>
-                            <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                              <Link href={subItem.href!}>
-                                <span>{subItem.title}</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
+                    {isCollapsed ? (
+                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                        <Link href={(item as any).defaultHref || item.items[0]?.href || "#"}>
+                          {item.icon && <item.icon />}
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    ) : (
+                      <>
+                        <SidebarMenuButton
+                          onClick={() => toggleMenu(item.title)}
+                          isActive={isActive}
+                          tooltip={item.title}
+                        >
+                          {item.icon && <item.icon />}
+                          <span>{item.title}</span>
+                          <ChevronDown
+                            className={`ml-auto h-4 w-4 transition-transform ${openMenus[item.title] ? "rotate-180" : ""}`}
+                          />
+                        </SidebarMenuButton>
+                        {openMenus[item.title] && (
+                          <SidebarMenuSub>
+                            {item.items.map((subItem, index) => (
+                              <SidebarMenuSubItem key={subItem.href || `${subItem.title}-${index}`}>
+                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                                  <Link href={subItem.href!}>
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        )}
+                      </>
                     )}
                   </SidebarMenuItem>
                 ) : (

@@ -36,10 +36,7 @@ interface TransactionEdit {
   isSelected: boolean
 }
 
-export function ReviewTransactionsClient({
-  transactions,
-  categories,
-}: ReviewTransactionsClientProps) {
+export function ReviewTransactionsClient({ transactions, categories }: ReviewTransactionsClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -154,14 +151,14 @@ export function ReviewTransactionsClient({
     }).format(amount)
   }
 
-  // Format date
+  // Format date - shorter format to save space
   const formatDate = (dateString: string | null) => {
     if (!dateString) return ""
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      year: "2-digit",
     })
   }
 
@@ -191,14 +188,8 @@ export function ReviewTransactionsClient({
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
-            {selectedCount} selected
-          </span>
-          <Button
-            onClick={handleConfirmClick}
-            disabled={selectedCount === 0 || isPending}
-            size="lg"
-          >
+          <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
+          <Button onClick={handleConfirmClick} disabled={selectedCount === 0 || isPending} size="lg">
             {isPending ? "Confirming..." : `Confirm ${selectedCount} Transaction${selectedCount !== 1 ? "s" : ""}`}
           </Button>
         </div>
@@ -209,11 +200,7 @@ export function ReviewTransactionsClient({
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={toggleAllSelections}
-                  aria-label="Select all"
-                />
+                <Checkbox checked={allSelected} onCheckedChange={toggleAllSelections} aria-label="Select all" />
               </TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Name</TableHead>
@@ -243,7 +230,12 @@ export function ReviewTransactionsClient({
                     {formatDate(transaction.date_string)}
                   </TableCell>
                   <TableCell className="font-medium">
-                    <div className="max-w-xs truncate">{transaction.merchantName || transaction.name}</div>
+                    <div className="max-w-xs">
+                      <div className="truncate">{transaction.merchantName || transaction.name}</div>
+                      {transaction.merchantName !== transaction.name && (
+                        <div className="text-xs text-muted-foreground truncate">{transaction.name}</div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {transaction.account?.name || "Unknown"}
@@ -295,7 +287,10 @@ export function ReviewTransactionsClient({
                         </Badge>
                       )}
                       {hasForReviewTag(transaction) && (
-                        <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-700 dark:text-yellow-400">
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-yellow-500 text-yellow-700 dark:text-yellow-400"
+                        >
                           For Review
                         </Badge>
                       )}
@@ -314,8 +309,9 @@ export function ReviewTransactionsClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Transaction Updates</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to save changes to {selectedCount} transaction{selectedCount !== 1 ? "s" : ""}?
-              {" "}This will update categories, subcategories, and notes, and remove the "for-review" tag from confirmed transactions.
+              Are you sure you want to save changes to {selectedCount} transaction{selectedCount !== 1 ? "s" : ""}? This
+              will update categories, subcategories, and notes, and remove the "for-review" tag from confirmed
+              transactions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -332,14 +328,10 @@ export function ReviewTransactionsClient({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Error Saving Changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              {errorMessage}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{errorMessage}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowErrorDialog(false)}>
-              OK
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => setShowErrorDialog(false)}>OK</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

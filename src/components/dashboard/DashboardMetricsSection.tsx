@@ -67,7 +67,7 @@ export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetri
           subtitle={subtitle}
           icon={Receipt}
           uncategorizedCount={uncategorizedCount}
-          href="/transactions"
+          href="/review-transactions"
         />
         <MetricCard
           title={`${periodLabel} Spending`}
