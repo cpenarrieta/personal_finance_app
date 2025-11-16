@@ -19,8 +19,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { TagSelector } from "@/components/transactions/filters/TagSelector"
 import { confirmTransactions } from "@/app/(app)/review-transactions/actions/confirm-transactions"
 import { useRouter } from "next/navigation"
+import { ArrowLeftRight } from "lucide-react"
 
 interface ReviewTransactionsClientProps {
   transactions: TransactionForClient[]
@@ -33,10 +35,12 @@ interface TransactionEdit {
   categoryId: string | null
   subcategoryId: string | null
   notes: string | null
+  newAmount: number | null // null means no change, otherwise the new amount
+  tagIds: string[] // Array of tag IDs for this transaction
   isSelected: boolean
 }
 
-export function ReviewTransactionsClient({ transactions, categories }: ReviewTransactionsClientProps) {
+export function ReviewTransactionsClient({ transactions, categories, tags }: ReviewTransactionsClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -52,6 +56,8 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
         categoryId: t.categoryId,
         subcategoryId: t.subcategoryId,
         notes: t.notes,
+        newAmount: null, // null means no change
+        tagIds: t.tags.map((tag) => tag.id), // Initialize with current tags
         isSelected: true, // All selected by default
       })
     })
@@ -116,6 +122,8 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
         categoryId: edit.categoryId,
         subcategoryId: edit.subcategoryId,
         notes: edit.notes,
+        newAmount: edit.newAmount,
+        tagIds: edit.tagIds,
       }))
 
     if (selectedEdits.length === 0) {
@@ -135,6 +143,22 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
         setShowErrorDialog(true)
       }
     })
+  }
+
+  // Toggle amount sign for a transaction
+  const toggleAmountSign = (transactionId: string, originalAmount: number) => {
+    const edit = getEdit(transactionId)
+    const currentAmount = edit.newAmount !== null ? edit.newAmount : originalAmount
+    updateEdit(transactionId, { newAmount: currentAmount * -1 })
+  }
+
+  // Toggle tag for a transaction
+  const toggleTag = (transactionId: string, tagId: string) => {
+    const edit = getEdit(transactionId)
+    const newTagIds = edit.tagIds.includes(tagId)
+      ? edit.tagIds.filter((id) => id !== tagId)
+      : [...edit.tagIds, tagId]
+    updateEdit(transactionId, { tagIds: newTagIds })
   }
 
   // Check if a transaction has the "for-review" tag
@@ -208,6 +232,7 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
               <TableHead className="text-right">Amount</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Subcategory</TableHead>
+              <TableHead>Tags</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -216,6 +241,7 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
             {transactions.map((transaction) => {
               const edit = getEdit(transaction.id)
               const needsCategory = !edit.categoryId
+              const displayAmount = edit.newAmount !== null ? edit.newAmount : transaction.amount_number
 
               return (
                 <TableRow key={transaction.id} className={!edit.isSelected ? "opacity-50" : ""}>
@@ -241,7 +267,20 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
                     {transaction.account?.name || "Unknown"}
                   </TableCell>
                   <TableCell className="text-right font-medium whitespace-nowrap">
-                    {formatCurrency(transaction.amount_number)}
+                    <div className="flex items-center justify-end gap-2">
+                      <span className={edit.newAmount !== null ? "text-primary" : ""}>
+                        {formatCurrency(displayAmount)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => toggleAmountSign(transaction.id, transaction.amount_number)}
+                        title="Flip amount sign"
+                      >
+                        <ArrowLeftRight className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <CategorySelect
@@ -268,6 +307,17 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
                       placeholder="None"
                       className="min-w-[180px] px-2 py-1 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input disabled:opacity-50 disabled:cursor-not-allowed"
                     />
+                  </TableCell>
+                  <TableCell>
+                    <div className="min-w-[200px]">
+                      <TagSelector
+                        tags={tags}
+                        selectedTagIds={edit.tagIds}
+                        onToggleTag={(tagId) => toggleTag(transaction.id, tagId)}
+                        label=""
+                        showManageLink={false}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Input
@@ -310,7 +360,7 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
             <AlertDialogTitle>Confirm Transaction Updates</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to save changes to {selectedCount} transaction{selectedCount !== 1 ? "s" : ""}? This
-              will update categories, subcategories, and notes, and remove the "for-review" tag from confirmed
+              will update categories, subcategories, amounts, tags, and notes, and remove the "for-review" tag from confirmed
               transactions.
             </AlertDialogDescription>
           </AlertDialogHeader>
