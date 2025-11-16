@@ -266,7 +266,7 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
     })
 
     // Auto-expand Accounts menu if on an account page
-    if (pathname.startsWith("/accounts/") || pathname === "/connect-account") {
+    if (pathname === "/accounts" || pathname.startsWith("/accounts/") || pathname === "/connect-account") {
       newOpenMenus["Accounts"] = true
     }
 

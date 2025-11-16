@@ -52,7 +52,7 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
 
   // Auto-expand if on an account page
   useEffect(() => {
-    if (pathname.startsWith("/accounts/") || pathname === "/connect-account") {
+    if (pathname === "/accounts" || pathname.startsWith("/accounts/") || pathname === "/connect-account") {
       setIsOpen(true)
 
       // Auto-expand the institution that contains the current account
@@ -66,7 +66,8 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
-  const isAccountsActive = pathname.startsWith("/accounts/") || pathname === "/connect-account"
+  const isAccountsActive =
+    pathname === "/accounts" || pathname.startsWith("/accounts/") || pathname === "/connect-account"
 
   const toggleInstitution = (institutionName: string) => {
     setOpenInstitutions((prev) => ({ ...prev, [institutionName]: !prev[institutionName] }))
