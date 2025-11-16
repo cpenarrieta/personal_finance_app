@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Home, Receipt, TrendingUp, Settings, ChevronDown, RefreshCw, Moon, Sun, Wallet, Bot } from "lucide-react"
+import { Home, Receipt, TrendingUp, Settings, ChevronDown, RefreshCw, Moon, Sun, Wallet, Bot, ClipboardCheck } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -53,6 +53,11 @@ const getStaticNavItems = () => {
       title: "Transactions",
       href: "/transactions",
       icon: Receipt,
+    },
+    {
+      title: "Review Transactions",
+      href: "/review-transactions",
+      icon: ClipboardCheck,
     },
     {
       title: "Investments",
@@ -308,11 +313,11 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
                   </SidebarMenuItem>
                 )
 
-                // Insert accounts slot after Transactions (idx === 1)
+                // Insert accounts slot after Review Transactions (idx === 2)
                 return (
                   <React.Fragment key={item.title}>
                     {menuItem}
-                    {idx === 1 && accountsSlot}
+                    {idx === 2 && accountsSlot}
                   </React.Fragment>
                 )
               })}

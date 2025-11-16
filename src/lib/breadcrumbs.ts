@@ -14,6 +14,7 @@ export interface BreadcrumbItem {
 const breadcrumbConfig: Record<string, string> = {
   "/": "Dashboard",
   "/transactions": "Transactions",
+  "/review-transactions": "Review Transactions",
   "/accounts": "Accounts",
   "/investments": "Investments",
   "/investments/holdings": "Holdings",
