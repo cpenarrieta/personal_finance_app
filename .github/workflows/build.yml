@@ -12,24 +12,6 @@ permissions:
   pull-requests: read
 
 jobs:
-  # Check which files changed to conditionally run jobs
-  changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    outputs:
-      mobile: ${{ steps.filter.outputs.mobile }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Check for file changes
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            mobile:
-              - 'mobile/**'
-
   nextjs-type-check-and-build:
     name: Next.js - Type Check and Build
     runs-on: ubuntu-latest
@@ -68,46 +50,3 @@ jobs:
       # Step 7: Run the build command defined in your package.json
       - name: Build Project
         run: npm run build
-
-  mobile-type-check:
-    name: Mobile App - Type Check
-    runs-on: ubuntu-latest
-    needs: changes
-    if: ${{ needs.changes.outputs.mobile == 'true' }}
-
-    defaults:
-      run:
-        working-directory: mobile
-
-    steps:
-      # Step 1: Checkout repository
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # Step 2: Set up Node.js with mobile package-lock.json cache
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: mobile/package-lock.json
-
-      # Step 3: Install mobile dependencies
-      - name: Install Mobile Dependencies
-        run: npm ci
-
-      # Step 4: Run TypeScript type-checking for mobile app
-      - name: Type Check Mobile App
-        run: npm run type-check
-
-      # Step 5: Check code formatting
-      - name: Check Code Formatting
-        run: npm run format:check
-
-      # Step 6: Run API contract tests (optional - requires test environment)
-      # Uncomment and configure API_URL to enable contract testing in CI
-      # - name: Run API Contract Tests
-      #   run: npm run test:contract
-      #   env:
-      #     API_URL: ${{ secrets.TEST_API_URL }}
-
