@@ -68,3 +68,6 @@ mobile/dist/
 mobile/.expo-shared/
 mobile/android/
 mobile/ios/
+
+# Sentry Config File
+.env.sentry-build-plugin
