@@ -9,6 +9,16 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { confirmTransactions } from "@/app/(app)/review-transactions/actions/confirm-transactions"
 import { useRouter } from "next/navigation"
 
@@ -32,6 +42,9 @@ export function ReviewTransactionsClient({
 }: ReviewTransactionsClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showErrorDialog, setShowErrorDialog] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
 
   // Initialize edits state - all transactions selected by default
   const [edits, setEdits] = useState<Map<string, TransactionEdit>>(() => {
@@ -89,7 +102,15 @@ export function ReviewTransactionsClient({
     return Array.from(edits.values()).filter((edit) => edit.isSelected).length
   }, [edits])
 
-  // Handle confirm
+  // Handle confirm button click - opens confirmation dialog
+  const handleConfirmClick = () => {
+    if (selectedCount === 0) {
+      return
+    }
+    setShowConfirmDialog(true)
+  }
+
+  // Actual confirm logic - executes after user confirms in dialog
   const handleConfirm = async () => {
     const selectedEdits = Array.from(edits.values())
       .filter((edit) => edit.isSelected)
@@ -104,6 +125,8 @@ export function ReviewTransactionsClient({
       return
     }
 
+    setShowConfirmDialog(false)
+
     startTransition(async () => {
       const result = await confirmTransactions(selectedEdits)
 
@@ -111,7 +134,8 @@ export function ReviewTransactionsClient({
         // Refresh the page to show updated data
         router.refresh()
       } else {
-        alert(`Error: ${result.error}`)
+        setErrorMessage(result.error || "An unexpected error occurred")
+        setShowErrorDialog(true)
       }
     })
   }
@@ -171,7 +195,7 @@ export function ReviewTransactionsClient({
             {selectedCount} selected
           </span>
           <Button
-            onClick={handleConfirm}
+            onClick={handleConfirmClick}
             disabled={selectedCount === 0 || isPending}
             size="lg"
           >
@@ -283,6 +307,42 @@ export function ReviewTransactionsClient({
           </TableBody>
         </Table>
       </div>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Transaction Updates</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to save changes to {selectedCount} transaction{selectedCount !== 1 ? "s" : ""}?
+              {" "}This will update categories, subcategories, and notes, and remove the "for-review" tag from confirmed transactions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
+              {isPending ? "Confirming..." : "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Error Dialog */}
+      <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Error Saving Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              {errorMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowErrorDialog(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
