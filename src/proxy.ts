@@ -60,10 +60,11 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api/auth (auth API routes)
+     * - api/plaid/webhook (Plaid server-to-server webhook with custom verification)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/auth|api/plaid/webhook|_next/static|_next/image|favicon.ico).*)",
   ],
 }
