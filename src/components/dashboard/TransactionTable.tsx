@@ -43,11 +43,11 @@ export function TransactionTable({ transactions, showCategory = true }: Transact
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
+            <TableHead className="w-[100px]">Date</TableHead>
+            <TableHead className="text-right w-[110px]">Amount</TableHead>
             <TableHead>Description</TableHead>
-            {showCategory && <TableHead>Category</TableHead>}
-            <TableHead>Account</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+            {showCategory && <TableHead className="hidden md:table-cell">Category</TableHead>}
+            <TableHead className="hidden md:table-cell">Account</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -55,8 +55,13 @@ export function TransactionTable({ transactions, showCategory = true }: Transact
             const amount = transaction.amount_number || 0
             return (
               <TableRow key={transaction.id} className="hover:bg-muted/50">
-                <TableCell className="whitespace-nowrap">
+                <TableCell className="whitespace-nowrap w-[100px]">
                   {transaction.date_string ? format(new Date(transaction.date_string), "MMM d, yyyy") : "N/A"}
+                </TableCell>
+                <TableCell className="text-right font-medium w-[110px]">
+                  <span className={amount >= 0 ? "text-success" : ""}>
+                    {amount < 0 ? "-" : "+"}${formatAmount(amount)}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <Link href={`/transactions/${transaction.id}`} className="block hover:underline">
@@ -81,7 +86,7 @@ export function TransactionTable({ transactions, showCategory = true }: Transact
                   </Link>
                 </TableCell>
                 {showCategory && (
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {transaction.category ? (
                       <div>
                         <div className="font-medium">{transaction.category.name}</div>
@@ -94,12 +99,7 @@ export function TransactionTable({ transactions, showCategory = true }: Transact
                     )}
                   </TableCell>
                 )}
-                <TableCell>{transaction.account.name}</TableCell>
-                <TableCell className="text-right font-medium">
-                  <span className={amount >= 0 ? "text-success" : ""}>
-                    {amount < 0 ? "-" : "+"}${formatAmount(amount)}
-                  </span>
-                </TableCell>
+                <TableCell className="hidden md:table-cell">{transaction.account.name}</TableCell>
               </TableRow>
             )
           })}
