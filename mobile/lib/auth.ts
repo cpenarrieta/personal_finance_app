@@ -82,24 +82,3 @@ export async function isAuthenticated(): Promise<boolean> {
   const session = await AsyncStorage.getItem(SESSION_KEY)
   return session === 'true'
 }
-
-/**
- * Fetch transactions from API
- */
-export async function fetchTransactions(limit = 100) {
-  try {
-    const response = await fetch(`${config.API_URL}/api/transactions?limit=${limit}`, {
-      credentials: 'include', // Include cookies
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
-    }
-
-    const data = await response.json()
-    return { success: true, data: data.transactions }
-  } catch (error) {
-    console.error('Fetch transactions error:', error)
-    return { success: false, error: String(error) }
-  }
-}

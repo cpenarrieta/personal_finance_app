@@ -104,3 +104,10 @@ jobs:
       - name: Check Code Formatting
         run: npm run format:check
 
+      # Step 6: Run API contract tests (optional - requires test environment)
+      # Uncomment and configure API_URL to enable contract testing in CI
+      # - name: Run API Contract Tests
+      #   run: npm run test:contract
+      #   env:
+      #     API_URL: ${{ secrets.TEST_API_URL }}
+

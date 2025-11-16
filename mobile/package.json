@@ -9,7 +9,11 @@
     "web": "expo start --web",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx}\"",
+    "test": "jest",
+    "test:contract": "jest lib/__tests__/api.test.ts",
+    "test:contract:local": "API_URL=http://localhost:3000 npm run test:contract",
+    "test:contract:dev": "npm run test:contract"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -19,11 +23,15 @@
     "expo-status-bar": "~3.0.8",
     "expo-web-browser": "^15.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.1.0",
+    "jest": "^29.7.0",
     "prettier": "^3.4.2",
+    "ts-jest": "^29.2.5",
     "typescript": "~5.9.2"
   },
   "private": true

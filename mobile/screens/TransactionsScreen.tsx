@@ -12,31 +12,9 @@ import {
   ActivityIndicator,
   type ListRenderItem,
 } from 'react-native'
-import { fetchTransactions, signOut } from '../lib/auth'
-
-interface Transaction {
-  id: string
-  name: string
-  merchantName: string | null
-  amount_number: number
-  date_string: string
-  pending: boolean
-  isoCurrencyCode: string | null
-  category: {
-    name: string
-    imageUrl: string | null
-  } | null
-  account: {
-    name: string
-    mask: string | null
-  }
-  tags: Array<{
-    tag: {
-      name: string
-      color: string | null
-    }
-  }>
-}
+import { signOut } from '../lib/auth'
+import { fetchTransactions } from '../lib/api'
+import type { Transaction } from '../lib/schemas/transaction'
 
 interface TransactionsScreenProps {
   onLogout: () => void
