@@ -39,14 +39,14 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
         return prisma.transaction.findUnique({
           where: { id: update.id },
           select: { tags: { select: { tagId: true } } },
-        }).then((currentTransaction) => {
-          const currentTagIds = currentTransaction?.tags.map((t) => t.tagId) || []
-          const tagsToConnect = update.tagIds.filter((tagId) => !currentTagIds.includes(tagId))
-          const tagsToDisconnect = currentTagIds.filter((tagId) => !update.tagIds.includes(tagId))
+        }).then((currentTransaction: { tags: { tagId: string }[] } | null) => {
+          const currentTagIds = currentTransaction?.tags.map((t: { tagId: string }) => t.tagId) || []
+          const tagsToConnect = update.tagIds.filter((tagId: string) => !currentTagIds.includes(tagId))
+          const tagsToDisconnect = currentTagIds.filter((tagId: string) => !update.tagIds.includes(tagId))
 
           // Filter out "for-review" tag from tagsToConnect to avoid re-adding it
           const tagsToConnectFiltered = forReviewTag
-            ? tagsToConnect.filter((tagId) => tagId !== forReviewTag.id)
+            ? tagsToConnect.filter((tagId: string) => tagId !== forReviewTag.id)
             : tagsToConnect
 
           return prisma.transaction.update({
@@ -69,7 +69,7 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
                 // Connect new tags
                 ...(tagsToConnectFiltered.length > 0
                   ? {
-                      create: tagsToConnectFiltered.map((tagId) => ({
+                      create: tagsToConnectFiltered.map((tagId: string) => ({
                         tag: { connect: { id: tagId } },
                       })),
                     }
@@ -80,7 +80,7 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
                       deleteMany: {
                         tagId: {
                           in: forReviewTag
-                            ? tagsToDisconnect.filter((tagId) => tagId !== forReviewTag.id)
+                            ? tagsToDisconnect.filter((tagId: string) => tagId !== forReviewTag.id)
                             : tagsToDisconnect,
                         },
                       },
