@@ -99,7 +99,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
         {/* Main Details */}
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
-            <h2 className="text-xl font-semibold text-foreground">Transaction Details</h2>
+            <h2 className="hidden md:block text-xl font-semibold text-foreground">Transaction Details</h2>
             <div className="flex gap-2">
               {!transaction.isSplit && !transaction.parentTransactionId && (
                 <Button
