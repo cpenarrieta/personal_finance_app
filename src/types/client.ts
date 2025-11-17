@@ -44,6 +44,7 @@ export interface TransactionForClient {
   isSplit: boolean
   parentTransactionId: string | null
   originalTransactionId: string | null
+  files: string[] // Array of file URLs from Cloudinary
   created_at_string: string // Generated from createdAt
   updated_at_string: string // Generated from updatedAt
 

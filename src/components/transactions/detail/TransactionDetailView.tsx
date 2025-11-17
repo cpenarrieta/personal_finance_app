@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { formatAmount } from "@/lib/utils"
 import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal"
 import { SplitTransactionModal } from "@/components/transactions/modals/SplitTransactionModal"
+import { TransactionFileUpload } from "@/components/transactions/detail/TransactionFileUpload"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -30,6 +31,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
   const [isSplitting, setIsSplitting] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [transactionFiles, setTransactionFiles] = useState<string[]>(transaction.files || [])
   const router = useRouter()
 
   const amount = transaction.amount_number
@@ -262,6 +264,16 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
               </div>
             </div>
           )}
+
+          {/* File Upload Section */}
+          <TransactionFileUpload
+            transactionId={transaction.id}
+            files={transactionFiles}
+            onFilesUpdate={(newFiles) => {
+              setTransactionFiles(newFiles)
+              router.refresh()
+            }}
+          />
 
           {/* Technical Details */}
           <div className="mt-8 pt-6 border-t">

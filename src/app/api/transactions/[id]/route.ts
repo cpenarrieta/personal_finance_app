@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       )
     }
 
-    const { name, plaidCategory, plaidSubcategory, categoryId, subcategoryId, notes, tagIds } = parseResult.data
+    const { name, plaidCategory, plaidSubcategory, categoryId, subcategoryId, notes, tagIds, files } = parseResult.data
 
     // Build update data object with proper typing
     const updateData: Prisma.TransactionUpdateInput = {}
@@ -31,6 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (plaidCategory !== undefined) updateData.plaidCategory = plaidCategory
     if (plaidSubcategory !== undefined) updateData.plaidSubcategory = plaidSubcategory
     if (notes !== undefined) updateData.notes = notes
+    if (files !== undefined) updateData.files = files
 
     // Handle category relation
     if (categoryId !== undefined) {
