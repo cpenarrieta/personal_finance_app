@@ -14,7 +14,9 @@ Sentry.init({
       maskAllText: true,
       blockAllMedia: true,
     }),
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
   ],
+  enableLogs: true,
 
   // Set tracesSampleRate to 1.0 to capture 100%
   // of transactions for tracing.
