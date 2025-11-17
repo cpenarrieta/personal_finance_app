@@ -6,14 +6,7 @@ import { getPlaidClient } from "../api/plaid"
 import { prisma } from "../db/prisma"
 import { Prisma } from "@prisma/client"
 import { revalidateTag } from "next/cache"
-import type {
-  Transaction,
-  AccountBase,
-  Security,
-  Holding,
-  InvestmentTransaction,
-  RemovedTransaction,
-} from "../api/plaid"
+import type { Transaction, AccountBase, Security, Holding, InvestmentTransaction } from "../api/plaid"
 
 // Constants
 const HISTORICAL_START_DATE = "2024-01-01"
@@ -185,7 +178,7 @@ function buildInvestmentTransactionUpsertData(t: InvestmentTransaction, accountI
     fees: t.fees != null ? new Prisma.Decimal(t.fees) : null,
     isoCurrencyCode: t.iso_currency_code || null,
     date: new Date(t.date),
-    transactionDatetime: t.transaction_datetime || t.date, // Plaid transaction_datetime or fallback to date
+    transactionDatetime: t.date, // InvestmentTransaction only has date field (no separate datetime)
     name: t.name || null,
   }
 
