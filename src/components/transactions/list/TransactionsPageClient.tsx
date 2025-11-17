@@ -76,12 +76,12 @@ export function TransactionsPageClient({
 
   return (
     <>
-      <div className="mb-4 flex justify-between items-center">
+      <div className="mb-4 flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Banking Transactions</h1>
           <p className="text-muted-foreground mt-1">View and search all your banking transactions</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={handleCopyForGoogleSheets} disabled={isCopying}>
             <Sheet className="h-4 w-4 mr-2" />
             {isCopying ? "Copying..." : "Copy to Clipboard"}
