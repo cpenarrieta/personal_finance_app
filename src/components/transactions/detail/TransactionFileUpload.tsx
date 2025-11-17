@@ -144,7 +144,8 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
       const urlObj = new URL(url)
       const pathname = urlObj.pathname
       const parts = pathname.split("/")
-      return decodeURIComponent(parts[parts.length - 1])
+      const lastPart = parts[parts.length - 1]
+      return lastPart ? decodeURIComponent(lastPart) : "Unknown file"
     } catch {
       return "Unknown file"
     }
