@@ -28,6 +28,7 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
 
   // Form state
   const [name, setName] = useState(transaction.name)
+  const [amount, setAmount] = useState(Math.abs(transaction.amount_number).toString())
   const [categoryId, setCategoryId] = useState(transaction.categoryId || "")
   const [subcategoryId, setSubcategoryId] = useState(transaction.subcategoryId || "")
   const [notes, setNotes] = useState(transaction.notes || "")
@@ -48,6 +49,11 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
     const toastId = toast.loading("Updating transaction...")
 
     try {
+      // Parse amount and preserve original sign (positive/negative)
+      const parsedAmount = parseFloat(amount)
+      const isOriginalNegative = transaction.amount_number < 0
+      const finalAmount = isOriginalNegative ? -Math.abs(parsedAmount) : Math.abs(parsedAmount)
+
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: "PATCH",
         headers: {
@@ -55,6 +61,7 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
         },
         body: JSON.stringify({
           name,
+          amount: finalAmount,
           categoryId: categoryId || null,
           subcategoryId: subcategoryId || null,
           notes: notes || null,
@@ -97,6 +104,23 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
               onChange={(e) => setName(e.target.value)}
               placeholder="Transaction name"
             />
+          </div>
+
+          {/* Amount */}
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              id="amount"
+              type="number"
+              step="0.01"
+              min="0"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+            />
+            <p className="text-xs text-muted-foreground">
+              {transaction.amount_number < 0 ? "This is an expense (negative)" : "This is income (positive)"}
+            </p>
           </div>
 
           {/* Categories */}
@@ -149,8 +173,6 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-muted-foreground">Transaction ID:</div>
               <div className="font-medium font-mono text-xs">{transaction.id}</div>
-              <div className="text-muted-foreground">Amount:</div>
-              <div className="font-medium">${formatAmount(transaction.amount_number)}</div>
               <div className="text-muted-foreground">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>
               <div className="text-muted-foreground">Transaction Date:</div>
