@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { LoginButtons } from "@/components/auth/LoginButtons"
@@ -36,9 +37,21 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ er
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">Personal Finance</CardTitle>
-          <CardDescription className="text-base">Sign in to access your financial dashboard</CardDescription>
+        <CardHeader className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <Image
+              src="/app_logo.svg"
+              alt="Personal Finance Logo"
+              width={100}
+              height={87}
+              className="w-24 h-auto"
+              priority
+            />
+          </div>
+          <div className="space-y-1">
+            <CardTitle className="text-3xl font-bold tracking-tight">Personal Finance</CardTitle>
+            <CardDescription className="text-base">Sign in to access your financial dashboard</CardDescription>
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-4 pt-6">
           <Suspense fallback={<LoginContentSkeleton />}>
