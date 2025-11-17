@@ -1,8 +1,17 @@
 {
   "name": "personal_finances_app",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "license": "CC-BY-NC-SA-4.0",
+  "author": "Cristian Penarrieta",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cpenarrieta/personal_finance_app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cpenarrieta/personal_finance_app/issues"
+  },
+  "homepage": "https://github.com/cpenarrieta/personal_finance_app",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
