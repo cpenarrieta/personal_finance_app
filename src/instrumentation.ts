@@ -19,6 +19,11 @@ export async function onRequestError(
     routeType: "render" | "route" | "action" | "middleware"
   },
 ) {
+  // Don't send errors in development
+  if (process.env.NODE_ENV === "development") {
+    return
+  }
+
   // Track server errors to Sentry
   const { captureException } = await import("@sentry/nextjs")
 
