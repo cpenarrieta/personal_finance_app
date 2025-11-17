@@ -19,8 +19,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { TagSelector } from "@/components/transactions/filters/TagSelector"
 import { confirmTransactions } from "@/app/(app)/review-transactions/actions/confirm-transactions"
 import { useRouter } from "next/navigation"
+import { ArrowLeftRight } from "lucide-react"
 
 interface ReviewTransactionsClientProps {
   transactions: TransactionForClient[]
@@ -33,15 +35,19 @@ interface TransactionEdit {
   categoryId: string | null
   subcategoryId: string | null
   notes: string | null
+  newAmount: number | null // null means no change, otherwise the new amount
+  tagIds: string[] // Array of tag IDs for this transaction
   isSelected: boolean
 }
 
-export function ReviewTransactionsClient({ transactions, categories }: ReviewTransactionsClientProps) {
+export function ReviewTransactionsClient({ transactions, categories, tags }: ReviewTransactionsClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showErrorDialog, setShowErrorDialog] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
+  const [showFlipAmountDialog, setShowFlipAmountDialog] = useState(false)
+  const [flipAmountData, setFlipAmountData] = useState<{ transactionId: string; originalAmount: number } | null>(null)
 
   // Initialize edits state - all transactions selected by default
   const [edits, setEdits] = useState<Map<string, TransactionEdit>>(() => {
@@ -52,6 +58,8 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
         categoryId: t.categoryId,
         subcategoryId: t.subcategoryId,
         notes: t.notes,
+        newAmount: null, // null means no change
+        tagIds: t.tags.map((tag) => tag.id), // Initialize with current tags
         isSelected: true, // All selected by default
       })
     })
@@ -116,6 +124,8 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
         categoryId: edit.categoryId,
         subcategoryId: edit.subcategoryId,
         notes: edit.notes,
+        newAmount: edit.newAmount,
+        tagIds: edit.tagIds,
       }))
 
     if (selectedEdits.length === 0) {
@@ -137,6 +147,31 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
     })
   }
 
+  // Show flip amount warning dialog
+  const handleFlipAmountClick = (transactionId: string, originalAmount: number) => {
+    setFlipAmountData({ transactionId, originalAmount })
+    setShowFlipAmountDialog(true)
+  }
+
+  // Toggle amount sign for a transaction (after confirmation)
+  const confirmFlipAmount = () => {
+    if (!flipAmountData) return
+
+    const edit = getEdit(flipAmountData.transactionId)
+    const currentAmount = edit.newAmount !== null ? edit.newAmount : flipAmountData.originalAmount
+    updateEdit(flipAmountData.transactionId, { newAmount: currentAmount * -1 })
+
+    setShowFlipAmountDialog(false)
+    setFlipAmountData(null)
+  }
+
+  // Toggle tag for a transaction
+  const toggleTag = (transactionId: string, tagId: string) => {
+    const edit = getEdit(transactionId)
+    const newTagIds = edit.tagIds.includes(tagId) ? edit.tagIds.filter((id) => id !== tagId) : [...edit.tagIds, tagId]
+    updateEdit(transactionId, { tagIds: newTagIds })
+  }
+
   // Check if a transaction has the "for-review" tag
   const hasForReviewTag = (transaction: TransactionForClient) => {
     return transaction.tags.some((tag) => tag.name === "for-review")
@@ -155,11 +190,10 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
   const formatDate = (dateString: string | null) => {
     if (!dateString) return ""
     const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "2-digit",
-    })
+    const month = date.toLocaleDateString("en-US", { month: "short" })
+    const day = date.getDate()
+    const year = date.toLocaleDateString("en-US", { year: "2-digit" })
+    return `${month} ${day} ${year}`
   }
 
   if (transactions.length === 0) {
@@ -204,10 +238,9 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
               </TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Account</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Amount</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Subcategory</TableHead>
+              <TableHead>Tags</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -216,6 +249,7 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
             {transactions.map((transaction) => {
               const edit = getEdit(transaction.id)
               const needsCategory = !edit.categoryId
+              const displayAmount = edit.newAmount !== null ? edit.newAmount : transaction.amount_number
 
               return (
                 <TableRow key={transaction.id} className={!edit.isSelected ? "opacity-50" : ""}>
@@ -235,39 +269,63 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
                       {transaction.merchantName !== transaction.name && (
                         <div className="text-xs text-muted-foreground truncate">{transaction.name}</div>
                       )}
+                      <div className="text-xs text-muted-foreground/70 truncate mt-0.5">
+                        {transaction.account?.name || "Unknown"}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {transaction.account?.name || "Unknown"}
-                  </TableCell>
                   <TableCell className="text-right font-medium whitespace-nowrap">
-                    {formatCurrency(transaction.amount_number)}
+                    <div className="flex items-center justify-end gap-2">
+                      <span className={edit.newAmount !== null ? "text-primary" : ""}>
+                        {formatCurrency(displayAmount)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
+                        title="Flip amount sign"
+                      >
+                        <ArrowLeftRight className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <CategorySelect
-                      value={edit.categoryId || ""}
-                      onChange={(value) => {
-                        updateEdit(transaction.id, {
-                          categoryId: value || null,
-                          subcategoryId: null, // Reset subcategory when category changes
-                        })
-                      }}
-                      categories={categories}
-                      placeholder="Select category..."
-                      className="min-w-[180px] px-2 py-1 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input"
-                    />
+                    <div className="flex flex-col gap-2">
+                      <CategorySelect
+                        value={edit.categoryId || ""}
+                        onChange={(value) => {
+                          updateEdit(transaction.id, {
+                            categoryId: value || null,
+                            subcategoryId: null, // Reset subcategory when category changes
+                          })
+                        }}
+                        categories={categories}
+                        placeholder="Select category..."
+                        className="w-full px-2 py-1 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input"
+                      />
+                      <SubcategorySelect
+                        value={edit.subcategoryId || ""}
+                        onChange={(value) => {
+                          updateEdit(transaction.id, { subcategoryId: value || null })
+                        }}
+                        categories={categories}
+                        categoryId={edit.categoryId}
+                        placeholder="None"
+                        className="w-full px-2 py-1 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <SubcategorySelect
-                      value={edit.subcategoryId || ""}
-                      onChange={(value) => {
-                        updateEdit(transaction.id, { subcategoryId: value || null })
-                      }}
-                      categories={categories}
-                      categoryId={edit.categoryId}
-                      placeholder="None"
-                      className="min-w-[180px] px-2 py-1 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
+                    <div className="min-w-[200px]">
+                      <TagSelector
+                        tags={tags}
+                        selectedTagIds={edit.tagIds}
+                        onToggleTag={(tagId) => toggleTag(transaction.id, tagId)}
+                        label=""
+                        showManageLink={false}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Input
@@ -310,8 +368,8 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
             <AlertDialogTitle>Confirm Transaction Updates</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to save changes to {selectedCount} transaction{selectedCount !== 1 ? "s" : ""}? This
-              will update categories, subcategories, and notes, and remove the "for-review" tag from confirmed
-              transactions.
+              will update categories, subcategories, amounts, tags, and notes, and remove the "for-review" tag from
+              confirmed transactions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -332,6 +390,33 @@ export function ReviewTransactionsClient({ transactions, categories }: ReviewTra
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowErrorDialog(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Flip Amount Warning Dialog */}
+      <AlertDialog open={showFlipAmountDialog} onOpenChange={setShowFlipAmountDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Flip Transaction Amount Sign?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <div className="font-semibold text-destructive">⚠️ Warning: This is a very rare operation</div>
+                <div>
+                  Flipping the amount sign should <strong>only</strong> be used when you are 100% confident that Plaid
+                  API made a mistake with the transaction amount sign.
+                </div>
+                <div className="text-sm">
+                  In most cases, the sign is correct. Proceed only if you're absolutely certain this is incorrect.
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFlipAmountData(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmFlipAmount} className="bg-destructive hover:bg-destructive/90">
+              Flip Amount Sign
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

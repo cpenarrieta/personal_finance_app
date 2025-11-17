@@ -9,13 +9,15 @@ const TransactionUpdateSchema = z.object({
   categoryId: z.string().nullable(),
   subcategoryId: z.string().nullable(),
   notes: z.string().nullable(),
+  newAmount: z.number().nullable(), // null means no change, otherwise the new amount (display format)
+  tagIds: z.array(z.string()), // Array of tag IDs for this transaction
 })
 
 type TransactionUpdate = z.infer<typeof TransactionUpdateSchema>
 
 /**
  * Confirm and save transaction updates
- * - Updates category, subcategory, and notes for selected transactions
+ * - Updates category, subcategory, notes, amount, and tags for selected transactions
  * - Removes "for-review" tag from confirmed transactions
  * - Revalidates transaction cache
  */
@@ -30,28 +32,73 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
       select: { id: true },
     })
 
+    // Fetch current transaction tags for all updates
+    const currentTransactions = await prisma.transaction.findMany({
+      where: { id: { in: validatedUpdates.map((u) => u.id) } },
+      select: { id: true, tags: { select: { tagId: true } } },
+    })
+
+    type TransactionWithTagIds = (typeof currentTransactions)[0]
+    type TransactionTagId = TransactionWithTagIds["tags"][0]
+
+    // Build a map of current tags for quick lookup
+    const currentTagsMap = new Map<string, string[]>(
+      currentTransactions.map((t: TransactionWithTagIds) => [t.id, t.tags.map((tag: TransactionTagId) => tag.tagId)]),
+    )
+
     // Process all updates in a transaction
     await prisma.$transaction(
-      validatedUpdates.map((update) =>
-        prisma.transaction.update({
+      validatedUpdates.map((update) => {
+        const currentTagIds: string[] = currentTagsMap.get(update.id) || []
+        const tagsToConnect = update.tagIds.filter((tagId: string) => !currentTagIds.includes(tagId))
+        const tagsToDisconnect = currentTagIds.filter((tagId: string) => !update.tagIds.includes(tagId))
+
+        // Filter out "for-review" tag from tagsToConnect to avoid re-adding it
+        const tagsToConnectFiltered = forReviewTag
+          ? tagsToConnect.filter((tagId: string) => tagId !== forReviewTag.id)
+          : tagsToConnect
+
+        return prisma.transaction.update({
           where: { id: update.id },
           data: {
             categoryId: update.categoryId,
             subcategoryId: update.subcategoryId,
             notes: update.notes,
-            // Remove "for-review" tag if it exists
-            ...(forReviewTag
-              ? {
-                  tags: {
+            // Update amount if newAmount is provided (convert back to database format: display * -1)
+            ...(update.newAmount !== null ? { amount: update.newAmount * -1 } : {}),
+            tags: {
+              // Remove "for-review" tag if it exists
+              ...(forReviewTag
+                ? {
                     deleteMany: {
                       tagId: forReviewTag.id,
                     },
-                  },
-                }
-              : {}),
+                  }
+                : {}),
+              // Connect new tags
+              ...(tagsToConnectFiltered.length > 0
+                ? {
+                    create: tagsToConnectFiltered.map((tagId: string) => ({
+                      tag: { connect: { id: tagId } },
+                    })),
+                  }
+                : {}),
+              // Disconnect removed tags (excluding for-review which is already handled)
+              ...(tagsToDisconnect.length > 0
+                ? {
+                    deleteMany: {
+                      tagId: {
+                        in: forReviewTag
+                          ? tagsToDisconnect.filter((tagId: string) => tagId !== forReviewTag.id)
+                          : tagsToDisconnect,
+                      },
+                    },
+                  }
+                : {}),
+            },
           },
-        }),
-      ),
+        })
+      }),
     )
 
     // Revalidate transactions cache
