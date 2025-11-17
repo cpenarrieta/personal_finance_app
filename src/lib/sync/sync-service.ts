@@ -177,6 +177,7 @@ function buildInvestmentTransactionUpsertData(t: any, accountId: string, securit
     fees: t.fees != null ? new Prisma.Decimal(t.fees) : null,
     isoCurrencyCode: t.iso_currency_code || null,
     date: new Date(t.date),
+    transactionDatetime: t.transaction_datetime || t.date, // Plaid transaction_datetime or fallback to date
     name: t.name || null,
   }
 

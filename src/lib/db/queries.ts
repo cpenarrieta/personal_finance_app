@@ -299,7 +299,7 @@ export async function getAllInvestmentTransactions() {
       quantity_number: true,
       fees_number: true,
       isoCurrencyCode: true,
-      date_string: true,
+      transactionDatetime: true,
       name: true,
       created_at_string: true,
       updated_at_string: true,
@@ -327,7 +327,7 @@ export async function getAllInvestmentTransactions() {
         },
       },
     },
-    orderBy: { date: "desc" },
+    orderBy: { transactionDatetime: "desc" },
   })
 }
 
@@ -537,7 +537,7 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
       quantity_number: true,
       fees_number: true,
       isoCurrencyCode: true,
-      date_string: true,
+      transactionDatetime: true,
       name: true,
       created_at_string: true,
       updated_at_string: true,
@@ -563,7 +563,7 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
         },
       },
     },
-    orderBy: { date: "desc" },
+    orderBy: { transactionDatetime: "desc" },
   })
 }
 

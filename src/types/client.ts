@@ -197,7 +197,7 @@ export interface InvestmentTransactionForClient {
   quantity_number: number | null // Generated from quantity
   fees_number: number | null // Generated from fees
   isoCurrencyCode: string | null
-  date_string: string | null // Generated from date
+  transactionDatetime: string | null // ISO 8601 datetime string from Plaid
   name: string | null
   created_at_string: string | null // Generated from createdAt
   updated_at_string: string | null // Generated from updatedAt

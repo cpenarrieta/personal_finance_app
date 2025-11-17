@@ -153,6 +153,7 @@ model InvestmentTransaction {
   fees                         Decimal?     @db.Decimal(20, 8)
   isoCurrencyCode              String?
   date                         DateTime
+  transactionDatetime          String?
   name                         String?
   createdAt                    DateTime     @default(now())
   updatedAt                    DateTime     @updatedAt
@@ -160,7 +161,6 @@ model InvestmentTransaction {
   price_number                 Float?       @default(dbgenerated("(price)::double precision"))
   quantity_number              Float?       @default(dbgenerated("(quantity)::double precision"))
   fees_number                  Float?       @default(dbgenerated("(fees)::double precision"))
-  date_string                  String?      @default(dbgenerated("timestamp_to_string(date)"))
   created_at_string            String?      @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
   updated_at_string            String?      @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
   account                      PlaidAccount @relation(fields: [accountId], references: [id])
