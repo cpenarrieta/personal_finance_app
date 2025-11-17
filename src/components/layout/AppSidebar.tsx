@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import {
   Home,
@@ -12,7 +13,6 @@ import {
   RefreshCw,
   Moon,
   Sun,
-  Wallet,
   Bot,
   ClipboardCheck,
 } from "lucide-react"
@@ -281,7 +281,7 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link href="/" className="flex items-center gap-2 px-2 py-2 hover:opacity-80 transition-opacity">
-          <Wallet className="h-6 w-6 text-primary" />
+          <Image src="/app_logo.svg" alt="Logo" width={24} height={24} className="h-6 w-6" />
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">Personal Finance</span>
         </Link>
       </SidebarHeader>
