@@ -4,16 +4,17 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const MONTH_OPTIONS = [
-  { value: "0", label: "Current Month" },
-  { value: "1", label: "Last Month" },
-  { value: "2", label: "Last 2 Months" },
-  { value: "3", label: "Last 3 Months" },
-  { value: "6", label: "Last 6 Months" },
+  { value: "0", label: "Current Month", mobileLabel: "Now" },
+  { value: "1", label: "Last Month", mobileLabel: "1m" },
+  { value: "2", label: "Last 2 Months", mobileLabel: "2m" },
+  { value: "3", label: "Last 3 Months", mobileLabel: "3m" },
+  { value: "6", label: "Last 6 Months", mobileLabel: "6m" },
 ] as const
 
 /**
  * Client Component for month range filter
  * Uses URL search params to maintain filter state
+ * Shows abbreviated labels on mobile to prevent horizontal scrolling
  */
 export function MonthFilter() {
   const router = useRouter()
@@ -37,7 +38,8 @@ export function MonthFilter() {
         <TabsList>
           {MONTH_OPTIONS.map((option) => (
             <TabsTrigger key={option.value} value={option.value}>
-              {option.label}
+              <span className="md:hidden">{option.mobileLabel}</span>
+              <span className="hidden md:inline">{option.label}</span>
             </TabsTrigger>
           ))}
         </TabsList>

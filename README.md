@@ -157,43 +157,6 @@ This application provides a comprehensive solution for managing your personal fi
    ```
    This will sync transactions, accounts, and investment holdings from Plaid.
 
-## 📱 Mobile App
-
-A React Native mobile app is included in the `/mobile` folder for viewing transactions on iOS and Android devices.
-
-### Features
-
-- OAuth authentication (Google & GitHub) with same email constraints
-- View recent transactions with full details
-- Pull to refresh
-- Category and tag visualization
-- Responsive transaction cards
-
-### Quick Start
-
-```bash
-cd mobile
-npm install
-npm start
-```
-
-Then scan the QR code with **Expo Go** app on your phone.
-
-### Setup Requirements
-
-1. Update `mobile/config.ts` with your computer's IP address:
-   ```typescript
-   API_URL: 'http://192.168.1.100:3000'  // Replace with your IP
-   ```
-
-2. Add mobile redirect URI to OAuth providers:
-   - **Google**: Add `personalfinance://` to authorized redirect URIs
-   - **GitHub**: Add `personalfinance://` to authorization callback URLs
-
-3. Ensure your Next.js dev server is running and accessible on your network
-
-See **[mobile/README.md](./mobile/README.md)** for detailed setup instructions and troubleshooting.
-
 ## 📚 Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - Development rules and quick reference
