@@ -6,6 +6,14 @@ import { getPlaidClient } from "../api/plaid"
 import { prisma } from "../db/prisma"
 import { Prisma } from "@prisma/client"
 import { revalidateTag } from "next/cache"
+import type {
+  Transaction,
+  AccountBase,
+  Security,
+  Holding,
+  InvestmentTransaction,
+  RemovedTransaction,
+} from "../api/plaid"
 
 // Constants
 const HISTORICAL_START_DATE = "2024-01-01"
@@ -39,7 +47,7 @@ export interface SyncOptions {
 /**
  * Builds transaction data object for Prisma upsert from Plaid transaction
  */
-function buildTransactionData(t: any) {
+function buildTransactionData(t: Transaction) {
   return {
     amount: new Prisma.Decimal(t.amount),
     isoCurrencyCode: t.iso_currency_code || null,
@@ -76,7 +84,7 @@ async function isSplitTransaction(plaidTransactionId: string): Promise<boolean> 
 /**
  * Builds account upsert data from Plaid account
  */
-function buildAccountUpsertData(a: any, itemId: string) {
+function buildAccountUpsertData(a: AccountBase, itemId: string) {
   const commonData = {
     officialName: a.official_name || null,
     mask: a.mask || null,
@@ -107,7 +115,7 @@ function buildAccountUpsertData(a: any, itemId: string) {
 /**
  * Builds security upsert data from Plaid security
  */
-function buildSecurityUpsertData(s: any) {
+function buildSecurityUpsertData(s: Security) {
   const data = {
     name: s.name || null,
     tickerSymbol: s.ticker_symbol || null,
@@ -128,7 +136,7 @@ function buildSecurityUpsertData(s: any) {
  * Builds holding upsert data from Plaid holding, optionally preserving existing price
  */
 function buildHoldingUpsertData(
-  h: any,
+  h: Holding,
   accountId: string,
   securityId: string,
   existingHolding: { institutionPrice: Prisma.Decimal | null; institutionPriceAsOf: Date | null } | null,
@@ -166,7 +174,7 @@ function buildHoldingUpsertData(
 /**
  * Builds investment transaction upsert data from Plaid investment transaction
  */
-function buildInvestmentTransactionUpsertData(t: any, accountId: string, securityId: string | null) {
+function buildInvestmentTransactionUpsertData(t: InvestmentTransaction, accountId: string, securityId: string | null) {
   const data = {
     accountId,
     securityId: securityId || null,
@@ -213,8 +221,7 @@ export async function syncItemTransactions(
     const historicalEndDate = new Date().toISOString().slice(0, 10)
 
     let offset = 0
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const totalTransactions: any[] = []
+    const totalTransactions: Transaction[] = []
 
     // Fetch all historical transactions using pagination
     while (true) {
