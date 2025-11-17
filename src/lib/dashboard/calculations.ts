@@ -32,7 +32,7 @@ type SerializableSubcategory = {
 
 type SerializableTransaction = {
   amount_number: number | null // Display format: negative = expense, positive = income
-  date_string: string | null
+  datetime: string | null
   category: SerializableCategory | null
   subcategory: SerializableSubcategory | null
 }
@@ -130,8 +130,8 @@ export function prepareDailySpendingData(transactions: SerializableTransaction[]
 
   return daysInRange.map((day) => {
     const dayTransactions = transactions.filter((t) => {
-      if (!t.date_string) return false
-      const transactionDate = new Date(t.date_string)
+      if (!t.datetime) return false
+      const transactionDate = new Date(t.datetime)
       return (
         transactionDate.getDate() === day.getDate() &&
         transactionDate.getMonth() === day.getMonth() &&

@@ -25,7 +25,7 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
     }
 
     // Get date range from filtered transactions
-    const transactionDates = transactions.map((t) => new Date(t.date_string || t.created_at_string))
+    const transactionDates = transactions.map((t) => new Date(t.datetime || t.created_at_string))
     const minDate = min(transactionDates)
     const maxDate = max(transactionDates)
 
@@ -101,7 +101,7 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
       const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0)
 
       const monthTransactions = transactions.filter((t: TransactionForClient) => {
-        const transactionDate = new Date(t.date_string || t.created_at_string)
+        const transactionDate = new Date(t.datetime || t.created_at_string)
         return transactionDate >= monthStart && transactionDate <= monthEnd
       })
 
@@ -126,7 +126,7 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
       const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0)
 
       const monthTransactions = transactions.filter((t: TransactionForClient) => {
-        const transactionDate = new Date(t.date_string || t.created_at_string)
+        const transactionDate = new Date(t.datetime || t.created_at_string)
         return transactionDate >= monthStart && transactionDate <= monthEnd
       })
 

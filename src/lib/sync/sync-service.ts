@@ -45,6 +45,8 @@ function buildTransactionData(t: any) {
     isoCurrencyCode: t.iso_currency_code || null,
     date: new Date(t.date),
     authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
+    datetime: t.datetime || t.date, // Plaid datetime or fallback to date
+    authorizedDatetime: t.authorized_datetime || null,
     pending: t.pending,
     merchantName: t.merchant_name || null,
     name: t.name,
@@ -63,10 +65,7 @@ function buildTransactionData(t: any) {
 async function isSplitTransaction(plaidTransactionId: string): Promise<boolean> {
   const existing = await prisma.transaction.findFirst({
     where: {
-      OR: [
-        { plaidTransactionId: plaidTransactionId },
-        { originalTransactionId: plaidTransactionId },
-      ],
+      OR: [{ plaidTransactionId: plaidTransactionId }, { originalTransactionId: plaidTransactionId }],
     },
     select: { isSplit: true, parentTransactionId: true },
   })
@@ -265,7 +264,9 @@ export async function syncItemTransactions(
       console.log(`       Name: ${t.name}`)
       console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
       console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
-      console.log(`       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`)
+      console.log(
+        `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+      )
 
       const upsertedTransaction = await prisma.transaction.upsert({
         where: { plaidTransactionId: existing?.plaidTransactionId || t.transaction_id },
@@ -356,7 +357,9 @@ export async function syncItemTransactions(
       console.log(`       Name: ${t.name}`)
       console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
       console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
-      console.log(`       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`)
+      console.log(
+        `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+      )
 
       const upsertedTransaction = await prisma.transaction.upsert({
         where: { plaidTransactionId: t.transaction_id },
@@ -392,7 +395,9 @@ export async function syncItemTransactions(
       console.log(`       Name: ${t.name}`)
       console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
       console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
-      console.log(`       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`)
+      console.log(
+        `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+      )
 
       await prisma.transaction.update({
         where: { plaidTransactionId: t.transaction_id },

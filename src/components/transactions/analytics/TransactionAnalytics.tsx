@@ -91,7 +91,7 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
     // Date range filter
     if (range) {
       filtered = filtered.filter((t) =>
-        isWithinInterval(new Date(t.date_string), {
+        isWithinInterval(new Date(t.datetime), {
           start: range.start,
           end: range.end,
         }),
@@ -140,7 +140,7 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
       let comparison = 0
       switch (sortBy) {
         case "date":
-          comparison = new Date(a.date_string).getTime() - new Date(b.date_string).getTime()
+          comparison = new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
           break
         case "amount":
           comparison = a.amount_number - b.amount_number
@@ -244,7 +244,7 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
     const monthMap = new Map<string, number>()
 
     filteredTransactions.forEach((t) => {
-      const month = format(new Date(t.date_string), "MMM yyyy")
+      const month = format(new Date(t.datetime), "MMM yyyy")
       const amount = Math.abs(t.amount_number)
 
       if (monthMap.has(month)) {
@@ -770,7 +770,7 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
                   onClick={() => (window.location.href = `/transactions/${transaction.id}`)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {format(new Date(transaction.date_string), "MMM d yyyy")}
+                    {format(new Date(transaction.datetime), "MMM d yyyy")}
                   </td>
                   <td className="px-6 py-4 text-sm text-foreground">
                     <div className="flex items-center gap-2">

@@ -20,15 +20,15 @@ export async function getAllTransactions() {
     where: {
       isSplit: false, // Filter out parent transactions that have been split
     },
-    orderBy: { date: "desc" },
+    orderBy: { datetime: "desc" },
     select: {
       id: true,
       plaidTransactionId: true,
       accountId: true,
       amount_number: true, // Generated column
       isoCurrencyCode: true,
-      date_string: true, // Generated column
-      authorized_date_string: true, // Generated column
+      datetime: true,
+      authorizedDatetime: true,
       pending: true,
       merchantName: true,
       name: true,
@@ -397,15 +397,15 @@ export async function getTransactionsForAccount(accountId: string) {
       accountId,
       isSplit: false,
     },
-    orderBy: { date: "desc" },
+    orderBy: { datetime: "desc" },
     select: {
       id: true,
       plaidTransactionId: true,
       accountId: true,
       amount_number: true,
       isoCurrencyCode: true,
-      date_string: true,
-      authorized_date_string: true,
+      datetime: true,
+      authorizedDatetime: true,
       pending: true,
       merchantName: true,
       name: true,
@@ -642,15 +642,15 @@ export async function getReviewTransactions() {
         },
       ],
     },
-    orderBy: { date: "desc" },
+    orderBy: { datetime: "desc" },
     select: {
       id: true,
       plaidTransactionId: true,
       accountId: true,
       amount_number: true,
       isoCurrencyCode: true,
-      date_string: true,
-      authorized_date_string: true,
+      datetime: true,
+      authorizedDatetime: true,
       pending: true,
       merchantName: true,
       name: true,

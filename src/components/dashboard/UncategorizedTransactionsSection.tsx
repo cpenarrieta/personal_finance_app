@@ -10,7 +10,7 @@ type SerializableUncategorizedTransaction = {
   name: string
   merchantName: string | null
   amount_number: number | null
-  date_string: string | null
+  datetime: string | null
   account: {
     id: string
     name: string
@@ -70,7 +70,7 @@ export function UncategorizedTransactionsSection({
               return (
                 <TableRow key={transaction.id} className="hover:bg-muted/50">
                   <TableCell className="whitespace-nowrap">
-                    {transaction.date_string ? format(new Date(transaction.date_string), "MMM d, yyyy") : "N/A"}
+                    {transaction.datetime ? format(new Date(transaction.datetime), "MMM d, yyyy") : "N/A"}
                   </TableCell>
                   <TableCell>
                     <Link href={`/transactions/${transaction.id}`} className="block hover:underline">

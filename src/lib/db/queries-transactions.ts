@@ -23,8 +23,8 @@ export async function getTransactionById(id: string) {
       accountId: true,
       amount_number: true,
       isoCurrencyCode: true,
-      date_string: true,
-      authorized_date_string: true,
+      datetime: true,
+      authorizedDatetime: true,
       pending: true,
       merchantName: true,
       name: true,
@@ -87,7 +87,7 @@ export async function getTransactionById(id: string) {
           id: true,
           name: true,
           amount_number: true,
-          date_string: true,
+          datetime: true,
           category: {
             select: {
               id: true,
@@ -101,7 +101,7 @@ export async function getTransactionById(id: string) {
           id: true,
           name: true,
           amount_number: true,
-          date_string: true,
+          datetime: true,
           category: {
             select: {
               id: true,

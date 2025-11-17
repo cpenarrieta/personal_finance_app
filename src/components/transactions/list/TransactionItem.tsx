@@ -81,7 +81,7 @@ export function TransactionItem({
 
               {/* Date and Account */}
               <div className="text-sm text-muted-foreground mt-1">
-                {format(new Date(t.date_string), "MMM d yyyy")}
+                {format(new Date(t.datetime), "MMM d yyyy")}
                 {showAccount && t.account && ` • ${t.account.name}`}
               </div>
 

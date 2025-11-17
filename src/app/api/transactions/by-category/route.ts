@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
         accountId: true,
         amount_number: true, // Generated column
         isoCurrencyCode: true,
-        date_string: true, // Generated column
-        authorized_date_string: true, // Generated column
+        datetime: true,
+        authorizedDatetime: true,
         pending: true,
         merchantName: true,
         name: true,
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: {
-        date: "desc",
+        datetime: "desc",
       },
     })
 

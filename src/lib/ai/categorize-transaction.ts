@@ -42,7 +42,7 @@ async function getRecentTransactionHistory(excludeTransactionId?: string) {
       name: true,
       merchantName: true,
       amount: true,
-      date: true,
+      datetime: true,
       category: {
         select: {
           name: true,
@@ -54,7 +54,7 @@ async function getRecentTransactionHistory(excludeTransactionId?: string) {
         },
       },
     },
-    orderBy: { date: "desc" },
+    orderBy: { datetime: "desc" },
     take: 100, // Limit to most recent 100 to keep context manageable
   })
 }
@@ -110,7 +110,7 @@ async function getSimilarTransactions(
       name: true,
       merchantName: true,
       amount: true,
-      date: true,
+      datetime: true,
       category: {
         select: {
           name: true,
@@ -122,7 +122,7 @@ async function getSimilarTransactions(
         },
       },
     },
-    orderBy: { date: "desc" },
+    orderBy: { datetime: "desc" },
     take: 20, // Limit to 20 most similar
   })
 
@@ -151,7 +151,7 @@ export async function categorizeTransaction(transactionId: string): Promise<{
         name: true,
         merchantName: true,
         amount: true,
-        date: true,
+        datetime: true,
         plaidCategory: true,
         plaidSubcategory: true,
         notes: true,

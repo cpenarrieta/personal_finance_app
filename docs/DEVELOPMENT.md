@@ -49,4 +49,4 @@ npm run sync                    # Incremental sync
 - **Async params**: Always `await params` in page components
 - **Caching**: Use `"use cache"` with `cacheLife()` and `cacheTag()`
 - **Server Components**: Default (use `'use client'` only for interactivity)
-- **Generated columns**: Use for client data (`amount_number`, `date_string`)
+- **Generated columns**: Use for client data (`amount_number`)

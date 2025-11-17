@@ -141,7 +141,7 @@ export function useTransactionFilters({
     return transactions.filter((t) => {
       // Date filter
       if (dateInterval) {
-        const txDate = new Date(t.date_string)
+        const txDate = new Date(t.datetime)
         if (!isWithinInterval(txDate, dateInterval)) return false
       }
 

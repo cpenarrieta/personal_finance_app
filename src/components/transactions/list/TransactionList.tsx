@@ -35,7 +35,7 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
                 )}
               </div>
               <div className="text-sm text-muted-foreground">
-                {format(new Date(t.date_string), "MMM d yyyy")}
+                {format(new Date(t.datetime), "MMM d yyyy")}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
               {t.merchantName && <div className="text-sm">Merchant: {t.merchantName}</div>}

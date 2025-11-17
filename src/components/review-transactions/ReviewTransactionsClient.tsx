@@ -261,7 +261,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
                     />
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                    {formatDate(transaction.date_string)}
+                    {formatDate(transaction.datetime)}
                   </TableCell>
                   <TableCell className="font-medium">
                     <div className="max-w-xs">

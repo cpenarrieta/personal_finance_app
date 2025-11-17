@@ -1,8 +1,8 @@
 /**
- * Client-safe types using generated columns
+ * Client-safe types using generated columns and string fields
  *
- * These types use PostgreSQL generated columns (amount_number, date_string, etc.)
- * which are automatically computed from source columns (amount, date, etc.).
+ * These types use PostgreSQL generated columns (amount_number, etc.) and
+ * string datetime fields which are automatically computed or directly stored.
  *
  * Benefits:
  * - No manual serialization needed
@@ -27,8 +27,8 @@ export interface TransactionForClient {
   accountId: string
   amount_number: number // Generated from amount * -1 - Display format: negative=expense, positive=income
   isoCurrencyCode: string | null
-  date_string: string // Generated from date (DateTime)
-  authorized_date_string: string | null // Generated from authorizedDate
+  datetime: string // ISO 8601 datetime string from Plaid
+  authorizedDatetime: string | null // ISO 8601 datetime string from Plaid
   pending: boolean
   merchantName: string | null
   name: string
@@ -61,7 +61,7 @@ export interface TransactionForClient {
     id: string
     name: string
     amount_number: number
-    date_string: string
+    datetime: string
     category: {
       id: string
       name: string
@@ -71,7 +71,7 @@ export interface TransactionForClient {
     id: string
     name: string
     amount_number: number
-    date_string: string
+    datetime: string
     category: {
       id: string
       name: string

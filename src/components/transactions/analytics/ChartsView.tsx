@@ -17,7 +17,16 @@ import {
   Cell,
   Legend,
 } from "recharts"
-import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO, eachMonthOfInterval, parse } from "date-fns"
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  isWithinInterval,
+  parseISO,
+  eachMonthOfInterval,
+  parse,
+} from "date-fns"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -127,7 +136,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     // Date range filter
     if (range) {
       filtered = filtered.filter((t) =>
-        isWithinInterval(parseISO(t.date_string), {
+        isWithinInterval(parseISO(t.datetime), {
           start: range.start,
           end: range.end,
         }),
@@ -317,7 +326,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
       const monthEnd = endOfMonth(month)
 
       const monthTransactions = transactions.filter((t) =>
-        isWithinInterval(parseISO(t.date_string), {
+        isWithinInterval(parseISO(t.datetime), {
           start: monthStart,
           end: monthEnd,
         }),
@@ -344,7 +353,7 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     const monthMap = new Map<string, number>()
 
     filteredTransactions.forEach((t) => {
-      const month = format(parseISO(t.date_string), "MMM yyyy")
+      const month = format(parseISO(t.datetime), "MMM yyyy")
       const amount = Math.abs(t.amount_number ?? 0)
 
       if (monthMap.has(month)) {

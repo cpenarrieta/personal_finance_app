@@ -188,19 +188,18 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Transaction Date</label>
                 <div className="text-lg font-semibold text-foreground">
-                  {format(new Date(transaction.date_string), "MMM d yyyy")}
+                  {format(new Date(transaction.datetime), "MMM d yyyy")}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {format(new Date(transaction.date_string), "EEEE")} at{" "}
-                  {format(new Date(transaction.date_string), "h:mm a")}
+                  {format(new Date(transaction.datetime), "EEEE")} at {format(new Date(transaction.datetime), "h:mm a")}
                 </div>
               </div>
 
-              {transaction.authorized_date_string && (
+              {transaction.authorizedDatetime && (
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-1">Authorized Date</label>
                   <div className="text-foreground">
-                    {format(new Date(transaction.authorized_date_string), "MMM d yyyy")}
+                    {format(new Date(transaction.authorizedDatetime), "MMM d yyyy")}
                   </div>
                 </div>
               )}
@@ -338,7 +337,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             <div className="p-3 bg-muted rounded-lg border border-border">
               <p className="font-medium text-foreground">{transaction.name}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                {format(new Date(transaction.date_string), "MMM d, yyyy")} •{" "}
+                {format(new Date(transaction.datetime), "MMM d, yyyy")} •{" "}
                 <span className={isExpense ? "text-destructive" : "text-success"}>
                   {isExpense ? "-" : "+"}${formatAmount(absoluteAmount)}
                 </span>

@@ -154,7 +154,7 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
               <div className="text-muted-foreground">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>
               <div className="text-muted-foreground">Transaction Date:</div>
-              <div className="font-medium">{format(new Date(transaction.date_string), "MMM d yyyy")}</div>
+              <div className="font-medium">{format(new Date(transaction.datetime), "MMM d yyyy")}</div>
               <div className="text-muted-foreground">Creation Date:</div>
               <div className="font-medium">{format(new Date(transaction.created_at_string), "MMM d yyyy, h:mm a")}</div>
               {transaction.merchantName && (

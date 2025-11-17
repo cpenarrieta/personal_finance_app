@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       where: {
         isSplit: false, // Filter out parent transactions that have been split
       },
-      orderBy: { date: "desc" },
+      orderBy: { datetime: "desc" },
       take: limit,
       select: {
         id: true,
@@ -27,8 +27,8 @@ export async function GET(req: NextRequest) {
         accountId: true,
         amount_number: true,
         isoCurrencyCode: true,
-        date_string: true,
-        authorized_date_string: true,
+        datetime: true,
+        authorizedDatetime: true,
         pending: true,
         merchantName: true,
         name: true,
@@ -144,10 +144,12 @@ export async function POST(req: NextRequest) {
       name,
       amount: new Prisma.Decimal(amount),
       date: new Date(date),
+      datetime: date, // Store as string (ISO format)
       pending,
       merchantName: merchantName || null,
       isoCurrencyCode: isoCurrencyCode || null,
       authorizedDate: authorizedDate ? new Date(authorizedDate) : null,
+      authorizedDatetime: authorizedDate || null, // Store as string (ISO format)
       plaidCategory: plaidCategory || null,
       plaidSubcategory: plaidSubcategory || null,
       paymentChannel: paymentChannel || null,

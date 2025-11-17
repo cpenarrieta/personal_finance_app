@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
           },
         },
       },
-      orderBy: { date: "desc" },
+      orderBy: { datetime: "desc" },
     })
 
     // Maintain the order from the frontend (important for sorting)
@@ -118,8 +118,8 @@ export async function POST(req: NextRequest) {
         transaction.account?.mask || "",
         transaction.amount_number?.toString() || "",
         transaction.isoCurrencyCode || "",
-        transaction.date.toISOString().split("T")[0], // Format as YYYY-MM-DD
-        transaction.authorizedDate ? transaction.authorizedDate.toISOString().split("T")[0] : "",
+        transaction.datetime.split("T")[0], // Format as YYYY-MM-DD (already ISO string)
+        transaction.authorizedDatetime ? transaction.authorizedDatetime.split("T")[0] : "",
         transaction.pending ? "Yes" : "No",
         transaction.merchantName || "",
         transaction.name || "",

@@ -104,15 +104,15 @@ export async function getUncategorizedTransactions() {
             categoryId: null,
             isSplit: false,
           },
-          orderBy: { date: "desc" },
+          orderBy: { datetime: "desc" },
           select: {
             id: true,
             plaidTransactionId: true,
             accountId: true,
             amount_number: true,
             isoCurrencyCode: true,
-            date_string: true,
-            authorized_date_string: true,
+            datetime: true,
+            authorizedDatetime: true,
             pending: true,
             merchantName: true,
             name: true,
@@ -173,15 +173,15 @@ export async function getRecentTransactions(limit = 20) {
       isSplit: false,
     },
     take: limit,
-    orderBy: { date: "desc" },
+    orderBy: { datetime: "desc" },
     select: {
       id: true,
       plaidTransactionId: true,
       accountId: true,
       amount_number: true,
       isoCurrencyCode: true,
-      date_string: true,
-      authorized_date_string: true,
+      datetime: true,
+      authorizedDatetime: true,
       pending: true,
       merchantName: true,
       name: true,
@@ -280,6 +280,10 @@ export async function getLastMonthStats(monthsBack: number = 0) {
 
   const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange(monthsBack)
 
+  // Convert Date objects to ISO strings for datetime string comparison
+  const lastMonthStartStr = lastMonthStart.toISOString()
+  const lastMonthEndStr = lastMonthEnd.toISOString()
+
   // Optimized: Single raw SQL query to get both spending and income
   // Uses amount_number (already inverted): negative = expense, positive = income
   const [stats] = await prisma.$queryRaw<
@@ -293,8 +297,8 @@ export async function getLastMonthStats(monthsBack: number = 0) {
       CAST(SUM(CASE WHEN t.amount_number > 0 THEN t.amount_number ELSE 0 END) AS double precision) as total_income
     FROM "Transaction" t
     LEFT JOIN "Category" c ON t."categoryId" = c.id
-    WHERE t.date >= ${lastMonthStart}
-      AND t.date < ${lastMonthEnd}
+    WHERE t.datetime >= ${lastMonthStartStr}
+      AND t.datetime < ${lastMonthEndStr}
       AND t."isSplit" = false
       AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
   `
@@ -305,9 +309,9 @@ export async function getLastMonthStats(monthsBack: number = 0) {
   // Fetch all transactions for the month (needed for charts)
   const lastMonthTransactions = await prisma.transaction.findMany({
     where: {
-      date: {
-        gte: lastMonthStart,
-        lt: lastMonthEnd,
+      datetime: {
+        gte: lastMonthStartStr,
+        lt: lastMonthEndStr,
       },
       isSplit: false,
     },
@@ -317,8 +321,8 @@ export async function getLastMonthStats(monthsBack: number = 0) {
       accountId: true,
       amount_number: true,
       isoCurrencyCode: true,
-      date_string: true,
-      authorized_date_string: true,
+      datetime: true,
+      authorizedDatetime: true,
       pending: true,
       merchantName: true,
       name: true,
@@ -404,8 +408,8 @@ export async function getTopExpensiveTransactions(monthsBack: number = 0, limit 
       accountId: true,
       amount_number: true,
       isoCurrencyCode: true,
-      date_string: true,
-      authorized_date_string: true,
+      datetime: true,
+      authorizedDatetime: true,
       pending: true,
       merchantName: true,
       name: true,
@@ -516,6 +520,12 @@ export async function getStatsWithTrends(monthsBack: number = 0) {
     previousPeriodEnd = endOfMonth(subMonths(now, monthsBack + 1))
   }
 
+  // Convert Date objects to ISO strings for datetime string comparison
+  const currentPeriodStartStr = currentPeriodStart.toISOString()
+  const currentPeriodEndStr = currentPeriodEnd.toISOString()
+  const previousPeriodStartStr = previousPeriodStart.toISOString()
+  const previousPeriodEndStr = previousPeriodEnd.toISOString()
+
   // Get stats for both periods
   const [currentStats, previousStats] = await Promise.all([
     prisma.$queryRaw<
@@ -531,8 +541,8 @@ export async function getStatsWithTrends(monthsBack: number = 0) {
         COUNT(*) as transaction_count
       FROM "Transaction" t
       LEFT JOIN "Category" c ON t."categoryId" = c.id
-      WHERE t.date >= ${currentPeriodStart}
-        AND t.date < ${currentPeriodEnd}
+      WHERE t.datetime >= ${currentPeriodStartStr}
+        AND t.datetime < ${currentPeriodEndStr}
         AND t."isSplit" = false
         AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
     `,
@@ -549,8 +559,8 @@ export async function getStatsWithTrends(monthsBack: number = 0) {
         COUNT(*) as transaction_count
       FROM "Transaction" t
       LEFT JOIN "Category" c ON t."categoryId" = c.id
-      WHERE t.date >= ${previousPeriodStart}
-        AND t.date < ${previousPeriodEnd}
+      WHERE t.datetime >= ${previousPeriodStartStr}
+        AND t.datetime < ${previousPeriodEndStr}
         AND t."isSplit" = false
         AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
     `,

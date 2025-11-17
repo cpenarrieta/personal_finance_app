@@ -69,6 +69,8 @@ model Transaction {
   isoCurrencyCode        String?
   date                   DateTime
   authorizedDate         DateTime?
+  datetime               String
+  authorizedDatetime     String?
   pending                Boolean
   merchantName           String?
   name                   String
@@ -88,8 +90,6 @@ model Transaction {
   originalTransactionId  String?
   parentTransactionId    String?
   amount_number          Float?        @default(dbgenerated("((amount * -1))::double precision"))
-  date_string            String?       @default(dbgenerated("timestamp_to_string(date)"))
-  authorized_date_string String?       @default(dbgenerated("timestamp_to_string(\"authorizedDate\")"))
   created_at_string      String?       @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
   updated_at_string      String?       @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
   account                PlaidAccount  @relation(fields: [accountId], references: [id])

@@ -27,7 +27,7 @@ export function useTransactionSort({
             compareValue = new Date(a.created_at_string).getTime() - new Date(b.created_at_string).getTime()
             break
           case "date":
-            compareValue = new Date(a.date_string).getTime() - new Date(b.date_string).getTime()
+            compareValue = new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
             break
           case "amount":
             compareValue = a.amount_number - b.amount_number

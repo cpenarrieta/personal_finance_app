@@ -36,7 +36,7 @@ export const getTransactionsByDateRange = tool({
     const transactions = await getAllTransactions()
 
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string)
+      const date = new Date(t.datetime)
       const start = new Date(startDate)
       const end = new Date(endDate)
 
@@ -50,7 +50,7 @@ export const getTransactionsByDateRange = tool({
 
     // Return simplified data for the AI
     return filtered.map((t: Transaction) => ({
-      date: t.date_string,
+      date: t.datetime,
       name: t.name,
       merchant: t.merchantName,
       amount: t.amount_number,
@@ -98,7 +98,7 @@ export const getSpendingByCategory = tool({
 
       // Filter by date range
       const filtered = transactions.filter((t: Transaction) => {
-        const date = new Date(t.date_string)
+        const date = new Date(t.datetime)
         const start = new Date(startDate)
         const end = new Date(endDate)
         return date >= start && date <= end
@@ -167,7 +167,7 @@ export const getSpendingByMerchant = tool({
 
     // Filter by date range and merchants only
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string)
+      const date = new Date(t.datetime)
       const start = new Date(startDate)
       const end = new Date(endDate)
       return date >= start && date <= end && t.merchantName
@@ -226,7 +226,7 @@ export const getTotalSpending = tool({
 
       // Filter by date range
       const filtered = transactions.filter((t: Transaction) => {
-        const date = new Date(t.date_string)
+        const date = new Date(t.datetime)
         const start = new Date(startDate)
         const end = new Date(endDate)
         return date >= start && date <= end
@@ -291,7 +291,7 @@ export const getSpendingTrends = tool({
 
     // Filter by date range and optional category
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.date_string)
+      const date = new Date(t.datetime)
       const start = new Date(startDate)
       const end = new Date(endDate)
       const isInRange = date >= start && date <= end
@@ -303,7 +303,7 @@ export const getSpendingTrends = tool({
     const monthMap = new Map<string, { expenses: number; income: number; count: number }>()
 
     filtered.forEach((t: Transaction) => {
-      const date = new Date(t.date_string)
+      const date = new Date(t.datetime)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
 
       const existing = monthMap.get(monthKey)
