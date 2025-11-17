@@ -32,63 +32,71 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
       select: { id: true },
     })
 
+    // Fetch current transaction tags for all updates
+    const currentTransactions = await prisma.transaction.findMany({
+      where: { id: { in: validatedUpdates.map((u) => u.id) } },
+      select: { id: true, tags: { select: { tagId: true } } },
+    })
+
+    type TransactionWithTagIds = (typeof currentTransactions)[0]
+    type TransactionTagId = TransactionWithTagIds["tags"][0]
+
+    // Build a map of current tags for quick lookup
+    const currentTagsMap = new Map<string, string[]>(
+      currentTransactions.map((t: TransactionWithTagIds) => [t.id, t.tags.map((tag: TransactionTagId) => tag.tagId)]),
+    )
+
     // Process all updates in a transaction
     await prisma.$transaction(
       validatedUpdates.map((update) => {
-        // Get current transaction to fetch existing tag IDs for comparison
-        return prisma.transaction.findUnique({
+        const currentTagIds: string[] = currentTagsMap.get(update.id) || []
+        const tagsToConnect = update.tagIds.filter((tagId: string) => !currentTagIds.includes(tagId))
+        const tagsToDisconnect = currentTagIds.filter((tagId: string) => !update.tagIds.includes(tagId))
+
+        // Filter out "for-review" tag from tagsToConnect to avoid re-adding it
+        const tagsToConnectFiltered = forReviewTag
+          ? tagsToConnect.filter((tagId: string) => tagId !== forReviewTag.id)
+          : tagsToConnect
+
+        return prisma.transaction.update({
           where: { id: update.id },
-          select: { tags: { select: { tagId: true } } },
-        }).then((currentTransaction: { tags: { tagId: string }[] } | null) => {
-          const currentTagIds = currentTransaction?.tags.map((t: { tagId: string }) => t.tagId) || []
-          const tagsToConnect = update.tagIds.filter((tagId: string) => !currentTagIds.includes(tagId))
-          const tagsToDisconnect = currentTagIds.filter((tagId: string) => !update.tagIds.includes(tagId))
-
-          // Filter out "for-review" tag from tagsToConnect to avoid re-adding it
-          const tagsToConnectFiltered = forReviewTag
-            ? tagsToConnect.filter((tagId: string) => tagId !== forReviewTag.id)
-            : tagsToConnect
-
-          return prisma.transaction.update({
-            where: { id: update.id },
-            data: {
-              categoryId: update.categoryId,
-              subcategoryId: update.subcategoryId,
-              notes: update.notes,
-              // Update amount if newAmount is provided (convert back to database format: display * -1)
-              ...(update.newAmount !== null ? { amount: update.newAmount * -1 } : {}),
-              tags: {
-                // Remove "for-review" tag if it exists
-                ...(forReviewTag
-                  ? {
-                      deleteMany: {
-                        tagId: forReviewTag.id,
+          data: {
+            categoryId: update.categoryId,
+            subcategoryId: update.subcategoryId,
+            notes: update.notes,
+            // Update amount if newAmount is provided (convert back to database format: display * -1)
+            ...(update.newAmount !== null ? { amount: update.newAmount * -1 } : {}),
+            tags: {
+              // Remove "for-review" tag if it exists
+              ...(forReviewTag
+                ? {
+                    deleteMany: {
+                      tagId: forReviewTag.id,
+                    },
+                  }
+                : {}),
+              // Connect new tags
+              ...(tagsToConnectFiltered.length > 0
+                ? {
+                    create: tagsToConnectFiltered.map((tagId: string) => ({
+                      tag: { connect: { id: tagId } },
+                    })),
+                  }
+                : {}),
+              // Disconnect removed tags (excluding for-review which is already handled)
+              ...(tagsToDisconnect.length > 0
+                ? {
+                    deleteMany: {
+                      tagId: {
+                        in: forReviewTag
+                          ? tagsToDisconnect.filter((tagId: string) => tagId !== forReviewTag.id)
+                          : tagsToDisconnect,
                       },
-                    }
-                  : {}),
-                // Connect new tags
-                ...(tagsToConnectFiltered.length > 0
-                  ? {
-                      create: tagsToConnectFiltered.map((tagId: string) => ({
-                        tag: { connect: { id: tagId } },
-                      })),
-                    }
-                  : {}),
-                // Disconnect removed tags (excluding for-review which is already handled)
-                ...(tagsToDisconnect.length > 0
-                  ? {
-                      deleteMany: {
-                        tagId: {
-                          in: forReviewTag
-                            ? tagsToDisconnect.filter((tagId: string) => tagId !== forReviewTag.id)
-                            : tagsToDisconnect,
-                        },
-                      },
-                    }
-                  : {}),
-              },
+                    },
+                  }
+                : {}),
             },
-          })
+          },
         })
       }),
     )

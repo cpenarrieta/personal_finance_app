@@ -26,11 +26,11 @@ export function TagSelector({
       {tags.map((tag) => (
         <Badge
           key={tag.id}
-          variant={selectedTagIds.includes(tag.id) ? "default" : "secondary"}
+          variant={selectedTagIds.includes(tag.id) ? "default" : "outline"}
           className={`cursor-pointer transition-all ${
             selectedTagIds.includes(tag.id)
-              ? "text-white ring-2 ring-offset-2"
-              : "text-muted-foreground bg-muted hover:bg-muted/80"
+              ? "text-white ring-2 ring-offset-2 border-0"
+              : "text-muted-foreground bg-background hover:bg-muted"
           }`}
           style={selectedTagIds.includes(tag.id) ? { backgroundColor: tag.color } : undefined}
           onClick={() => onToggleTag(tag.id)}
