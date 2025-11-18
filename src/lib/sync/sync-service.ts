@@ -8,12 +8,6 @@ import { Prisma } from "@prisma/client"
 import { revalidateTag } from "next/cache"
 import type { Transaction, AccountBase, Security, Holding, InvestmentTransaction } from "../api/plaid"
 
-// Plaid's TypeScript types are incomplete - they're missing some fields that the API actually returns
-// Extend InvestmentTransaction to include the missing datetime field
-interface PlaidInvestmentTransaction extends InvestmentTransaction {
-  datetime?: string // ISO 8601 datetime string
-}
-
 // Constants
 const HISTORICAL_START_DATE = "2024-01-01"
 const TRANSACTION_BATCH_SIZE = 500
@@ -173,11 +167,7 @@ function buildHoldingUpsertData(
 /**
  * Builds investment transaction upsert data from Plaid investment transaction
  */
-function buildInvestmentTransactionUpsertData(
-  t: PlaidInvestmentTransaction,
-  accountId: string,
-  securityId: string | null,
-) {
+function buildInvestmentTransactionUpsertData(t: InvestmentTransaction, accountId: string, securityId: string | null) {
   const data = {
     accountId,
     securityId: securityId || null,
@@ -188,7 +178,7 @@ function buildInvestmentTransactionUpsertData(
     fees: t.fees != null ? new Prisma.Decimal(t.fees) : null,
     isoCurrencyCode: t.iso_currency_code || null,
     date: new Date(t.date),
-    transactionDatetime: t.datetime || t.date, // Plaid datetime or fallback to date
+    transactionDatetime: t.date, // Store date as string in transactionDatetime column
     name: t.name || null,
   }
 
