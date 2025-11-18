@@ -14,6 +14,17 @@ import { CategorySelect } from "@/components/ui/category-select"
 import { SubcategorySelect } from "@/components/ui/subcategory-select"
 import { Button } from "@/components/ui/button"
 import { TagSelector } from "@/components/transactions/filters/TagSelector"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { ArrowLeftRight } from "lucide-react"
 
 interface EditTransactionModalProps {
   transaction: TransactionForClient
@@ -25,9 +36,11 @@ interface EditTransactionModalProps {
 export function EditTransactionModal({ transaction, onClose, categories, tags }: EditTransactionModalProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showFlipAmountDialog, setShowFlipAmountDialog] = useState(false)
 
   // Form state
   const [name, setName] = useState(transaction.name)
+  const [newAmount, setNewAmount] = useState<number | null>(null) // null means no change
   const [categoryId, setCategoryId] = useState(transaction.categoryId || "")
   const [subcategoryId, setSubcategoryId] = useState(transaction.subcategoryId || "")
   const [notes, setNotes] = useState(transaction.notes || "")
@@ -35,10 +48,17 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
     transaction.tags?.map((tag: TagForClient) => tag.id) || [],
   )
 
-  // No longer needed - SubcategorySelect handles this internally
+  const displayAmount = newAmount !== null ? newAmount : transaction.amount_number
 
   const toggleTag = (tagId: string) => {
     setSelectedTagIds((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
+  }
+
+  const confirmFlipAmount = () => {
+    // Explicitly calculate current amount to avoid closure issues
+    const currentAmount = newAmount !== null ? newAmount : transaction.amount_number
+    setNewAmount(currentAmount * -1)
+    setShowFlipAmountDialog(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,18 +68,27 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
     const toastId = toast.loading("Updating transaction...")
 
     try {
+      const updatePayload: Record<string, unknown> = {
+        name,
+        categoryId: categoryId || null,
+        subcategoryId: subcategoryId || null,
+        notes: notes || null,
+        tagIds: selectedTagIds,
+      }
+
+      // Only include amount if it was changed
+      // Note: Database stores amount with opposite sign of what user sees
+      // (amount_number = amount * -1), so we need to flip it before sending
+      if (newAmount !== null) {
+        updatePayload.amount = newAmount * -1
+      }
+
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name,
-          categoryId: categoryId || null,
-          subcategoryId: subcategoryId || null,
-          notes: notes || null,
-          tagIds: selectedTagIds,
-        }),
+        body: JSON.stringify(updatePayload),
       })
 
       if (!response.ok) {
@@ -150,7 +179,21 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
               <div className="text-muted-foreground">Transaction ID:</div>
               <div className="font-medium font-mono text-xs">{transaction.id}</div>
               <div className="text-muted-foreground">Amount:</div>
-              <div className="font-medium">${formatAmount(transaction.amount_number)}</div>
+              <div className="font-medium flex items-center gap-2">
+                <span className={newAmount !== null ? "text-primary" : ""}>
+                  {displayAmount < 0 ? "-" : "+"}${formatAmount(displayAmount)}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => setShowFlipAmountDialog(true)}
+                  title="Flip amount sign"
+                >
+                  <ArrowLeftRight className="h-3 w-3" />
+                </Button>
+              </div>
               <div className="text-muted-foreground">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>
               <div className="text-muted-foreground">Transaction Date:</div>
@@ -177,6 +220,33 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Flip Amount Warning Dialog */}
+      <AlertDialog open={showFlipAmountDialog} onOpenChange={setShowFlipAmountDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Flip Transaction Amount Sign?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <div className="font-semibold text-destructive">⚠️ Warning: This is a very rare operation</div>
+                <div>
+                  Flipping the amount sign should <strong>only</strong> be used when you are 100% confident that Plaid
+                  API made a mistake with the transaction amount sign.
+                </div>
+                <div className="text-sm">
+                  In most cases, the sign is correct. Proceed only if you're absolutely certain this is incorrect.
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmFlipAmount} className="bg-destructive hover:bg-destructive/90">
+              Flip Amount Sign
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }

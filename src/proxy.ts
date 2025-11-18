@@ -20,7 +20,9 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/api/auth") ||
     pathname === "/login" ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon")
+    pathname.startsWith("/favicon") ||
+    // Allow public assets (images, icons, manifest, etc.)
+    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|json)$/)
   ) {
     return NextResponse.next()
   }
@@ -64,6 +66,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * Note: Public assets are filtered in the proxy function itself
      */
     "/((?!api/auth|api/plaid/webhook|_next/static|_next/image|favicon.ico).*)",
   ],
