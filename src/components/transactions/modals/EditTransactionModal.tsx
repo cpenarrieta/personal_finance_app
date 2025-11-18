@@ -55,7 +55,9 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
   }
 
   const confirmFlipAmount = () => {
-    setNewAmount(displayAmount * -1)
+    // Explicitly calculate current amount to avoid closure issues
+    const currentAmount = newAmount !== null ? newAmount : transaction.amount_number
+    setNewAmount(currentAmount * -1)
     setShowFlipAmountDialog(false)
   }
 
@@ -75,8 +77,10 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
       }
 
       // Only include amount if it was changed
+      // Note: Database stores amount with opposite sign of what user sees
+      // (amount_number = amount * -1), so we need to flip it before sending
       if (newAmount !== null) {
-        updatePayload.amount = newAmount
+        updatePayload.amount = newAmount * -1
       }
 
       const response = await fetch(`/api/transactions/${transaction.id}`, {
@@ -224,8 +228,8 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
               <div className="space-y-2">
                 <div className="font-semibold text-destructive">⚠️ Warning: This is a very rare operation</div>
                 <div>
-                  Flipping the amount sign should <strong>only</strong> be used when you are 100% confident that Plaid API
-                  made a mistake with the transaction amount sign.
+                  Flipping the amount sign should <strong>only</strong> be used when you are 100% confident that Plaid
+                  API made a mistake with the transaction amount sign.
                 </div>
                 <div className="text-sm">
                   In most cases, the sign is correct. Proceed only if you're absolutely certain this is incorrect.
