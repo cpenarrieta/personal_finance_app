@@ -59,6 +59,7 @@ export type CreateTransactionPayload = z.infer<typeof createTransactionSchema>
  */
 export const updateTransactionSchema = z.object({
   name: z.string().optional(),
+  amount: z.number().optional(),
   plaidCategory: z.string().nullable().optional(),
   plaidSubcategory: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional(),
