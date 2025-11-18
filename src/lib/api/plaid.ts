@@ -13,3 +13,19 @@ export function getPlaidClient() {
   })
   return new PlaidApi(config)
 }
+
+// Re-export commonly used Plaid types for convenience
+export type {
+  Transaction,
+  AccountBase,
+  Security,
+  Holding,
+  InvestmentTransaction,
+  RemovedTransaction,
+  TransactionsSyncResponse,
+  TransactionsGetResponse,
+  InvestmentsHoldingsGetResponse,
+  InvestmentsTransactionsGetResponse,
+  Products,
+  CountryCode,
+} from "plaid"
