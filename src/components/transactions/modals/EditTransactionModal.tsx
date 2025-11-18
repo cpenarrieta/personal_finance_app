@@ -180,7 +180,9 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
               <div className="font-medium font-mono text-xs">{transaction.id}</div>
               <div className="text-muted-foreground">Amount:</div>
               <div className="font-medium flex items-center gap-2">
-                <span className={newAmount !== null ? "text-primary" : ""}>${formatAmount(displayAmount)}</span>
+                <span className={newAmount !== null ? "text-primary" : ""}>
+                  {displayAmount < 0 ? "-" : "+"}${formatAmount(displayAmount)}
+                </span>
                 <Button
                   type="button"
                   variant="ghost"
