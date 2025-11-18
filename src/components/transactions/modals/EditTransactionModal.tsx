@@ -14,6 +14,17 @@ import { CategorySelect } from "@/components/ui/category-select"
 import { SubcategorySelect } from "@/components/ui/subcategory-select"
 import { Button } from "@/components/ui/button"
 import { TagSelector } from "@/components/transactions/filters/TagSelector"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { ArrowLeftRight } from "lucide-react"
 
 interface EditTransactionModalProps {
   transaction: TransactionForClient
@@ -25,10 +36,11 @@ interface EditTransactionModalProps {
 export function EditTransactionModal({ transaction, onClose, categories, tags }: EditTransactionModalProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showFlipAmountDialog, setShowFlipAmountDialog] = useState(false)
 
   // Form state
   const [name, setName] = useState(transaction.name)
-  const [amount, setAmount] = useState(Math.abs(transaction.amount_number).toString())
+  const [newAmount, setNewAmount] = useState<number | null>(null) // null means no change
   const [categoryId, setCategoryId] = useState(transaction.categoryId || "")
   const [subcategoryId, setSubcategoryId] = useState(transaction.subcategoryId || "")
   const [notes, setNotes] = useState(transaction.notes || "")
@@ -36,10 +48,15 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
     transaction.tags?.map((tag: TagForClient) => tag.id) || [],
   )
 
-  // No longer needed - SubcategorySelect handles this internally
+  const displayAmount = newAmount !== null ? newAmount : transaction.amount_number
 
   const toggleTag = (tagId: string) => {
     setSelectedTagIds((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
+  }
+
+  const confirmFlipAmount = () => {
+    setNewAmount(displayAmount * -1)
+    setShowFlipAmountDialog(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,24 +66,25 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
     const toastId = toast.loading("Updating transaction...")
 
     try {
-      // Parse amount and preserve original sign (positive/negative)
-      const parsedAmount = parseFloat(amount)
-      const isOriginalNegative = transaction.amount_number < 0
-      const finalAmount = isOriginalNegative ? -Math.abs(parsedAmount) : Math.abs(parsedAmount)
+      const updatePayload: Record<string, unknown> = {
+        name,
+        categoryId: categoryId || null,
+        subcategoryId: subcategoryId || null,
+        notes: notes || null,
+        tagIds: selectedTagIds,
+      }
+
+      // Only include amount if it was changed
+      if (newAmount !== null) {
+        updatePayload.amount = newAmount
+      }
 
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name,
-          amount: finalAmount,
-          categoryId: categoryId || null,
-          subcategoryId: subcategoryId || null,
-          notes: notes || null,
-          tagIds: selectedTagIds,
-        }),
+        body: JSON.stringify(updatePayload),
       })
 
       if (!response.ok) {
@@ -104,23 +122,6 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
               onChange={(e) => setName(e.target.value)}
               placeholder="Transaction name"
             />
-          </div>
-
-          {/* Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-            />
-            <p className="text-xs text-muted-foreground">
-              {transaction.amount_number < 0 ? "This is an expense (negative)" : "This is income (positive)"}
-            </p>
           </div>
 
           {/* Categories */}
@@ -173,6 +174,20 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-muted-foreground">Transaction ID:</div>
               <div className="font-medium font-mono text-xs">{transaction.id}</div>
+              <div className="text-muted-foreground">Amount:</div>
+              <div className="font-medium flex items-center gap-2">
+                <span className={newAmount !== null ? "text-primary" : ""}>${formatAmount(displayAmount)}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => setShowFlipAmountDialog(true)}
+                  title="Flip amount sign"
+                >
+                  <ArrowLeftRight className="h-3 w-3" />
+                </Button>
+              </div>
               <div className="text-muted-foreground">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>
               <div className="text-muted-foreground">Transaction Date:</div>
@@ -199,6 +214,33 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Flip Amount Warning Dialog */}
+      <AlertDialog open={showFlipAmountDialog} onOpenChange={setShowFlipAmountDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Flip Transaction Amount Sign?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <div className="font-semibold text-destructive">⚠️ Warning: This is a very rare operation</div>
+                <div>
+                  Flipping the amount sign should <strong>only</strong> be used when you are 100% confident that Plaid API
+                  made a mistake with the transaction amount sign.
+                </div>
+                <div className="text-sm">
+                  In most cases, the sign is correct. Proceed only if you're absolutely certain this is incorrect.
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmFlipAmount} className="bg-destructive hover:bg-destructive/90">
+              Flip Amount Sign
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }
