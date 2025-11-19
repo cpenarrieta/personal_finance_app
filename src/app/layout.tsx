@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import Script from "next/script"
 import { ThemeProvider } from "@/components/shared/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
@@ -51,7 +50,6 @@ export default function RootLayout({
           {children}
           <Toaster />
         </ThemeProvider>
-        <Script src="https://upload-widget.cloudinary.com/global/all.js" strategy="lazyOnload" />
       </body>
     </html>
   )
