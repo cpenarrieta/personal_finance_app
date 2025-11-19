@@ -31,7 +31,6 @@ import { CategoryForClient, TransactionForClient } from "@/types"
 import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils"
 import { useClickOutside } from "@/hooks/useClickOutside"
 import {
-  getTransactionDate,
   isTransactionInDateRange,
   getTransactionMonth,
   formatTransactionMonth,

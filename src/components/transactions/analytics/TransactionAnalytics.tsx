@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, RefObject } from "react"
 import Image from "next/image"
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
-import { startOfMonth, endOfMonth, subMonths } from "date-fns"
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -381,13 +381,13 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customStartDate ? format(parseLocalDate(customStartDate), "PPP") : "Start date"}
+                      {customStartDate ? format(new Date(customStartDate), "PPP") : "Start date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={customStartDate ? parseLocalDate(customStartDate) : undefined}
+                      selected={customStartDate ? new Date(customStartDate) : undefined}
                       onSelect={(date) => setCustomStartDate(date ? format(date, "yyyy-MM-dd") : "")}
                       weekStartsOn={1}
                       initialFocus
@@ -407,13 +407,13 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customEndDate ? format(parseLocalDate(customEndDate), "PPP") : "End date"}
+                      {customEndDate ? format(new Date(customEndDate), "PPP") : "End date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={customEndDate ? parseLocalDate(customEndDate) : undefined}
+                      selected={customEndDate ? new Date(customEndDate) : undefined}
                       onSelect={(date) => setCustomEndDate(date ? format(date, "yyyy-MM-dd") : "")}
                       weekStartsOn={1}
                       initialFocus

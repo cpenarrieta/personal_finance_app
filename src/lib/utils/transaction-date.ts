@@ -14,7 +14,7 @@
  * @returns Date string in YYYY-MM-DD format (e.g., "2025-11-16")
  */
 export function getTransactionDate(datetime: string): string {
-  return datetime.split("T")[0]
+  return datetime.split("T")[0]!
 }
 
 /**
@@ -35,7 +35,7 @@ export function formatTransactionDate(
   formatType: "short" | "medium" | "long" | "weekday" | "iso" = "medium",
 ): string {
   const dateStr = getTransactionDate(datetime)
-  const [year, month, day] = dateStr.split("-").map(Number)
+  const [year, month, day] = dateStr.split("-").map(Number) as [number, number, number]
 
   // Create date in local timezone (no UTC conversion)
   const date = new Date(year, month - 1, day)
@@ -59,17 +59,17 @@ export function formatTransactionDate(
 
   switch (formatType) {
     case "short":
-      return `${monthShort[month - 1]} ${day}`
+      return `${monthShort[month - 1]!} ${day}`
     case "medium":
-      return `${monthShort[month - 1]} ${day}, ${year}`
+      return `${monthShort[month - 1]!} ${day}, ${year}`
     case "long":
-      return `${monthNames[month - 1]} ${day}, ${year}`
+      return `${monthNames[month - 1]!} ${day}, ${year}`
     case "weekday":
-      return weekdays[date.getDay()]
+      return weekdays[date.getDay()]!
     case "iso":
       return dateStr
     default:
-      return `${monthShort[month - 1]} ${day}, ${year}`
+      return `${monthShort[month - 1]!} ${day}, ${year}`
   }
 }
 
@@ -112,9 +112,9 @@ export function getTransactionMonth(datetime: string): string {
  * @returns Formatted string (e.g., "Nov 2025")
  */
 export function formatTransactionMonth(yearMonth: string): string {
-  const [year, month] = yearMonth.split("-").map(Number)
+  const [year, month] = yearMonth.split("-").map(Number) as [number, number]
   const monthShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  return `${monthShort[month - 1]} ${year}`
+  return `${monthShort[month - 1]!} ${year}`
 }
 
 /**
