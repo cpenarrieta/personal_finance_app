@@ -6,6 +6,7 @@
 import { tool } from "ai"
 import { z } from "zod"
 import { getAllTransactions } from "@/lib/db/queries"
+import { getTransactionDate, isTransactionInDateRange, getTransactionMonth } from "@/lib/utils/transaction-date"
 
 // Type for a single transaction from getAllTransactions
 type Transaction = Awaited<ReturnType<typeof getAllTransactions>>[number]
@@ -36,11 +37,7 @@ export const getTransactionsByDateRange = tool({
     const transactions = await getAllTransactions()
 
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.datetime)
-      const start = new Date(startDate)
-      const end = new Date(endDate)
-
-      const isInRange = date >= start && date <= end
+      const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
       const matchesMerchant =
         !merchantName || (t.merchantName && t.merchantName.toLowerCase().includes(merchantName.toLowerCase()))
@@ -50,7 +47,7 @@ export const getTransactionsByDateRange = tool({
 
     // Return simplified data for the AI
     return filtered.map((t: Transaction) => ({
-      date: t.datetime,
+      date: getTransactionDate(t.datetime),
       name: t.name,
       merchant: t.merchantName,
       amount: t.amount_number,
@@ -98,10 +95,7 @@ export const getSpendingByCategory = tool({
 
       // Filter by date range
       const filtered = transactions.filter((t: Transaction) => {
-        const date = new Date(t.datetime)
-        const start = new Date(startDate)
-        const end = new Date(endDate)
-        return date >= start && date <= end
+        return isTransactionInDateRange(t.datetime, startDate, endDate)
       })
 
       // Group by category
@@ -167,10 +161,7 @@ export const getSpendingByMerchant = tool({
 
     // Filter by date range and merchants only
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.datetime)
-      const start = new Date(startDate)
-      const end = new Date(endDate)
-      return date >= start && date <= end && t.merchantName
+      return isTransactionInDateRange(t.datetime, startDate, endDate) && t.merchantName
     })
 
     // Group by merchant
@@ -226,10 +217,7 @@ export const getTotalSpending = tool({
 
       // Filter by date range
       const filtered = transactions.filter((t: Transaction) => {
-        const date = new Date(t.datetime)
-        const start = new Date(startDate)
-        const end = new Date(endDate)
-        return date >= start && date <= end
+        return isTransactionInDateRange(t.datetime, startDate, endDate)
       })
 
       // Calculate totals (negative = expense, positive = income)
@@ -291,10 +279,7 @@ export const getSpendingTrends = tool({
 
     // Filter by date range and optional category
     const filtered = transactions.filter((t: Transaction) => {
-      const date = new Date(t.datetime)
-      const start = new Date(startDate)
-      const end = new Date(endDate)
-      const isInRange = date >= start && date <= end
+      const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
       return isInRange && matchesCategory
     })
@@ -303,8 +288,7 @@ export const getSpendingTrends = tool({
     const monthMap = new Map<string, { expenses: number; income: number; count: number }>()
 
     filtered.forEach((t: Transaction) => {
-      const date = new Date(t.datetime)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+      const monthKey = getTransactionMonth(t.datetime)
 
       const existing = monthMap.get(monthKey)
       const isExpense = t.amount_number < 0
