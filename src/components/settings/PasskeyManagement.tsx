@@ -16,7 +16,7 @@ interface Passkey {
   createdAt: string
 }
 
-export default function PasskeyManagement({ userId }: { userId: string }) {
+export default function PasskeyManagement() {
   const [passkeys, setPasskeys] = useState<Passkey[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
@@ -54,7 +54,7 @@ export default function PasskeyManagement({ userId }: { userId: string }) {
         name: deviceName,
       })
 
-      if (result.error) {
+      if (result?.error) {
         toast.error(result.error.message || "Failed to add passkey")
         return
       }

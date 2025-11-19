@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 export default async function SecurityPage() {
-  const session = await validateAllowedEmail()
+  await validateAllowedEmail()
 
   return (
     <div className="space-y-4">
@@ -19,7 +19,7 @@ export default async function SecurityPage() {
         <h1 className="text-3xl font-bold text-foreground">Security Settings</h1>
         <p className="text-muted-foreground mt-1">Manage your passkeys and biometric authentication.</p>
       </div>
-      <PasskeyManagement userId={session.user.id} />
+      <PasskeyManagement />
     </div>
   )
 }
