@@ -252,7 +252,7 @@ export async function syncItemTransactions(
 
       // If split transaction exists, skip it (don't overwrite user's split)
       if (existing && existing.isSplit) {
-        console.log(`    ⏭️  Skipping split: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
+        console.log(`    ⏭️  Skipping split: ${t.date} | ${t.datetime} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
         continue
       }
 
@@ -261,7 +261,7 @@ export async function syncItemTransactions(
 
       // Log transaction details for historical tracking
       console.log(`    ${isNew ? "➕ NEW" : "🔄 UPDATE"} [HISTORICAL]`)
-      console.log(`       Date: ${t.date} | Account: ${t.account_id}`)
+      console.log(`       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}`)
       console.log(`       Name: ${t.name}`)
       console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
       console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
@@ -354,7 +354,7 @@ export async function syncItemTransactions(
 
       // Log transaction details for historical tracking
       console.log(`    ➕ NEW [ADDED]`)
-      console.log(`       Date: ${t.date} | Account: ${t.account_id}`)
+      console.log(`       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}`)
       console.log(`       Name: ${t.name}`)
       console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
       console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
@@ -392,7 +392,7 @@ export async function syncItemTransactions(
 
       // Log transaction details for historical tracking
       console.log(`    📝 MODIFIED [UPDATE]`)
-      console.log(`       Date: ${t.date} | Account: ${t.account_id}`)
+      console.log(`       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}`)
       console.log(`       Name: ${t.name}`)
       console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
       console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
