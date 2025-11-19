@@ -28,7 +28,9 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
 
       if (!cloudName || !uploadPreset) {
-        throw new Error("Cloudinary is not configured. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET")
+        throw new Error(
+          "Cloudinary is not configured. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET",
+        )
       }
 
       // Create a Cloudinary upload widget
@@ -37,9 +39,9 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
           cloudName,
           uploadPreset,
           sources: ["local", "url", "camera"],
-          multiple: true,
-          maxFiles: 10,
-          clientAllowedFormats: ["jpg", "jpeg", "png", "gif", "pdf", "doc", "docx", "xls", "xlsx"],
+          multiple: false,
+          maxFiles: 1,
+          clientAllowedFormats: ["jpg", "jpeg", "png", "pdf", "doc", "docx", "xls", "xlsx", "webp"],
           maxFileSize: 10000000, // 10MB
           folder: `transactions/${transactionId}`,
         },
@@ -83,7 +85,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
           if (result.event === "close") {
             setIsUploading(false)
           }
-        }
+        },
       )
 
       widget?.open()
@@ -167,13 +169,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
         </div>
       )}
 
-      {files.length === 0 ? (
-        <div className="p-8 border-2 border-dashed border-border rounded-lg text-center">
-          <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground">No files attached</p>
-          <p className="text-xs text-muted-foreground mt-1">Click &quot;Upload File&quot; to add files</p>
-        </div>
-      ) : (
+      {files.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {files.map((fileUrl, index) => {
             const fileType = getFileType(fileUrl)
@@ -186,13 +182,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
                   <div className="flex-shrink-0">
                     {fileType === "image" ? (
                       <div className="relative w-16 h-16 rounded overflow-hidden bg-muted">
-                        <Image
-                          src={fileUrl}
-                          alt={fileName}
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                        />
+                        <Image src={fileUrl} alt={fileName} fill className="object-cover" sizes="64px" />
                       </div>
                     ) : (
                       <div className="w-16 h-16 rounded bg-primary/10 flex items-center justify-center text-primary">
@@ -240,7 +230,8 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
         <div className="mt-3 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-foreground">
           <p className="font-medium">Cloudinary not configured</p>
           <p className="text-xs mt-1">
-            Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET environment variables to enable file uploads.
+            Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET environment variables to
+            enable file uploads.
           </p>
         </div>
       )}
