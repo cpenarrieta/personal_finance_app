@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react"
-import { startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns"
+import { startOfMonth, endOfMonth, subMonths } from "date-fns"
 import type { CategoryForClient, TransactionForClient, TagForClient } from "@/types"
+import { isTransactionInDateRange, dateToString } from "@/lib/utils/transaction-date"
 
 export type DateRange = "all" | "last30" | "last90" | "thisMonth" | "lastMonth" | "custom"
 
@@ -141,8 +142,9 @@ export function useTransactionFilters({
     return transactions.filter((t) => {
       // Date filter
       if (dateInterval) {
-        const txDate = new Date(t.datetime)
-        if (!isWithinInterval(txDate, dateInterval)) return false
+        const startStr = dateToString(dateInterval.start)
+        const endStr = dateToString(dateInterval.end)
+        if (!isTransactionInDateRange(t.datetime, startStr, endStr)) return false
       }
 
       // Transfer filter (check first - if it's a transfer and showTransfers is false, exclude)

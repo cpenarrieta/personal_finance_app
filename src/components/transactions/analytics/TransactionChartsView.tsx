@@ -1,11 +1,12 @@
 "use client"
 
 import { useMemo } from "react"
-import { format, startOfMonth as dateStartOfMonth, eachMonthOfInterval, min, max } from "date-fns"
+import { format, startOfMonth as dateStartOfMonth, eachMonthOfInterval } from "date-fns"
 import { SpendingByCategoryChart } from "@/components/charts/SpendingByCategoryChart"
 import { MonthlyTrendChart } from "@/components/charts/MonthlyTrendChart"
 import { IncomeVsExpenseChart } from "@/components/charts/IncomeVsExpenseChart"
 import type { TransactionForClient, CategoryForClient } from "@/types"
+import { getTransactionDate, dateToString } from "@/lib/utils/transaction-date"
 
 interface TransactionChartsViewProps {
   transactions: TransactionForClient[]
@@ -25,14 +26,14 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
     }
 
     // Get date range from filtered transactions
-    const transactionDates = transactions.map((t) => new Date(t.datetime || t.created_at_string))
-    const minDate = min(transactionDates)
-    const maxDate = max(transactionDates)
+    const transactionDateStrings = transactions.map((t) => getTransactionDate(t.datetime))
+    const minDateStr = transactionDateStrings.reduce((a, b) => (a < b ? a : b))
+    const maxDateStr = transactionDateStrings.reduce((a, b) => (a > b ? a : b))
 
     // Generate months for the filtered date range
     const months = eachMonthOfInterval({
-      start: dateStartOfMonth(minDate),
-      end: dateStartOfMonth(maxDate),
+      start: dateStartOfMonth(new Date(minDateStr)),
+      end: dateStartOfMonth(new Date(maxDateStr)),
     })
 
     // Spending by Category (all filtered transactions, exclude transfers)
@@ -99,10 +100,12 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
     const monthlyTrendData = months.map((month) => {
       const monthStart = dateStartOfMonth(month)
       const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0)
+      const startStr = dateToString(monthStart)
+      const endStr = dateToString(monthEnd)
 
       const monthTransactions = transactions.filter((t: TransactionForClient) => {
-        const transactionDate = new Date(t.datetime || t.created_at_string)
-        return transactionDate >= monthStart && transactionDate <= monthEnd
+        const transactionDate = getTransactionDate(t.datetime)
+        return transactionDate >= startStr && transactionDate <= endStr
       })
 
       const spending = monthTransactions
@@ -124,10 +127,12 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
     const incomeVsExpenseData = months.map((month) => {
       const monthStart = dateStartOfMonth(month)
       const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0)
+      const startStr = dateToString(monthStart)
+      const endStr = dateToString(monthEnd)
 
       const monthTransactions = transactions.filter((t: TransactionForClient) => {
-        const transactionDate = new Date(t.datetime || t.created_at_string)
-        return transactionDate >= monthStart && transactionDate <= monthEnd
+        const transactionDate = getTransactionDate(t.datetime)
+        return transactionDate >= startStr && transactionDate <= endStr
       })
 
       const expenses = monthTransactions

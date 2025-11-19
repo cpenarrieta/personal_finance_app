@@ -1,10 +1,10 @@
 "use client"
 
-import { format } from "date-fns"
 import Link from "next/link"
 import Image from "next/image"
 import { getCategoryImage } from "@/lib/categories/images"
 import { formatAmount } from "@/lib/utils"
+import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -81,7 +81,7 @@ export function TransactionItem({
 
               {/* Date and Account */}
               <div className="text-sm text-muted-foreground mt-1">
-                {format(new Date(t.datetime), "MMM d yyyy")}
+                {formatTransactionDate(t.datetime, "medium")}
                 {showAccount && t.account && ` • ${t.account.name}`}
               </div>
 

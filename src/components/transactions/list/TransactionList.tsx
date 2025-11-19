@@ -1,6 +1,6 @@
-import { format } from "date-fns"
 import Image from "next/image"
 import { formatAmount } from "@/lib/utils"
+import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import type { TransactionForClient } from "@/types"
 
 interface TransactionListProps {
@@ -35,7 +35,7 @@ export function TransactionList({ transactions, showAccount = false }: Transacti
                 )}
               </div>
               <div className="text-sm text-muted-foreground">
-                {format(new Date(t.datetime), "MMM d yyyy")}
+                {formatTransactionDate(t.datetime, "medium")}
                 {showAccount && t.account && ` · ${t.account.name}`}
               </div>
               {t.merchantName && <div className="text-sm">Merchant: {t.merchantName}</div>}

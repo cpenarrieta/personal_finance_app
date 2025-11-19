@@ -17,16 +17,7 @@ import {
   Cell,
   Legend,
 } from "recharts"
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-  isWithinInterval,
-  parseISO,
-  eachMonthOfInterval,
-  parse,
-} from "date-fns"
+import { format, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval } from "date-fns"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -39,6 +30,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CategoryForClient, TransactionForClient } from "@/types"
 import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils"
 import { useClickOutside } from "@/hooks/useClickOutside"
+import {
+  getTransactionDate,
+  isTransactionInDateRange,
+  getTransactionMonth,
+  formatTransactionMonth,
+  dateToString,
+} from "@/lib/utils/transaction-date"
 
 interface ChartsViewProps {
   transactions: TransactionForClient[]
@@ -60,11 +58,6 @@ const COLORS = [
   "#06b6d4",
   "#84cc16",
 ]
-
-// Parse date string as local date (not UTC) to avoid timezone issues
-function parseLocalDate(dateString: string): Date {
-  return parse(dateString, "yyyy-MM-dd", new Date())
-}
 
 export function ChartsView({ transactions, categories }: ChartsViewProps) {
   const [activeTab, setActiveTab] = useState<ChartTab>("subcategories")
@@ -123,8 +116,8 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
       case "custom":
         if (customStartDate && customEndDate) {
           range = {
-            start: parseLocalDate(customStartDate),
-            end: parseLocalDate(customEndDate),
+            start: new Date(customStartDate),
+            end: new Date(customEndDate),
           }
         }
         break
@@ -135,12 +128,9 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
 
     // Date range filter
     if (range) {
-      filtered = filtered.filter((t) =>
-        isWithinInterval(parseISO(t.datetime), {
-          start: range.start,
-          end: range.end,
-        }),
-      )
+      const startStr = dateToString(range.start)
+      const endStr = dateToString(range.end)
+      filtered = filtered.filter((t) => isTransactionInDateRange(t.datetime, startStr, endStr))
     }
 
     // Income/Expense filter
@@ -324,13 +314,10 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     return months.map((month) => {
       const monthStart = startOfMonth(month)
       const monthEnd = endOfMonth(month)
+      const startStr = dateToString(monthStart)
+      const endStr = dateToString(monthEnd)
 
-      const monthTransactions = transactions.filter((t) =>
-        isWithinInterval(parseISO(t.datetime), {
-          start: monthStart,
-          end: monthEnd,
-        }),
-      )
+      const monthTransactions = transactions.filter((t) => isTransactionInDateRange(t.datetime, startStr, endStr))
 
       const expenses = Math.abs(
         monthTransactions.filter((t) => t.amount_number < 0).reduce((sum, t) => sum + (t.amount_number ?? 0), 0),
@@ -353,23 +340,19 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
     const monthMap = new Map<string, number>()
 
     filteredTransactions.forEach((t) => {
-      const month = format(parseISO(t.datetime), "MMM yyyy")
+      const monthKey = getTransactionMonth(t.datetime) // YYYY-MM format
       const amount = Math.abs(t.amount_number ?? 0)
 
-      if (monthMap.has(month)) {
-        monthMap.set(month, monthMap.get(month)! + amount)
+      if (monthMap.has(monthKey)) {
+        monthMap.set(monthKey, monthMap.get(monthKey)! + amount)
       } else {
-        monthMap.set(month, amount)
+        monthMap.set(monthKey, amount)
       }
     })
 
     return Array.from(monthMap.entries())
-      .map(([month, amount]) => ({ month, amount }))
-      .sort((a, b) => {
-        const dateA = new Date(a.month)
-        const dateB = new Date(b.month)
-        return dateA.getTime() - dateB.getTime()
-      })
+      .map(([monthKey, amount]) => ({ month: formatTransactionMonth(monthKey), amount }))
+      .sort((a, b) => a.month.localeCompare(b.month))
   }, [filteredTransactions])
 
   const incomeVsExpensesData = useMemo(() => {
@@ -460,13 +443,13 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customStartDate ? format(parseLocalDate(customStartDate), "PPP") : "Start date"}
+                      {customStartDate ? format(new Date(customStartDate), "PPP") : "Start date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={customStartDate ? parseLocalDate(customStartDate) : undefined}
+                      selected={customStartDate ? new Date(customStartDate) : undefined}
                       onSelect={(date) => setCustomStartDate(date ? format(date, "yyyy-MM-dd") : "")}
                       weekStartsOn={1}
                       initialFocus
@@ -490,13 +473,13 @@ export function ChartsView({ transactions, categories }: ChartsViewProps) {
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      {customEndDate ? format(parseLocalDate(customEndDate), "PPP") : "End date"}
+                      {customEndDate ? format(new Date(customEndDate), "PPP") : "End date"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={customEndDate ? parseLocalDate(customEndDate) : undefined}
+                      selected={customEndDate ? new Date(customEndDate) : undefined}
                       onSelect={(date) => setCustomEndDate(date ? format(date, "yyyy-MM-dd") : "")}
                       weekStartsOn={1}
                       initialFocus

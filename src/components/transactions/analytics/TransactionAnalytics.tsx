@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, RefObject } from "react"
 import Image from "next/image"
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
-import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, parse } from "date-fns"
+import { startOfMonth, endOfMonth, subMonths } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -13,6 +13,14 @@ import { Label } from "@/components/ui/label"
 import { CategoryForClient, TransactionForClient } from "@/types/client"
 import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils"
 import { useClickOutside } from "@/hooks/useClickOutside"
+import {
+  formatTransactionDate,
+  compareTransactionDates,
+  isTransactionInDateRange,
+  getTransactionMonth,
+  formatTransactionMonth,
+  dateToString,
+} from "@/lib/utils/transaction-date"
 
 interface TransactionAnalyticsProps {
   transactions: TransactionForClient[]
@@ -20,11 +28,6 @@ interface TransactionAnalyticsProps {
 }
 
 type DateRange = "all" | "last30" | "last90" | "thisMonth" | "lastMonth" | "custom"
-
-// Parse date string as local date (not UTC) to avoid timezone issues
-function parseLocalDate(dateString: string): Date {
-  return parse(dateString, "yyyy-MM-dd", new Date())
-}
 
 export function TransactionAnalytics({ transactions, categories }: TransactionAnalyticsProps) {
   const [dateRange, setDateRange] = useState<DateRange>("last30")
@@ -78,8 +81,8 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
       case "custom":
         if (customStartDate && customEndDate) {
           range = {
-            start: parseLocalDate(customStartDate),
-            end: parseLocalDate(customEndDate),
+            start: new Date(customStartDate),
+            end: new Date(customEndDate),
           }
         }
         break
@@ -90,12 +93,9 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
 
     // Date range filter
     if (range) {
-      filtered = filtered.filter((t) =>
-        isWithinInterval(new Date(t.datetime), {
-          start: range.start,
-          end: range.end,
-        }),
-      )
+      const startStr = dateToString(range.start)
+      const endStr = dateToString(range.end)
+      filtered = filtered.filter((t) => isTransactionInDateRange(t.datetime, startStr, endStr))
     }
 
     // Income/Expense filter
@@ -140,7 +140,7 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
       let comparison = 0
       switch (sortBy) {
         case "date":
-          comparison = new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+          comparison = compareTransactionDates(a.datetime, b.datetime)
           break
         case "amount":
           comparison = a.amount_number - b.amount_number
@@ -244,23 +244,19 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
     const monthMap = new Map<string, number>()
 
     filteredTransactions.forEach((t) => {
-      const month = format(new Date(t.datetime), "MMM yyyy")
+      const monthKey = getTransactionMonth(t.datetime) // YYYY-MM format
       const amount = Math.abs(t.amount_number)
 
-      if (monthMap.has(month)) {
-        monthMap.set(month, monthMap.get(month)! + amount)
+      if (monthMap.has(monthKey)) {
+        monthMap.set(monthKey, monthMap.get(monthKey)! + amount)
       } else {
-        monthMap.set(month, amount)
+        monthMap.set(monthKey, amount)
       }
     })
 
     return Array.from(monthMap.entries())
-      .map(([month, amount]) => ({ month, amount }))
-      .sort((a, b) => {
-        const dateA = new Date(a.month)
-        const dateB = new Date(b.month)
-        return dateA.getTime() - dateB.getTime()
-      })
+      .map(([monthKey, amount]) => ({ month: formatTransactionMonth(monthKey), amount }))
+      .sort((a, b) => a.month.localeCompare(b.month))
   }, [filteredTransactions])
 
   const toggleSort = (field: "date" | "amount" | "category") => {
@@ -770,7 +766,7 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
                   onClick={() => (window.location.href = `/transactions/${transaction.id}`)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {format(new Date(transaction.datetime), "MMM d yyyy")}
+                    {formatTransactionDate(transaction.datetime, "medium")}
                   </td>
                   <td className="px-6 py-4 text-sm text-foreground">
                     <div className="flex items-center gap-2">

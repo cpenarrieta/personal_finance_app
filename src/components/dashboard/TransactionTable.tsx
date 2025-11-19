@@ -1,6 +1,6 @@
 import Link from "next/link"
-import { format } from "date-fns"
 import { formatAmount } from "@/lib/utils"
+import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 
@@ -56,7 +56,7 @@ export function TransactionTable({ transactions, showCategory = true }: Transact
             return (
               <TableRow key={transaction.id} className="hover:bg-muted/50">
                 <TableCell className="whitespace-nowrap w-[100px]">
-                  {transaction.datetime ? format(new Date(transaction.datetime), "MMM d, yyyy") : "N/A"}
+                  {transaction.datetime ? formatTransactionDate(transaction.datetime, "medium") : "N/A"}
                 </TableCell>
                 <TableCell className="text-right font-medium w-[110px]">
                   <span className={amount >= 0 ? "text-success" : ""}>

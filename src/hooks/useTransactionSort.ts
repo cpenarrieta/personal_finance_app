@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import type { TransactionForClient } from "@/types"
+import { compareTransactionDates } from "@/lib/utils/transaction-date"
 
 export type SortField = "createdAt" | "date" | "amount" | "name" | "merchant" | "category"
 export type SortDirection = "asc" | "desc"
@@ -27,7 +28,7 @@ export function useTransactionSort({
             compareValue = new Date(a.created_at_string).getTime() - new Date(b.created_at_string).getTime()
             break
           case "date":
-            compareValue = new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+            compareValue = compareTransactionDates(a.datetime, b.datetime)
             break
           case "amount":
             compareValue = a.amount_number - b.amount_number

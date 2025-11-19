@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { formatAmount } from "@/lib/utils"
+import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -197,7 +198,7 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
               <div className="text-muted-foreground">Account:</div>
               <div className="font-medium">{transaction.account?.name}</div>
               <div className="text-muted-foreground">Transaction Date:</div>
-              <div className="font-medium">{format(new Date(transaction.datetime), "MMM d yyyy")}</div>
+              <div className="font-medium">{formatTransactionDate(transaction.datetime, "medium")}</div>
               <div className="text-muted-foreground">Creation Date:</div>
               <div className="font-medium">{format(new Date(transaction.created_at_string), "MMM d yyyy, h:mm a")}</div>
               {transaction.merchantName && (

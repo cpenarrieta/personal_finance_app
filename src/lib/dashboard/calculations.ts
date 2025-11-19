@@ -1,4 +1,5 @@
 import { format, eachDayOfInterval } from "date-fns"
+import { getTransactionDate, dateToString } from "@/lib/utils/transaction-date"
 
 const CHART_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
 
@@ -129,14 +130,11 @@ export function prepareDailySpendingData(transactions: SerializableTransaction[]
   })
 
   return daysInRange.map((day) => {
+    const dayStr = dateToString(day)
     const dayTransactions = transactions.filter((t) => {
       if (!t.datetime) return false
-      const transactionDate = new Date(t.datetime)
-      return (
-        transactionDate.getDate() === day.getDate() &&
-        transactionDate.getMonth() === day.getMonth() &&
-        transactionDate.getFullYear() === day.getFullYear()
-      )
+      const transactionDateStr = getTransactionDate(t.datetime)
+      return transactionDateStr === dayStr
     })
 
     const spending = dayTransactions

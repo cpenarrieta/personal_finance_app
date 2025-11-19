@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { formatAmount } from "@/lib/utils"
+import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal"
 import { SplitTransactionModal } from "@/components/transactions/modals/SplitTransactionModal"
 import { TransactionFileUpload } from "@/components/transactions/detail/TransactionFileUpload"
@@ -190,10 +191,10 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Transaction Date</label>
                 <div className="text-lg font-semibold text-foreground">
-                  {format(new Date(transaction.datetime), "MMM d yyyy")}
+                  {formatTransactionDate(transaction.datetime, "medium")}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {format(new Date(transaction.datetime), "EEEE")} at {format(new Date(transaction.datetime), "h:mm a")}
+                  {formatTransactionDate(transaction.datetime, "weekday")}
                 </div>
               </div>
 
@@ -201,7 +202,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-1">Authorized Date</label>
                   <div className="text-foreground">
-                    {format(new Date(transaction.authorizedDatetime), "MMM d yyyy")}
+                    {formatTransactionDate(transaction.authorizedDatetime, "medium")}
                   </div>
                 </div>
               )}
@@ -349,7 +350,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             <div className="p-3 bg-muted rounded-lg border border-border">
               <p className="font-medium text-foreground">{transaction.name}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                {format(new Date(transaction.datetime), "MMM d, yyyy")} •{" "}
+                {formatTransactionDate(transaction.datetime, "medium")} •{" "}
                 <span className={isExpense ? "text-destructive" : "text-success"}>
                   {isExpense ? "-" : "+"}${formatAmount(absoluteAmount)}
                 </span>
