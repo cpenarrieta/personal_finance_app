@@ -58,7 +58,7 @@ export async function applySplitsAction(
     await applySplitSuggestions(transactionId, splits)
 
     // Revalidate transactions cache
-    revalidateTag("transactions")
+    revalidateTag("transactions", "max")
 
     return {
       success: true,

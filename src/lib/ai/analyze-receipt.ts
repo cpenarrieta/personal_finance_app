@@ -7,6 +7,7 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject } from "ai"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
+import type { CoreMessage } from "ai"
 
 // Initialize OpenAI with API key
 const openai = createOpenAI({
@@ -73,8 +74,8 @@ export async function analyzeReceiptForSplits(transactionId: string): Promise<Re
 
     // Build categories context for the AI
     const categoriesContext = categories
-      .map((cat) => {
-        const subs = cat.subcategories.map((s) => s.name).join(", ")
+      .map((cat: { name: string; subcategories: Array<{ name: string }> }) => {
+        const subs = cat.subcategories.map((s: { name: string }) => s.name).join(", ")
         return `${cat.name}: [${subs || "no subcategories"}]`
       })
       .join("\n")
@@ -110,7 +111,10 @@ Expected Output:
 Analyze the receipt and provide your grouped split suggestions.`
 
     // Create vision content array with all file URLs
-    const content: Array<{ type: "text" | "image"; text?: string; image?: string }> = [
+    const contentParts: Array<
+      | { type: "text"; text: string }
+      | { type: "image"; image: string | URL }
+    > = [
       {
         type: "text",
         text: prompt,
@@ -119,7 +123,7 @@ Analyze the receipt and provide your grouped split suggestions.`
 
     // Add all receipt images/PDFs to the content
     for (const fileUrl of transaction.files) {
-      content.push({
+      contentParts.push({
         type: "image",
         image: fileUrl,
       })
@@ -132,8 +136,8 @@ Analyze the receipt and provide your grouped split suggestions.`
       messages: [
         {
           role: "user",
-          content,
-        },
+          content: contentParts,
+        } as CoreMessage,
       ],
     })
 
@@ -221,14 +225,14 @@ export async function applySplitSuggestions(
     // Create child transactions
     const childTransactionPromises = splits.map(async (split, index) => {
       // Find category and subcategory IDs
-      const category = categories.find((c) => c.name === split.categoryName)
+      const category = categories.find((c: { name: string }) => c.name === split.categoryName)
       if (!category) {
         console.warn(`Category "${split.categoryName}" not found, skipping split`)
         return null
       }
 
       const subcategory = split.subcategoryName
-        ? category.subcategories.find((s) => s.name === split.subcategoryName)
+        ? category.subcategories.find((s: { name: string }) => s.name === split.subcategoryName)
         : null
 
       // Create child transaction
