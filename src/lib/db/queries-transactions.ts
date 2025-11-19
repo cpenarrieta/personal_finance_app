@@ -37,6 +37,7 @@ export async function getTransactionById(id: string) {
       categoryId: true,
       subcategoryId: true,
       notes: true,
+      files: true,
       isSplit: true,
       parentTransactionId: true,
       originalTransactionId: true,
