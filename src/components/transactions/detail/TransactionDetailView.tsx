@@ -10,6 +10,7 @@ import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal"
 import { SplitTransactionModal } from "@/components/transactions/modals/SplitTransactionModal"
 import { TransactionFileUpload } from "@/components/transactions/detail/TransactionFileUpload"
+import { AnalyzeReceiptButton } from "@/components/transactions/detail/AnalyzeReceiptButton"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -105,13 +106,21 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             <h2 className="hidden md:block text-xl font-semibold text-foreground">Transaction Details</h2>
             <div className="flex gap-2">
               {!transaction.isSplit && !transaction.parentTransactionId && (
-                <Button
-                  onClick={() => setIsSplitting(true)}
-                  variant="outline"
-                  className="border-primary text-primary hover:bg-primary/10"
-                >
-                  Split Transaction
-                </Button>
+                <>
+                  <AnalyzeReceiptButton
+                    transactionId={transaction.id}
+                    transactionAmount={amount}
+                    hasFiles={transactionFiles.length > 0}
+                    categories={categories}
+                  />
+                  <Button
+                    onClick={() => setIsSplitting(true)}
+                    variant="outline"
+                    className="border-primary text-primary hover:bg-primary/10"
+                  >
+                    Split Transaction
+                  </Button>
+                </>
               )}
               <Button onClick={() => setIsEditing(true)} className="bg-primary hover:bg-primary/90">
                 Edit Transaction
