@@ -6,6 +6,7 @@ import { BreadcrumbsAsync } from "@/components/layout/BreadcrumbsAsync"
 import { BreadcrumbsSkeleton } from "@/components/layout/BreadcrumbsSkeleton"
 import { AccountsMenuAsync } from "@/components/layout/AccountsMenuAsync"
 import { AccountsMenuSkeleton } from "@/components/layout/AccountsMenuSkeleton"
+import Script from "next/script"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const accountsSlot = (
@@ -15,19 +16,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <AppShell
-      sidebarSlot={
-        <Suspense fallback={<AppSidebarSkeleton accountsSlot={accountsSlot} />}>
-          <AppSidebarWithPathname accountsSlot={accountsSlot} />
-        </Suspense>
-      }
-      breadcrumbsSlot={
-        <Suspense fallback={<BreadcrumbsSkeleton />}>
-          <BreadcrumbsAsync />
-        </Suspense>
-      }
-    >
-      <div className="w-full max-w-7xl mx-auto">{children}</div>
-    </AppShell>
+    <>
+      <AppShell
+        sidebarSlot={
+          <Suspense fallback={<AppSidebarSkeleton accountsSlot={accountsSlot} />}>
+            <AppSidebarWithPathname accountsSlot={accountsSlot} />
+          </Suspense>
+        }
+        breadcrumbsSlot={
+          <Suspense fallback={<BreadcrumbsSkeleton />}>
+            <BreadcrumbsAsync />
+          </Suspense>
+        }
+      >
+        <div className="w-full max-w-7xl mx-auto">{children}</div>
+      </AppShell>
+      <Script src="https://upload-widget.cloudinary.com/global/all.js" strategy="lazyOnload" />
+    </>
   )
 }

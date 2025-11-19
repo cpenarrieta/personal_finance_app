@@ -66,6 +66,7 @@ export const updateTransactionSchema = z.object({
   subcategoryId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tagIds: z.array(z.string()).optional(),
+  files: z.array(z.string()).optional(),
 })
 
 export type UpdateTransactionPayload = z.infer<typeof updateTransactionSchema>

@@ -89,6 +89,7 @@ model Transaction {
   isManual               Boolean       @default(false)
   originalTransactionId  String?
   parentTransactionId    String?
+  files                  String[]      @default([])
   amount_number          Float?        @default(dbgenerated("((amount * -1))::double precision"))
   created_at_string      String?       @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
   updated_at_string      String?       @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
