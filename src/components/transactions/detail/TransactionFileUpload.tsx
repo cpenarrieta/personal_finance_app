@@ -43,7 +43,8 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
           maxFiles: 1,
           clientAllowedFormats: ["jpg", "jpeg", "png", "pdf", "doc", "docx", "xls", "xlsx", "webp"],
           maxFileSize: 10000000, // 10MB
-          folder: `transactions/${transactionId}`,
+          publicIdPrefix: `personal-finance/${transactionId}`,
+          tags: [transactionId, "transaction-file"],
         },
         async (error: any, result: any) => {
           if (error) {
