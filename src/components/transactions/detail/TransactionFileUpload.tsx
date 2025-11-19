@@ -25,19 +25,41 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
 
       // Check if Cloudinary is configured
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+      const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY
 
-      if (!cloudName || !uploadPreset) {
+      if (!cloudName || !apiKey) {
         throw new Error(
-          "Cloudinary is not configured. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET",
+          "Cloudinary is not configured. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_API_KEY",
         )
       }
 
-      // Create a Cloudinary upload widget
+      // Create a Cloudinary upload widget with signed uploads
       const widget = (window as any).cloudinary?.createUploadWidget(
         {
           cloudName,
-          uploadPreset,
+          apiKey,
+          uploadSignature: async (callback: any, paramsToSign: any) => {
+            try {
+              const response = await fetch("/api/cloudinary-signature", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(paramsToSign),
+              })
+
+              if (!response.ok) {
+                throw new Error("Failed to get upload signature")
+              }
+
+              const data = await response.json()
+              callback(data.signature)
+            } catch (err) {
+              console.error("Error getting signature:", err)
+              toast.error("Failed to authorize upload")
+              setIsUploading(false)
+            }
+          },
           sources: ["local", "url", "camera"],
           multiple: false,
           maxFiles: 1,
@@ -231,8 +253,8 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
         <div className="mt-3 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-foreground">
           <p className="font-medium">Cloudinary not configured</p>
           <p className="text-xs mt-1">
-            Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET environment variables to
-            enable file uploads.
+            Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, NEXT_PUBLIC_CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment
+            variables to enable file uploads.
           </p>
         </div>
       )}
