@@ -135,8 +135,13 @@ async function getSimilarTransactions(
 
 /**
  * Categorize a single transaction using AI
+ * @param transactionId - The transaction ID to categorize
+ * @param allowRecategorize - If true, allows re-categorization of already categorized transactions
  */
-export async function categorizeTransaction(transactionId: string): Promise<{
+export async function categorizeTransaction(
+  transactionId: string,
+  allowRecategorize: boolean = false,
+): Promise<{
   categoryId: string | null
   subcategoryId: string | null
   confidence: number
@@ -151,6 +156,7 @@ export async function categorizeTransaction(transactionId: string): Promise<{
         name: true,
         merchantName: true,
         amount: true,
+        date: true,
         datetime: true,
         plaidCategory: true,
         plaidSubcategory: true,
@@ -163,15 +169,17 @@ export async function categorizeTransaction(transactionId: string): Promise<{
       return null
     }
 
-    // Skip if already categorized
-    const existingCategory = await prisma.transaction.findUnique({
-      where: { id: transactionId },
-      select: { categoryId: true },
-    })
+    // Skip if already categorized (unless allowRecategorize is true)
+    if (!allowRecategorize) {
+      const existingCategory = await prisma.transaction.findUnique({
+        where: { id: transactionId },
+        select: { categoryId: true },
+      })
 
-    if (existingCategory?.categoryId) {
-      console.log(`Transaction ${transactionId} already categorized, skipping`)
-      return null
+      if (existingCategory?.categoryId) {
+        console.log(`Transaction ${transactionId} already categorized, skipping`)
+        return null
+      }
     }
 
     // Fetch all available categories
