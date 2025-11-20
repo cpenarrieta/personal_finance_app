@@ -8,6 +8,7 @@ import { generateObject } from "ai"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
 import type { CoreMessage } from "ai"
+import { categorizeAndApply } from "@/lib/ai/categorize-transaction"
 
 // Initialize OpenAI with API key
 const openai = createOpenAI({
@@ -185,6 +186,7 @@ Analyze the receipt and provide your grouped split suggestions.`
 
 /**
  * Apply the AI-suggested splits to create child transactions
+ * Uses the same AI categorization logic as webhook transactions
  */
 export async function applySplitSuggestions(
   transactionId: string,
@@ -215,29 +217,12 @@ export async function applySplitSuggestions(
       throw new Error(`Transaction ${transactionId} not found`)
     }
 
-    // Fetch all categories to map names to IDs
-    const categories = await prisma.category.findMany({
-      include: {
-        subcategories: true,
-      },
-    })
+    // Note: amount is stored as negative for expenses, but split.amount is positive
+    const isExpense = parentTransaction.amount.toNumber() < 0
 
-    // Create child transactions
+    // Create child transactions WITHOUT categories first
+    // We'll use AI categorization (same as webhook) to assign categories
     const childTransactionPromises = splits.map(async (split, index) => {
-      // Find category and subcategory IDs
-      const category = categories.find((c: { name: string }) => c.name === split.categoryName)
-      if (!category) {
-        console.warn(`Category "${split.categoryName}" not found, skipping split`)
-        return null
-      }
-
-      const subcategory = split.subcategoryName
-        ? category.subcategories.find((s: { name: string }) => s.name === split.subcategoryName)
-        : null
-
-      // Create child transaction
-      // Note: amount is stored as negative for expenses, but split.amount is positive
-      const isExpense = parentTransaction.amount.toNumber() < 0
       const childAmount = isExpense ? -split.amount : split.amount
 
       return prisma.transaction.create({
@@ -250,19 +235,19 @@ export async function applySplitSuggestions(
           datetime: parentTransaction.datetime,
           pending: false,
           merchantName: parentTransaction.merchantName,
+          // Use item summary as transaction name (helps AI categorization)
           name: `${parentTransaction.name} - ${split.itemsSummary}`,
-          categoryId: category.id,
-          subcategoryId: subcategory?.id || null,
-          notes: `Smart Split: ${split.itemsSummary}`,
+          // Receipt analysis suggested category (for reference in notes)
+          notes: `Smart Split: ${split.itemsSummary}\nSuggested category: ${split.categoryName}${split.subcategoryName ? ` > ${split.subcategoryName}` : ""}`,
           isSplit: false,
           isManual: true,
           parentTransactionId: parentTransaction.id,
+          // No categoryId or subcategoryId - will be set by AI categorization
         },
       })
     })
 
     const createdTransactions = await Promise.all(childTransactionPromises)
-    const validTransactions = createdTransactions.filter((t) => t !== null)
 
     // Mark parent transaction as split
     await prisma.transaction.update({
@@ -272,7 +257,25 @@ export async function applySplitSuggestions(
       },
     })
 
-    console.log(`✅ Created ${validTransactions.length} child transactions for split ${transactionId}`)
+    console.log(`✅ Created ${createdTransactions.length} child transactions for split ${transactionId}`)
+
+    // Apply AI categorization to each child transaction
+    // This uses the SAME logic as webhook transactions (categorizeAndApply)
+    console.log(`🤖 Starting AI categorization for ${createdTransactions.length} split transaction(s)...`)
+
+    await Promise.all(
+      createdTransactions.map(async (transaction) => {
+        try {
+          await categorizeAndApply(transaction.id)
+          console.log(`✅ Categorized split transaction: ${transaction.id}`)
+        } catch (error) {
+          console.error(`❌ Error categorizing split transaction ${transaction.id}:`, error)
+          // Continue with other transactions even if one fails
+        }
+      }),
+    )
+
+    console.log(`✅ AI categorization complete for all splits`)
   } catch (error) {
     console.error("Error applying split suggestions:", error)
     throw error
