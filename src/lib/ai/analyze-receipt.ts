@@ -265,7 +265,8 @@ export async function applySplitSuggestions(
     console.log(`🤖 Starting AI categorization for ${createdTransactions.length} split transaction(s)...`)
 
     const transactionIds = createdTransactions.map((t) => t.id)
-    await categorizeTransactions(transactionIds, false)
+    // allowRecategorize defaults to false, so no need to specify it
+    await categorizeTransactions(transactionIds)
 
     console.log(`✅ AI categorization complete for all splits`)
   } catch (error) {
