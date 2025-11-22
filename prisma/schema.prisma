@@ -59,6 +59,9 @@ model PlaidAccount {
   investmentTxns            InvestmentTransaction[]
   item                      Item                    @relation(fields: [itemId], references: [id])
   transactions              Transaction[]
+  creditLiability           CreditLiability?
+  mortgageLiability         MortgageLiability?
+  studentLoanLiability      StudentLoanLiability?
 }
 
 model Transaction {
@@ -283,4 +286,115 @@ model Subcategory {
   updated_at_string String?       @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
   category          Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   transactions      Transaction[]
+}
+
+model CreditLiability {
+  id                        String       @id @default(cuid())
+  accountId                 String       @unique
+  aprs                      Json?
+  isOverdue                 Boolean?
+  lastPaymentAmount         Decimal?     @db.Decimal(14, 2)
+  lastPaymentDate           DateTime?
+  lastStatementIssueDate    DateTime?
+  lastStatementBalance      Decimal?     @db.Decimal(14, 2)
+  minimumPaymentAmount      Decimal?     @db.Decimal(14, 2)
+  nextPaymentDueDate        DateTime?
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+  last_payment_amount_number       Float?       @default(dbgenerated("(\"lastPaymentAmount\")::double precision"))
+  last_statement_balance_number    Float?       @default(dbgenerated("(\"lastStatementBalance\")::double precision"))
+  minimum_payment_amount_number    Float?       @default(dbgenerated("(\"minimumPaymentAmount\")::double precision"))
+  last_payment_date_string         String?      @default(dbgenerated("timestamp_to_string(\"lastPaymentDate\")"))
+  last_statement_issue_date_string String?      @default(dbgenerated("timestamp_to_string(\"lastStatementIssueDate\")"))
+  next_payment_due_date_string     String?      @default(dbgenerated("timestamp_to_string(\"nextPaymentDueDate\")"))
+  created_at_string                String?      @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string                String?      @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  account                   PlaidAccount @relation(fields: [accountId], references: [id])
+}
+
+model MortgageLiability {
+  id                          String       @id @default(cuid())
+  accountId                   String       @unique
+  accountNumber               String?
+  currentLateFee              Decimal?     @db.Decimal(14, 2)
+  escrowBalance               Decimal?     @db.Decimal(14, 2)
+  hasPmi                      Boolean?
+  hasPrepaymentPenalty        Boolean?
+  interestRate                Json?
+  lastPaymentAmount           Decimal?     @db.Decimal(14, 2)
+  lastPaymentDate             DateTime?
+  loanTypeDescription         String?
+  loanTerm                    String?
+  maturityDate                DateTime?
+  nextMonthlyPayment          Decimal?     @db.Decimal(14, 2)
+  nextPaymentDueDate          DateTime?
+  originationDate             DateTime?
+  originationPrincipalAmount  Decimal?     @db.Decimal(14, 2)
+  pastDueAmount               Decimal?     @db.Decimal(14, 2)
+  propertyAddress             Json?
+  ytdInterestPaid             Decimal?     @db.Decimal(14, 2)
+  ytdPrincipalPaid            Decimal?     @db.Decimal(14, 2)
+  createdAt                   DateTime     @default(now())
+  updatedAt                   DateTime     @updatedAt
+  current_late_fee_number              Float?       @default(dbgenerated("(\"currentLateFee\")::double precision"))
+  escrow_balance_number                Float?       @default(dbgenerated("(\"escrowBalance\")::double precision"))
+  last_payment_amount_number           Float?       @default(dbgenerated("(\"lastPaymentAmount\")::double precision"))
+  next_monthly_payment_number          Float?       @default(dbgenerated("(\"nextMonthlyPayment\")::double precision"))
+  origination_principal_amount_number  Float?       @default(dbgenerated("(\"originationPrincipalAmount\")::double precision"))
+  past_due_amount_number               Float?       @default(dbgenerated("(\"pastDueAmount\")::double precision"))
+  ytd_interest_paid_number             Float?       @default(dbgenerated("(\"ytdInterestPaid\")::double precision"))
+  ytd_principal_paid_number            Float?       @default(dbgenerated("(\"ytdPrincipalPaid\")::double precision"))
+  last_payment_date_string             String?      @default(dbgenerated("timestamp_to_string(\"lastPaymentDate\")"))
+  maturity_date_string                 String?      @default(dbgenerated("timestamp_to_string(\"maturityDate\")"))
+  next_payment_due_date_string         String?      @default(dbgenerated("timestamp_to_string(\"nextPaymentDueDate\")"))
+  origination_date_string              String?      @default(dbgenerated("timestamp_to_string(\"originationDate\")"))
+  created_at_string                    String?      @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string                    String?      @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  account                     PlaidAccount @relation(fields: [accountId], references: [id])
+}
+
+model StudentLoanLiability {
+  id                          String       @id @default(cuid())
+  accountId                   String       @unique
+  accountNumber               String?
+  disbursementDates           String[]     @default([])
+  expectedPayoffDate          DateTime?
+  guarantor                   String?
+  interestRatePercentage      Decimal?     @db.Decimal(10, 4)
+  isOverdue                   Boolean?
+  lastPaymentAmount           Decimal?     @db.Decimal(14, 2)
+  lastPaymentDate             DateTime?
+  lastStatementBalance        Decimal?     @db.Decimal(14, 2)
+  lastStatementIssueDate      DateTime?
+  loanName                    String?
+  loanStatus                  Json?
+  minimumPaymentAmount        Decimal?     @db.Decimal(14, 2)
+  nextPaymentDueDate          DateTime?
+  originationDate             DateTime?
+  originationPrincipalAmount  Decimal?     @db.Decimal(14, 2)
+  outstandingInterestAmount   Decimal?     @db.Decimal(14, 2)
+  paymentReferenceNumber      String?
+  repaymentPlan               Json?
+  sequenceNumber              String?
+  servicerAddress             Json?
+  ytdInterestPaid             Decimal?     @db.Decimal(14, 2)
+  ytdPrincipalPaid            Decimal?     @db.Decimal(14, 2)
+  createdAt                   DateTime     @default(now())
+  updatedAt                   DateTime     @updatedAt
+  interest_rate_percentage_number      Float?       @default(dbgenerated("(\"interestRatePercentage\")::double precision"))
+  last_payment_amount_number           Float?       @default(dbgenerated("(\"lastPaymentAmount\")::double precision"))
+  last_statement_balance_number        Float?       @default(dbgenerated("(\"lastStatementBalance\")::double precision"))
+  minimum_payment_amount_number        Float?       @default(dbgenerated("(\"minimumPaymentAmount\")::double precision"))
+  origination_principal_amount_number  Float?       @default(dbgenerated("(\"originationPrincipalAmount\")::double precision"))
+  outstanding_interest_amount_number   Float?       @default(dbgenerated("(\"outstandingInterestAmount\")::double precision"))
+  ytd_interest_paid_number             Float?       @default(dbgenerated("(\"ytdInterestPaid\")::double precision"))
+  ytd_principal_paid_number            Float?       @default(dbgenerated("(\"ytdPrincipalPaid\")::double precision"))
+  expected_payoff_date_string          String?      @default(dbgenerated("timestamp_to_string(\"expectedPayoffDate\")"))
+  last_payment_date_string             String?      @default(dbgenerated("timestamp_to_string(\"lastPaymentDate\")"))
+  last_statement_issue_date_string     String?      @default(dbgenerated("timestamp_to_string(\"lastStatementIssueDate\")"))
+  next_payment_due_date_string         String?      @default(dbgenerated("timestamp_to_string(\"nextPaymentDueDate\")"))
+  origination_date_string              String?      @default(dbgenerated("timestamp_to_string(\"originationDate\")"))
+  created_at_string                    String?      @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string                    String?      @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+  account                     PlaidAccount @relation(fields: [accountId], references: [id])
 }

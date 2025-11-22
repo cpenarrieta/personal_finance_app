@@ -712,3 +712,128 @@ export async function getReviewTransactions() {
     },
   })
 }
+
+/**
+ * Get all liabilities (credit, mortgage, student loans) with account info
+ * Cached with 24h expiration, tagged with "liabilities"
+ */
+export async function getAllLiabilities() {
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("liabilities")
+
+  const [creditLiabilities, mortgageLiabilities, studentLoanLiabilities] = await Promise.all([
+    prisma.creditLiability.findMany({
+      select: {
+        id: true,
+        accountId: true,
+        aprs: true,
+        isOverdue: true,
+        last_payment_amount_number: true,
+        last_payment_date_string: true,
+        last_statement_issue_date_string: true,
+        last_statement_balance_number: true,
+        minimum_payment_amount_number: true,
+        next_payment_due_date_string: true,
+        created_at_string: true,
+        updated_at_string: true,
+        account: {
+          select: {
+            id: true,
+            name: true,
+            mask: true,
+            type: true,
+            subtype: true,
+            current_balance_number: true,
+            available_balance_number: true,
+            credit_limit_number: true,
+          },
+        },
+      },
+    }),
+    prisma.mortgageLiability.findMany({
+      select: {
+        id: true,
+        accountId: true,
+        accountNumber: true,
+        current_late_fee_number: true,
+        escrow_balance_number: true,
+        hasPmi: true,
+        hasPrepaymentPenalty: true,
+        interestRate: true,
+        last_payment_amount_number: true,
+        last_payment_date_string: true,
+        loanTypeDescription: true,
+        loanTerm: true,
+        maturity_date_string: true,
+        next_monthly_payment_number: true,
+        next_payment_due_date_string: true,
+        origination_date_string: true,
+        origination_principal_amount_number: true,
+        past_due_amount_number: true,
+        propertyAddress: true,
+        ytd_interest_paid_number: true,
+        ytd_principal_paid_number: true,
+        created_at_string: true,
+        updated_at_string: true,
+        account: {
+          select: {
+            id: true,
+            name: true,
+            mask: true,
+            type: true,
+            subtype: true,
+            current_balance_number: true,
+          },
+        },
+      },
+    }),
+    prisma.studentLoanLiability.findMany({
+      select: {
+        id: true,
+        accountId: true,
+        accountNumber: true,
+        disbursementDates: true,
+        expected_payoff_date_string: true,
+        guarantor: true,
+        interest_rate_percentage_number: true,
+        isOverdue: true,
+        last_payment_amount_number: true,
+        last_payment_date_string: true,
+        last_statement_balance_number: true,
+        last_statement_issue_date_string: true,
+        loanName: true,
+        loanStatus: true,
+        minimum_payment_amount_number: true,
+        next_payment_due_date_string: true,
+        origination_date_string: true,
+        origination_principal_amount_number: true,
+        outstanding_interest_amount_number: true,
+        paymentReferenceNumber: true,
+        repaymentPlan: true,
+        sequenceNumber: true,
+        servicerAddress: true,
+        ytd_interest_paid_number: true,
+        ytd_principal_paid_number: true,
+        created_at_string: true,
+        updated_at_string: true,
+        account: {
+          select: {
+            id: true,
+            name: true,
+            mask: true,
+            type: true,
+            subtype: true,
+            current_balance_number: true,
+          },
+        },
+      },
+    }),
+  ])
+
+  return {
+    credit: creditLiabilities,
+    mortgage: mortgageLiabilities,
+    studentLoan: studentLoanLiabilities,
+  }
+}

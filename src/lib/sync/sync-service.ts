@@ -28,11 +28,21 @@ export interface InvestmentSyncStats {
   investmentTransactionsAdded: number
 }
 
-export interface SyncStats extends TransactionSyncStats, InvestmentSyncStats {}
+export interface LiabilitiesSyncStats {
+  creditLiabilitiesAdded: number
+  creditLiabilitiesUpdated: number
+  mortgageLiabilitiesAdded: number
+  mortgageLiabilitiesUpdated: number
+  studentLoanLiabilitiesAdded: number
+  studentLoanLiabilitiesUpdated: number
+}
+
+export interface SyncStats extends TransactionSyncStats, InvestmentSyncStats, LiabilitiesSyncStats {}
 
 export interface SyncOptions {
   syncTransactions?: boolean
   syncInvestments?: boolean
+  syncLiabilities?: boolean
 }
 
 // Helper functions
@@ -572,9 +582,188 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
 }
 
 /**
- * Generic sync function that can sync transactions and/or investments
+ * Syncs liabilities (credit cards, mortgages, student loans) for a single item
  */
-export async function syncItems(options: SyncOptions = { syncTransactions: true, syncInvestments: true }) {
+export async function syncItemLiabilities(itemId: string, accessToken: string): Promise<LiabilitiesSyncStats> {
+  const plaid = getPlaidClient()
+  const stats: LiabilitiesSyncStats = {
+    creditLiabilitiesAdded: 0,
+    creditLiabilitiesUpdated: 0,
+    mortgageLiabilitiesAdded: 0,
+    mortgageLiabilitiesUpdated: 0,
+    studentLoanLiabilitiesAdded: 0,
+    studentLoanLiabilitiesUpdated: 0,
+  }
+
+  console.log("  💳 Syncing liabilities...")
+  const accounts = await prisma.plaidAccount.findMany({
+    where: { itemId: itemId },
+  })
+
+  // Fetch liabilities data from Plaid
+  const liabilitiesResp = await plaid.liabilitiesGet({
+    access_token: accessToken,
+  })
+
+  // Process credit card liabilities
+  if (liabilitiesResp.data.liabilities?.credit) {
+    for (const credit of liabilitiesResp.data.liabilities.credit) {
+      if (!credit.account_id) continue
+
+      const account = accounts.find((a) => a.plaidAccountId === credit.account_id)
+      if (!account) continue
+
+      const existing = await prisma.creditLiability.findUnique({
+        where: { accountId: account.id },
+      })
+
+      const creditData = {
+        aprs: credit.aprs ? JSON.parse(JSON.stringify(credit.aprs)) : null,
+        isOverdue: credit.is_overdue ?? null,
+        lastPaymentAmount: credit.last_payment_amount != null ? new Prisma.Decimal(credit.last_payment_amount) : null,
+        lastPaymentDate: credit.last_payment_date ? new Date(credit.last_payment_date) : null,
+        lastStatementIssueDate: credit.last_statement_issue_date ? new Date(credit.last_statement_issue_date) : null,
+        lastStatementBalance: credit.last_statement_balance != null ? new Prisma.Decimal(credit.last_statement_balance) : null,
+        minimumPaymentAmount: credit.minimum_payment_amount != null ? new Prisma.Decimal(credit.minimum_payment_amount) : null,
+        nextPaymentDueDate: credit.next_payment_due_date ? new Date(credit.next_payment_due_date) : null,
+      }
+
+      await prisma.creditLiability.upsert({
+        where: { accountId: account.id },
+        update: creditData,
+        create: {
+          accountId: account.id,
+          ...creditData,
+        },
+      })
+
+      if (existing) {
+        stats.creditLiabilitiesUpdated++
+        console.log(`    🔄 ${account.name} (Credit) updated`)
+      } else {
+        stats.creditLiabilitiesAdded++
+        console.log(`    ➕ ${account.name} (Credit) added`)
+      }
+    }
+  }
+
+  // Process mortgage liabilities
+  if (liabilitiesResp.data.liabilities?.mortgage) {
+    for (const mortgage of liabilitiesResp.data.liabilities.mortgage) {
+      if (!mortgage.account_id) continue
+
+      const account = accounts.find((a) => a.plaidAccountId === mortgage.account_id)
+      if (!account) continue
+
+      const existing = await prisma.mortgageLiability.findUnique({
+        where: { accountId: account.id },
+      })
+
+      const mortgageData = {
+        accountNumber: mortgage.account_number || null,
+        currentLateFee: mortgage.current_late_fee != null ? new Prisma.Decimal(mortgage.current_late_fee) : null,
+        escrowBalance: mortgage.escrow_balance != null ? new Prisma.Decimal(mortgage.escrow_balance) : null,
+        hasPmi: mortgage.has_pmi ?? null,
+        hasPrepaymentPenalty: mortgage.has_prepayment_penalty ?? null,
+        interestRate: mortgage.interest_rate ? JSON.parse(JSON.stringify(mortgage.interest_rate)) : null,
+        lastPaymentAmount: mortgage.last_payment_amount != null ? new Prisma.Decimal(mortgage.last_payment_amount) : null,
+        lastPaymentDate: mortgage.last_payment_date ? new Date(mortgage.last_payment_date) : null,
+        loanTypeDescription: mortgage.loan_type_description || null,
+        loanTerm: mortgage.loan_term || null,
+        maturityDate: mortgage.maturity_date ? new Date(mortgage.maturity_date) : null,
+        nextMonthlyPayment: mortgage.next_monthly_payment != null ? new Prisma.Decimal(mortgage.next_monthly_payment) : null,
+        nextPaymentDueDate: mortgage.next_payment_due_date ? new Date(mortgage.next_payment_due_date) : null,
+        originationDate: mortgage.origination_date ? new Date(mortgage.origination_date) : null,
+        originationPrincipalAmount: mortgage.origination_principal_amount != null ? new Prisma.Decimal(mortgage.origination_principal_amount) : null,
+        pastDueAmount: mortgage.past_due_amount != null ? new Prisma.Decimal(mortgage.past_due_amount) : null,
+        propertyAddress: mortgage.property_address ? JSON.parse(JSON.stringify(mortgage.property_address)) : null,
+        ytdInterestPaid: mortgage.ytd_interest_paid != null ? new Prisma.Decimal(mortgage.ytd_interest_paid) : null,
+        ytdPrincipalPaid: mortgage.ytd_principal_paid != null ? new Prisma.Decimal(mortgage.ytd_principal_paid) : null,
+      }
+
+      await prisma.mortgageLiability.upsert({
+        where: { accountId: account.id },
+        update: mortgageData,
+        create: {
+          accountId: account.id,
+          ...mortgageData,
+        },
+      })
+
+      if (existing) {
+        stats.mortgageLiabilitiesUpdated++
+        console.log(`    🔄 ${account.name} (Mortgage) updated`)
+      } else {
+        stats.mortgageLiabilitiesAdded++
+        console.log(`    ➕ ${account.name} (Mortgage) added`)
+      }
+    }
+  }
+
+  // Process student loan liabilities
+  if (liabilitiesResp.data.liabilities?.student) {
+    for (const student of liabilitiesResp.data.liabilities.student) {
+      if (!student.account_id) continue
+
+      const account = accounts.find((a) => a.plaidAccountId === student.account_id)
+      if (!account) continue
+
+      const existing = await prisma.studentLoanLiability.findUnique({
+        where: { accountId: account.id },
+      })
+
+      const studentData = {
+        accountNumber: student.account_number || null,
+        disbursementDates: student.disbursement_dates || [],
+        expectedPayoffDate: student.expected_payoff_date ? new Date(student.expected_payoff_date) : null,
+        guarantor: student.guarantor || null,
+        interestRatePercentage: student.interest_rate_percentage != null ? new Prisma.Decimal(student.interest_rate_percentage) : null,
+        isOverdue: student.is_overdue ?? null,
+        lastPaymentAmount: student.last_payment_amount != null ? new Prisma.Decimal(student.last_payment_amount) : null,
+        lastPaymentDate: student.last_payment_date ? new Date(student.last_payment_date) : null,
+        lastStatementBalance: student.last_statement_balance != null ? new Prisma.Decimal(student.last_statement_balance) : null,
+        lastStatementIssueDate: student.last_statement_issue_date ? new Date(student.last_statement_issue_date) : null,
+        loanName: student.loan_name || null,
+        loanStatus: student.loan_status ? JSON.parse(JSON.stringify(student.loan_status)) : null,
+        minimumPaymentAmount: student.minimum_payment_amount != null ? new Prisma.Decimal(student.minimum_payment_amount) : null,
+        nextPaymentDueDate: student.next_payment_due_date ? new Date(student.next_payment_due_date) : null,
+        originationDate: student.origination_date ? new Date(student.origination_date) : null,
+        originationPrincipalAmount: student.origination_principal_amount != null ? new Prisma.Decimal(student.origination_principal_amount) : null,
+        outstandingInterestAmount: student.outstanding_interest_amount != null ? new Prisma.Decimal(student.outstanding_interest_amount) : null,
+        paymentReferenceNumber: student.payment_reference_number || null,
+        repaymentPlan: student.repayment_plan ? JSON.parse(JSON.stringify(student.repayment_plan)) : null,
+        sequenceNumber: student.sequence_number || null,
+        servicerAddress: student.servicer_address ? JSON.parse(JSON.stringify(student.servicer_address)) : null,
+        ytdInterestPaid: student.ytd_interest_paid != null ? new Prisma.Decimal(student.ytd_interest_paid) : null,
+        ytdPrincipalPaid: student.ytd_principal_paid != null ? new Prisma.Decimal(student.ytd_principal_paid) : null,
+      }
+
+      await prisma.studentLoanLiability.upsert({
+        where: { accountId: account.id },
+        update: studentData,
+        create: {
+          accountId: account.id,
+          ...studentData,
+        },
+      })
+
+      if (existing) {
+        stats.studentLoanLiabilitiesUpdated++
+        console.log(`    🔄 ${account.name} (Student Loan) updated`)
+      } else {
+        stats.studentLoanLiabilitiesAdded++
+        console.log(`    ➕ ${account.name} (Student Loan) added`)
+      }
+    }
+  }
+
+  return stats
+}
+
+/**
+ * Generic sync function that can sync transactions and/or investments and/or liabilities
+ */
+export async function syncItems(options: SyncOptions = { syncTransactions: true, syncInvestments: true, syncLiabilities: true }) {
   const items = await prisma.item.findMany()
 
   const totalStats: SyncStats = {
@@ -588,14 +777,24 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
     holdingsUpdated: 0,
     holdingsRemoved: 0,
     investmentTransactionsAdded: 0,
+    creditLiabilitiesAdded: 0,
+    creditLiabilitiesUpdated: 0,
+    mortgageLiabilitiesAdded: 0,
+    mortgageLiabilitiesUpdated: 0,
+    studentLoanLiabilitiesAdded: 0,
+    studentLoanLiabilitiesUpdated: 0,
   }
 
   const syncType =
-    options.syncTransactions && options.syncInvestments
+    options.syncTransactions && options.syncInvestments && options.syncLiabilities
       ? "full"
-      : options.syncTransactions
-        ? "transactions"
-        : "investments"
+      : options.syncTransactions && options.syncInvestments
+        ? "transactions + investments"
+        : options.syncTransactions
+          ? "transactions"
+          : options.syncInvestments
+            ? "investments"
+            : "liabilities"
 
   console.log(`\n🔄 Starting ${syncType} sync for ${items.length} item(s)...\n`)
 
@@ -611,6 +810,12 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
       holdingsUpdated: 0,
       holdingsRemoved: 0,
       investmentTransactionsAdded: 0,
+      creditLiabilitiesAdded: 0,
+      creditLiabilitiesUpdated: 0,
+      mortgageLiabilitiesAdded: 0,
+      mortgageLiabilitiesUpdated: 0,
+      studentLoanLiabilitiesAdded: 0,
+      studentLoanLiabilitiesUpdated: 0,
     }
 
     const itemInfo = await prisma.item.findUnique({
@@ -644,6 +849,12 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
       Object.assign(itemStats, invStats)
     }
 
+    // Sync liabilities if requested
+    if (options.syncLiabilities) {
+      const libStats = await syncItemLiabilities(item.id, item.accessToken)
+      Object.assign(itemStats, libStats)
+    }
+
     // Update total stats
     totalStats.accountsUpdated += itemStats.accountsUpdated
     totalStats.transactionsAdded += itemStats.transactionsAdded
@@ -655,6 +866,12 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
     totalStats.holdingsUpdated += itemStats.holdingsUpdated
     totalStats.holdingsRemoved += itemStats.holdingsRemoved
     totalStats.investmentTransactionsAdded += itemStats.investmentTransactionsAdded
+    totalStats.creditLiabilitiesAdded += itemStats.creditLiabilitiesAdded
+    totalStats.creditLiabilitiesUpdated += itemStats.creditLiabilitiesUpdated
+    totalStats.mortgageLiabilitiesAdded += itemStats.mortgageLiabilitiesAdded
+    totalStats.mortgageLiabilitiesUpdated += itemStats.mortgageLiabilitiesUpdated
+    totalStats.studentLoanLiabilitiesAdded += itemStats.studentLoanLiabilitiesAdded
+    totalStats.studentLoanLiabilitiesUpdated += itemStats.studentLoanLiabilitiesUpdated
 
     // Print item summary
     console.log("\n  ✅ Summary for " + institutionName + ":")
@@ -670,6 +887,14 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
       console.log(`     • Holdings updated: ${itemStats.holdingsUpdated}`)
       console.log(`     • Holdings removed: ${itemStats.holdingsRemoved}`)
       console.log(`     • Investment transactions added: ${itemStats.investmentTransactionsAdded}`)
+    }
+    if (options.syncLiabilities) {
+      console.log(`     • Credit liabilities added: ${itemStats.creditLiabilitiesAdded}`)
+      console.log(`     • Credit liabilities updated: ${itemStats.creditLiabilitiesUpdated}`)
+      console.log(`     • Mortgage liabilities added: ${itemStats.mortgageLiabilitiesAdded}`)
+      console.log(`     • Mortgage liabilities updated: ${itemStats.mortgageLiabilitiesUpdated}`)
+      console.log(`     • Student loan liabilities added: ${itemStats.studentLoanLiabilitiesAdded}`)
+      console.log(`     • Student loan liabilities updated: ${itemStats.studentLoanLiabilitiesUpdated}`)
     }
   }
 
@@ -688,6 +913,12 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
     revalidateTag("dashboard", "max")
     console.log("  ✓ Invalidated: holdings, investments, accounts, dashboard")
   }
+  if (options.syncLiabilities) {
+    revalidateTag("liabilities", "max")
+    revalidateTag("accounts", "max")
+    revalidateTag("dashboard", "max")
+    console.log("  ✓ Invalidated: liabilities, accounts, dashboard")
+  }
 
   // Print total summary
   console.log("\n" + "═".repeat(60))
@@ -705,6 +936,14 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
     console.log(`  Holdings updated: ${totalStats.holdingsUpdated}`)
     console.log(`  Holdings removed: ${totalStats.holdingsRemoved}`)
     console.log(`  Investment transactions added: ${totalStats.investmentTransactionsAdded}`)
+  }
+  if (options.syncLiabilities) {
+    console.log(`  Credit liabilities added: ${totalStats.creditLiabilitiesAdded}`)
+    console.log(`  Credit liabilities updated: ${totalStats.creditLiabilitiesUpdated}`)
+    console.log(`  Mortgage liabilities added: ${totalStats.mortgageLiabilitiesAdded}`)
+    console.log(`  Mortgage liabilities updated: ${totalStats.mortgageLiabilitiesUpdated}`)
+    console.log(`  Student loan liabilities added: ${totalStats.studentLoanLiabilitiesAdded}`)
+    console.log(`  Student loan liabilities updated: ${totalStats.studentLoanLiabilitiesUpdated}`)
   }
   console.log("═".repeat(60) + "\n")
 }

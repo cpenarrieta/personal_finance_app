@@ -15,6 +15,7 @@ import {
   Sun,
   Bot,
   ClipboardCheck,
+  CreditCard,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -86,6 +87,11 @@ const getStaticNavItems = () => {
           href: "/investments/transactions",
         },
       ],
+    },
+    {
+      title: "Liabilities",
+      href: "/liabilities",
+      icon: CreditCard,
     },
     {
       title: "AI Chat",
@@ -190,6 +196,12 @@ function SyncDropdown() {
           disabled={syncing}
         >
           Sync Investments Only
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleSync("/api/plaid/sync-liabilities", "Syncing liabilities")}
+          disabled={syncing}
+        >
+          Sync Liabilities Only
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")}
