@@ -7,7 +7,7 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject } from "ai"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
-import { Prisma } from "@prisma/client"
+import { Category, Prisma, Subcategory, Transaction } from "@prisma/client"
 
 // Initialize OpenAI with API key
 const openai = createOpenAI({
@@ -16,24 +16,21 @@ const openai = createOpenAI({
 
 // Schema for AI response
 const CategorizationResultSchema = z.object({
-  categoryName: z.string().nullable().describe("The category name, or null if uncertain"),
-  subcategoryName: z.string().nullable().describe("The subcategory name, or null if uncertain"),
+  categoryId: z.string().nullable().describe("The category ID, or null if uncertain"),
+  subcategoryId: z.string().nullable().describe("The subcategory ID, or null if uncertain"),
   confidence: z.number().min(0).max(100).describe("Confidence score from 0-100"),
-  reasoning: z.string().describe("Brief explanation for the categorization decision"),
+  reasoning: z.string().max(500).describe("Brief explanation for the categorization decision"),
 })
+
+// Type for categories with subcategories
+type CategoryWithSubs = Category & { subcategories: Subcategory[] }
 
 /**
  * Fetch transactions from the last 2 months for context
  */
-async function getRecentTransactionHistory(excludeTransactionId?: string) {
-  const twoMonthsAgo = new Date()
-  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2)
-
+async function getRecentTransactionHistory(excludeTransactionId?: string, maxTransactions: number = 200) {
   return prisma.transaction.findMany({
     where: {
-      date: {
-        gte: twoMonthsAgo,
-      },
       id: excludeTransactionId ? { not: excludeTransactionId } : undefined,
       categoryId: { not: null }, // Only get categorized transactions
       isSplit: false,
@@ -46,32 +43,25 @@ async function getRecentTransactionHistory(excludeTransactionId?: string) {
       category: {
         select: {
           name: true,
+          id: true,
         },
       },
       subcategory: {
         select: {
           name: true,
+          id: true,
         },
       },
     },
     orderBy: { datetime: "desc" },
-    take: 100, // Limit to most recent 100 to keep context manageable
-  })
+    take: maxTransactions,
+  }) as (Transaction & { category: Category; subcategory: Subcategory })[]
 }
 
 /**
  * Find similar transactions based on merchant, amount, and description
  */
-async function getSimilarTransactions(
-  merchantName: string | null,
-  name: string,
-  amount: Prisma.Decimal,
-  excludeTransactionId?: string,
-) {
-  // Convert amount to number for comparison
-  const amountNum = amount.toNumber()
-  const amountTolerance = Math.abs(amountNum) * 0.1 // 10% tolerance
-
+async function getSimilarTransactions(merchantName: string | null, name: string, excludeTransactionId?: string) {
   // Build conditions for similar transactions
   const conditions: Prisma.TransactionWhereInput[] = []
 
@@ -100,7 +90,7 @@ async function getSimilarTransactions(
     return []
   }
 
-  const similarTransactions = await prisma.transaction.findMany({
+  const similarTransactions = (await prisma.transaction.findMany({
     where: {
       OR: conditions,
       id: excludeTransactionId ? { not: excludeTransactionId } : undefined,
@@ -114,90 +104,103 @@ async function getSimilarTransactions(
       category: {
         select: {
           name: true,
+          id: true,
         },
       },
       subcategory: {
         select: {
           name: true,
+          id: true,
         },
       },
     },
     orderBy: { datetime: "desc" },
-    take: 20, // Limit to 20 most similar
-  })
+    take: 200,
+  })) as (Transaction & { category: Category; subcategory: Subcategory })[]
 
-  // Filter by amount tolerance
-  return similarTransactions.filter((t: { amount: Prisma.Decimal }) => {
-    const diff = Math.abs(Math.abs(t.amount.toNumber()) - Math.abs(amountNum))
-    return diff <= amountTolerance
-  })
+  return similarTransactions
+}
+
+/**
+ * Fetch all categories once
+ */
+async function getAllCategories() {
+  return (await prisma.category.findMany({
+    include: {
+      subcategories: true,
+    },
+    orderBy: { displayOrder: "asc" },
+  })) as CategoryWithSubs[]
 }
 
 /**
  * Categorize a single transaction using AI
+ * @param transactionId - The transaction ID to categorize
+ * @param allowRecategorize - If true, allows re-categorization of already categorized transactions
+ * @param preFetchedCategories - Optional, pass pre-fetched categories to avoid DB calls
+ * @param preFetchedHistory - Optional, pass pre-fetched history to avoid DB calls
  */
-export async function categorizeTransaction(transactionId: string): Promise<{
+export async function categorizeTransaction(
+  transactionId: string,
+  allowRecategorize: boolean = false,
+  preFetchedCategories?: CategoryWithSubs[],
+  preFetchedHistory?: (Transaction & { category: Category; subcategory: Subcategory })[],
+): Promise<{
   categoryId: string | null
   subcategoryId: string | null
   confidence: number
   reasoning: string
 } | null> {
   try {
-    // Fetch the transaction
-    const transaction = await prisma.transaction.findUnique({
+    // Fetch the transaction to be categorized
+    const transaction = (await prisma.transaction.findUnique({
       where: { id: transactionId },
       select: {
         id: true,
         name: true,
         merchantName: true,
         amount: true,
+        date: true,
         datetime: true,
         plaidCategory: true,
         plaidSubcategory: true,
         notes: true,
       },
-    })
+    })) as Transaction | null
 
     if (!transaction) {
       console.error(`Transaction ${transactionId} not found`)
       return null
     }
 
-    // Skip if already categorized
-    const existingCategory = await prisma.transaction.findUnique({
-      where: { id: transactionId },
-      select: { categoryId: true },
-    })
+    // Skip if already categorized (unless allowRecategorize is true)
+    if (!allowRecategorize) {
+      const existingCategory = await prisma.transaction.findUnique({
+        where: { id: transactionId },
+        select: { categoryId: true },
+      })
 
-    if (existingCategory?.categoryId) {
-      console.log(`Transaction ${transactionId} already categorized, skipping`)
-      return null
+      if (existingCategory?.categoryId) {
+        console.log(`Transaction ${transactionId} already categorized, skipping`)
+        return null
+      }
     }
 
-    // Fetch all available categories
-    const categories = await prisma.category.findMany({
-      include: {
-        subcategories: true,
-      },
-      orderBy: { displayOrder: "asc" },
-    })
+    // Fetch categories if not provided
+    const categories = preFetchedCategories || (await getAllCategories())
 
-    // Get similar transactions
-    const similarTransactions = await getSimilarTransactions(
-      transaction.merchantName,
-      transaction.name,
-      transaction.amount,
-      transaction.id,
-    )
+    // Get similar transactions based on merchant name and transaction name
+    // This is specific to the transaction so we can't easily pre-fetch in bulk without complex logic
+    const similarTransactions = await getSimilarTransactions(transaction.merchantName, transaction.name, transaction.id)
 
-    // Get recent transaction history
-    const recentHistory = await getRecentTransactionHistory(transaction.id)
+    // Get recent transaction history if not provided
+    const recentHistory = preFetchedHistory || (await getRecentTransactionHistory(transaction.id))
 
-    // Build prompt context
+    // Build categorization prompt context
     const categoriesContext = categories
-      .map((cat: { name: string; subcategories: Array<{ name: string }> }) => {
-        const subs = cat.subcategories.map((s: { name: string }) => s.name).join(", ")
-        return `${cat.name}: [${subs || "no subcategories"}]`
+      .map((cat) => {
+        const subs = cat.subcategories.map((s) => `${s.name} (ID: ${s.id})`).join(", ")
+        return `${cat.name} (ID: ${cat.id}): [${subs || "no subcategories"}]`
       })
       .join("\n")
 
@@ -208,11 +211,13 @@ export async function categorizeTransaction(transactionId: string): Promise<{
               (t: {
                 name: string
                 amount: Prisma.Decimal
-                category: { name: string } | null
-                subcategory: { name: string } | null
+                category: { name: string; id: string } | null
+                subcategory: { name: string; id: string } | null
               }) => {
                 const amt = Math.abs(t.amount.toNumber()).toFixed(2)
-                return `  - "${t.name}" | $${amt} | Category: ${t.category?.name || "N/A"}${t.subcategory ? ` > ${t.subcategory.name}` : ""}`
+                return `  - "${t.name}" | $${amt} | Category: ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
+                  t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
+                }`
               },
             )
             .join("\n")
@@ -221,24 +226,25 @@ export async function categorizeTransaction(transactionId: string): Promise<{
     const historyContext =
       recentHistory.length > 0
         ? recentHistory
-            .slice(0, 20) // Use top 20 for context
             .map(
               (t: {
                 name: string
                 merchantName: string | null
                 amount: Prisma.Decimal
-                category: { name: string } | null
-                subcategory: { name: string } | null
+                category: { name: string; id: string } | null
+                subcategory: { name: string; id: string } | null
               }) => {
                 const amt = Math.abs(t.amount.toNumber()).toFixed(2)
-                return `  - "${t.merchantName || t.name}" | $${amt} | ${t.category?.name || "N/A"}${t.subcategory ? ` > ${t.subcategory.name}` : ""}`
+                return `  - "${t.merchantName || t.name}" | $${amt} | ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
+                  t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
+                }`
               },
             )
             .join("\n")
         : "  No recent history"
 
     const transactionAmount = Math.abs(transaction.amount.toNumber()).toFixed(2)
-    const transactionType = transaction.amount.toNumber() > 0 ? "expense" : "income"
+    const transactionType = transaction.amount.toNumber() > 0 ? "expense" : "income" // negative = income, positive = expense
 
     const prompt = `You are a financial transaction categorization expert. Your task is to categorize this transaction based on available context.
 
@@ -256,24 +262,24 @@ ${categoriesContext}
 SIMILAR TRANSACTIONS (same merchant/amount/description):
 ${similarContext}
 
-RECENT TRANSACTION HISTORY (last 2 months):
+RECENT TRANSACTION HISTORY (last 200 transactions):
 ${historyContext}
 
 INSTRUCTIONS:
 1. Prioritize similar transactions - if there are transactions with the same merchant or description that have been categorized, use that pattern
 2. Consider the transaction history to understand spending patterns
-3. Use the Plaid category as a fallback reference
+3. Use the Plaid category as a fallback reference but this is not always the best category it makes several mistakes
 4. Consider the amount and transaction type (expense vs income)
 5. Only assign a category if confidence > 60
 6. If you can't match a subcategory but the category is clear, just use the category
-7. Use exact category/subcategory names from the available categories list
+7. Use exact category/subcategory IDs from the available categories list
 8. Be conservative - when in doubt, return null values
 
 Provide your categorization decision with confidence and reasoning.`
 
     // Call OpenAI using ai-sdk with structured output
     const result = await generateObject({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-5-mini-2025-08-07"),
       schema: CategorizationResultSchema,
       prompt,
     })
@@ -282,27 +288,27 @@ Provide your categorization decision with confidence and reasoning.`
 
     // Log the result
     console.log(`🤖 AI Categorization for "${transaction.name}":`, {
-      category: categorization.categoryName,
-      subcategory: categorization.subcategoryName,
+      categoryId: categorization.categoryId,
+      subcategoryId: categorization.subcategoryId,
       confidence: categorization.confidence,
       reasoning: categorization.reasoning,
     })
 
     // If confidence is too low or no category suggested, return null
-    if (!categorization.categoryName || categorization.confidence <= 60) {
+    if (!categorization.categoryId || categorization.confidence <= 60) {
       console.log(`⚠️  Low confidence (${categorization.confidence}), skipping auto-categorization`)
       return null
     }
 
     // Find the category and subcategory IDs
-    const category = categories.find((c: { name: string }) => c.name === categorization.categoryName)
+    const category = categories.find((c) => c.id === categorization.categoryId)
     if (!category) {
-      console.error(`Category "${categorization.categoryName}" not found`)
+      console.error(`Category ID "${categorization.categoryId}" not found`)
       return null
     }
 
-    const subcategory = categorization.subcategoryName
-      ? category.subcategories.find((s: { name: string }) => s.name === categorization.subcategoryName)
+    const subcategory = categorization.subcategoryId
+      ? category.subcategories.find((s) => s.id === categorization.subcategoryId)
       : null
 
     return {
@@ -324,41 +330,50 @@ export async function applyCategorization(
   transactionId: string,
   categoryId: string,
   subcategoryId: string | null,
+  skipReviewTag: boolean = false,
 ): Promise<void> {
   try {
-    // Ensure "for-review" tag exists
-    const forReviewTag = await prisma.tag.upsert({
-      where: { name: "for-review" },
-      update: {},
-      create: {
-        name: "for-review",
-        color: "#fbbf24", // Yellow color for review
-      },
-    })
+    let tagsUpdate = {}
 
-    // Update transaction with category and add tag
+    if (!skipReviewTag) {
+      // Ensure "for-review" tag exists
+      const forReviewTag = await prisma.tag.upsert({
+        where: { name: "for-review" },
+        update: {},
+        create: {
+          name: "for-review",
+          color: "#fbbf24", // Yellow color for review
+        },
+      })
+
+      tagsUpdate = {
+        connectOrCreate: {
+          where: {
+            transactionId_tagId: {
+              transactionId,
+              tagId: forReviewTag.id,
+            },
+          },
+          create: {
+            tagId: forReviewTag.id,
+          },
+        },
+      }
+    }
+
+    // Update transaction with category and optionally add tag
     await prisma.transaction.update({
       where: { id: transactionId },
       data: {
         categoryId,
         subcategoryId,
-        tags: {
-          connectOrCreate: {
-            where: {
-              transactionId_tagId: {
-                transactionId,
-                tagId: forReviewTag.id,
-              },
-            },
-            create: {
-              tagId: forReviewTag.id,
-            },
-          },
-        },
+        tags: !skipReviewTag ? tagsUpdate : undefined,
       },
     })
 
-    console.log(`✅ Applied categorization and for-review tag to transaction ${transactionId}`)
+    console.log(
+      `✅ Applied categorization${!skipReviewTag ? " and for-review tag" : ""} to transaction ${transactionId}`,
+    )
   } catch (error) {
     console.error("Error applying categorization:", error)
     throw error
@@ -375,5 +390,55 @@ export async function categorizeAndApply(transactionId: string): Promise<void> {
     await applyCategorization(transactionId, result.categoryId, result.subcategoryId)
   } else {
     console.log(`ℹ️  Skipping auto-categorization for transaction ${transactionId}`)
+  }
+}
+
+/**
+ * Bulk categorize multiple transactions
+ * Handles fetching shared context once and processing in parallel with concurrency limits
+ */
+export async function categorizeTransactions(
+  transactionIds: string[],
+  allowRecategorize: boolean = false,
+): Promise<void> {
+  if (transactionIds.length === 0) return
+
+  console.log(`🔄 Starting bulk categorization for ${transactionIds.length} transactions...`)
+
+  try {
+    // 1. Fetch shared context once
+    const [categories, recentHistory] = await Promise.all([getAllCategories(), getRecentTransactionHistory()])
+
+    // 2. Define concurrency limit (e.g., 5 concurrent requests to avoid rate limits)
+    const CONCURRENCY_LIMIT = 5
+    const results = []
+
+    // 3. Process in chunks
+    for (let i = 0; i < transactionIds.length; i += CONCURRENCY_LIMIT) {
+      const chunk = transactionIds.slice(i, i + CONCURRENCY_LIMIT)
+      const chunkPromises = chunk.map(async (id) => {
+        try {
+          const result = await categorizeTransaction(id, allowRecategorize, categories, recentHistory)
+          if (result && result.categoryId) {
+            await applyCategorization(id, result.categoryId, result.subcategoryId)
+            return { id, status: "categorized", result }
+          } else {
+            return { id, status: "skipped" }
+          }
+        } catch (error) {
+          console.error(`Failed to categorize transaction ${id}`, error)
+          return { id, status: "error", error }
+        }
+      })
+
+      const chunkResults = await Promise.all(chunkPromises)
+      results.push(...chunkResults)
+    }
+
+    console.log(
+      `✅ Bulk categorization complete. Categorized: ${results.filter((r) => r.status === "categorized").length}, Skipped: ${results.filter((r) => r.status === "skipped").length}, Errors: ${results.filter((r) => r.status === "error").length}`,
+    )
+  } catch (error) {
+    console.error("Error in bulk categorization:", error)
   }
 }

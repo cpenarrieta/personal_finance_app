@@ -123,10 +123,18 @@ export function prepareSpendingBySubcategory(transactions: SerializableTransacti
 /**
  * Prepare daily spending data for charts
  */
-export function prepareDailySpendingData(transactions: SerializableTransaction[], startDate: Date, endDate: Date) {
+export function prepareDailySpendingData(
+  transactions: SerializableTransaction[],
+  startDate: Date | string,
+  endDate: Date | string,
+) {
+  // Convert string dates to Date objects if necessary
+  const start = typeof startDate === "string" ? new Date(startDate) : startDate
+  const end = typeof endDate === "string" ? new Date(endDate) : endDate
+
   const daysInRange = eachDayOfInterval({
-    start: startDate,
-    end: endDate,
+    start,
+    end,
   })
 
   return daysInRange.map((day) => {

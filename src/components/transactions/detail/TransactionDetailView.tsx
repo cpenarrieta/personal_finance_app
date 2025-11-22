@@ -4,6 +4,7 @@ import { useState } from "react"
 import { format } from "date-fns"
 import Link from "next/link"
 import Image from "next/image"
+import { Sparkles, Loader2, Split, Pencil, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { formatAmount } from "@/lib/utils"
 import { formatTransactionDate } from "@/lib/utils/transaction-date"
@@ -20,6 +21,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Alert } from "@/components/ui/alert"
+import {
+  getAICategorization,
+  applyAICategorization,
+  type AICategorizeResponse,
+} from "@/app/(app)/transactions/[id]/actions"
 import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
 
 interface TransactionDetailViewProps {
@@ -34,6 +41,11 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [transactionFiles, setTransactionFiles] = useState<string[]>(transaction.files || [])
+  const [isAICategorizingLoading, setIsAICategorizingLoading] = useState(false)
+  const [aiSuggestion, setAiSuggestion] = useState<AICategorizeResponse | null>(null)
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false)
+  const [isApplyingAI, setIsApplyingAI] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
   const router = useRouter()
 
   const amount = transaction.amount_number
@@ -60,6 +72,59 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
       setIsDeleting(false)
       setIsDeleteDialogOpen(false)
     }
+  }
+
+  const handleAICategorize = async () => {
+    setIsAICategorizingLoading(true)
+    setAiError(null)
+    try {
+      const result = await getAICategorization(transaction.id)
+
+      if (!result.success || !result.data) {
+        setAiError(result.error || "Failed to get AI categorization")
+        return
+      }
+
+      setAiSuggestion(result.data)
+      setIsAIDialogOpen(true)
+    } catch (error) {
+      console.error("Error getting AI categorization:", error)
+      setAiError(error instanceof Error ? error.message : "Failed to get AI categorization")
+    } finally {
+      setIsAICategorizingLoading(false)
+    }
+  }
+
+  const handleApplyAISuggestion = async () => {
+    if (!aiSuggestion || !aiSuggestion.categoryId) {
+      return
+    }
+
+    setIsApplyingAI(true)
+    try {
+      const result = await applyAICategorization(transaction.id, aiSuggestion.categoryId, aiSuggestion.subcategoryId)
+
+      if (!result.success) {
+        setAiError(result.error || "Failed to apply AI categorization")
+        return
+      }
+
+      // Close dialog and refresh
+      setIsAIDialogOpen(false)
+      setAiSuggestion(null)
+      router.refresh()
+    } catch (error) {
+      console.error("Error applying AI categorization:", error)
+      setAiError(error instanceof Error ? error.message : "Failed to apply AI categorization")
+    } finally {
+      setIsApplyingAI(false)
+    }
+  }
+
+  const handleDenyAISuggestion = () => {
+    setIsAIDialogOpen(false)
+    setAiSuggestion(null)
+    setAiError(null)
   }
 
   return (
@@ -104,7 +169,25 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <h2 className="hidden md:block text-xl font-semibold text-foreground">Transaction Details</h2>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                onClick={handleAICategorize}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10"
+                disabled={isAICategorizingLoading}
+              >
+                {isAICategorizingLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    AI Categorizing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    AI-Categorize
+                  </>
+                )}
+              </Button>
               {!transaction.isSplit && !transaction.parentTransactionId && (
                 <>
                   <AnalyzeReceiptButton
@@ -118,14 +201,17 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                     variant="outline"
                     className="border-primary text-primary hover:bg-primary/10"
                   >
+                    <Split className="mr-2 h-4 w-4" />
                     Split Transaction
                   </Button>
                 </>
               )}
               <Button onClick={() => setIsEditing(true)} className="bg-primary hover:bg-primary/90">
+                <Pencil className="mr-2 h-4 w-4" />
                 Edit Transaction
               </Button>
               <Button onClick={() => setIsDeleteDialogOpen(true)} variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>
             </div>
@@ -340,6 +426,70 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
           categories={categories}
         />
       )}
+
+      {/* Error Alert */}
+      {aiError && (
+        <Alert variant="destructive" className="mt-4">
+          <p className="text-sm">{aiError}</p>
+        </Alert>
+      )}
+
+      {/* AI Categorization Dialog */}
+      <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>AI Categorization Suggestion</DialogTitle>
+            <DialogDescription>
+              Review the AI-suggested category for this transaction. You can accept or reject the suggestion.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            {/* Transaction Info */}
+            <div className="p-3 bg-muted rounded-lg border border-border">
+              <p className="font-medium text-foreground">{transaction.name}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {formatTransactionDate(transaction.datetime, "medium")} •{" "}
+                <span className={isExpense ? "text-destructive" : "text-success"}>
+                  {isExpense ? "-" : "+"}${formatAmount(absoluteAmount)}
+                </span>
+              </p>
+            </div>
+
+            {/* AI Suggestion */}
+            {aiSuggestion && (
+              <div className="space-y-3">
+                <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-foreground">Suggested Category</h4>
+                    <span className="text-sm text-primary font-medium">{aiSuggestion.confidence}% confidence</span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-foreground font-medium">
+                      {aiSuggestion.categoryName}
+                      {aiSuggestion.subcategoryName && (
+                        <span className="text-muted-foreground"> → {aiSuggestion.subcategoryName}</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                  <h5 className="text-sm font-medium text-muted-foreground mb-2">AI Reasoning</h5>
+                  <p className="text-sm text-foreground">{aiSuggestion.reasoning}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleDenyAISuggestion} disabled={isApplyingAI}>
+              Deny
+            </Button>
+            <Button onClick={handleApplyAISuggestion} disabled={isApplyingAI}>
+              {isApplyingAI ? "Applying..." : "Confirm & Apply"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

@@ -138,8 +138,8 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
       const result = await confirmTransactions(selectedEdits)
 
       if (result.success) {
-        // Refresh the page to show updated data
-        router.refresh()
+        // Redirect to homepage after confirming
+        router.push("/")
       } else {
         setErrorMessage(result.error || "An unexpected error occurred")
         setShowErrorDialog(true)
