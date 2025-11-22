@@ -28,7 +28,7 @@ type CategoryWithSubs = Category & { subcategories: Subcategory[] }
 /**
  * Fetch transactions from the last 2 months for context
  */
-async function getRecentTransactionHistory(excludeTransactionId?: string, maxTransactions: number = 200) {
+async function getRecentTransactionHistory(excludeTransactionId?: string, maxTransactions: number = 100) {
   return prisma.transaction.findMany({
     where: {
       id: excludeTransactionId ? { not: excludeTransactionId } : undefined,
@@ -115,7 +115,7 @@ async function getSimilarTransactions(merchantName: string | null, name: string,
       },
     },
     orderBy: { datetime: "desc" },
-    take: 200,
+    take: 50,
   })) as (Transaction & { category: Category; subcategory: Subcategory })[]
 
   return similarTransactions
