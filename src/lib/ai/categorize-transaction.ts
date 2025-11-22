@@ -22,6 +22,9 @@ const CategorizationResultSchema = z.object({
   reasoning: z.string().max(500).describe("Brief explanation for the categorization decision"),
 })
 
+// Type for categories with subcategories
+type CategoryWithSubs = Category & { subcategories: Subcategory[] }
+
 /**
  * Fetch transactions from the last 2 months for context
  */
@@ -119,13 +122,29 @@ async function getSimilarTransactions(merchantName: string | null, name: string,
 }
 
 /**
+ * Fetch all categories once
+ */
+async function getAllCategories() {
+  return (await prisma.category.findMany({
+    include: {
+      subcategories: true,
+    },
+    orderBy: { displayOrder: "asc" },
+  })) as CategoryWithSubs[]
+}
+
+/**
  * Categorize a single transaction using AI
  * @param transactionId - The transaction ID to categorize
  * @param allowRecategorize - If true, allows re-categorization of already categorized transactions
+ * @param preFetchedCategories - Optional, pass pre-fetched categories to avoid DB calls
+ * @param preFetchedHistory - Optional, pass pre-fetched history to avoid DB calls
  */
 export async function categorizeTransaction(
   transactionId: string,
   allowRecategorize: boolean = false,
+  preFetchedCategories?: CategoryWithSubs[],
+  preFetchedHistory?: (Transaction & { category: Category; subcategory: Subcategory })[],
 ): Promise<{
   categoryId: string | null
   subcategoryId: string | null
@@ -167,19 +186,15 @@ export async function categorizeTransaction(
       }
     }
 
-    // Fetch all available categories
-    const categories = (await prisma.category.findMany({
-      include: {
-        subcategories: true,
-      },
-      orderBy: { displayOrder: "asc" },
-    })) as (Category & { subcategories: Subcategory[] })[]
+    // Fetch categories if not provided
+    const categories = preFetchedCategories || (await getAllCategories())
 
     // Get similar transactions based on merchant name and transaction name
+    // This is specific to the transaction so we can't easily pre-fetch in bulk without complex logic
     const similarTransactions = await getSimilarTransactions(transaction.merchantName, transaction.name, transaction.id)
 
-    // Get recent transaction history
-    const recentHistory = await getRecentTransactionHistory(transaction.id)
+    // Get recent transaction history if not provided
+    const recentHistory = preFetchedHistory || (await getRecentTransactionHistory(transaction.id))
 
     // Build categorization prompt context
     const categoriesContext = categories
@@ -232,6 +247,7 @@ export async function categorizeTransaction(
     const transactionType = transaction.amount.toNumber() > 0 ? "expense" : "income" // negative = income, positive = expense
 
     const prompt = `You are a financial transaction categorization expert. Your task is to categorize this transaction based on available context.
+
 TRANSACTION TO CATEGORIZE:
   Name: ${transaction.name}
   Merchant: ${transaction.merchantName || "N/A"}
@@ -314,41 +330,50 @@ export async function applyCategorization(
   transactionId: string,
   categoryId: string,
   subcategoryId: string | null,
+  skipReviewTag: boolean = false,
 ): Promise<void> {
   try {
-    // Ensure "for-review" tag exists
-    const forReviewTag = await prisma.tag.upsert({
-      where: { name: "for-review" },
-      update: {},
-      create: {
-        name: "for-review",
-        color: "#fbbf24", // Yellow color for review
-      },
-    })
+    let tagsUpdate = {}
 
-    // Update transaction with category and add tag
+    if (!skipReviewTag) {
+      // Ensure "for-review" tag exists
+      const forReviewTag = await prisma.tag.upsert({
+        where: { name: "for-review" },
+        update: {},
+        create: {
+          name: "for-review",
+          color: "#fbbf24", // Yellow color for review
+        },
+      })
+
+      tagsUpdate = {
+        connectOrCreate: {
+          where: {
+            transactionId_tagId: {
+              transactionId,
+              tagId: forReviewTag.id,
+            },
+          },
+          create: {
+            tagId: forReviewTag.id,
+          },
+        },
+      }
+    }
+
+    // Update transaction with category and optionally add tag
     await prisma.transaction.update({
       where: { id: transactionId },
       data: {
         categoryId,
         subcategoryId,
-        tags: {
-          connectOrCreate: {
-            where: {
-              transactionId_tagId: {
-                transactionId,
-                tagId: forReviewTag.id,
-              },
-            },
-            create: {
-              tagId: forReviewTag.id,
-            },
-          },
-        },
+        tags: !skipReviewTag ? tagsUpdate : undefined,
       },
     })
 
-    console.log(`✅ Applied categorization and for-review tag to transaction ${transactionId}`)
+    console.log(
+      `✅ Applied categorization${!skipReviewTag ? " and for-review tag" : ""} to transaction ${transactionId}`,
+    )
   } catch (error) {
     console.error("Error applying categorization:", error)
     throw error
@@ -365,5 +390,55 @@ export async function categorizeAndApply(transactionId: string): Promise<void> {
     await applyCategorization(transactionId, result.categoryId, result.subcategoryId)
   } else {
     console.log(`ℹ️  Skipping auto-categorization for transaction ${transactionId}`)
+  }
+}
+
+/**
+ * Bulk categorize multiple transactions
+ * Handles fetching shared context once and processing in parallel with concurrency limits
+ */
+export async function categorizeTransactions(
+  transactionIds: string[],
+  allowRecategorize: boolean = false,
+): Promise<void> {
+  if (transactionIds.length === 0) return
+
+  console.log(`🔄 Starting bulk categorization for ${transactionIds.length} transactions...`)
+
+  try {
+    // 1. Fetch shared context once
+    const [categories, recentHistory] = await Promise.all([getAllCategories(), getRecentTransactionHistory()])
+
+    // 2. Define concurrency limit (e.g., 5 concurrent requests to avoid rate limits)
+    const CONCURRENCY_LIMIT = 5
+    const results = []
+
+    // 3. Process in chunks
+    for (let i = 0; i < transactionIds.length; i += CONCURRENCY_LIMIT) {
+      const chunk = transactionIds.slice(i, i + CONCURRENCY_LIMIT)
+      const chunkPromises = chunk.map(async (id) => {
+        try {
+          const result = await categorizeTransaction(id, allowRecategorize, categories, recentHistory)
+          if (result && result.categoryId) {
+            await applyCategorization(id, result.categoryId, result.subcategoryId)
+            return { id, status: "categorized", result }
+          } else {
+            return { id, status: "skipped" }
+          }
+        } catch (error) {
+          console.error(`Failed to categorize transaction ${id}`, error)
+          return { id, status: "error", error }
+        }
+      })
+
+      const chunkResults = await Promise.all(chunkPromises)
+      results.push(...chunkResults)
+    }
+
+    console.log(
+      `✅ Bulk categorization complete. Categorized: ${results.filter((r) => r.status === "categorized").length}, Skipped: ${results.filter((r) => r.status === "skipped").length}, Errors: ${results.filter((r) => r.status === "error").length}`,
+    )
+  } catch (error) {
+    console.error("Error in bulk categorization:", error)
   }
 }

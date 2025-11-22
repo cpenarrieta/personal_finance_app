@@ -32,7 +32,8 @@ export async function getAICategorization(transactionId: string): Promise<{
     if (!result) {
       return {
         success: false,
-        error: "Could not generate a categorization suggestion. The transaction may already be categorized or the AI confidence was too low.",
+        error:
+          "Could not generate a categorization suggestion. The transaction may already be categorized or the AI confidence was too low.",
       }
     }
 
@@ -81,7 +82,9 @@ export async function applyAICategorization(
   error?: string
 }> {
   try {
-    await applyCategorization(transactionId, categoryId, subcategoryId)
+    // Pass true as the 4th argument to skip adding the "for-review" tag
+    // since the user is manually confirming this categorization
+    await applyCategorization(transactionId, categoryId, subcategoryId, true)
 
     // Revalidate caches
     revalidateTag("transactions", "max")
