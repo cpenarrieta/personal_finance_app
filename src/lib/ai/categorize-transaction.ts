@@ -133,24 +133,82 @@ async function getAllCategories() {
   })) as CategoryWithSubs[]
 }
 
+export function buildCategoriesContext(categories: CategoryWithSubs[]): string {
+  return categories
+    .map((cat) => {
+      const subs = cat.subcategories.map((s) => `${s.name} (ID: ${s.id})`).join(", ")
+      return `${cat.name} (ID: ${cat.id}): [${subs || "no subcategories"}]`
+    })
+    .join("\n")
+}
+
+export function buildSimilarTransactionsContext(
+  similarTransactions: (Transaction & { category: Category; subcategory: Subcategory })[],
+): string {
+  return similarTransactions.length > 0
+    ? similarTransactions
+        .map(
+          (t: {
+            name: string
+            amount: Prisma.Decimal
+            category: { name: string; id: string } | null
+            subcategory: { name: string; id: string } | null
+          }) => {
+            const amt = Math.abs(t.amount.toNumber()).toFixed(2)
+            return `  - "${t.name}" | $${amt} | Category: ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
+              t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
+            }`
+          },
+        )
+        .join("\n")
+    : "  No similar transactions found"
+}
+
+export function buildHistoryContext(
+  recentHistory: (Transaction & { category: Category; subcategory: Subcategory })[],
+): string {
+  return recentHistory.length > 0
+    ? recentHistory
+        .map(
+          (t: {
+            name: string
+            merchantName: string | null
+            amount: Prisma.Decimal
+            category: { name: string; id: string } | null
+            subcategory: { name: string; id: string } | null
+          }) => {
+            const amt = Math.abs(t.amount.toNumber()).toFixed(2)
+            return `  - "${t.merchantName || t.name}" | $${amt} | ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
+              t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
+            }`
+          },
+        )
+        .join("\n")
+    : "  No recent history"
+}
+
+interface CategorizeOptions {
+  allowRecategorize?: boolean
+  preFetchedCategories?: CategoryWithSubs[]
+  preFetchedHistory?: (Transaction & { category: Category; subcategory: Subcategory })[]
+}
+
 /**
  * Categorize a single transaction using AI
  * @param transactionId - The transaction ID to categorize
- * @param allowRecategorize - If true, allows re-categorization of already categorized transactions
- * @param preFetchedCategories - Optional, pass pre-fetched categories to avoid DB calls
- * @param preFetchedHistory - Optional, pass pre-fetched history to avoid DB calls
+ * @param options - Options for categorization including pre-fetched data
  */
 export async function categorizeTransaction(
   transactionId: string,
-  allowRecategorize: boolean = false,
-  preFetchedCategories?: CategoryWithSubs[],
-  preFetchedHistory?: (Transaction & { category: Category; subcategory: Subcategory })[],
+  options: CategorizeOptions = {},
 ): Promise<{
   categoryId: string | null
   subcategoryId: string | null
   confidence: number
   reasoning: string
 } | null> {
+  const { allowRecategorize = false, preFetchedCategories, preFetchedHistory } = options
+
   try {
     // Fetch the transaction to be categorized
     const transaction = (await prisma.transaction.findUnique({
@@ -197,51 +255,9 @@ export async function categorizeTransaction(
     const recentHistory = preFetchedHistory || (await getRecentTransactionHistory(transaction.id))
 
     // Build categorization prompt context
-    const categoriesContext = categories
-      .map((cat) => {
-        const subs = cat.subcategories.map((s) => `${s.name} (ID: ${s.id})`).join(", ")
-        return `${cat.name} (ID: ${cat.id}): [${subs || "no subcategories"}]`
-      })
-      .join("\n")
-
-    const similarContext =
-      similarTransactions.length > 0
-        ? similarTransactions
-            .map(
-              (t: {
-                name: string
-                amount: Prisma.Decimal
-                category: { name: string; id: string } | null
-                subcategory: { name: string; id: string } | null
-              }) => {
-                const amt = Math.abs(t.amount.toNumber()).toFixed(2)
-                return `  - "${t.name}" | $${amt} | Category: ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
-                  t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
-                }`
-              },
-            )
-            .join("\n")
-        : "  No similar transactions found"
-
-    const historyContext =
-      recentHistory.length > 0
-        ? recentHistory
-            .map(
-              (t: {
-                name: string
-                merchantName: string | null
-                amount: Prisma.Decimal
-                category: { name: string; id: string } | null
-                subcategory: { name: string; id: string } | null
-              }) => {
-                const amt = Math.abs(t.amount.toNumber()).toFixed(2)
-                return `  - "${t.merchantName || t.name}" | $${amt} | ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
-                  t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
-                }`
-              },
-            )
-            .join("\n")
-        : "  No recent history"
+    const categoriesContext = buildCategoriesContext(categories)
+    const similarContext = buildSimilarTransactionsContext(similarTransactions as any)
+    const historyContext = buildHistoryContext(recentHistory as any)
 
     const transactionAmount = Math.abs(transaction.amount.toNumber()).toFixed(2)
     const transactionType = transaction.amount.toNumber() > 0 ? "expense" : "income" // negative = income, positive = expense
@@ -262,7 +278,7 @@ ${categoriesContext}
 SIMILAR TRANSACTIONS (same merchant/amount/description):
 ${similarContext}
 
-RECENT TRANSACTION HISTORY (last 200 transactions):
+RECENT TRANSACTION HISTORY:
 ${historyContext}
 
 INSTRUCTIONS:
@@ -397,10 +413,7 @@ export async function categorizeAndApply(transactionId: string): Promise<void> {
  * Bulk categorize multiple transactions
  * Handles fetching shared context once and processing in parallel with concurrency limits
  */
-export async function categorizeTransactions(
-  transactionIds: string[],
-  allowRecategorize: boolean = false,
-): Promise<void> {
+export async function categorizeTransactions(transactionIds: string[], options: CategorizeOptions = {}): Promise<void> {
   if (transactionIds.length === 0) return
 
   console.log(`🔄 Starting bulk categorization for ${transactionIds.length} transactions...`)
@@ -418,7 +431,14 @@ export async function categorizeTransactions(
       const chunk = transactionIds.slice(i, i + CONCURRENCY_LIMIT)
       const chunkPromises = chunk.map(async (id) => {
         try {
-          const result = await categorizeTransaction(id, allowRecategorize, categories, recentHistory)
+          // Merge the pre-fetched data into the options for each call
+          const txOptions: CategorizeOptions = {
+            ...options,
+            preFetchedCategories: categories,
+            preFetchedHistory: recentHistory,
+          }
+
+          const result = await categorizeTransaction(id, txOptions)
           if (result && result.categoryId) {
             await applyCategorization(id, result.categoryId, result.subcategoryId)
             return { id, status: "categorized", result }

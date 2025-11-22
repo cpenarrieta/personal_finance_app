@@ -27,7 +27,7 @@ export async function getAICategorization(transactionId: string): Promise<{
   try {
     // Call the existing categorizeTransaction function with allowRecategorize=true
     // to allow users to get AI suggestions even for already categorized transactions
-    const result = await categorizeTransaction(transactionId, true)
+    const result = await categorizeTransaction(transactionId, { allowRecategorize: true })
 
     if (!result) {
       return {

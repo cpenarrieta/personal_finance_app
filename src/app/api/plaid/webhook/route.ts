@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
 import { syncItemTransactions } from "@/lib/sync/sync-service"
-import { categorizeAndApply } from "@/lib/ai/categorize-transaction"
+import { categorizeTransactions } from "@/lib/ai/categorize-transaction"
 import { revalidateTag } from "next/cache"
 
 // Plaid webhook types
@@ -100,18 +100,9 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
     if (stats.newTransactionIds.length > 0) {
       console.log(`🤖 Starting AI categorization for ${stats.newTransactionIds.length} new transaction(s)...`)
 
-      // Run categorization in the background for each new transaction
+      // Run categorization in the background for all new transactions
       // Don't await to avoid blocking the webhook response
-      Promise.all(
-        stats.newTransactionIds.map(async (transactionId) => {
-          try {
-            await categorizeAndApply(transactionId)
-          } catch (error) {
-            console.error(`❌ Error categorizing transaction ${transactionId}:`, error)
-            // Continue with other transactions even if one fails
-          }
-        }),
-      )
+      categorizeTransactions(stats.newTransactionIds)
         .then(() => {
           console.log(`✅ AI categorization complete`)
           // Invalidate caches after categorization
