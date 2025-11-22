@@ -16,6 +16,7 @@ interface PlaidWebhook {
   }
   new_transactions?: number
   removed_transactions?: string[]
+  reason?: string // For PENDING_DISCONNECT
 }
 
 /**
@@ -134,7 +135,12 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
 /**
  * Handles item webhook events
  */
-async function handleItemWebhook(webhookCode: string, itemId: string, error?: PlaidWebhook["error"]): Promise<void> {
+async function handleItemWebhook(
+  webhookCode: string,
+  itemId: string,
+  error?: PlaidWebhook["error"],
+  reason?: string,
+): Promise<void> {
   console.log(`🔔 Processing item webhook: ${webhookCode} for item ${itemId}`)
 
   // Find the item in our database
@@ -165,6 +171,16 @@ async function handleItemWebhook(webhookCode: string, itemId: string, error?: Pl
         where: { id: item.id },
         data: {
           status: "PENDING_EXPIRATION",
+        },
+      })
+      break
+
+    case "PENDING_DISCONNECT":
+      console.warn(`⚠️  Item pending disconnect. Reason: ${reason}`)
+      await prisma.item.update({
+        where: { id: item.id },
+        data: {
+          status: "PENDING_DISCONNECT",
         },
       })
       break
@@ -236,7 +252,7 @@ export async function POST(request: NextRequest) {
       case "ITEM":
         // Handle item webhooks (errors, login issues, etc.)
         if (body.item_id) {
-          await handleItemWebhook(body.webhook_code, body.item_id, body.error)
+          await handleItemWebhook(body.webhook_code, body.item_id, body.error, body.reason)
         }
         break
 
