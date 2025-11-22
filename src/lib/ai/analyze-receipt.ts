@@ -8,7 +8,7 @@ import { generateObject } from "ai"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
 import type { CoreMessage } from "ai"
-import { categorizeAndApply } from "@/lib/ai/categorize-transaction"
+import { categorizeTransactions } from "@/lib/ai/categorize-transaction"
 
 // Initialize OpenAI with API key
 const openai = createOpenAI({
@@ -259,21 +259,13 @@ export async function applySplitSuggestions(
 
     console.log(`✅ Created ${createdTransactions.length} child transactions for split ${transactionId}`)
 
-    // Apply AI categorization to each child transaction
-    // This uses the SAME logic as webhook transactions (categorizeAndApply)
+    // Apply AI categorization to all child transactions using bulk categorization
+    // This uses the SAME logic as webhook transactions, optimized for multiple transactions
+    // Pre-fetches categories and history once for better performance
     console.log(`🤖 Starting AI categorization for ${createdTransactions.length} split transaction(s)...`)
 
-    await Promise.all(
-      createdTransactions.map(async (transaction) => {
-        try {
-          await categorizeAndApply(transaction.id)
-          console.log(`✅ Categorized split transaction: ${transaction.id}`)
-        } catch (error) {
-          console.error(`❌ Error categorizing split transaction ${transaction.id}:`, error)
-          // Continue with other transactions even if one fails
-        }
-      }),
-    )
+    const transactionIds = createdTransactions.map((t) => t.id)
+    await categorizeTransactions(transactionIds, false)
 
     console.log(`✅ AI categorization complete for all splits`)
   } catch (error) {
