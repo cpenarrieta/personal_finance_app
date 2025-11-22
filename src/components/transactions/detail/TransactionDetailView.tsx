@@ -4,6 +4,7 @@ import { useState } from "react"
 import { format } from "date-fns"
 import Link from "next/link"
 import Image from "next/image"
+import { Sparkles, Loader2, Split, Pencil, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { formatAmount } from "@/lib/utils"
 import { formatTransactionDate } from "@/lib/utils/transaction-date"
@@ -20,7 +21,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Alert } from "@/components/ui/alert"
-import { getAICategorization, applyAICategorization, type AICategorizeResponse } from "@/app/(app)/transactions/[id]/actions"
+import {
+  getAICategorization,
+  applyAICategorization,
+  type AICategorizeResponse,
+} from "@/app/(app)/transactions/[id]/actions"
 import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
 
 interface TransactionDetailViewProps {
@@ -96,11 +101,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
 
     setIsApplyingAI(true)
     try {
-      const result = await applyAICategorization(
-        transaction.id,
-        aiSuggestion.categoryId,
-        aiSuggestion.subcategoryId,
-      )
+      const result = await applyAICategorization(transaction.id, aiSuggestion.categoryId, aiSuggestion.subcategoryId)
 
       if (!result.success) {
         setAiError(result.error || "Failed to apply AI categorization")
@@ -174,7 +175,17 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                 className="border-primary text-primary hover:bg-primary/10"
                 disabled={isAICategorizingLoading}
               >
-                {isAICategorizingLoading ? "AI Categorizing..." : "AI-Categorize"}
+                {isAICategorizingLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    AI Categorizing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    AI-Categorize
+                  </>
+                )}
               </Button>
               {!transaction.isSplit && !transaction.parentTransactionId && (
                 <Button
@@ -182,13 +193,16 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                   variant="outline"
                   className="border-primary text-primary hover:bg-primary/10"
                 >
+                  <Split className="mr-2 h-4 w-4" />
                   Split Transaction
                 </Button>
               )}
               <Button onClick={() => setIsEditing(true)} className="bg-primary hover:bg-primary/90">
+                <Pencil className="mr-2 h-4 w-4" />
                 Edit Transaction
               </Button>
               <Button onClick={() => setIsDeleteDialogOpen(true)} variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>
             </div>
@@ -438,9 +452,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                 <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-foreground">Suggested Category</h4>
-                    <span className="text-sm text-primary font-medium">
-                      {aiSuggestion.confidence}% confidence
-                    </span>
+                    <span className="text-sm text-primary font-medium">{aiSuggestion.confidence}% confidence</span>
                   </div>
                   <div className="space-y-1">
                     <p className="text-foreground font-medium">
