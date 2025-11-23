@@ -128,9 +128,6 @@ PLAID_COUNTRY_CODES=US,CA
 ### Optional Variables
 
 ```bash
-# Plaid Webhook (recommended for production)
-PLAID_WEBHOOK_SECRET=your-plaid-webhook-secret
-
 # OpenAI API (for AI categorization)
 OPENAI_API_KEY=your-openai-api-key
 
@@ -193,14 +190,8 @@ For real-time transaction updates via webhooks:
 2. **Configure in Plaid Dashboard**:
    - Go to [Plaid Dashboard](https://dashboard.plaid.com/team/webhooks)
    - Add webhook URL: `https://your-app.vercel.app/api/webhooks/plaid`
-   - Copy the webhook secret
 
-3. **Add to Vercel environment variables**:
-   ```bash
-   PLAID_WEBHOOK_SECRET=your-webhook-secret
-   ```
-
-4. **Redeploy** for changes to take effect
+3. **Redeploy** for changes to take effect
 
 See [WEBHOOKS.md](./WEBHOOKS.md) for detailed webhook documentation.
 
@@ -230,10 +221,6 @@ See [WEBHOOKS.md](./WEBHOOKS.md) for detailed webhook documentation.
 **OAuth redirect mismatch**
 - Verify OAuth redirect URIs match your Vercel URL exactly
 - Check both Google and GitHub OAuth app settings
-
-**"Webhook verification failed"**
-- Ensure `PLAID_WEBHOOK_SECRET` matches the secret from Plaid dashboard
-- Can be left empty for testing, but required for production
 
 ### Performance Issues
 

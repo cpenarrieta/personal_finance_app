@@ -24,7 +24,7 @@ Personal finance app built with Next.js 16 that syncs financial data via Plaid A
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Better Auth with OAuth (Google, GitHub)
 - **Financial Data**: Plaid API
-- **AI**: OpenAI GPT-4o-mini for transaction categorization
+- **AI**: OpenAI GPT-5-mini for transaction categorization
 - **UI**: React 19.2, Tailwind CSS 4, shadcn/ui, Recharts
 - **Stock Data**: Alpha Vantage API
 

@@ -61,7 +61,7 @@ async function getRecentTransactionHistory(excludeTransactionId?: string, maxTra
 /**
  * Find similar transactions based on merchant, amount, and description
  */
-async function getSimilarTransactions(merchantName: string | null, name: string, excludeTransactionId?: string) {
+export async function getSimilarTransactions(merchantName: string | null, name: string, excludeTransactionId?: string) {
   // Build conditions for similar transactions
   const conditions: Prisma.TransactionWhereInput[] = []
 
@@ -223,6 +223,7 @@ export async function categorizeTransaction(
         plaidCategory: true,
         plaidSubcategory: true,
         notes: true,
+        files: true,
       },
     })) as Transaction | null
 
@@ -293,12 +294,67 @@ INSTRUCTIONS:
 
 Provide your categorization decision with confidence and reasoning.`
 
+    // Helper function to prepare file URLs for vision (convert PDFs to images)
+    const prepareFileForVision = (fileUrl: string): string => {
+      const lowerUrl = fileUrl.toLowerCase()
+
+      // Check if it's a PDF
+      if (lowerUrl.includes(".pdf") || lowerUrl.match(/\.pdf(\?|$|#)/)) {
+        // Convert PDF to image using Cloudinary transformations
+        if (fileUrl.includes("cloudinary.com")) {
+          return fileUrl.replace("/upload/", "/upload/f_jpg,pg_1,q_auto,w_2000/")
+        }
+
+        console.warn(`PDF detected but not hosted on Cloudinary: ${fileUrl}. Vision API may not support it.`)
+        return fileUrl
+      }
+
+      return fileUrl
+    }
+
     // Call OpenAI using ai-sdk with structured output
-    const result = await generateObject({
-      model: openai("gpt-5-mini-2025-08-07"),
-      schema: CategorizationResultSchema,
-      prompt,
-    })
+    // If transaction has files, use vision with messages format; otherwise use text-only prompt
+    let result
+    if (transaction.files && transaction.files.length > 0) {
+      // Build content array with text and images
+      const content: any[] = [
+        {
+          type: "text",
+          text:
+            prompt +
+            `\n\nATTACHED RECEIPT(S): ${transaction.files.length} file(s) - Use these receipts to help categorize the transaction accurately.`,
+        },
+      ]
+
+      // Add each file URL as an image
+      for (const fileUrl of transaction.files) {
+        const processedUrl = prepareFileForVision(fileUrl)
+        content.push({
+          type: "image",
+          image: processedUrl,
+        })
+      }
+
+      console.log(`🖼️  Including ${transaction.files.length} receipt file(s) in categorization`)
+
+      result = await generateObject({
+        model: openai("gpt-5-mini"),
+        schema: CategorizationResultSchema,
+        messages: [
+          {
+            role: "user",
+            content,
+          },
+        ],
+      })
+    } else {
+      // No files - use text-only prompt
+      result = await generateObject({
+        model: openai("gpt-5-mini"),
+        schema: CategorizationResultSchema,
+        prompt,
+      })
+    }
 
     const categorization = result.object
 

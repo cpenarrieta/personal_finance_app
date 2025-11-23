@@ -135,7 +135,7 @@ import { google } from '@ai-sdk/google';
 
 ```typescript
 // OpenAI
-const model = openai('gpt-4o');
+const model = openai('gpt-5-mini');
 const model = openai('gpt-3.5-turbo');
 
 // Anthropic Claude
@@ -150,7 +150,7 @@ const model = google('gemini-2.0-flash-lite');
 
 ### Model Selection Guidelines
 
-- **GPT-4o**: Best for complex reasoning, expensive
+- **GPT-5**: Best for complex reasoning, expensive
 - **GPT-3.5-turbo**: Fast and cheap, good for simple tasks
 - **Claude Sonnet**: Excellent balance of capability and speed
 - **Claude Haiku**: Very fast, cost-effective
@@ -628,7 +628,7 @@ export const POST = async (req: Request): Promise<Response> => {
 ### Important Notes on Files and Images
 
 - Not all models support images (check provider documentation)
-- Vision-capable models: GPT-4o, Claude Sonnet, Gemini Flash
+- Vision-capable models: GPT-5-mini, Claude Sonnet, Gemini Flash
 - Files must be converted to data URLs for transmission
 - The AI SDK handles the conversion from UIMessage parts to model-specific formats
 
@@ -1403,7 +1403,7 @@ Tokens are the fundamental unit of LLMs - not words or characters. You're billed
 import { Tiktoken } from 'js-tiktoken/lite';
 import o200k_base from 'js-tiktoken/ranks/o200k_base';
 
-// o200k_base is the tokenizer for GPT-4o
+// o200k_base is the tokenizer for GPT-5-mini
 const tokenizer = new Tiktoken(o200k_base);
 
 const tokenize = (text: string) => {
@@ -1435,7 +1435,7 @@ console.log('Usage:', result.usage);
 //   totalTokens: 160
 // }
 
-// Calculate cost (example for GPT-4o)
+// Calculate cost (example for GPT-5-mini)
 const inputCost = (result.usage.promptTokens / 1000) * 0.005;
 const outputCost = (result.usage.completionTokens / 1000) * 0.015;
 const totalCost = inputCost + outputCost;
@@ -1446,14 +1446,14 @@ const totalCost = inputCost + outputCost;
 The context window is the maximum amount of tokens an LLM can process at once:
 
 - **GPT-3.5-turbo**: 16K tokens
-- **GPT-4o**: 128K tokens
+- **GPT-5-mini**: 128K tokens
 - **Claude Sonnet**: 200K tokens
 - **Gemini Flash**: 1M tokens
 
 ```typescript
 // Check if your prompt fits in context
 const promptTokens = tokenize(prompt).length;
-const contextWindow = 128000; // GPT-4o
+const contextWindow = 128000; // GPT-5-mini
 
 if (promptTokens > contextWindow) {
   console.error('Prompt exceeds context window!');
@@ -1489,7 +1489,7 @@ const result = await generateText({
 ### 1. Model Selection
 
 - **Development**: Use fast, cheap models (GPT-3.5, Gemini Flash Lite)
-- **Production**: Use capable models (GPT-4o, Claude Sonnet)
+- **Production**: Use capable models (GPT-5-mini, Claude Sonnet)
 - **Tool Calling**: Prefer models with good tool calling support
 - **Vision**: Use vision-capable models only when needed
 

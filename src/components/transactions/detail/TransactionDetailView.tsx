@@ -13,9 +13,11 @@ import { TransactionFileUpload } from "@/components/transactions/detail/Transact
 import { TransactionActions } from "@/components/transactions/detail/TransactionActions"
 import { AICategorizationDialog } from "@/components/transactions/detail/AICategorizationDialog"
 import { DeleteConfirmationDialog } from "@/components/transactions/detail/DeleteConfirmationDialog"
+import { SmartSplitReviewModal } from "@/components/transactions/detail/SmartSplitReviewModal"
 import { Alert } from "@/components/ui/alert"
 import { useAICategorization } from "@/hooks/useAICategorization"
 import { useTransactionDelete } from "@/hooks/useTransactionDelete"
+import { useSmartAnalysis } from "@/hooks/useSmartAnalysis"
 import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
 
 interface TransactionDetailViewProps {
@@ -30,13 +32,19 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
   const [transactionFiles, setTransactionFiles] = useState<string[]>(transaction.files || [])
   const router = useRouter()
 
-  // Custom hooks for AI categorization and deletion
+  // Custom hooks for AI categorization, smart analysis, and deletion
   const aiCategorization = useAICategorization(transaction.id)
+  const smartAnalysis = useSmartAnalysis()
   const deletion = useTransactionDelete(transaction.id)
 
   const amount = transaction.amount_number
   const isExpense = amount < 0
   const absoluteAmount = Math.abs(amount)
+
+  // Handler for Smart Analysis
+  const handleSmartAnalysis = async () => {
+    await smartAnalysis.handlers.analyzeReceipt(transaction.id, categories)
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -79,12 +87,13 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
         {/* Main Details */}
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
-            <h2 className="hidden md:block text-xl font-semibold text-foreground">Transaction Details</h2>
             <TransactionActions
               transaction={transaction}
               isAILoading={aiCategorization.state.isLoading}
               onAICategorize={aiCategorization.handlers.categorize}
               onSplit={() => setIsSplitting(true)}
+              onSmartSplit={handleSmartAnalysis}
+              isSmartSplitLoading={smartAnalysis.state.isAnalyzing}
               onEdit={() => setIsEditing(true)}
               onDelete={() => deletion.handlers.setIsDialogOpen(true)}
             />
@@ -300,10 +309,15 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
         />
       )}
 
-      {/* Error Alert */}
+      {/* Error Alerts */}
       {aiCategorization.state.error && (
-        <Alert variant="destructive" className="mt-4">
+        <Alert variant="destructive" className="mt-4 grid-cols-1fr">
           <p className="text-sm">{aiCategorization.state.error}</p>
+        </Alert>
+      )}
+      {smartAnalysis.state.error && (
+        <Alert variant="destructive" className="mt-4 grid-cols-1fr">
+          <p className="text-sm">{smartAnalysis.state.error}</p>
         </Alert>
       )}
 
@@ -317,6 +331,51 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
         onApply={aiCategorization.handlers.apply}
         onDeny={aiCategorization.handlers.deny}
       />
+
+      {/* Smart Split Review Modal (for split results) */}
+      {smartAnalysis.state.resultType === "split" && (
+        <SmartSplitReviewModal
+          isOpen={smartAnalysis.state.isSplitModalOpen}
+          onClose={smartAnalysis.handlers.cancelSplit}
+          transaction={transaction}
+          suggestedSplits={smartAnalysis.state.suggestedSplits}
+          categories={categories}
+          isSubmitting={smartAnalysis.state.isConfirmingSplit}
+          onConfirm={() => smartAnalysis.handlers.confirmSplit(transaction.id, smartAnalysis.state.suggestedSplits)}
+          confidence={smartAnalysis.state.splitConfidence}
+          notes={smartAnalysis.state.splitNotes}
+        />
+      )}
+
+      {/* AI Recategorization Dialog (for recategorize results) */}
+      {smartAnalysis.state.resultType === "recategorize" && (
+        <AICategorizationDialog
+          transaction={transaction}
+          suggestion={
+            smartAnalysis.state.suggestedCategoryId
+              ? {
+                  categoryId: smartAnalysis.state.suggestedCategoryId,
+                  subcategoryId: smartAnalysis.state.suggestedSubcategoryId,
+                  categoryName: smartAnalysis.state.suggestedCategoryName,
+                  subcategoryName: smartAnalysis.state.suggestedSubcategoryName,
+                  confidence: smartAnalysis.state.recategorizeConfidence || 0,
+                  reasoning: smartAnalysis.state.recategorizeReasoning || "",
+                }
+              : null
+          }
+          isOpen={smartAnalysis.state.isRecategorizeDialogOpen}
+          isApplying={smartAnalysis.state.isApplyingRecategorization}
+          onOpenChange={(open) => !open && smartAnalysis.handlers.cancelRecategorization()}
+          onApply={() =>
+            smartAnalysis.handlers.applyRecategorization(
+              transaction.id,
+              smartAnalysis.state.suggestedCategoryId!,
+              smartAnalysis.state.suggestedSubcategoryId,
+            )
+          }
+          onDeny={smartAnalysis.handlers.cancelRecategorization}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog

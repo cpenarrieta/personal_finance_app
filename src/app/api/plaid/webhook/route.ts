@@ -31,35 +31,25 @@ async function verifyPlaidWebhook(request: NextRequest, _body: string): Promise<
     return false
   }
 
-  // If PLAID_WEBHOOK_SECRET is set, verify using it
-  // Note: Plaid recommends using webhook verification in production
-  const webhookSecret = process.env.PLAID_WEBHOOK_SECRET
+  try {
+    const plaid = getPlaidClient()
+    const isValid = await plaid.webhookVerificationKeyGet({
+      key_id: plaidVerification,
+    })
 
-  if (webhookSecret) {
-    try {
-      const plaid = getPlaidClient()
-      const isValid = await plaid.webhookVerificationKeyGet({
-        key_id: plaidVerification,
-      })
-
-      if (!isValid.data) {
-        console.error("❌ Webhook verification failed")
-        return false
-      }
-
-      // In production, you should verify the JWT signature using the public key
-      // For now, we'll accept the presence of the verification header
-      console.log("✅ Webhook verification header present")
-      return true
-    } catch (error) {
-      console.error("❌ Error verifying webhook:", error)
+    if (!isValid.data) {
+      console.error("❌ Webhook verification failed")
       return false
     }
-  }
 
-  // In development, we'll allow webhooks without verification
-  console.warn("⚠️  Webhook verification disabled (set PLAID_WEBHOOK_SECRET for production)")
-  return true
+    // In production, you should verify the JWT signature using the public key
+    // For now, we'll accept the presence of the verification header
+    console.log("✅ Webhook verification header present")
+    return true
+  } catch (error) {
+    console.error("❌ Error verifying webhook:", error)
+    return false
+  }
 }
 
 /**

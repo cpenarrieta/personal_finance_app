@@ -1,4 +1,4 @@
-import { Sparkles, Loader2, Split, Pencil, Trash2 } from "lucide-react"
+import { Sparkles, Loader2, Split, Pencil, Trash2, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { TransactionForClient } from "@/types"
 
@@ -7,6 +7,8 @@ interface TransactionActionsProps {
   isAILoading: boolean
   onAICategorize: () => void
   onSplit: () => void
+  onSmartSplit?: () => void
+  isSmartSplitLoading?: boolean
   onEdit: () => void
   onDelete: () => void
 }
@@ -16,9 +18,14 @@ export function TransactionActions({
   isAILoading,
   onAICategorize,
   onSplit,
+  onSmartSplit,
+  isSmartSplitLoading = false,
   onEdit,
   onDelete,
 }: TransactionActionsProps) {
+  const hasFiles = transaction.files && transaction.files.length > 0
+  const canSplit = !transaction.isSplit && !transaction.parentTransactionId
+
   return (
     <div className="flex gap-2 flex-wrap">
       <Button
@@ -39,7 +46,27 @@ export function TransactionActions({
           </>
         )}
       </Button>
-      {!transaction.isSplit && !transaction.parentTransactionId && (
+      {hasFiles && onSmartSplit && (
+        <Button
+          onClick={onSmartSplit}
+          variant="outline"
+          className="border-primary text-primary hover:bg-primary/10"
+          disabled={isSmartSplitLoading}
+        >
+          {isSmartSplitLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Analyzing...
+            </>
+          ) : (
+            <>
+              <Wand2 className="mr-2 h-4 w-4" />
+              AI Analyze Receipt
+            </>
+          )}
+        </Button>
+      )}
+      {canSplit && (
         <Button onClick={onSplit} variant="outline" className="border-primary text-primary hover:bg-primary/10">
           <Split className="mr-2 h-4 w-4" />
           Split Transaction
