@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/utils"
 
 type LiabilitiesData = Awaited<ReturnType<typeof import("@/lib/db/queries").getAllLiabilities>>
+type CreditLiability = LiabilitiesData["credit"][number]
+type MortgageLiability = LiabilitiesData["mortgage"][number]
+type StudentLoanLiability = LiabilitiesData["studentLoan"][number]
 
 interface LiabilitiesListProps {
   liabilities: LiabilitiesData
@@ -31,7 +34,7 @@ export function LiabilitiesList({ liabilities }: LiabilitiesListProps) {
         <div>
           <h3 className="text-xl font-semibold mb-3">Credit Cards</h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {credit.map((liability) => (
+            {credit.map((liability: CreditLiability) => (
               <Card key={liability.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -93,7 +96,7 @@ export function LiabilitiesList({ liabilities }: LiabilitiesListProps) {
         <div>
           <h3 className="text-xl font-semibold mb-3">Mortgages</h3>
           <div className="grid gap-4 md:grid-cols-2">
-            {mortgage.map((liability) => (
+            {mortgage.map((liability: MortgageLiability) => (
               <Card key={liability.id}>
                 <CardHeader>
                   <CardTitle className="text-lg">{liability.account.name}</CardTitle>
@@ -173,7 +176,7 @@ export function LiabilitiesList({ liabilities }: LiabilitiesListProps) {
         <div>
           <h3 className="text-xl font-semibold mb-3">Student Loans</h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {studentLoan.map((liability) => (
+            {studentLoan.map((liability: StudentLoanLiability) => (
               <Card key={liability.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">

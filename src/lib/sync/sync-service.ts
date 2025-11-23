@@ -610,7 +610,7 @@ export async function syncItemLiabilities(itemId: string, accessToken: string): 
     for (const credit of liabilitiesResp.data.liabilities.credit) {
       if (!credit.account_id) continue
 
-      const account = accounts.find((a) => a.plaidAccountId === credit.account_id)
+      const account = accounts.find((a: (typeof accounts)[number]) => a.plaidAccountId === credit.account_id)
       if (!account) continue
 
       const existing = await prisma.creditLiability.findUnique({
@@ -652,7 +652,7 @@ export async function syncItemLiabilities(itemId: string, accessToken: string): 
     for (const mortgage of liabilitiesResp.data.liabilities.mortgage) {
       if (!mortgage.account_id) continue
 
-      const account = accounts.find((a) => a.plaidAccountId === mortgage.account_id)
+      const account = accounts.find((a: (typeof accounts)[number]) => a.plaidAccountId === mortgage.account_id)
       if (!account) continue
 
       const existing = await prisma.mortgageLiability.findUnique({
@@ -705,7 +705,7 @@ export async function syncItemLiabilities(itemId: string, accessToken: string): 
     for (const student of liabilitiesResp.data.liabilities.student) {
       if (!student.account_id) continue
 
-      const account = accounts.find((a) => a.plaidAccountId === student.account_id)
+      const account = accounts.find((a: (typeof accounts)[number]) => a.plaidAccountId === student.account_id)
       if (!account) continue
 
       const existing = await prisma.studentLoanLiability.findUnique({
