@@ -26,12 +26,12 @@ export const auth = betterAuth({
     passkey({
       rpName: "Personal Finance App",
       rpID:
-        process.env.NODE_ENV === "production"
-          ? new URL(process.env.BETTER_AUTH_URL as string).hostname
+        process.env.NODE_ENV === "production" && process.env.BETTER_AUTH_URL
+          ? new URL(process.env.BETTER_AUTH_URL).hostname
           : "localhost",
       origin:
-        process.env.NODE_ENV === "production"
-          ? (process.env.BETTER_AUTH_URL as string)
+        process.env.NODE_ENV === "production" && process.env.BETTER_AUTH_URL
+          ? process.env.BETTER_AUTH_URL
           : "http://localhost:3000",
     }),
   ],
