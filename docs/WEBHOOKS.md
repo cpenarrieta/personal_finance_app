@@ -57,8 +57,17 @@ The webhook handler also monitors item status:
 
 ## Environment Configuration
 
+### Production (Optional but Recommended)
+Add the following to your `.env` file to enable webhook verification:
+
+```bash
+PLAID_WEBHOOK_VERIFICATION_KEY="your-verification-key"
+```
+
+This enables secure verification that webhooks are actually from Plaid. While optional, it's strongly recommended for production environments.
+
 ### Development
-For local development and testing, webhook verification is optional.
+For local development and testing, you can leave `PLAID_WEBHOOK_VERIFICATION_KEY` empty or undefined. The webhook will still work but will log a warning that verification is disabled.
 
 ## How It Works
 

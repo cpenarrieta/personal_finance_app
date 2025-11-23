@@ -31,9 +31,9 @@ async function verifyPlaidWebhook(request: NextRequest, _body: string): Promise<
     return false
   }
 
-  // If no webhook secret is configured, skip verification but log a warning
-  if (!process.env.PLAID_WEBHOOK_SECRET) {
-    console.warn("⚠️  Webhook verification disabled (set PLAID_WEBHOOK_SECRET for production)")
+  // If no webhook verification key is configured, skip verification but log a warning
+  if (!process.env.PLAID_WEBHOOK_VERIFICATION_KEY) {
+    console.warn("⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)")
     return true
   }
 

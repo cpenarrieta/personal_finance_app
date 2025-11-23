@@ -78,7 +78,7 @@ describe("Plaid Webhook API", () => {
     jest.spyOn(console, "error").mockImplementation()
 
     // Clear environment variables
-    delete process.env.PLAID_WEBHOOK_SECRET
+    delete process.env.PLAID_WEBHOOK_VERIFICATION_KEY
   })
 
   afterEach(() => {
@@ -135,13 +135,13 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(console.warn).toHaveBeenCalledWith(
-        "⚠️  Webhook verification disabled (set PLAID_WEBHOOK_SECRET for production)",
+        "⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)",
       )
     })
 
-    it("should verify webhook with secret when PLAID_WEBHOOK_SECRET is set", async () => {
+    it("should verify webhook with secret when PLAID_WEBHOOK_VERIFICATION_KEY is set", async () => {
       // Arrange
-      process.env.PLAID_WEBHOOK_SECRET = "test-secret"
+      process.env.PLAID_WEBHOOK_VERIFICATION_KEY = "test-secret"
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "SYNC_UPDATES_AVAILABLE",
@@ -169,7 +169,7 @@ describe("Plaid Webhook API", () => {
 
     it("should reject webhook with invalid verification when secret is set", async () => {
       // Arrange
-      process.env.PLAID_WEBHOOK_SECRET = "test-secret"
+      process.env.PLAID_WEBHOOK_VERIFICATION_KEY = "test-secret"
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "SYNC_UPDATES_AVAILABLE",
@@ -195,7 +195,7 @@ describe("Plaid Webhook API", () => {
 
     it("should reject webhook when verification throws error", async () => {
       // Arrange
-      process.env.PLAID_WEBHOOK_SECRET = "test-secret"
+      process.env.PLAID_WEBHOOK_VERIFICATION_KEY = "test-secret"
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "SYNC_UPDATES_AVAILABLE",
