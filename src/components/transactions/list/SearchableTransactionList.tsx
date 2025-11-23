@@ -19,6 +19,7 @@ import type { TransactionForClient, CategoryForClient, TagForClient, PlaidAccoun
 import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params"
 import { sortCategoriesByGroupAndOrder, formatAmount } from "@/lib/utils"
 import { useClickOutside } from "@/hooks/useClickOutside"
+import { useDebounce } from "@/hooks/useDebounce"
 import { TagSelector } from "@/components/transactions/filters/TagSelector"
 import { useTransactionFilters, DateRange } from "@/hooks/useTransactionFilters"
 import { useTransactionSort } from "@/hooks/useTransactionSort"
@@ -53,6 +54,12 @@ export function SearchableTransactionList({
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const nonInvestmentAccounts = accounts.filter((account) => account.type !== "investment")
+
+  // Local state for immediate search input (responsive UI)
+  const [localSearchQuery, setLocalSearchQuery] = useState(initialFilters?.searchQuery ?? "")
+
+  // Debounce the search query (300ms delay)
+  const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
 
   // Use hooks with initial values from URL
   const filters = useTransactionFilters({
@@ -91,6 +98,22 @@ export function SearchableTransactionList({
   const sortedCategories = useMemo(() => sortCategoriesByGroupAndOrder(categories), [categories])
 
   // No longer need default transfer exclusions - using showTransfers checkbox instead
+
+  // Sync debounced search query to filters
+  useEffect(() => {
+    filters.setSearchQuery?.(debouncedSearchQuery)
+  }, [debouncedSearchQuery])
+
+  // Sync filters.searchQuery to local state (for browser back/forward navigation)
+  useEffect(() => {
+    if (
+      filters.searchQuery !== undefined &&
+      filters.searchQuery !== localSearchQuery &&
+      filters.searchQuery !== debouncedSearchQuery
+    ) {
+      setLocalSearchQuery(filters.searchQuery)
+    }
+  }, [filters.searchQuery])
 
   // Sync filters to URL
   useEffect(() => {
@@ -251,6 +274,11 @@ export function SearchableTransactionList({
     filters.setSelectedAccountIds(newSelected)
   }
 
+  const handleClearAllFilters = () => {
+    setLocalSearchQuery("")
+    filters.clearAllFilters()
+  }
+
   return (
     <div className="space-y-4">
       {/* Search Bar - Full Width at Top */}
@@ -259,8 +287,8 @@ export function SearchableTransactionList({
           <Input
             type="text"
             placeholder="Search transactions (name, merchant, category, account, amount, tags...)"
-            value={filters.searchQuery || ""}
-            onChange={(e) => filters.setSearchQuery?.(e.target.value)}
+            value={localSearchQuery}
+            onChange={(e) => setLocalSearchQuery(e.target.value)}
             className="pl-10"
           />
           <svg
@@ -276,11 +304,11 @@ export function SearchableTransactionList({
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
-          {filters.searchQuery && (
+          {localSearchQuery && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => filters.setSearchQuery?.("")}
+              onClick={() => setLocalSearchQuery("")}
               className="absolute right-3 top-2 h-7 w-7 p-0"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -569,7 +597,7 @@ export function SearchableTransactionList({
 
           {/* Clear Filters */}
           {filters.hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={filters.clearAllFilters} className="ml-auto">
+            <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="ml-auto">
               Clear Filters
             </Button>
           )}

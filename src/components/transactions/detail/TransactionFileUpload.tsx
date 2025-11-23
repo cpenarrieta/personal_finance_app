@@ -179,7 +179,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
-        <label className="block text-sm font-medium text-muted-foreground">Attached Files</label>
+        <label className="block text-sm font-medium text-muted-foreground">Attached Receipts/Files</label>
         <Button onClick={handleUpload} disabled={isUploading} size="sm" variant="outline">
           <Upload className="h-4 w-4 mr-2" />
           {isUploading ? "Uploading..." : "Upload File"}

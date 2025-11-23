@@ -30,6 +30,7 @@ npm run sync                    # Incremental sync
 **Optional:**
 - `OPENAI_API_KEY`: AI categorization
 - `ALPHA_VANTAGE_API_KEY`: Stock prices
+- `PLAID_WEBHOOK_VERIFICATION_KEY`: Webhook security (recommended for production)
 
 ## Debugging
 

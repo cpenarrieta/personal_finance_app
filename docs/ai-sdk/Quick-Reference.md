@@ -84,7 +84,7 @@ const final = await result.object;
 
 ```typescript
 // OpenAI
-openai('gpt-4o')           // Most capable
+openai('gpt-5-mini')           // Most capable
 openai('gpt-3.5-turbo')    // Fast and cheap
 
 // Anthropic

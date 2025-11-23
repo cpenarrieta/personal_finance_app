@@ -520,7 +520,7 @@ const result2 = generateText({
 });
 
 const result3 = generateText({
-  model: openai('gpt-4o'),
+  model: openai('gpt-5-mini'),
   prompt: 'Write a product description',
 });
 

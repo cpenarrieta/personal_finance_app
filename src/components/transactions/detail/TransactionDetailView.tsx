@@ -10,15 +10,14 @@ import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal"
 import { SplitTransactionModal } from "@/components/transactions/modals/SplitTransactionModal"
 import { TransactionFileUpload } from "@/components/transactions/detail/TransactionFileUpload"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { TransactionActions } from "@/components/transactions/detail/TransactionActions"
+import { AICategorizationDialog } from "@/components/transactions/detail/AICategorizationDialog"
+import { DeleteConfirmationDialog } from "@/components/transactions/detail/DeleteConfirmationDialog"
+import { SmartSplitReviewModal } from "@/components/transactions/detail/SmartSplitReviewModal"
+import { Alert } from "@/components/ui/alert"
+import { useAICategorization } from "@/hooks/useAICategorization"
+import { useTransactionDelete } from "@/hooks/useTransactionDelete"
+import { useSmartAnalysis } from "@/hooks/useSmartAnalysis"
 import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
 
 interface TransactionDetailViewProps {
@@ -30,35 +29,21 @@ interface TransactionDetailViewProps {
 export function TransactionDetailView({ transaction, categories, tags }: TransactionDetailViewProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isSplitting, setIsSplitting] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [transactionFiles, setTransactionFiles] = useState<string[]>(transaction.files || [])
   const router = useRouter()
+
+  // Custom hooks for AI categorization, smart analysis, and deletion
+  const aiCategorization = useAICategorization(transaction.id)
+  const smartAnalysis = useSmartAnalysis()
+  const deletion = useTransactionDelete(transaction.id)
 
   const amount = transaction.amount_number
   const isExpense = amount < 0
   const absoluteAmount = Math.abs(amount)
 
-  const handleDelete = async () => {
-    setIsDeleting(true)
-    try {
-      const response = await fetch(`/api/transactions/${transaction.id}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to delete transaction")
-      }
-
-      // Redirect to transactions page after successful deletion
-      router.push("/transactions")
-      router.refresh()
-    } catch (error) {
-      console.error("Error deleting transaction:", error)
-      alert("Failed to delete transaction. Please try again.")
-      setIsDeleting(false)
-      setIsDeleteDialogOpen(false)
-    }
+  // Handler for Smart Analysis
+  const handleSmartAnalysis = async () => {
+    await smartAnalysis.handlers.analyzeReceipt(transaction.id, categories)
   }
 
   return (
@@ -102,24 +87,16 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
         {/* Main Details */}
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
-            <h2 className="hidden md:block text-xl font-semibold text-foreground">Transaction Details</h2>
-            <div className="flex gap-2">
-              {!transaction.isSplit && !transaction.parentTransactionId && (
-                <Button
-                  onClick={() => setIsSplitting(true)}
-                  variant="outline"
-                  className="border-primary text-primary hover:bg-primary/10"
-                >
-                  Split Transaction
-                </Button>
-              )}
-              <Button onClick={() => setIsEditing(true)} className="bg-primary hover:bg-primary/90">
-                Edit Transaction
-              </Button>
-              <Button onClick={() => setIsDeleteDialogOpen(true)} variant="destructive">
-                Delete
-              </Button>
-            </div>
+            <TransactionActions
+              transaction={transaction}
+              isAILoading={aiCategorization.state.isLoading}
+              onAICategorize={aiCategorization.handlers.categorize}
+              onSplit={() => setIsSplitting(true)}
+              onSmartSplit={handleSmartAnalysis}
+              isSmartSplitLoading={smartAnalysis.state.isAnalyzing}
+              onEdit={() => setIsEditing(true)}
+              onDelete={() => deletion.handlers.setIsDialogOpen(true)}
+            />
           </div>
 
           {/* Parent Transaction Info (if this is a split child) */}
@@ -332,41 +309,82 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
         />
       )}
 
+      {/* Error Alerts */}
+      {aiCategorization.state.error && (
+        <Alert variant="destructive" className="mt-4 grid-cols-1fr">
+          <p className="text-sm">{aiCategorization.state.error}</p>
+        </Alert>
+      )}
+      {smartAnalysis.state.error && (
+        <Alert variant="destructive" className="mt-4 grid-cols-1fr">
+          <p className="text-sm">{smartAnalysis.state.error}</p>
+        </Alert>
+      )}
+
+      {/* AI Categorization Dialog */}
+      <AICategorizationDialog
+        transaction={transaction}
+        suggestion={aiCategorization.state.suggestion}
+        isOpen={aiCategorization.state.isDialogOpen}
+        isApplying={aiCategorization.state.isApplying}
+        onOpenChange={aiCategorization.handlers.setIsDialogOpen}
+        onApply={aiCategorization.handlers.apply}
+        onDeny={aiCategorization.handlers.deny}
+      />
+
+      {/* Smart Split Review Modal (for split results) */}
+      {smartAnalysis.state.resultType === "split" && (
+        <SmartSplitReviewModal
+          isOpen={smartAnalysis.state.isSplitModalOpen}
+          onClose={smartAnalysis.handlers.cancelSplit}
+          transaction={transaction}
+          suggestedSplits={smartAnalysis.state.suggestedSplits}
+          categories={categories}
+          isSubmitting={smartAnalysis.state.isConfirmingSplit}
+          onConfirm={() => smartAnalysis.handlers.confirmSplit(transaction.id, smartAnalysis.state.suggestedSplits)}
+          confidence={smartAnalysis.state.splitConfidence}
+          notes={smartAnalysis.state.splitNotes}
+        />
+      )}
+
+      {/* AI Recategorization Dialog (for recategorize results) */}
+      {smartAnalysis.state.resultType === "recategorize" && (
+        <AICategorizationDialog
+          transaction={transaction}
+          suggestion={
+            smartAnalysis.state.suggestedCategoryId
+              ? {
+                  categoryId: smartAnalysis.state.suggestedCategoryId,
+                  subcategoryId: smartAnalysis.state.suggestedSubcategoryId,
+                  categoryName: smartAnalysis.state.suggestedCategoryName,
+                  subcategoryName: smartAnalysis.state.suggestedSubcategoryName,
+                  confidence: smartAnalysis.state.recategorizeConfidence || 0,
+                  reasoning: smartAnalysis.state.recategorizeReasoning || "",
+                }
+              : null
+          }
+          isOpen={smartAnalysis.state.isRecategorizeDialogOpen}
+          isApplying={smartAnalysis.state.isApplyingRecategorization}
+          onOpenChange={(open) => !open && smartAnalysis.handlers.cancelRecategorization()}
+          onApply={() =>
+            smartAnalysis.handlers.applyRecategorization(
+              transaction.id,
+              smartAnalysis.state.suggestedCategoryId!,
+              smartAnalysis.state.suggestedSubcategoryId,
+            )
+          }
+          onDeny={smartAnalysis.handlers.cancelRecategorization}
+        />
+      )}
+
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Transaction</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this transaction? This action cannot be undone.
-              {transaction.childTransactions && transaction.childTransactions.length > 0 && (
-                <span className="block mt-2 font-medium text-destructive">
-                  Warning: This will also delete all {transaction.childTransactions.length} split transactions.
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="p-3 bg-muted rounded-lg border border-border">
-              <p className="font-medium text-foreground">{transaction.name}</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {formatTransactionDate(transaction.datetime, "medium")} •{" "}
-                <span className={isExpense ? "text-destructive" : "text-success"}>
-                  {isExpense ? "-" : "+"}${formatAmount(absoluteAmount)}
-                </span>
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? "Deleting..." : "Delete Transaction"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        transaction={transaction}
+        isOpen={deletion.state.isDialogOpen}
+        isDeleting={deletion.state.isDeleting}
+        onOpenChange={deletion.handlers.setIsDialogOpen}
+        onConfirm={deletion.handlers.deleteTransaction}
+      />
     </div>
   )
 }

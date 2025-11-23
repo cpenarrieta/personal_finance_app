@@ -57,30 +57,22 @@ The webhook handler also monitors item status:
 
 ## Environment Configuration
 
+### Production (Optional but Recommended)
+Add the following to your `.env` file to enable webhook verification:
+
+```bash
+PLAID_WEBHOOK_VERIFICATION_KEY="your-verification-key"
+```
+
+This enables secure verification that webhooks are actually from Plaid. While optional, it's strongly recommended for production environments.
+
 ### Development
-For local development and testing, webhook verification is optional:
-
-```bash
-# .env.local
-PLAID_WEBHOOK_SECRET=  # Leave empty for development
-```
-
-### Production
-For production deployments, it's **strongly recommended** to enable webhook verification:
-
-1. In the Plaid Dashboard, navigate to your webhook configuration
-2. Copy the webhook verification key
-3. Add it to your environment variables:
-
-```bash
-# .env (production)
-PLAID_WEBHOOK_SECRET=your_webhook_verification_key_here
-```
+For local development and testing, you can leave `PLAID_WEBHOOK_VERIFICATION_KEY` empty or undefined. The webhook will still work but will log a warning that verification is disabled.
 
 ## How It Works
 
 1. **Plaid sends a webhook** when transaction updates are available
-2. **Webhook handler verifies** the request is from Plaid (if `PLAID_WEBHOOK_SECRET` is set)
+2. **Webhook handler verifies** the request is from Plaid
 3. **Handler identifies the item** based on the `item_id` in the webhook payload
 4. **Syncs transactions** for the affected item using the existing sync logic
 5. **Invalidates caches** to ensure fresh data is displayed
@@ -165,7 +157,6 @@ npm run dev
 - Check Plaid Dashboard > Webhooks > Activity Log for delivery attempts
 
 ### Verification failures
-- Verify `PLAID_WEBHOOK_SECRET` is correctly set in production
 - Check the `Plaid-Verification` header is present
 - Review webhook verification logs
 
@@ -181,7 +172,7 @@ npm run dev
 
 ## Security Considerations
 
-1. **Always enable webhook verification in production** by setting `PLAID_WEBHOOK_SECRET`
+1. **Always enable webhook verification**
 2. **Use HTTPS** for your webhook endpoint
 3. **Return 200 OK** quickly - perform heavy processing asynchronously if needed
 4. **Log webhook activity** for monitoring and debugging

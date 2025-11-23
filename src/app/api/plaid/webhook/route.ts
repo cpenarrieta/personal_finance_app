@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
 import { syncItemTransactions } from "@/lib/sync/sync-service"
-import { categorizeAndApply } from "@/lib/ai/categorize-transaction"
+import { categorizeTransactions } from "@/lib/ai/categorize-transaction"
 import { revalidateTag } from "next/cache"
 
 // Plaid webhook types
@@ -16,6 +16,7 @@ interface PlaidWebhook {
   }
   new_transactions?: number
   removed_transactions?: string[]
+  reason?: string // For PENDING_DISCONNECT
 }
 
 /**
@@ -30,35 +31,31 @@ async function verifyPlaidWebhook(request: NextRequest, _body: string): Promise<
     return false
   }
 
-  // If PLAID_WEBHOOK_SECRET is set, verify using it
-  // Note: Plaid recommends using webhook verification in production
-  const webhookSecret = process.env.PLAID_WEBHOOK_SECRET
-
-  if (webhookSecret) {
-    try {
-      const plaid = getPlaidClient()
-      const isValid = await plaid.webhookVerificationKeyGet({
-        key_id: plaidVerification,
-      })
-
-      if (!isValid.data) {
-        console.error("❌ Webhook verification failed")
-        return false
-      }
-
-      // In production, you should verify the JWT signature using the public key
-      // For now, we'll accept the presence of the verification header
-      console.log("✅ Webhook verification header present")
-      return true
-    } catch (error) {
-      console.error("❌ Error verifying webhook:", error)
-      return false
-    }
+  // If no webhook verification key is configured, skip verification but log a warning
+  if (!process.env.PLAID_WEBHOOK_VERIFICATION_KEY) {
+    console.warn("⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)")
+    return true
   }
 
-  // In development, we'll allow webhooks without verification
-  console.warn("⚠️  Webhook verification disabled (set PLAID_WEBHOOK_SECRET for production)")
-  return true
+  try {
+    const plaid = getPlaidClient()
+    const isValid = await plaid.webhookVerificationKeyGet({
+      key_id: plaidVerification,
+    })
+
+    if (!isValid.data) {
+      console.error("❌ Webhook verification failed")
+      return false
+    }
+
+    // In production, you should verify the JWT signature using the public key
+    // For now, we'll accept the presence of the verification header
+    console.log("✅ Webhook verification header present")
+    return true
+  } catch (error) {
+    console.error("❌ Error verifying webhook:", error)
+    return false
+  }
 }
 
 /**
@@ -99,18 +96,9 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
     if (stats.newTransactionIds.length > 0) {
       console.log(`🤖 Starting AI categorization for ${stats.newTransactionIds.length} new transaction(s)...`)
 
-      // Run categorization in the background for each new transaction
+      // Run categorization in the background for all new transactions
       // Don't await to avoid blocking the webhook response
-      Promise.all(
-        stats.newTransactionIds.map(async (transactionId) => {
-          try {
-            await categorizeAndApply(transactionId)
-          } catch (error) {
-            console.error(`❌ Error categorizing transaction ${transactionId}:`, error)
-            // Continue with other transactions even if one fails
-          }
-        }),
-      )
+      categorizeTransactions(stats.newTransactionIds)
         .then(() => {
           console.log(`✅ AI categorization complete`)
           // Invalidate caches after categorization
@@ -134,7 +122,12 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
 /**
  * Handles item webhook events
  */
-async function handleItemWebhook(webhookCode: string, itemId: string, error?: PlaidWebhook["error"]): Promise<void> {
+async function handleItemWebhook(
+  webhookCode: string,
+  itemId: string,
+  error?: PlaidWebhook["error"],
+  reason?: string,
+): Promise<void> {
   console.log(`🔔 Processing item webhook: ${webhookCode} for item ${itemId}`)
 
   // Find the item in our database
@@ -165,6 +158,16 @@ async function handleItemWebhook(webhookCode: string, itemId: string, error?: Pl
         where: { id: item.id },
         data: {
           status: "PENDING_EXPIRATION",
+        },
+      })
+      break
+
+    case "PENDING_DISCONNECT":
+      console.warn(`⚠️  Item pending disconnect. Reason: ${reason}`)
+      await prisma.item.update({
+        where: { id: item.id },
+        data: {
+          status: "PENDING_DISCONNECT",
         },
       })
       break
@@ -236,7 +239,7 @@ export async function POST(request: NextRequest) {
       case "ITEM":
         // Handle item webhooks (errors, login issues, etc.)
         if (body.item_id) {
-          await handleItemWebhook(body.webhook_code, body.item_id, body.error)
+          await handleItemWebhook(body.webhook_code, body.item_id, body.error, body.reason)
         }
         break
 
