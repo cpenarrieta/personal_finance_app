@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { Prisma } from "@prisma/client"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 import { getReconnectionData, clearReconnectionData } from "@/lib/cache/reconnection-cache"
 
 /**
@@ -129,6 +129,7 @@ export async function POST(req: NextRequest) {
     revalidateTag("items", "max")
     revalidateTag("transactions", "max")
     revalidateTag("dashboard", "max")
+    revalidatePath("/", "layout") // Invalidate Router Cache
 
     console.log(`✅ Reconnection complete for ${institutionName}`)
 

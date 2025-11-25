@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 
 /**
  * Updates item status after successful reauth (when item_id hasn't changed)
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
     revalidateTag("items", "max")
     revalidateTag("accounts", "max")
     revalidateTag("dashboard", "max")
+    revalidatePath("/", "layout") // Invalidate Router Cache
 
     console.log(`✅ Item ${itemId} status updated to ACTIVE (reauth successful)`)
 

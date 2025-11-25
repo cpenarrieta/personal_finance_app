@@ -3,7 +3,7 @@ import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
 import { Prisma } from "@prisma/client"
 import { CountryCode } from "plaid"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 
 export async function POST(req: NextRequest) {
   const { public_token } = await req.json()
@@ -144,6 +144,7 @@ export async function POST(req: NextRequest) {
       // Invalidate caches
       revalidateTag("accounts", "max")
       revalidateTag("items", "max")
+      revalidatePath("/", "layout") // Invalidate Router Cache
 
       return NextResponse.json({ ok: true, reconnected: true })
     }
@@ -193,6 +194,7 @@ export async function POST(req: NextRequest) {
   // Invalidate caches so UI updates immediately
   revalidateTag("accounts", "max")
   revalidateTag("items", "max")
+  revalidatePath("/", "layout") // Invalidate Router Cache
 
   return NextResponse.json({ ok: true })
 }

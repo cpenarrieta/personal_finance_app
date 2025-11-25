@@ -4,7 +4,7 @@ import { z } from "zod"
 import { safeParseRequestBody } from "@/types/api"
 import { Decimal } from "@prisma/client/runtime/library"
 import { Prisma } from "@prisma/client"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 
 // Schema for AI-generated split transaction request
 const aiSplitSchema = z.object({
@@ -156,6 +156,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Invalidate transaction and dashboard caches
     revalidateTag("transactions", "max")
     revalidateTag("dashboard", "max")
+    revalidatePath("/", "layout") // Invalidate Router Cache
 
     return NextResponse.json({
       success: true,

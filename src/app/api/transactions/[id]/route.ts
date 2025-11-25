@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db/prisma"
 import { updateTransactionSchema } from "@/types/api"
 import { safeParseRequestBody } from "@/types/api"
 import type { Prisma } from "@prisma/client"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -80,6 +80,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Invalidate transaction and dashboard caches
     revalidateTag("transactions", "max")
     revalidateTag("dashboard", "max")
+    revalidatePath("/", "layout") // Invalidate Router Cache
 
     return NextResponse.json(updatedTransaction)
   } catch (error) {
@@ -124,6 +125,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     // Invalidate transaction and dashboard caches
     revalidateTag("transactions", "max")
     revalidateTag("dashboard", "max")
+    revalidatePath("/", "layout") // Invalidate Router Cache
 
     return NextResponse.json({ success: true })
   } catch (error) {
