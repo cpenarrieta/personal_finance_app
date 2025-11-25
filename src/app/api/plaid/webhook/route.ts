@@ -3,7 +3,7 @@ import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
 import { syncItemTransactions } from "@/lib/sync/sync-service"
 import { categorizeTransactions } from "@/lib/ai/categorize-transaction"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 
 // Plaid webhook types
 interface PlaidWebhook {
@@ -103,6 +103,7 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
           console.log(`✅ AI categorization complete`)
           // Invalidate caches after categorization
           revalidateTag("transactions", "max")
+          revalidatePath("/", "layout") // Invalidate Router Cache for all routes
         })
         .catch((error) => {
           console.error(`❌ Error in batch categorization:`, error)
@@ -113,6 +114,11 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
     revalidateTag("transactions", "max")
     revalidateTag("accounts", "max")
     revalidateTag("dashboard", "max")
+
+    // Invalidate Router Cache for all routes (required in Route Handlers)
+    // In Route Handlers, revalidateTag only invalidates Data Cache, not Router Cache
+    // See: https://nextjs.org/docs/app/guides/caching#data-cache-and-client-side-router-cache
+    revalidatePath("/", "layout")
   } catch (error) {
     console.error(`❌ Error syncing transactions:`, error)
     throw error

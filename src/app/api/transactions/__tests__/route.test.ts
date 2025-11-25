@@ -65,6 +65,7 @@ jest.mock("@/lib/db/prisma", () => ({
 
 jest.mock("next/cache", () => ({
   revalidateTag: jest.fn(),
+  revalidatePath: jest.fn(),
 }))
 
 jest.mock("nanoid", () => ({

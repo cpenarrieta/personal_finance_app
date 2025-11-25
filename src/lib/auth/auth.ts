@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
+import { passkey } from "better-auth/plugins/passkey"
 import { prisma } from "../db/prisma"
 
 export const auth = betterAuth({
@@ -21,4 +22,17 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET || "secret",
   trustedOrigins: [process.env.BETTER_AUTH_URL as string],
+  plugins: [
+    passkey({
+      rpName: "Personal Finance App",
+      rpID:
+        process.env.NODE_ENV === "production" && process.env.BETTER_AUTH_URL
+          ? new URL(process.env.BETTER_AUTH_URL).hostname
+          : "localhost",
+      origin:
+        process.env.NODE_ENV === "production" && process.env.BETTER_AUTH_URL
+          ? process.env.BETTER_AUTH_URL
+          : "http://localhost:3000",
+    }),
+  ],
 })

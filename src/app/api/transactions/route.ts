@@ -4,7 +4,7 @@ import { createTransactionSchema } from "@/types/api"
 import { safeParseRequestBody } from "@/types/api"
 import { Prisma } from "@prisma/client"
 import { nanoid } from "nanoid"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 
 /**
  * GET /api/transactions - Fetch recent transactions
@@ -188,6 +188,7 @@ export async function POST(req: NextRequest) {
     // Invalidate transaction and dashboard caches
     revalidateTag("transactions", "max")
     revalidateTag("dashboard", "max")
+    revalidatePath("/", "layout") // Invalidate Router Cache
 
     return NextResponse.json(newTransaction, { status: 201 })
   } catch (error) {
