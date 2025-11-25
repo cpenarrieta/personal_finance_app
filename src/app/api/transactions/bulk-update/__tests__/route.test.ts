@@ -29,6 +29,7 @@ jest.mock("@/lib/db/prisma", () => ({
 
 jest.mock("next/cache", () => ({
   revalidateTag: jest.fn(),
+  revalidatePath: jest.fn(),
 }))
 
 describe("Transactions Bulk Update API - PATCH", () => {

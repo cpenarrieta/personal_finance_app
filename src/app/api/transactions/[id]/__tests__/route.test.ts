@@ -33,6 +33,7 @@ jest.mock("@/lib/db/prisma", () => ({
 
 jest.mock("next/cache", () => ({
   revalidateTag: jest.fn(),
+  revalidatePath: jest.fn(),
 }))
 
 describe("Transaction [id] API", () => {
