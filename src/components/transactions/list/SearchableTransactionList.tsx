@@ -282,17 +282,17 @@ export function SearchableTransactionList({
   return (
     <div className="space-y-4">
       {/* Search Bar - Full Width at Top */}
-      <div className="bg-card p-4 rounded-lg shadow-sm border">
+      <div className="bg-card p-3 md:p-4 rounded-lg shadow-sm border">
         <div className="relative">
           <Input
             type="text"
-            placeholder="Search transactions (name, merchant, category, account, amount, tags...)"
+            placeholder="Search transactions (name, merchant, category...)"
             value={localSearchQuery}
             onChange={(e) => setLocalSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm md:text-base"
           />
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-muted-foreground"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -309,9 +309,9 @@ export function SearchableTransactionList({
               variant="ghost"
               size="sm"
               onClick={() => setLocalSearchQuery("")}
-              className="absolute right-3 top-2 h-7 w-7 p-0"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </Button>
@@ -320,12 +320,12 @@ export function SearchableTransactionList({
       </div>
 
       {/* Filters Section */}
-      <div className="bg-card p-4 rounded-lg shadow-sm border space-y-4">
+      <div className="bg-card p-3 md:p-4 rounded-lg shadow-sm border space-y-3 md:space-y-4">
         {/* Primary Filters Row */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           {/* Date Range */}
           <Select value={filters.dateRange} onValueChange={(value) => filters.setDateRange(value as DateRange)}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[140px] md:w-[160px] text-sm md:text-base">
               <SelectValue placeholder="Select date range" />
             </SelectTrigger>
             <SelectContent>
@@ -342,7 +342,10 @@ export function SearchableTransactionList({
           {filters.dateRange === "custom" && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
+                <Button
+                  variant="outline"
+                  className="w-full md:w-[280px] justify-start text-left font-normal text-sm md:text-base"
+                >
                   <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -422,7 +425,7 @@ export function SearchableTransactionList({
                 }
               }}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[140px] md:w-[180px] text-sm md:text-base">
                 <SelectValue placeholder="All Accounts" />
               </SelectTrigger>
               <SelectContent>
@@ -438,9 +441,14 @@ export function SearchableTransactionList({
 
           {/* Category/Subcategory Multi-select */}
           <div className="relative" ref={dropdownRef}>
-            <Button variant="outline" onClick={() => filters.setShowCategoryDropdown(!filters.showCategoryDropdown)}>
+            <Button
+              variant="outline"
+              onClick={() => filters.setShowCategoryDropdown(!filters.showCategoryDropdown)}
+              size="sm"
+              className="md:h-10 text-sm md:text-base"
+            >
               <span>Select Categories...</span>
-              <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 ml-1 md:ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </Button>
@@ -500,10 +508,10 @@ export function SearchableTransactionList({
           </div>
 
           {/* Sort Controls */}
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Sort:</span>
+          <div className="w-full md:w-auto md:ml-auto flex items-center gap-2">
+            <span className="text-xs md:text-sm text-muted-foreground">Sort:</span>
             <Select value={sort.sortBy} onValueChange={(value) => sort.setSortBy(value as any)}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="flex-1 md:w-[160px] text-sm md:text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -519,9 +527,10 @@ export function SearchableTransactionList({
               size="icon"
               onClick={() => sort.setSortDirection(sort.sortDirection === "asc" ? "desc" : "asc")}
               title={sort.sortDirection === "asc" ? "Ascending" : "Descending"}
+              className="h-9 w-9 md:h-10 md:w-10"
             >
               {sort.sortDirection === "asc" ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -530,7 +539,7 @@ export function SearchableTransactionList({
                   />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -544,60 +553,67 @@ export function SearchableTransactionList({
         </div>
 
         {/* Secondary Filters Row - Type, Tags, Uncategorized */}
-        <div className="flex flex-wrap items-center gap-4 pt-3 border-t">
+        <div className="flex flex-wrap items-center gap-3 md:gap-4 pt-3 border-t">
           {/* Income/Expense/Transfer Toggles */}
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
+          <div className="flex items-center gap-3 md:gap-4">
+            <label className="flex items-center gap-1.5 md:gap-2 cursor-pointer">
               <Checkbox
                 checked={filters.showIncome}
                 onCheckedChange={(checked) => filters.setShowIncome(checked === true)}
               />
-              <span className="text-sm text-muted-foreground">Income</span>
+              <span className="text-xs md:text-sm text-muted-foreground">Income</span>
             </label>
 
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-1.5 md:gap-2 cursor-pointer">
               <Checkbox
                 checked={filters.showExpenses}
                 onCheckedChange={(checked) => filters.setShowExpenses(checked === true)}
               />
-              <span className="text-sm text-muted-foreground">Expenses</span>
+              <span className="text-xs md:text-sm text-muted-foreground">Expenses</span>
             </label>
 
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-1.5 md:gap-2 cursor-pointer">
               <Checkbox
                 checked={filters.showTransfers}
                 onCheckedChange={(checked) => filters.setShowTransfers(checked === true)}
               />
-              <span className="text-sm text-muted-foreground">Transfers</span>
+              <span className="text-xs md:text-sm text-muted-foreground">Transfers</span>
             </label>
           </div>
 
-          {/* Tag Filter */}
-          {tags.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Tags:</span>
-              <TagSelector
-                tags={tags}
-                selectedTagIds={Array.from(filters.selectedTagIds || [])}
-                onToggleTag={toggleTag}
-                label=""
-                showManageLink={false}
-              />
-            </div>
-          )}
-
           {/* Uncategorized Checkbox */}
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-1.5 md:gap-2 cursor-pointer">
             <Checkbox
               checked={filters.showOnlyUncategorized || false}
               onCheckedChange={(checked) => filters.setShowOnlyUncategorized?.(checked === true)}
             />
-            <span className="text-sm text-muted-foreground">Uncategorized</span>
+            <span className="text-xs md:text-sm text-muted-foreground">Uncategorized</span>
           </label>
+
+          {/* Tag Filter - Full width on mobile */}
+          {tags.length > 0 && (
+            <div className="w-full md:w-auto flex items-center gap-2">
+              <span className="text-xs md:text-sm text-muted-foreground flex-shrink-0">Tags:</span>
+              <div className="flex-1 md:flex-initial">
+                <TagSelector
+                  tags={tags}
+                  selectedTagIds={Array.from(filters.selectedTagIds || [])}
+                  onToggleTag={toggleTag}
+                  label=""
+                  showManageLink={false}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Clear Filters */}
           {filters.hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={handleClearAllFilters} className="ml-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearAllFilters}
+              className="w-full md:w-auto md:ml-auto text-sm"
+            >
               Clear Filters
             </Button>
           )}
