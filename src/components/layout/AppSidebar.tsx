@@ -34,7 +34,6 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +45,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
 import { useTheme } from "next-themes"
 import { LogoutButton } from "@/components/auth/LogoutButton"
 
@@ -102,6 +103,10 @@ const getStaticNavItems = () => {
           href: "/settings/connections",
         },
         {
+          title: "Security",
+          href: "/settings/security",
+        },
+        {
           title: "Categories",
           href: "/settings/manage-categories",
         },
@@ -126,9 +131,16 @@ function SyncDropdown() {
   const router = useRouter()
   const [syncing, setSyncing] = useState(false)
   const [showReauthModal, setShowReauthModal] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSync = async (endpoint: string, label: string) => {
     setSyncing(true)
+    setOpen(false)
     const toastId = toast.loading(`${label}...`)
 
     try {
@@ -159,14 +171,29 @@ function SyncDropdown() {
     router.push("/settings/connections")
   }
 
+  if (!mounted) {
+    return (
+      <Button
+        variant="outline"
+        className="w-full justify-between group-data-[collapsible=icon]:justify-center"
+        disabled
+      >
+        <span className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          <span className="group-data-[collapsible=icon]:hidden">Sync</span>
+        </span>
+        <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+      </Button>
+    )
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild suppressHydrationWarning>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button
           variant="outline"
           className="w-full justify-between group-data-[collapsible=icon]:justify-center"
           disabled={syncing}
-          suppressHydrationWarning
         >
           <span className="flex items-center gap-2">
             <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
@@ -174,31 +201,55 @@ function SyncDropdown() {
           </span>
           <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" side="right" className="w-56">
-        <DropdownMenuItem onClick={() => handleSync("/api/plaid/sync", "Syncing all")} disabled={syncing}>
-          Sync All
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => handleSync("/api/plaid/sync-transactions", "Syncing transactions")}
-          disabled={syncing}
-        >
-          Sync Transactions Only
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => handleSync("/api/plaid/sync-investments", "Syncing investments")}
-          disabled={syncing}
-        >
-          Sync Investments Only
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")}
-          disabled={syncing}
-          className="text-destructive"
-        >
-          Fresh Sync (Emergency)
-        </DropdownMenuItem>
-      </DropdownMenuContent>
+      </SheetTrigger>
+      <SheetContent side="bottom" className="px-4 pb-8">
+        <SheetHeader className="pb-4">
+          <SheetTitle className="text-left">Sync Financial Data</SheetTitle>
+        </SheetHeader>
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => handleSync("/api/plaid/sync", "Syncing all")}
+            disabled={syncing}
+            className="w-full h-14 text-base justify-start"
+          >
+            <RefreshCw className="h-5 w-5 mr-3" />
+            Sync All
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => handleSync("/api/plaid/sync-transactions", "Syncing transactions")}
+            disabled={syncing}
+            className="w-full h-14 text-base justify-start"
+          >
+            <Receipt className="h-5 w-5 mr-3" />
+            Sync Transactions Only
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => handleSync("/api/plaid/sync-investments", "Syncing investments")}
+            disabled={syncing}
+            className="w-full h-14 text-base justify-start"
+          >
+            <TrendingUp className="h-5 w-5 mr-3" />
+            Sync Investments Only
+          </Button>
+          <Separator className="my-2" />
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")}
+            disabled={syncing}
+            className="w-full h-14 text-base justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <RefreshCw className="h-5 w-5 mr-3" />
+            Fresh Sync (Emergency)
+          </Button>
+        </div>
+      </SheetContent>
       <AlertDialog open={showReauthModal} onOpenChange={setShowReauthModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -214,7 +265,7 @@ function SyncDropdown() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </DropdownMenu>
+    </Sheet>
   )
 }
 
@@ -248,7 +299,7 @@ function ThemeToggle() {
 }
 
 export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
-  const { state } = useSidebar()
+  const { state, isMobile, setOpenMobile } = useSidebar()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
   const navItems = useMemo(() => getStaticNavItems(), [])
 
@@ -277,10 +328,20 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
     setOpenMenus((prev) => ({ ...prev, [title]: !prev[title] }))
   }
 
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link href="/" className="flex items-center gap-2 px-2 py-2 hover:opacity-80 transition-opacity">
+        <Link
+          href="/"
+          className="flex items-center gap-2 px-2 py-2 hover:opacity-80 transition-opacity"
+          onClick={handleLinkClick}
+        >
           <Image src="/app_logo.svg" alt="Logo" width={24} height={24} className="h-6 w-6" />
           <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">Personal Finance</span>
         </Link>
@@ -301,7 +362,7 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
                   <SidebarMenuItem key={item.title}>
                     {isCollapsed ? (
                       <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                        <Link href={(item as any).defaultHref || item.items[0]?.href || "#"}>
+                        <Link href={(item as any).defaultHref || item.items[0]?.href || "#"} onClick={handleLinkClick}>
                           {item.icon && <item.icon />}
                           <span>{item.title}</span>
                         </Link>
@@ -324,7 +385,7 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
                             {item.items.map((subItem, index) => (
                               <SidebarMenuSubItem key={subItem.href || `${subItem.title}-${index}`}>
                                 <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                                  <Link href={subItem.href!}>
+                                  <Link href={subItem.href!} onClick={handleLinkClick}>
                                     <span>{subItem.title}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
@@ -338,7 +399,7 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
                 ) : (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                      <Link href={item.href!}>
+                      <Link href={item.href!} onClick={handleLinkClick}>
                         {item.icon && <item.icon />}
                         <span>{item.title}</span>
                       </Link>

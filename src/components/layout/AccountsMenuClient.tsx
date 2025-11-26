@@ -33,7 +33,7 @@ type Account = AccountsMenuClientProps["accounts"][number]
 
 export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
   const pathname = usePathname()
-  const { state } = useSidebar()
+  const { state, isMobile, setOpenMobile } = useSidebar()
   const [isOpen, setIsOpen] = useState(false)
   const [openInstitutions, setOpenInstitutions] = useState<Record<string, boolean>>({})
 
@@ -73,6 +73,12 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
     setOpenInstitutions((prev) => ({ ...prev, [institutionName]: !prev[institutionName] }))
   }
 
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
+
   // When sidebar is collapsed, clicking should navigate to /accounts
   // When expanded, clicking should toggle the menu
   const isCollapsed = state === "collapsed"
@@ -81,7 +87,7 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
     <SidebarMenuItem>
       {isCollapsed ? (
         <SidebarMenuButton asChild isActive={isAccountsActive} tooltip="Accounts">
-          <Link href="/accounts">
+          <Link href="/accounts" onClick={handleLinkClick}>
             <Wallet />
             <span>Accounts</span>
           </Link>
@@ -98,7 +104,7 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
               {/* Connect Account */}
               <SidebarMenuSubItem>
                 <SidebarMenuSubButton asChild isActive={pathname === "/connect-account"}>
-                  <Link href="/connect-account">
+                  <Link href="/connect-account" onClick={handleLinkClick}>
                     <Plus className="h-4 w-4" />
                     <span>Connect Account</span>
                   </Link>
@@ -127,7 +133,7 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
                         {institutionAccounts.map((account) => (
                           <SidebarMenuSubItem key={account.id}>
                             <SidebarMenuSubButton asChild isActive={pathname === `/accounts/${account.id}`}>
-                              <Link href={`/accounts/${account.id}`}>
+                              <Link href={`/accounts/${account.id}`} onClick={handleLinkClick}>
                                 <span>{account.name}</span>
                               </Link>
                             </SidebarMenuSubButton>
