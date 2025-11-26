@@ -46,6 +46,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { useTheme } from "next-themes"
 import { LogoutButton } from "@/components/auth/LogoutButton"
@@ -129,6 +136,7 @@ const getStaticNavItems = () => {
 
 function SyncDropdown() {
   const router = useRouter()
+  const { isMobile } = useSidebar()
   const [syncing, setSyncing] = useState(false)
   const [showReauthModal, setShowReauthModal] = useState(false)
   const [open, setOpen] = useState(false)
@@ -187,69 +195,139 @@ function SyncDropdown() {
     )
   }
 
+  // Mobile: Sheet (bottom drawer)
+  if (isMobile) {
+    return (
+      <>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-between group-data-[collapsible=icon]:justify-center"
+              disabled={syncing}
+            >
+              <span className="flex items-center gap-2">
+                <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+                <span className="group-data-[collapsible=icon]:hidden">Sync</span>
+              </span>
+              <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="px-4 pb-8">
+            <SheetHeader className="pb-4">
+              <SheetTitle className="text-left">Sync Financial Data</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleSync("/api/plaid/sync", "Syncing all")}
+                disabled={syncing}
+                className="w-full h-14 text-base justify-start"
+              >
+                <RefreshCw className="h-5 w-5 mr-3" />
+                Sync All
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleSync("/api/plaid/sync-transactions", "Syncing transactions")}
+                disabled={syncing}
+                className="w-full h-14 text-base justify-start"
+              >
+                <Receipt className="h-5 w-5 mr-3" />
+                Sync Transactions Only
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleSync("/api/plaid/sync-investments", "Syncing investments")}
+                disabled={syncing}
+                className="w-full h-14 text-base justify-start"
+              >
+                <TrendingUp className="h-5 w-5 mr-3" />
+                Sync Investments Only
+              </Button>
+              <Separator className="my-2" />
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")}
+                disabled={syncing}
+                className="w-full h-14 text-base justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <RefreshCw className="h-5 w-5 mr-3" />
+                Fresh Sync (Emergency)
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+        <AlertDialog open={showReauthModal} onOpenChange={setShowReauthModal}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reauthorization Required</AlertDialogTitle>
+              <AlertDialogDescription>
+                Your financial institution requires you to sign in again. This is normal and happens when your login
+                credentials or session expires.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleReauthClick}>Go to Connections</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    )
+  }
+
+  // Desktop: Dropdown Menu
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-full justify-between group-data-[collapsible=icon]:justify-center"
-          disabled={syncing}
-        >
-          <span className="flex items-center gap-2">
-            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-            <span className="group-data-[collapsible=icon]:hidden">Sync</span>
-          </span>
-          <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className="px-4 pb-8">
-        <SheetHeader className="pb-4">
-          <SheetTitle className="text-left">Sync Financial Data</SheetTitle>
-        </SheetHeader>
-        <div className="space-y-2">
+    <>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            size="lg"
-            onClick={() => handleSync("/api/plaid/sync", "Syncing all")}
+            className="w-full justify-between group-data-[collapsible=icon]:justify-center"
             disabled={syncing}
-            className="w-full h-14 text-base justify-start"
           >
-            <RefreshCw className="h-5 w-5 mr-3" />
-            Sync All
+            <span className="flex items-center gap-2">
+              <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+              <span className="group-data-[collapsible=icon]:hidden">Sync</span>
+            </span>
+            <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onClick={() => handleSync("/api/plaid/sync", "Syncing all")} disabled={syncing}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Sync All
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onClick={() => handleSync("/api/plaid/sync-transactions", "Syncing transactions")}
             disabled={syncing}
-            className="w-full h-14 text-base justify-start"
           >
-            <Receipt className="h-5 w-5 mr-3" />
+            <Receipt className="h-4 w-4 mr-2" />
             Sync Transactions Only
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onClick={() => handleSync("/api/plaid/sync-investments", "Syncing investments")}
             disabled={syncing}
-            className="w-full h-14 text-base justify-start"
           >
-            <TrendingUp className="h-5 w-5 mr-3" />
+            <TrendingUp className="h-4 w-4 mr-2" />
             Sync Investments Only
-          </Button>
-          <Separator className="my-2" />
-          <Button
-            variant="outline"
-            size="lg"
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
             onClick={() => handleSync("/api/plaid/sync-from-scratch", "Running fresh sync")}
             disabled={syncing}
-            className="w-full h-14 text-base justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="text-destructive focus:text-destructive"
           >
-            <RefreshCw className="h-5 w-5 mr-3" />
+            <RefreshCw className="h-4 w-4 mr-2" />
             Fresh Sync (Emergency)
-          </Button>
-        </div>
-      </SheetContent>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <AlertDialog open={showReauthModal} onOpenChange={setShowReauthModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -265,7 +343,7 @@ function SyncDropdown() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Sheet>
+    </>
   )
 }
 
