@@ -23,6 +23,8 @@ import { TagSelector } from "@/components/transactions/filters/TagSelector"
 import { confirmTransactions } from "@/app/(app)/review-transactions/actions/confirm-transactions"
 import { useRouter } from "next/navigation"
 import { ArrowLeftRight } from "lucide-react"
+import { ReviewTransactionCard } from "./ReviewTransactionCard"
+import { ReviewTransactionCardTablet } from "./ReviewTransactionCardTablet"
 
 interface ReviewTransactionsClientProps {
   transactions: TransactionForClient[]
@@ -200,8 +202,8 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
     return (
       <div className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Review and categorize uncategorized transactions or transactions tagged for review
           </p>
         </div>
@@ -213,15 +215,17 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 pb-24 md:pb-4">
+      {/* Header - Responsive */}
+      <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
             {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} need review
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        {/* Desktop confirm button */}
+        <div className="hidden md:flex md:items-center md:gap-4">
           <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
           <Button onClick={handleConfirmClick} disabled={selectedCount === 0 || isPending} size="lg">
             {isPending ? "Confirming..." : `Confirm ${selectedCount} Transaction${selectedCount !== 1 ? "s" : ""}`}
@@ -229,7 +233,48 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
         </div>
       </div>
 
-      <div className="border border-border rounded-lg overflow-hidden">
+      {/* Mobile - Select all */}
+      <div className="md:hidden flex items-center gap-3 px-1">
+        <Checkbox checked={allSelected} onCheckedChange={toggleAllSelections} aria-label="Select all" />
+        <span className="text-sm text-muted-foreground">
+          Select all ({selectedCount} of {transactions.length})
+        </span>
+      </div>
+
+      {/* Mobile - Card layout (< 640px) */}
+      <div className="sm:hidden space-y-3">
+        {transactions.map((transaction) => (
+          <ReviewTransactionCard
+            key={transaction.id}
+            transaction={transaction}
+            edit={getEdit(transaction.id)}
+            categories={categories}
+            tags={tags}
+            onToggleSelection={() => toggleSelection(transaction.id)}
+            onUpdateEdit={(update) => updateEdit(transaction.id, update)}
+            onFlipAmount={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
+          />
+        ))}
+      </div>
+
+      {/* Tablet - Wide card layout (640px - 1024px) */}
+      <div className="hidden sm:block lg:hidden space-y-3">
+        {transactions.map((transaction) => (
+          <ReviewTransactionCardTablet
+            key={transaction.id}
+            transaction={transaction}
+            edit={getEdit(transaction.id)}
+            categories={categories}
+            tags={tags}
+            onToggleSelection={() => toggleSelection(transaction.id)}
+            onUpdateEdit={(update) => updateEdit(transaction.id, update)}
+            onFlipAmount={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
+          />
+        ))}
+      </div>
+
+      {/* Desktop - Table layout (≥ 1024px) */}
+      <div className="hidden lg:block border border-border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -359,6 +404,16 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
             })}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile/Tablet - Sticky bottom action bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 shadow-lg z-10">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
+          <Button onClick={handleConfirmClick} disabled={selectedCount === 0 || isPending} size="lg" className="flex-1">
+            {isPending ? "Confirming..." : `Confirm ${selectedCount}`}
+          </Button>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}
