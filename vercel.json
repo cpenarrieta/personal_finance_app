@@ -1,0 +1,6 @@
+{
+  "security": {
+    "challengeEnabled": true,
+    "excludePaths": ["/api/plaid/webhook"]
+  }
+}
