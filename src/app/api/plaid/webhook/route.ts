@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getPlaidClient } from "@/lib/api/plaid"
+// import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
 import { syncItemTransactions } from "@/lib/sync/sync-service"
 import { categorizeTransactions } from "@/lib/ai/categorize-transaction"
