@@ -27,7 +27,7 @@ export default function PasskeyManagement() {
   const loadPasskeys = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/auth/passkey/list")
+      const response = await fetch("/api/passkeys/list")
       if (response.ok) {
         const data = await response.json()
         setPasskeys(data.passkeys || [])
@@ -78,7 +78,7 @@ export default function PasskeyManagement() {
     }
 
     try {
-      const response = await fetch(`/api/auth/passkey/${passkeyId}`, {
+      const response = await fetch(`/api/passkeys/${passkeyId}`, {
         method: "DELETE",
       })
 
@@ -107,10 +107,7 @@ export default function PasskeyManagement() {
 
   // Check if passkeys are supported
   const isPasskeySupported = () => {
-    return (
-      window.PublicKeyCredential &&
-      typeof window.PublicKeyCredential === "function"
-    )
+    return window.PublicKeyCredential && typeof window.PublicKeyCredential === "function"
   }
 
   if (loading) {
@@ -211,16 +208,11 @@ export default function PasskeyManagement() {
       ) : (
         <div className="space-y-3">
           {passkeys.map((passkey) => (
-            <div
-              key={passkey.id}
-              className="flex items-center justify-between p-4 border rounded-lg bg-background"
-            >
+            <div key={passkey.id} className="flex items-center justify-between p-4 border rounded-lg bg-background">
               <div className="flex items-center gap-3">
                 <Fingerprint className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="font-medium text-foreground">
-                    {passkey.name || "Unnamed Device"}
-                  </p>
+                  <p className="font-medium text-foreground">{passkey.name || "Unnamed Device"}</p>
                   <p className="text-sm text-muted-foreground">
                     Added on {new Date(passkey.createdAt).toLocaleDateString()}
                   </p>

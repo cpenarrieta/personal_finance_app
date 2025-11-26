@@ -1,4 +1,3 @@
-import { validateAllowedEmail } from "@/lib/auth/auth-helpers"
 import PasskeyManagement from "@/components/settings/PasskeyManagement"
 import type { Metadata } from "next"
 
@@ -11,8 +10,6 @@ export const metadata: Metadata = {
 }
 
 export default async function SecurityPage() {
-  await validateAllowedEmail()
-
   return (
     <div className="space-y-4">
       <div>

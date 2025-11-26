@@ -3,10 +3,12 @@
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth/auth-client"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Fingerprint } from "lucide-react"
 import { toast } from "sonner"
 
 export function LoginButtons() {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState<string | null>(null)
   const [isPasskeySupported, setIsPasskeySupported] = useState(false)
 
@@ -15,7 +17,7 @@ export function LoginButtons() {
     setIsPasskeySupported(
       typeof window !== "undefined" &&
         window.PublicKeyCredential !== undefined &&
-        typeof window.PublicKeyCredential === "function"
+        typeof window.PublicKeyCredential === "function",
     )
   }, [])
 
@@ -55,7 +57,9 @@ export function LoginButtons() {
         return
       }
 
-      // Success - page will redirect automatically
+      // Success - redirect to dashboard
+      router.push("/")
+      router.refresh()
     } catch (error: any) {
       console.error("Passkey login error:", error)
       toast.error(error.message || "Failed to sign in with passkey")
