@@ -76,34 +76,42 @@ export function TransactionsPageClient({
 
   return (
     <>
-      <div className="mb-4 space-y-3">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Banking Transactions</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1">
-            View and search all your banking transactions
-          </p>
-        </div>
+      <div className="mb-4 space-y-3 md:space-y-0">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+          {/* Header */}
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Banking Transactions</h1>
+            <p className="text-sm md:text-base text-muted-foreground mt-1">
+              View and search all your banking transactions
+            </p>
+          </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            onClick={handleCopyForGoogleSheets}
-            disabled={isCopying}
-            size="sm"
-            className="md:h-10"
-          >
-            <Sheet className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">{isCopying ? "Copying..." : "Copy to Clipboard"}</span>
-          </Button>
-          <Button variant="outline" onClick={handleDownloadCSV} disabled={isDownloading} size="sm" className="md:h-10">
-            <Download className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">{isDownloading ? "Downloading..." : "Download CSV"}</span>
-          </Button>
-          <Button onClick={() => setShowAddModal(true)} size="sm" className="md:h-10">
-            Add Transaction
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-2 flex-wrap md:flex-nowrap">
+            <Button
+              variant="outline"
+              onClick={handleCopyForGoogleSheets}
+              disabled={isCopying}
+              size="sm"
+              className="md:h-10"
+            >
+              <Sheet className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">{isCopying ? "Copying..." : "Copy to Clipboard"}</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleDownloadCSV}
+              disabled={isDownloading}
+              size="sm"
+              className="md:h-10"
+            >
+              <Download className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">{isDownloading ? "Downloading..." : "Download CSV"}</span>
+            </Button>
+            <Button onClick={() => setShowAddModal(true)} size="sm" className="md:h-10">
+              Add Transaction
+            </Button>
+          </div>
         </div>
       </div>
 
