@@ -8,11 +8,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}))
     const { access_token } = body
 
+    // Get webhook URL from environment or construct from request
+    const webhookUrl = process.env.PLAID_WEBHOOK_URL || `${process.env.BETTER_AUTH_URL}/api/plaid/webhook`
+
     const config: any = {
       user: { client_user_id: "local-user" },
       client_name: "Personal Finance (Local)",
       language: "en",
       redirect_uri: process.env.PLAID_REDIRECT_URI || undefined,
+      webhook: webhookUrl, // Enable webhooks for this item
     }
 
     if (access_token) {
