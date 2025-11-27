@@ -14,6 +14,7 @@ import {
   buildSimilarTransactionsContext,
   getSimilarTransactions,
 } from "./categorize-transaction"
+import { logInfo, logWarn, logError } from "@/lib/utils/logger"
 
 // Initialize OpenAI with API key
 const openai = createOpenAI({
@@ -136,7 +137,7 @@ export async function smartAnalyzeReceipt(transactionId: string): Promise<SmartA
     })) as Transaction | null
 
     if (!transaction) {
-      console.error(`Transaction ${transactionId} not found`)
+      logError(`Transaction ${transactionId} not found`, undefined, { transactionId })
       return null
     }
 
@@ -317,7 +318,7 @@ Analyze the transaction and provide your recommended action.`
           return fileUrl.replace("/upload/", "/upload/f_jpg,pg_1,q_auto,w_2000/")
         }
 
-        console.warn(`PDF detected but not hosted on Cloudinary: ${fileUrl}. Vision API may not support it.`)
+        logWarn(`PDF detected but not hosted on Cloudinary: ${fileUrl}. Vision API may not support it.`, { fileUrl })
         return fileUrl
       }
 
@@ -344,15 +345,15 @@ Analyze the transaction and provide your recommended action.`
         })
       }
 
-      console.log(`🖼️  Smart analysis WITH ${transaction.files.length} receipt file(s)`)
-      console.log(
-        "Processing files:",
-        transaction.files.map((url) => ({
+      logInfo(`🖼️  Smart analysis WITH ${transaction.files.length} receipt file(s)`, {
+        transactionId,
+        fileCount: transaction.files.length,
+        files: transaction.files.map((url) => ({
           original: url,
           processed: prepareFileForVision(url),
           isPdf: url.toLowerCase().includes(".pdf"),
         })),
-      )
+      })
 
       result = await generateObject({
         model: openai("gpt-5-mini"),
@@ -366,7 +367,7 @@ Analyze the transaction and provide your recommended action.`
       })
     } else {
       // WITHOUT files: Use text-only prompt
-      console.log("📝 Smart analysis WITHOUT receipt (metadata only)")
+      logInfo("📝 Smart analysis WITHOUT receipt (metadata only)", { transactionId })
 
       result = await generateObject({
         model: openai("gpt-5-mini"),
@@ -381,7 +382,9 @@ Analyze the transaction and provide your recommended action.`
     if (analysis.type === "split") {
       // CRITICAL: Cannot split without receipt
       if (!hasFiles) {
-        console.error("⚠️  AI suggested split but no receipt files available - rejecting suggestion")
+        logError("⚠️  AI suggested split but no receipt files available - rejecting suggestion", undefined, {
+          transactionId,
+        })
         return null
       }
       // Validate that splits sum to transaction amount
@@ -389,8 +392,14 @@ Analyze the transaction and provide your recommended action.`
       const difference = Math.abs(totalSplits - transactionAmount)
 
       if (difference > 0.02) {
-        console.warn(
+        logWarn(
           `⚠️  Split amounts ($${totalSplits.toFixed(2)}) don't match transaction amount ($${transactionAmount.toFixed(2)}). Difference: $${difference.toFixed(2)}`,
+          {
+            transactionId,
+            totalSplits,
+            transactionAmount,
+            difference,
+          },
         )
         analysis.notes = `Warning: Split total ($${totalSplits.toFixed(2)}) differs from transaction amount ($${transactionAmount.toFixed(2)}) by $${difference.toFixed(2)}. Please review carefully.`
       }
@@ -399,22 +408,31 @@ Analyze the transaction and provide your recommended action.`
       for (const split of analysis.splits) {
         const category = categories.find((c) => c.id === split.categoryId)
         if (!category) {
-          console.error(`Invalid category ID "${split.categoryId}" returned by AI`)
+          logError(`Invalid category ID "${split.categoryId}" returned by AI`, undefined, {
+            transactionId,
+            categoryId: split.categoryId,
+          })
           return null
         }
 
         if (split.subcategoryId) {
           const subcategory = category.subcategories.find((s) => s.id === split.subcategoryId)
           if (!subcategory) {
-            console.warn(
+            logWarn(
               `Invalid subcategory ID "${split.subcategoryId}" for category "${category.name}", ignoring subcategory`,
+              {
+                transactionId,
+                subcategoryId: split.subcategoryId,
+                categoryName: category.name,
+              },
             )
             split.subcategoryId = null
           }
         }
       }
 
-      console.log(`✅ Smart analysis complete (SPLIT):`, {
+      logInfo(`✅ Smart analysis complete (SPLIT)`, {
+        transactionId,
         fileCount: hasFiles ? transaction.files.length : 0,
         splitsCount: analysis.splits.length,
         confidence: analysis.confidence,
@@ -425,21 +443,30 @@ Analyze the transaction and provide your recommended action.`
       // Validate category ID exists
       const category = categories.find((c) => c.id === analysis.categoryId)
       if (!category) {
-        console.error(`Invalid category ID "${analysis.categoryId}" returned by AI`)
+        logError(`Invalid category ID "${analysis.categoryId}" returned by AI`, undefined, {
+          transactionId,
+          categoryId: analysis.categoryId,
+        })
         return null
       }
 
       if (analysis.subcategoryId) {
         const subcategory = category.subcategories.find((s) => s.id === analysis.subcategoryId)
         if (!subcategory) {
-          console.warn(
+          logWarn(
             `Invalid subcategory ID "${analysis.subcategoryId}" for category "${category.name}", ignoring subcategory`,
+            {
+              transactionId,
+              subcategoryId: analysis.subcategoryId,
+              categoryName: category.name,
+            },
           )
           analysis.subcategoryId = null
         }
       }
 
-      console.log(`✅ Smart analysis complete (RECATEGORIZE):`, {
+      logInfo(`✅ Smart analysis complete (RECATEGORIZE)`, {
+        transactionId,
         hasFiles,
         fileCount: hasFiles ? transaction.files.length : 0,
         suggestedCategory: category.name,
@@ -448,7 +475,8 @@ Analyze the transaction and provide your recommended action.`
       })
     } else {
       // Type: confirm
-      console.log(`✅ Smart analysis complete (CONFIRM):`, {
+      logInfo(`✅ Smart analysis complete (CONFIRM)`, {
+        transactionId,
         hasFiles,
         fileCount: hasFiles ? transaction.files.length : 0,
         confidence: analysis.confidence,
@@ -458,7 +486,7 @@ Analyze the transaction and provide your recommended action.`
 
     return analysis
   } catch (error) {
-    console.error("Error in smart receipt analysis:", error)
+    logError("Error in smart receipt analysis:", error, { transactionId })
     return null
   }
 }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma"
 import { Prisma } from "@prisma/client"
 import { CountryCode } from "plaid"
 import { revalidateTag, revalidatePath } from "next/cache"
+import { logInfo, logWarn } from "@/lib/utils/logger"
 
 export async function POST(req: NextRequest) {
   const { public_token } = await req.json()
@@ -43,7 +44,12 @@ export async function POST(req: NextRequest) {
 
   // If reconnecting (new itemId but same institution), update existing item
   if (existingItemForInstitution && existingItemForInstitution.plaidItemId !== itemId) {
-    console.log(`Reconnection detected for ${institutionName}. Updating existing item...`)
+    logInfo(`Reconnection detected for ${institutionName}. Updating existing item...`, {
+      institutionName,
+      institutionId: institution.id,
+      oldItemId: existingItemForInstitution.plaidItemId,
+      newItemId: itemId,
+    })
 
     // Check if accounts match (by name + mask)
     const newAccountSignatures = new Set(accts.data.accounts.map((a) => `${a.name}|${a.mask}`))
@@ -55,7 +61,10 @@ export async function POST(req: NextRequest) {
 
     if (matchingAccounts.length > 0) {
       // Same accounts detected - this is a reconnection
-      console.log(`⚠️  Reconnection: Deleting old transactions (Plaid will assign new IDs)...`)
+      logWarn(`⚠️  Reconnection: Deleting old transactions (Plaid will assign new IDs)...`, {
+        institutionName,
+        matchingAccountsCount: matchingAccounts.length,
+      })
 
       // STEP 1: Convert split children to manual (preserve user customizations)
       // This orphans them (removes parent link) before we delete the parent
@@ -72,7 +81,10 @@ export async function POST(req: NextRequest) {
       })
 
       if (convertedSplits.count > 0) {
-        console.log(`   Converted ${convertedSplits.count} split children to manual transactions`)
+        logInfo(`   Converted ${convertedSplits.count} split children to manual transactions`, {
+          institutionName,
+          convertedCount: convertedSplits.count,
+        })
       }
 
       // STEP 2: Delete old Plaid transactions (including split parents)
@@ -82,7 +94,10 @@ export async function POST(req: NextRequest) {
           isManual: false, // Only delete Plaid-sourced transactions
         },
       })
-      console.log(`   Deleted ${deletedTxs.count} Plaid transactions (preserved manual & split children)`)
+      logInfo(`   Deleted ${deletedTxs.count} Plaid transactions (preserved manual & split children)`, {
+        institutionName,
+        deletedCount: deletedTxs.count,
+      })
 
       // Update existing item with new access token and plaidItemId
       // Reset cursors since old cursors are tied to old access token

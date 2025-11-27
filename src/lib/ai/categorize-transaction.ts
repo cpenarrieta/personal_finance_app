@@ -8,6 +8,7 @@ import { generateObject } from "ai"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
 import { Category, Prisma, Subcategory, Transaction } from "@prisma/client"
+import { logInfo, logWarn, logError } from "@/lib/utils/logger"
 
 // Initialize OpenAI with API key
 const openai = createOpenAI({
@@ -228,7 +229,7 @@ export async function categorizeTransaction(
     })) as Transaction | null
 
     if (!transaction) {
-      console.error(`Transaction ${transactionId} not found`)
+      logError(`Transaction ${transactionId} not found`, undefined, { transactionId })
       return null
     }
 
@@ -240,7 +241,7 @@ export async function categorizeTransaction(
       })
 
       if (existingCategory?.categoryId) {
-        console.log(`Transaction ${transactionId} already categorized, skipping`)
+        logInfo(`Transaction ${transactionId} already categorized, skipping`, { transactionId })
         return null
       }
     }
@@ -305,7 +306,7 @@ Provide your categorization decision with confidence and reasoning.`
           return fileUrl.replace("/upload/", "/upload/f_jpg,pg_1,q_auto,w_2000/")
         }
 
-        console.warn(`PDF detected but not hosted on Cloudinary: ${fileUrl}. Vision API may not support it.`)
+        logWarn(`PDF detected but not hosted on Cloudinary: ${fileUrl}. Vision API may not support it.`, { fileUrl })
         return fileUrl
       }
 
@@ -335,7 +336,10 @@ Provide your categorization decision with confidence and reasoning.`
         })
       }
 
-      console.log(`🖼️  Including ${transaction.files.length} receipt file(s) in categorization`)
+      logInfo(`🖼️  Including ${transaction.files.length} receipt file(s) in categorization`, {
+        transactionId,
+        fileCount: transaction.files.length,
+      })
 
       result = await generateObject({
         model: openai("gpt-5-mini"),
@@ -359,7 +363,9 @@ Provide your categorization decision with confidence and reasoning.`
     const categorization = result.object
 
     // Log the result
-    console.log(`🤖 AI Categorization for "${transaction.name}":`, {
+    logInfo(`🤖 AI Categorization for "${transaction.name}"`, {
+      transactionId,
+      transactionName: transaction.name,
       categoryId: categorization.categoryId,
       subcategoryId: categorization.subcategoryId,
       confidence: categorization.confidence,
@@ -368,14 +374,20 @@ Provide your categorization decision with confidence and reasoning.`
 
     // If confidence is too low or no category suggested, return null
     if (!categorization.categoryId || categorization.confidence <= 60) {
-      console.log(`⚠️  Low confidence (${categorization.confidence}), skipping auto-categorization`)
+      logInfo(`⚠️  Low confidence (${categorization.confidence}), skipping auto-categorization`, {
+        transactionId,
+        confidence: categorization.confidence,
+      })
       return null
     }
 
     // Find the category and subcategory IDs
     const category = categories.find((c) => c.id === categorization.categoryId)
     if (!category) {
-      console.error(`Category ID "${categorization.categoryId}" not found`)
+      logError(`Category ID "${categorization.categoryId}" not found`, undefined, {
+        transactionId,
+        categoryId: categorization.categoryId,
+      })
       return null
     }
 
@@ -390,7 +402,7 @@ Provide your categorization decision with confidence and reasoning.`
       reasoning: categorization.reasoning,
     }
   } catch (error) {
-    console.error("Error categorizing transaction:", error)
+    logError("Error categorizing transaction:", error, { transactionId })
     return null
   }
 }
@@ -443,11 +455,14 @@ export async function applyCategorization(
       },
     })
 
-    console.log(
-      `✅ Applied categorization${!skipReviewTag ? " and for-review tag" : ""} to transaction ${transactionId}`,
-    )
+    logInfo(`✅ Applied categorization${!skipReviewTag ? " and for-review tag" : ""} to transaction ${transactionId}`, {
+      transactionId,
+      categoryId,
+      subcategoryId,
+      hasReviewTag: !skipReviewTag,
+    })
   } catch (error) {
-    console.error("Error applying categorization:", error)
+    logError("Error applying categorization:", error, { transactionId, categoryId, subcategoryId })
     throw error
   }
 }
@@ -461,7 +476,7 @@ export async function categorizeAndApply(transactionId: string): Promise<void> {
   if (result && result.categoryId) {
     await applyCategorization(transactionId, result.categoryId, result.subcategoryId)
   } else {
-    console.log(`ℹ️  Skipping auto-categorization for transaction ${transactionId}`)
+    logInfo(`ℹ️  Skipping auto-categorization for transaction ${transactionId}`, { transactionId })
   }
 }
 
@@ -472,7 +487,9 @@ export async function categorizeAndApply(transactionId: string): Promise<void> {
 export async function categorizeTransactions(transactionIds: string[], options: CategorizeOptions = {}): Promise<void> {
   if (transactionIds.length === 0) return
 
-  console.log(`🔄 Starting bulk categorization for ${transactionIds.length} transactions...`)
+  logInfo(`🔄 Starting bulk categorization for ${transactionIds.length} transactions...`, {
+    transactionCount: transactionIds.length,
+  })
 
   try {
     // 1. Fetch shared context once
@@ -502,7 +519,7 @@ export async function categorizeTransactions(transactionIds: string[], options: 
             return { id, status: "skipped" }
           }
         } catch (error) {
-          console.error(`Failed to categorize transaction ${id}`, error)
+          logError(`Failed to categorize transaction ${id}`, error, { transactionId: id })
           return { id, status: "error", error }
         }
       })
@@ -511,10 +528,17 @@ export async function categorizeTransactions(transactionIds: string[], options: 
       results.push(...chunkResults)
     }
 
-    console.log(
-      `✅ Bulk categorization complete. Categorized: ${results.filter((r) => r.status === "categorized").length}, Skipped: ${results.filter((r) => r.status === "skipped").length}, Errors: ${results.filter((r) => r.status === "error").length}`,
-    )
+    const categorizedCount = results.filter((r) => r.status === "categorized").length
+    const skippedCount = results.filter((r) => r.status === "skipped").length
+    const errorCount = results.filter((r) => r.status === "error").length
+
+    logInfo(`✅ Bulk categorization complete`, {
+      total: transactionIds.length,
+      categorized: categorizedCount,
+      skipped: skippedCount,
+      errors: errorCount,
+    })
   } catch (error) {
-    console.error("Error in bulk categorization:", error)
+    logError("Error in bulk categorization:", error, { transactionCount: transactionIds.length })
   }
 }

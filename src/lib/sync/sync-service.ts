@@ -7,6 +7,7 @@ import { prisma } from "../db/prisma"
 import { Prisma } from "@prisma/client"
 import { revalidateTag } from "next/cache"
 import type { Transaction, AccountBase, Security, Holding, InvestmentTransaction } from "../api/plaid"
+import { logInfo, logError } from "../utils/logger"
 
 // Constants
 const HISTORICAL_START_DATE = "2024-01-01"
@@ -210,7 +211,7 @@ export async function syncItemTransactions(
 
   // First, if no cursor exists, do a historical fetch to get older data
   if (!lastCursor) {
-    console.log("  📅 Fetching historical transactions...")
+    logInfo("  📅 Fetching historical transactions...")
     const historicalEndDate = new Date().toISOString().slice(0, 10)
 
     let offset = 0
@@ -236,7 +237,9 @@ export async function syncItemTransactions(
       offset += TRANSACTION_BATCH_SIZE
     }
 
-    console.log(`  ✓ Found ${totalTransactions.length} historical transaction(s)`)
+    logInfo(`  ✓ Found ${totalTransactions.length} historical transaction(s)`, {
+      transactionCount: totalTransactions.length,
+    })
 
     // Process historical transactions
     for (const t of totalTransactions) {
@@ -252,7 +255,11 @@ export async function syncItemTransactions(
 
       // If split transaction exists, skip it (don't overwrite user's split)
       if (existing && existing.isSplit) {
-        console.log(`    ⏭️  Skipping split: ${t.date} | ${t.datetime} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
+        logInfo(`    ⏭️  Skipping split: ${t.date} | ${t.datetime} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`, {
+          date: t.date,
+          name: t.name,
+          amount: t.amount,
+        })
         continue
       }
 
@@ -260,13 +267,25 @@ export async function syncItemTransactions(
       const transactionData = buildTransactionData(t)
 
       // Log transaction details for historical tracking
-      console.log(`    ${isNew ? "➕ NEW" : "🔄 UPDATE"} [HISTORICAL]`)
-      console.log(`       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}`)
-      console.log(`       Name: ${t.name}`)
-      console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
-      console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
-      console.log(
-        `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+      logInfo(
+        `    ${isNew ? "➕ NEW" : "🔄 UPDATE"} [HISTORICAL]\n` +
+          `       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}\n` +
+          `       Name: ${t.name}\n` +
+          `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)\n` +
+          `       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}\n` +
+          `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+        {
+          isNew,
+          date: t.date,
+          datetime: t.datetime,
+          accountId: t.account_id,
+          name: t.name,
+          amount: t.amount,
+          pending: t.pending,
+          currency: t.iso_currency_code,
+          category: t.personal_finance_category?.primary,
+          subcategory: t.personal_finance_category?.detailed,
+        },
       )
 
       const upsertedTransaction = await prisma.transaction.upsert({
@@ -288,11 +307,13 @@ export async function syncItemTransactions(
         stats.newTransactionIds.push(upsertedTransaction.id)
       }
     }
-    console.log(`  ✓ Processed ${stats.transactionsAdded} new transaction(s)`)
+    logInfo(`  ✓ Processed ${stats.transactionsAdded} new transaction(s)`, {
+      transactionsAdded: stats.transactionsAdded,
+    })
   }
 
   // Now use /transactions/sync for incremental updates
-  console.log("  🔄 Syncing incremental updates...")
+  logInfo("  🔄 Syncing incremental updates...")
   let cursor = lastCursor || undefined
   let hasMore = true
 
@@ -305,10 +326,11 @@ export async function syncItemTransactions(
         count: TRANSACTION_BATCH_SIZE,
       })
     } catch (error: any) {
-      console.error("  ❌ Plaid transactionsSync error:")
-      console.error("  Error code:", error.response?.data?.error_code)
-      console.error("  Error message:", error.response?.data?.error_message)
-      console.error("  Cursor value:", cursor)
+      logError("  ❌ Plaid transactionsSync error:", error, {
+        errorCode: error.response?.data?.error_code,
+        errorMessage: error.response?.data?.error_message,
+        cursor: cursor,
+      })
 
       // Update item status if login required
       if (error.response?.data?.error_code === "ITEM_LOGIN_REQUIRED") {
@@ -317,8 +339,8 @@ export async function syncItemTransactions(
           data: { status: "ITEM_LOGIN_REQUIRED" },
         })
         revalidateTag("items", "max")
-        console.error("  ℹ️  Item status updated to ITEM_LOGIN_REQUIRED")
-        console.error("  ℹ️  Visit /settings/connections to reauthorize")
+        logError("  ℹ️  Item status updated to ITEM_LOGIN_REQUIRED")
+        logError("  ℹ️  Visit /settings/connections to reauthorize")
       }
 
       throw error
@@ -345,7 +367,11 @@ export async function syncItemTransactions(
       })
 
       if (existingSplit) {
-        console.log(`    ⏭️  Skipping split: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
+        logInfo(`    ⏭️  Skipping split: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`, {
+          date: t.date,
+          name: t.name,
+          amount: t.amount,
+        })
         continue
       }
 
@@ -353,13 +379,24 @@ export async function syncItemTransactions(
       const transactionData = buildTransactionData(t)
 
       // Log transaction details for historical tracking
-      console.log(`    ➕ NEW [ADDED]`)
-      console.log(`       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}`)
-      console.log(`       Name: ${t.name}`)
-      console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
-      console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
-      console.log(
-        `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+      logInfo(
+        `    ➕ NEW [ADDED]\n` +
+          `       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}\n` +
+          `       Name: ${t.name}\n` +
+          `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)\n` +
+          `       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}\n` +
+          `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+        {
+          date: t.date,
+          datetime: t.datetime,
+          accountId: t.account_id,
+          name: t.name,
+          amount: t.amount,
+          pending: t.pending,
+          currency: t.iso_currency_code,
+          category: t.personal_finance_category?.primary,
+          subcategory: t.personal_finance_category?.detailed,
+        },
       )
 
       const upsertedTransaction = await prisma.transaction.upsert({
@@ -383,7 +420,11 @@ export async function syncItemTransactions(
     for (const t of resp.data.modified) {
       // Don't update split transactions (preserve user customization)
       if (await isSplitTransaction(t.transaction_id)) {
-        console.log(`    ⏭️  Skipping split update: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`)
+        logInfo(`    ⏭️  Skipping split update: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`, {
+          date: t.date,
+          name: t.name,
+          amount: t.amount,
+        })
         continue
       }
 
@@ -391,13 +432,24 @@ export async function syncItemTransactions(
       const transactionData = buildTransactionData(t)
 
       // Log transaction details for historical tracking
-      console.log(`    📝 MODIFIED [UPDATE]`)
-      console.log(`       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}`)
-      console.log(`       Name: ${t.name}`)
-      console.log(`       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)`)
-      console.log(`       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}`)
-      console.log(
-        `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+      logInfo(
+        `    📝 MODIFIED [UPDATE]\n` +
+          `       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}\n` +
+          `       Name: ${t.name}\n` +
+          `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)\n` +
+          `       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}\n` +
+          `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
+        {
+          date: t.date,
+          datetime: t.datetime,
+          accountId: t.account_id,
+          name: t.name,
+          amount: t.amount,
+          pending: t.pending,
+          currency: t.iso_currency_code,
+          category: t.personal_finance_category?.primary,
+          subcategory: t.personal_finance_category?.detailed,
+        },
       )
 
       await prisma.transaction.update({
@@ -419,7 +471,7 @@ export async function syncItemTransactions(
       })
       stats.transactionsRemoved += count
       if (count > 0) {
-        console.log(`    🗑️  Removed ${count} transaction(s) (preserved splits)`)
+        logInfo(`    🗑️  Removed ${count} transaction(s) (preserved splits)`, { removedCount: count })
       }
     }
 
@@ -443,7 +495,7 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
     investmentTransactionsAdded: 0,
   }
 
-  console.log("  📊 Syncing investments...")
+  logInfo("  📊 Syncing investments...")
   const accounts = (await prisma.plaidAccount.findMany({
     where: { itemId: itemId },
   })) as PlaidAccountWithRelations[]
@@ -468,7 +520,10 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
 
     if (isNew) {
       stats.securitiesAdded++
-      console.log(`    🔐 ${s.ticker_symbol || s.name || "Security"} added`)
+      logInfo(`    🔐 ${s.ticker_symbol || s.name || "Security"} added`, {
+        ticker: s.ticker_symbol,
+        name: s.name,
+      })
     }
   }
 
@@ -485,7 +540,10 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
     if (!plaidHoldingKeys.has(key)) {
       stats.holdingsRemoved++
       await prisma.holding.delete({ where: { id: existing.id } })
-      console.log(`    🗑️  ${existing.security.tickerSymbol || existing.security.name || "Holding"} removed`)
+      logInfo(`    🗑️  ${existing.security.tickerSymbol || existing.security.name || "Holding"} removed`, {
+        ticker: existing.security.tickerSymbol,
+        name: existing.security.name,
+      })
     }
   }
 
@@ -524,7 +582,11 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
 
     if (isNewHolding) {
       stats.holdingsAdded++
-      console.log(`    📈 ${security.tickerSymbol || security.name || "Holding"} | Qty: ${h.quantity}`)
+      logInfo(`    📈 ${security.tickerSymbol || security.name || "Holding"} | Qty: ${h.quantity}`, {
+        ticker: security.tickerSymbol,
+        name: security.name,
+        quantity: h.quantity,
+      })
     } else {
       stats.holdingsUpdated++
     }
@@ -564,7 +626,11 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
 
     if (isNew) {
       stats.investmentTransactionsAdded++
-      console.log(`    💰 ${t.date} | ${t.type} | ${t.name || "Investment Transaction"}`)
+      logInfo(`    💰 ${t.date} | ${t.type} | ${t.name || "Investment Transaction"}`, {
+        date: t.date,
+        type: t.type,
+        name: t.name,
+      })
     }
   }
 
@@ -597,7 +663,10 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
         ? "transactions"
         : "investments"
 
-  console.log(`\n🔄 Starting ${syncType} sync for ${items.length} item(s)...\n`)
+  logInfo(`\n🔄 Starting ${syncType} sync for ${items.length} item(s)...\n`, {
+    syncType,
+    itemCount: items.length,
+  })
 
   for (const item of items) {
     const itemStats: SyncStats = {
@@ -618,8 +687,10 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
       include: { institution: true },
     })
     const institutionName = itemInfo?.institution?.name || "Unknown Institution"
-    console.log(`\n📦 Processing: ${institutionName}`)
-    console.log("─".repeat(60))
+    logInfo(`\n📦 Processing: ${institutionName}\n${"─".repeat(60)}`, {
+      institutionName,
+      itemId: item.id,
+    })
 
     // Sync transactions if requested
     if (options.syncTransactions) {
@@ -657,54 +728,71 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
     totalStats.investmentTransactionsAdded += itemStats.investmentTransactionsAdded
 
     // Print item summary
-    console.log("\n  ✅ Summary for " + institutionName + ":")
-    if (options.syncTransactions) {
-      console.log(`     • Accounts updated: ${itemStats.accountsUpdated}`)
-      console.log(`     • Transactions added: ${itemStats.transactionsAdded}`)
-      console.log(`     • Transactions modified: ${itemStats.transactionsModified}`)
-      console.log(`     • Transactions removed: ${itemStats.transactionsRemoved}`)
-    }
-    if (options.syncInvestments) {
-      console.log(`     • Securities added: ${itemStats.securitiesAdded}`)
-      console.log(`     • Holdings added: ${itemStats.holdingsAdded}`)
-      console.log(`     • Holdings updated: ${itemStats.holdingsUpdated}`)
-      console.log(`     • Holdings removed: ${itemStats.holdingsRemoved}`)
-      console.log(`     • Investment transactions added: ${itemStats.investmentTransactionsAdded}`)
-    }
+    const summaryMessage =
+      "\n  ✅ Summary for " +
+      institutionName +
+      ":" +
+      (options.syncTransactions
+        ? `\n     • Accounts updated: ${itemStats.accountsUpdated}` +
+          `\n     • Transactions added: ${itemStats.transactionsAdded}` +
+          `\n     • Transactions modified: ${itemStats.transactionsModified}` +
+          `\n     • Transactions removed: ${itemStats.transactionsRemoved}`
+        : "") +
+      (options.syncInvestments
+        ? `\n     • Securities added: ${itemStats.securitiesAdded}` +
+          `\n     • Holdings added: ${itemStats.holdingsAdded}` +
+          `\n     • Holdings updated: ${itemStats.holdingsUpdated}` +
+          `\n     • Holdings removed: ${itemStats.holdingsRemoved}` +
+          `\n     • Investment transactions added: ${itemStats.investmentTransactionsAdded}`
+        : "")
+
+    logInfo(summaryMessage, {
+      institutionName,
+      ...itemStats,
+    })
   }
 
   // Invalidate caches based on what was synced
-  console.log("\n🔄 Invalidating caches...")
+  logInfo("\n🔄 Invalidating caches...")
   if (options.syncTransactions) {
     revalidateTag("transactions", "max")
     revalidateTag("accounts", "max")
     revalidateTag("dashboard", "max")
-    console.log("  ✓ Invalidated: transactions, accounts, dashboard")
+    logInfo("  ✓ Invalidated: transactions, accounts, dashboard")
   }
   if (options.syncInvestments) {
     revalidateTag("holdings", "max")
     revalidateTag("investments", "max")
     revalidateTag("accounts", "max")
     revalidateTag("dashboard", "max")
-    console.log("  ✓ Invalidated: holdings, investments, accounts, dashboard")
+    logInfo("  ✓ Invalidated: holdings, investments, accounts, dashboard")
   }
 
   // Print total summary
-  console.log("\n" + "═".repeat(60))
-  console.log(`📊 ${syncType.toUpperCase()} SYNC COMPLETE - TOTAL SUMMARY`)
-  console.log("═".repeat(60))
-  if (options.syncTransactions) {
-    console.log(`  Accounts updated: ${totalStats.accountsUpdated}`)
-    console.log(`  Transactions added: ${totalStats.transactionsAdded}`)
-    console.log(`  Transactions modified: ${totalStats.transactionsModified}`)
-    console.log(`  Transactions removed: ${totalStats.transactionsRemoved}`)
-  }
-  if (options.syncInvestments) {
-    console.log(`  Securities added: ${totalStats.securitiesAdded}`)
-    console.log(`  Holdings added: ${totalStats.holdingsAdded}`)
-    console.log(`  Holdings updated: ${totalStats.holdingsUpdated}`)
-    console.log(`  Holdings removed: ${totalStats.holdingsRemoved}`)
-    console.log(`  Investment transactions added: ${totalStats.investmentTransactionsAdded}`)
-  }
-  console.log("═".repeat(60) + "\n")
+  const totalSummaryMessage =
+    "\n" +
+    "═".repeat(60) +
+    `\n📊 ${syncType.toUpperCase()} SYNC COMPLETE - TOTAL SUMMARY\n` +
+    "═".repeat(60) +
+    (options.syncTransactions
+      ? `\n  Accounts updated: ${totalStats.accountsUpdated}` +
+        `\n  Transactions added: ${totalStats.transactionsAdded}` +
+        `\n  Transactions modified: ${totalStats.transactionsModified}` +
+        `\n  Transactions removed: ${totalStats.transactionsRemoved}`
+      : "") +
+    (options.syncInvestments
+      ? `\n  Securities added: ${totalStats.securitiesAdded}` +
+        `\n  Holdings added: ${totalStats.holdingsAdded}` +
+        `\n  Holdings updated: ${totalStats.holdingsUpdated}` +
+        `\n  Holdings removed: ${totalStats.holdingsRemoved}` +
+        `\n  Investment transactions added: ${totalStats.investmentTransactionsAdded}`
+      : "") +
+    "\n" +
+    "═".repeat(60) +
+    "\n"
+
+  logInfo(totalSummaryMessage, {
+    syncType,
+    ...totalStats,
+  })
 }

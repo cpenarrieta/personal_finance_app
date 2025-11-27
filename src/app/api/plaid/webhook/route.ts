@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma"
 import { syncItemTransactions } from "@/lib/sync/sync-service"
 import { categorizeTransactions } from "@/lib/ai/categorize-transaction"
 import { revalidateTag, revalidatePath } from "next/cache"
+import { logInfo, logWarn, logError } from "@/lib/utils/logger"
 
 // Plaid webhook types
 interface PlaidWebhook {
@@ -27,13 +28,13 @@ async function verifyPlaidWebhook(request: NextRequest, _body: string): Promise<
   const plaidVerification = request.headers.get("plaid-verification")
 
   if (!plaidVerification) {
-    console.error("❌ Missing Plaid-Verification header")
+    logError("❌ Missing Plaid-Verification header")
     return false
   }
 
   // If no webhook verification key is configured, skip verification but log a warning
   if (!process.env.PLAID_WEBHOOK_VERIFICATION_KEY) {
-    console.warn("⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)")
+    logWarn("⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)")
     return true
   }
 
@@ -44,16 +45,16 @@ async function verifyPlaidWebhook(request: NextRequest, _body: string): Promise<
     })
 
     if (!isValid.data) {
-      console.error("❌ Webhook verification failed")
+      logError("❌ Webhook verification failed")
       return false
     }
 
     // In production, you should verify the JWT signature using the public key
     // For now, we'll accept the presence of the verification header
-    console.log("✅ Webhook verification header present")
+    logInfo("✅ Webhook verification header present")
     return true
   } catch (error) {
-    console.error("❌ Error verifying webhook:", error)
+    logError("❌ Error verifying webhook:", error)
     return false
   }
 }
@@ -62,7 +63,10 @@ async function verifyPlaidWebhook(request: NextRequest, _body: string): Promise<
  * Handles transaction webhook events
  */
 async function handleTransactionWebhook(webhookCode: string, itemId: string): Promise<void> {
-  console.log(`📊 Processing transaction webhook: ${webhookCode} for item ${itemId}`)
+  logInfo(`📊 Processing transaction webhook: ${webhookCode} for item ${itemId}`, {
+    webhookCode,
+    itemId,
+  })
 
   // Find the item in our database
   const item = await prisma.item.findFirst({
@@ -70,11 +74,11 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
   })
 
   if (!item) {
-    console.error(`❌ Item not found: ${itemId}`)
+    logError(`❌ Item not found: ${itemId}`, undefined, { itemId })
     throw new Error(`Item not found: ${itemId}`)
   }
 
-  console.log(`🔄 Syncing transactions for item: ${item.id}`)
+  logInfo(`🔄 Syncing transactions for item: ${item.id}`, { itemId: item.id })
 
   try {
     // Sync transactions for this item
@@ -86,7 +90,7 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
       data: { lastTransactionsCursor: newCursor },
     })
 
-    console.log(`✅ Transaction sync complete:`, {
+    logInfo(`✅ Transaction sync complete`, {
       added: stats.transactionsAdded,
       modified: stats.transactionsModified,
       removed: stats.transactionsRemoved,
@@ -94,19 +98,21 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
 
     // Categorize new transactions with AI
     if (stats.newTransactionIds.length > 0) {
-      console.log(`🤖 Starting AI categorization for ${stats.newTransactionIds.length} new transaction(s)...`)
+      logInfo(`🤖 Starting AI categorization for ${stats.newTransactionIds.length} new transaction(s)...`, {
+        transactionCount: stats.newTransactionIds.length,
+      })
 
       // Run categorization in the background for all new transactions
       // Don't await to avoid blocking the webhook response
       categorizeTransactions(stats.newTransactionIds)
         .then(() => {
-          console.log(`✅ AI categorization complete`)
+          logInfo(`✅ AI categorization complete`)
           // Invalidate caches after categorization
           revalidateTag("transactions", "max")
           revalidatePath("/", "layout") // Invalidate Router Cache for all routes
         })
         .catch((error) => {
-          console.error(`❌ Error in batch categorization:`, error)
+          logError(`❌ Error in batch categorization:`, error)
         })
     }
 
@@ -120,7 +126,7 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
     // See: https://nextjs.org/docs/app/guides/caching#data-cache-and-client-side-router-cache
     revalidatePath("/", "layout")
   } catch (error) {
-    console.error(`❌ Error syncing transactions:`, error)
+    logError(`❌ Error syncing transactions:`, error)
     throw error
   }
 }
@@ -134,7 +140,10 @@ async function handleItemWebhook(
   error?: PlaidWebhook["error"],
   reason?: string,
 ): Promise<void> {
-  console.log(`🔔 Processing item webhook: ${webhookCode} for item ${itemId}`)
+  logInfo(`🔔 Processing item webhook: ${webhookCode} for item ${itemId}`, {
+    webhookCode,
+    itemId,
+  })
 
   // Find the item in our database
   const item = await prisma.item.findFirst({
@@ -142,14 +151,14 @@ async function handleItemWebhook(
   })
 
   if (!item) {
-    console.error(`❌ Item not found: ${itemId}`)
+    logError(`❌ Item not found: ${itemId}`, undefined, { itemId })
     return
   }
 
   // Handle different item webhook codes
   switch (webhookCode) {
     case "ERROR":
-      console.error(`❌ Item error:`, error)
+      logError(`❌ Item error:`, error, { itemId: item.id, errorCode: error?.error_code })
       await prisma.item.update({
         where: { id: item.id },
         data: {
@@ -159,7 +168,7 @@ async function handleItemWebhook(
       break
 
     case "PENDING_EXPIRATION":
-      console.warn(`⚠️  Item credentials expiring soon`)
+      logWarn(`⚠️  Item credentials expiring soon`, { itemId: item.id })
       await prisma.item.update({
         where: { id: item.id },
         data: {
@@ -169,7 +178,7 @@ async function handleItemWebhook(
       break
 
     case "PENDING_DISCONNECT":
-      console.warn(`⚠️  Item pending disconnect. Reason: ${reason}`)
+      logWarn(`⚠️  Item pending disconnect. Reason: ${reason}`, { itemId: item.id, reason })
       await prisma.item.update({
         where: { id: item.id },
         data: {
@@ -179,7 +188,7 @@ async function handleItemWebhook(
       break
 
     case "LOGIN_REPAIRED":
-      console.log(`✅ Item login repaired`)
+      logInfo(`✅ Item login repaired`, { itemId: item.id })
       await prisma.item.update({
         where: { id: item.id },
         data: {
@@ -189,7 +198,7 @@ async function handleItemWebhook(
       break
 
     default:
-      console.log(`ℹ️  Unhandled item webhook code: ${webhookCode}`)
+      logInfo(`ℹ️  Unhandled item webhook code: ${webhookCode}`, { webhookCode, itemId: item.id })
   }
 }
 
@@ -202,7 +211,7 @@ export async function POST(request: NextRequest) {
     const bodyText = await request.text()
     const body: PlaidWebhook = JSON.parse(bodyText)
 
-    console.log("\n🔔 Received Plaid webhook:", {
+    logInfo("\n🔔 Received Plaid webhook:", {
       type: body.webhook_type,
       code: body.webhook_code,
       itemId: body.item_id,
@@ -211,7 +220,7 @@ export async function POST(request: NextRequest) {
     // Verify the webhook is from Plaid
     const isValid = await verifyPlaidWebhook(request, bodyText)
     if (!isValid) {
-      console.error("❌ Webhook verification failed")
+      logError("❌ Webhook verification failed")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -230,7 +239,7 @@ export async function POST(request: NextRequest) {
             break
 
           case "TRANSACTIONS_REMOVED":
-            console.log("🗑️  Transactions removed:", body.removed_transactions)
+            logInfo("🗑️  Transactions removed:", { removedTransactions: body.removed_transactions })
             // The sync will handle removed transactions automatically
             if (body.item_id) {
               await handleTransactionWebhook(body.webhook_code, body.item_id)
@@ -238,7 +247,9 @@ export async function POST(request: NextRequest) {
             break
 
           default:
-            console.log(`ℹ️  Unhandled transaction webhook code: ${body.webhook_code}`)
+            logInfo(`ℹ️  Unhandled transaction webhook code: ${body.webhook_code}`, {
+              webhookCode: body.webhook_code,
+            })
         }
         break
 
@@ -250,13 +261,13 @@ export async function POST(request: NextRequest) {
         break
 
       default:
-        console.log(`ℹ️  Unhandled webhook type: ${body.webhook_type}`)
+        logInfo(`ℹ️  Unhandled webhook type: ${body.webhook_type}`, { webhookType: body.webhook_type })
     }
 
     // Always return 200 to acknowledge receipt
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error("❌ Error processing webhook:", error)
+    logError("❌ Error processing webhook:", error)
 
     // Return 200 anyway to prevent Plaid from retrying
     // Log the error for investigation

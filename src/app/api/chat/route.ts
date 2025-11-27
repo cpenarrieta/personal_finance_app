@@ -6,6 +6,7 @@
 import { openai } from "@ai-sdk/openai"
 import { streamText, convertToModelMessages, stepCountIs, type UIMessage, type InferUITools } from "ai"
 import { transactionTools } from "@/lib/ai/transaction-tools"
+import { logInfo, logError } from "@/lib/utils/logger"
 
 export const maxDuration = 30
 
@@ -18,9 +19,10 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json()
 
-    console.log("\n=== CHAT API REQUEST ===")
-    console.log("📨 Incoming messages count:", messages.length)
-    console.log("📝 Last message:", JSON.stringify(messages[messages.length - 1], null, 2))
+    logInfo("\n=== CHAT API REQUEST ===", {
+      messageCount: messages.length,
+      lastMessage: messages[messages.length - 1],
+    })
 
     const result = streamText({
       model: openai("gpt-5-mini"),
@@ -70,56 +72,52 @@ Example responses:
       tools: transactionTools,
       stopWhen: [stepCountIs(10)], // Allow up to 10 tool calls
       onStepFinish: async (result) => {
-        console.log("\n=== STEP FINISHED ===")
-        console.log("Finish reason:", result.finishReason)
-        console.log("Text length:", result.text?.length || 0)
+        logInfo("\n=== STEP FINISHED ===", {
+          finishReason: result.finishReason,
+          textLength: result.text?.length || 0,
+        })
 
         if (result.toolCalls && result.toolCalls.length > 0) {
-          console.log("\n🔧 TOOL CALLS:")
-          result.toolCalls.forEach((call, idx) => {
-            console.log(`  ${idx + 1}. ${call.toolName}`)
-            if ("input" in call) {
-              console.log(`     Input:`, JSON.stringify(call.input, null, 2))
-            }
+          logInfo("\n🔧 TOOL CALLS", {
+            toolCallsCount: result.toolCalls.length,
+            toolCalls: result.toolCalls.map((call, idx) => ({
+              index: idx + 1,
+              toolName: call.toolName,
+              input: "input" in call ? call.input : undefined,
+            })),
           })
         }
 
         if (result.toolResults && result.toolResults.length > 0) {
-          console.log("\n✅ TOOL RESULTS:")
-          result.toolResults.forEach((toolResult, idx) => {
-            console.log(`  ${idx + 1}. ${toolResult.toolName}`)
-            console.log(`     Full toolResult object keys:`, Object.keys(toolResult))
-            console.log(`     Full toolResult:`, JSON.stringify(toolResult, null, 2))
+          logInfo("\n✅ TOOL RESULTS", {
+            toolResultsCount: result.toolResults.length,
+            toolResults: result.toolResults.map((toolResult, idx) => ({
+              index: idx + 1,
+              toolName: toolResult.toolName,
+              keys: Object.keys(toolResult),
+            })),
           })
         }
       },
       onFinish: async (result) => {
-        console.log("\n\n🏁 === FINAL RESULT ===")
-        console.log("Finish reason:", result.finishReason)
-        console.log("Total steps:", result.steps?.length || 0)
-        console.log("Response messages:", result.response?.messages?.length || 0)
-
-        if (result.toolCalls && result.toolCalls.length > 0) {
-          console.log(
-            "\n📋 All tool calls:",
-            result.toolCalls.map((c) => c.toolName),
-          )
-        }
-
-        if (result.toolResults && result.toolResults.length > 0) {
-          console.log("\n📊 All tool results:")
-          result.toolResults.forEach((tr) => {
-            const hasOutput = "output" in tr
-            console.log(`  - ${tr.toolName}: ${hasOutput ? "✓ has output" : "✗ no output"}`)
-          })
-        }
+        logInfo("\n\n🏁 === FINAL RESULT ===", {
+          finishReason: result.finishReason,
+          totalSteps: result.steps?.length || 0,
+          responseMessages: result.response?.messages?.length || 0,
+          allToolCalls: result.toolCalls?.map((c) => c.toolName) || [],
+          toolResultsSummary:
+            result.toolResults?.map((tr) => ({
+              toolName: tr.toolName,
+              hasOutput: "output" in tr,
+            })) || [],
+        })
       },
     })
 
-    console.log("📤 Streaming response started")
+    logInfo("📤 Streaming response started")
     return result.toUIMessageStreamResponse()
   } catch (error) {
-    console.error("Chat API error:", error)
+    logError("Chat API error:", error)
     return new Response(
       JSON.stringify({
         error: "Failed to process chat request",
