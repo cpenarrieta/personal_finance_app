@@ -39,9 +39,27 @@ async function verifyPlaidWebhook(request: NextRequest, _body: string): Promise<
   }
 
   try {
+    // Extract the kid from the JWT header
+    // JWT format: header.payload.signature
+    const jwtParts = plaidVerification.split(".")
+    if (jwtParts.length !== 3 || !jwtParts[0]) {
+      logError("❌ Invalid JWT format")
+      return false
+    }
+
+    // Decode the header (first part) from base64
+    const headerJson = Buffer.from(jwtParts[0], "base64").toString("utf-8")
+    const header = JSON.parse(headerJson) as { kid?: string }
+    const keyId = header.kid
+
+    if (!keyId) {
+      logError("❌ Missing kid in JWT header")
+      return false
+    }
+
     const plaid = getPlaidClient()
     const isValid = await plaid.webhookVerificationKeyGet({
-      key_id: plaidVerification,
+      key_id: keyId,
     })
 
     if (!isValid.data) {
