@@ -113,7 +113,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.error).toBe("Unauthorized")
-      expect(console.error).toHaveBeenCalledWith("❌ Missing Plaid-Verification header")
+      expect(console.error).toHaveBeenCalledWith("❌ Missing Plaid-Verification header", "", "")
     })
 
     it("should accept webhook with verification header when no secret is set", async () => {
@@ -136,6 +136,7 @@ describe("Plaid Webhook API", () => {
       expect(data.received).toBe(true)
       expect(console.warn).toHaveBeenCalledWith(
         "⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)",
+        "",
       )
     })
 
@@ -147,8 +148,15 @@ describe("Plaid Webhook API", () => {
         webhook_code: "SYNC_UPDATES_AVAILABLE",
         item_id: "test-plaid-item-id",
       }
+
+      // Create a valid JWT-like token with kid in the header
+      const jwtHeader = Buffer.from(JSON.stringify({ kid: "test-verification-key" })).toString("base64")
+      const jwtPayload = Buffer.from(JSON.stringify({ test: "payload" })).toString("base64")
+      const jwtSignature = "test-signature"
+      const validJwt = `${jwtHeader}.${jwtPayload}.${jwtSignature}`
+
       const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-verification-key",
+        "plaid-verification": validJwt,
       })
 
       mockPlaidClient.webhookVerificationKeyGet.mockResolvedValue({
@@ -175,8 +183,15 @@ describe("Plaid Webhook API", () => {
         webhook_code: "SYNC_UPDATES_AVAILABLE",
         item_id: "test-plaid-item-id",
       }
+
+      // Create a valid JWT-like token with kid in the header
+      const jwtHeader = Buffer.from(JSON.stringify({ kid: "invalid-key" })).toString("base64")
+      const jwtPayload = Buffer.from(JSON.stringify({ test: "payload" })).toString("base64")
+      const jwtSignature = "test-signature"
+      const validJwt = `${jwtHeader}.${jwtPayload}.${jwtSignature}`
+
       const request = createMockRequest(webhookBody, {
-        "plaid-verification": "invalid-key",
+        "plaid-verification": validJwt,
       })
 
       mockPlaidClient.webhookVerificationKeyGet.mockResolvedValue({
@@ -190,7 +205,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.error).toBe("Unauthorized")
-      expect(console.error).toHaveBeenCalledWith("❌ Webhook verification failed")
+      expect(console.error).toHaveBeenCalledWith("❌ Webhook verification failed", "", "")
     })
 
     it("should reject webhook when verification throws error", async () => {
@@ -201,8 +216,15 @@ describe("Plaid Webhook API", () => {
         webhook_code: "SYNC_UPDATES_AVAILABLE",
         item_id: "test-plaid-item-id",
       }
+
+      // Create a valid JWT-like token with kid in the header
+      const jwtHeader = Buffer.from(JSON.stringify({ kid: "test-key" })).toString("base64")
+      const jwtPayload = Buffer.from(JSON.stringify({ test: "payload" })).toString("base64")
+      const jwtSignature = "test-signature"
+      const validJwt = `${jwtHeader}.${jwtPayload}.${jwtSignature}`
+
       const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
+        "plaid-verification": validJwt,
       })
 
       mockPlaidClient.webhookVerificationKeyGet.mockRejectedValue(new Error("Verification service unavailable"))
@@ -214,7 +236,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.error).toBe("Unauthorized")
-      expect(console.error).toHaveBeenCalledWith("❌ Error verifying webhook:", expect.any(Error))
+      expect(console.error).toHaveBeenCalledWith("❌ Error verifying webhook:", expect.any(Error), "")
     })
   })
 
@@ -337,7 +359,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(syncServiceModule.syncItemTransactions).toHaveBeenCalled()
-      expect(console.log).toHaveBeenCalledWith("🗑️  Transactions removed:", ["txn-1", "txn-2"])
+      expect(console.log).toHaveBeenCalledWith("🗑️  Transactions removed:", { removedTransactions: ["txn-1", "txn-2"] })
     })
 
     it("should skip transaction webhook if item_id is missing", async () => {
@@ -379,7 +401,9 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(console.log).toHaveBeenCalledWith("ℹ️  Unhandled transaction webhook code: UNKNOWN_CODE")
+      expect(console.log).toHaveBeenCalledWith("ℹ️  Unhandled transaction webhook code: UNKNOWN_CODE", {
+        webhookCode: "UNKNOWN_CODE",
+      })
       expect(syncServiceModule.syncItemTransactions).not.toHaveBeenCalled()
     })
   })
@@ -411,7 +435,11 @@ describe("Plaid Webhook API", () => {
         where: { id: mockItem.id },
         data: { status: "ERROR" },
       })
-      expect(console.error).toHaveBeenCalledWith("❌ Item error:", webhookBody.error)
+      expect(console.error).toHaveBeenCalledWith(
+        "❌ Item error:",
+        webhookBody.error,
+        { itemId: mockItem.id, errorCode: "ITEM_LOGIN_REQUIRED" },
+      )
     })
 
     it("should handle PENDING_EXPIRATION item webhook", async () => {
@@ -436,7 +464,7 @@ describe("Plaid Webhook API", () => {
         where: { id: mockItem.id },
         data: { status: "PENDING_EXPIRATION" },
       })
-      expect(console.warn).toHaveBeenCalledWith("⚠️  Item credentials expiring soon")
+      expect(console.warn).toHaveBeenCalledWith("⚠️  Item credentials expiring soon", { itemId: mockItem.id })
     })
 
     it("should handle LOGIN_REPAIRED item webhook", async () => {
@@ -461,7 +489,7 @@ describe("Plaid Webhook API", () => {
         where: { id: mockItem.id },
         data: { status: "ACTIVE" },
       })
-      expect(console.log).toHaveBeenCalledWith("✅ Item login repaired")
+      expect(console.log).toHaveBeenCalledWith("✅ Item login repaired", { itemId: mockItem.id })
     })
 
     it("should handle unhandled item webhook codes", async () => {
@@ -482,7 +510,10 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(console.log).toHaveBeenCalledWith("ℹ️  Unhandled item webhook code: UNKNOWN_CODE")
+      expect(console.log).toHaveBeenCalledWith("ℹ️  Unhandled item webhook code: UNKNOWN_CODE", {
+        webhookCode: "UNKNOWN_CODE",
+        itemId: mockItem.id,
+      })
     })
 
     it("should skip item webhook if item_id is missing", async () => {
@@ -530,7 +561,9 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(console.error).toHaveBeenCalledWith("❌ Item not found: non-existent-item-id")
+      expect(console.error).toHaveBeenCalledWith("❌ Item not found: non-existent-item-id", "", {
+        itemId: "non-existent-item-id",
+      })
       expect(prismaModule.prisma.item.update).not.toHaveBeenCalled()
     })
   })
@@ -557,7 +590,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(data.error).toBe("Item not found: non-existent-item-id")
-      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error))
+      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error), "")
     })
 
     it("should return 200 with error when sync fails", async () => {
@@ -581,7 +614,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(data.error).toBe("Sync service error")
-      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error))
+      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error), "")
     })
 
     it("should return 200 with error when database update fails", async () => {
@@ -609,7 +642,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(data.error).toBe("Database error")
-      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error))
+      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error), "")
     })
 
     it("should handle malformed JSON gracefully", async () => {
@@ -629,7 +662,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(data.error).toBeDefined()
-      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error))
+      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error), "")
     })
   })
 
@@ -652,7 +685,9 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(console.log).toHaveBeenCalledWith("ℹ️  Unhandled webhook type: UNKNOWN_TYPE")
+      expect(console.log).toHaveBeenCalledWith("ℹ️  Unhandled webhook type: UNKNOWN_TYPE", {
+        webhookType: "UNKNOWN_TYPE",
+      })
     })
   })
 
@@ -694,11 +729,14 @@ describe("Plaid Webhook API", () => {
       await POST(request)
 
       // Assert
-      expect(console.log).toHaveBeenCalledWith("✅ Transaction sync complete:", {
-        added: 5,
-        modified: 2,
-        removed: 1,
-      })
+      expect(console.log).toHaveBeenCalledWith(
+        "✅ Transaction sync complete",
+        {
+          added: 5,
+          modified: 2,
+          removed: 1,
+        },
+      )
     })
   })
 })
