@@ -561,7 +561,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(console.error).toHaveBeenCalledWith("❌ Item not found: non-existent-item-id", undefined, {
+      expect(console.error).toHaveBeenCalledWith("❌ Item not found: non-existent-item-id", "", {
         itemId: "non-existent-item-id",
       })
       expect(prismaModule.prisma.item.update).not.toHaveBeenCalled()
