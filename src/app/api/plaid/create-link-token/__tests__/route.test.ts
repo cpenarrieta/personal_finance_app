@@ -39,6 +39,7 @@ describe("Plaid Create Link Token API - POST", () => {
     process.env.PLAID_PRODUCTS = "transactions,investments"
     process.env.PLAID_COUNTRY_CODES = "US,CA"
     process.env.PLAID_REDIRECT_URI = "https://example.com/oauth-redirect"
+    process.env.BETTER_AUTH_URL = "https://example.com"
   })
 
   afterEach(() => {
@@ -46,6 +47,7 @@ describe("Plaid Create Link Token API - POST", () => {
     delete process.env.PLAID_PRODUCTS
     delete process.env.PLAID_COUNTRY_CODES
     delete process.env.PLAID_REDIRECT_URI
+    delete process.env.BETTER_AUTH_URL
   })
 
   describe("New Item Mode", () => {
@@ -69,6 +71,7 @@ describe("Plaid Create Link Token API - POST", () => {
         client_name: "Personal Finance (Local)",
         language: "en",
         redirect_uri: "https://example.com/oauth-redirect",
+        webhook: "https://example.com/api/plaid/webhook",
         products: ["transactions", "investments"],
         country_codes: ["US", "CA"],
       })
@@ -93,6 +96,7 @@ describe("Plaid Create Link Token API - POST", () => {
         client_name: "Personal Finance (Local)",
         language: "en",
         redirect_uri: undefined,
+        webhook: "https://example.com/api/plaid/webhook",
         products: ["transactions", "investments"],
         country_codes: ["US", "CA"],
       })
@@ -160,6 +164,7 @@ describe("Plaid Create Link Token API - POST", () => {
         client_name: "Personal Finance (Local)",
         language: "en",
         redirect_uri: "https://example.com/oauth-redirect",
+        webhook: "https://example.com/api/plaid/webhook",
         access_token: "access-token-abc",
         country_codes: ["US", "CA"],
       })
