@@ -27,6 +27,19 @@ Sentry.init({
     if (process.env.NODE_ENV === "development") {
       return null
     }
+
+    // Filter out Next.js internal errors
+    if (event.message) {
+      // Ignore Next.js internal 500.html errors (App Router uses global-error.tsx)
+      if (event.message.includes("Failed to load static file for page: /500")) {
+        return null
+      }
+      // Ignore Next.js static generation bailout errors (expected in dynamic routes)
+      if (event.message.includes("NEXT_STATIC_GEN_BAILOUT")) {
+        return null
+      }
+    }
+
     return event
   },
 
