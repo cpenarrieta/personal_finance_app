@@ -1,6 +1,7 @@
 "use server"
 
 import { smartAnalyzeReceipt, type SmartAnalysisResult } from "@/lib/ai/smart-analyze-receipt"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Server action to smart analyze receipt files
@@ -11,7 +12,7 @@ export async function smartAnalyzeReceiptAction(transactionId: string): Promise<
     const result = await smartAnalyzeReceipt(transactionId)
     return result
   } catch (error) {
-    console.error("Error in smartAnalyzeReceiptAction:", error)
+    logError("Error in smartAnalyzeReceiptAction:", error)
     return null
   }
 }

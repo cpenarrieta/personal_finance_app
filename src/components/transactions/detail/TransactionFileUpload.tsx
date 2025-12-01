@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Upload, X, FileText, Image as ImageIcon, File } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
+import { logError } from "@/lib/utils/logger"
 
 interface TransactionFileUploadProps {
   transactionId: string
@@ -55,7 +56,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
               const data = await response.json()
               callback(data.signature)
             } catch (err) {
-              console.error("Error getting signature:", err)
+              logError("Error getting signature:", err)
               toast.error("Failed to authorize upload")
               setIsUploading(false)
             }
@@ -70,7 +71,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
         },
         async (error: any, result: any) => {
           if (error) {
-            console.error("Upload error:", error)
+            logError("Upload error:", error)
             setUploadError(error.message || "Failed to upload file")
             toast.error("Failed to upload file")
             setIsUploading(false)
@@ -100,7 +101,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
               onFilesUpdate(updatedFiles)
               toast.success("File uploaded successfully")
             } catch (err) {
-              console.error("Error updating transaction:", err)
+              logError("Error updating transaction:", err)
               toast.error("Failed to save file to transaction")
             }
           }
@@ -113,7 +114,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
 
       widget?.open()
     } catch (err) {
-      console.error("Error opening upload widget:", err)
+      logError("Error opening upload widget:", err)
       setUploadError(err instanceof Error ? err.message : "Failed to open upload widget")
       toast.error("Failed to open upload widget")
       setIsUploading(false)
@@ -141,7 +142,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
       onFilesUpdate(updatedFiles)
       toast.success("File removed successfully")
     } catch (err) {
-      console.error("Error removing file:", err)
+      logError("Error removing file:", err)
       toast.error("Failed to remove file")
     }
   }

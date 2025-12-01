@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import type { Prisma } from "@prisma/client"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Get transactions by category and optional subcategory
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(transactionsWithFlatTags)
   } catch (error) {
-    console.error("Error fetching transactions by category:", error)
+    logError("Error fetching transactions by category:", error)
     return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 })
   }
 }

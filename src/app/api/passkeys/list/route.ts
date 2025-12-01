@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth/auth"
 import { prisma } from "@/lib/db/prisma"
 import { NextRequest, NextResponse } from "next/server"
+import { logError } from "@/lib/utils/logger"
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ passkeys })
   } catch (error) {
-    console.error("Failed to list passkeys:", error)
+    logError("Failed to list passkeys:", error)
     return NextResponse.json({ error: "Failed to list passkeys" }, { status: 500 })
   }
 }

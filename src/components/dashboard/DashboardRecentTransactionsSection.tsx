@@ -2,6 +2,7 @@ import { TransactionTable } from "@/components/dashboard/TransactionTable"
 import { getRecentTransactions } from "@/lib/dashboard/data"
 import { TransitionLink } from "@/components/shared/TransitionLink"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Async Server Component for Recent Transactions
@@ -26,7 +27,7 @@ export async function DashboardRecentTransactionsSection() {
       </div>
     )
   } catch (error) {
-    console.error("Failed to load recent transactions:", error)
+    logError("Failed to load recent transactions:", error)
     return (
       <ErrorFallback
         error={error as Error}

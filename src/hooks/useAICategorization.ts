@@ -5,6 +5,7 @@ import {
   applyAICategorization,
   type AICategorizeResponse,
 } from "@/app/(app)/transactions/[id]/actions"
+import { logError } from "@/lib/utils/logger"
 
 export function useAICategorization(transactionId: string) {
   const [isLoading, setIsLoading] = useState(false)
@@ -28,7 +29,7 @@ export function useAICategorization(transactionId: string) {
       setSuggestion(result.data)
       setIsDialogOpen(true)
     } catch (error) {
-      console.error("Error getting AI categorization:", error)
+      logError("Error getting AI categorization:", error)
       setError(error instanceof Error ? error.message : "Failed to get AI categorization")
     } finally {
       setIsLoading(false)
@@ -54,7 +55,7 @@ export function useAICategorization(transactionId: string) {
       setSuggestion(null)
       router.refresh()
     } catch (error) {
-      console.error("Error applying AI categorization:", error)
+      logError("Error applying AI categorization:", error)
       setError(error instanceof Error ? error.message : "Failed to apply AI categorization")
     } finally {
       setIsApplying(false)

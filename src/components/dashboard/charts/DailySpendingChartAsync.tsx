@@ -2,6 +2,7 @@ import { DailySpendingChart } from "@/components/charts/DailySpendingChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareDailySpendingData } from "@/lib/dashboard/calculations"
 import { ChartErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 
 interface DailySpendingChartAsyncProps {
   monthsBack?: number
@@ -18,7 +19,7 @@ export async function DailySpendingChartAsync({ monthsBack = 1 }: DailySpendingC
 
     return <DailySpendingChart data={dailySpendingData} />
   } catch (error) {
-    console.error("Failed to load daily spending chart:", error)
+    logError("Failed to load daily spending chart:", error)
     return <ChartErrorFallback error={error as Error} />
   }
 }

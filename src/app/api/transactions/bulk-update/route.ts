@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { bulkUpdateTransactionsSchema, safeParseRequestBody } from "@/types/api"
 import { revalidateTag, revalidatePath } from "next/cache"
+import { logError } from "@/lib/utils/logger"
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -69,7 +70,7 @@ export async function PATCH(request: NextRequest) {
       updatedCount: transactionIds.length,
     })
   } catch (error) {
-    console.error("Error bulk updating transactions:", error)
+    logError("Error bulk updating transactions:", error)
     return NextResponse.json({ error: "Failed to bulk update transactions" }, { status: 500 })
   }
 }

@@ -4,6 +4,7 @@ import { categorizeTransaction, applyCategorization } from "@/lib/ai/categorize-
 import { prisma } from "@/lib/db/prisma"
 import { revalidateTag } from "next/cache"
 import { z } from "zod"
+import { logError } from "@/lib/utils/logger"
 
 const AICategorizeResponseSchema = z.object({
   categoryId: z.string().nullable(),
@@ -62,7 +63,7 @@ export async function getAICategorization(transactionId: string): Promise<{
       },
     }
   } catch (error) {
-    console.error("Error getting AI categorization:", error)
+    logError("Error getting AI categorization:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get AI categorization",
@@ -93,7 +94,7 @@ export async function applyAICategorization(
       success: true,
     }
   } catch (error) {
-    console.error("Error applying AI categorization:", error)
+    logError("Error applying AI categorization:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to apply AI categorization",

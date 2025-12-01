@@ -1,6 +1,7 @@
 import { UncategorizedBanner } from "@/components/dashboard/UncategorizedBanner"
 import { getUncategorizedTransactions } from "@/lib/dashboard/data"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Async Server Component for Uncategorized Transactions Banner
@@ -12,7 +13,7 @@ export async function DashboardUncategorizedSection() {
 
     return <UncategorizedBanner count={uncategorizedCount} />
   } catch (error) {
-    console.error("Failed to load uncategorized transactions:", error)
+    logError("Failed to load uncategorized transactions:", error)
     return (
       <ErrorFallback
         error={error as Error}

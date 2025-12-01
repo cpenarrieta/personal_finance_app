@@ -2,6 +2,7 @@ import { format, startOfMonth, subMonths } from "date-fns"
 import { TransactionTable } from "@/components/dashboard/TransactionTable"
 import { getTopExpensiveTransactions } from "@/lib/dashboard/data"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 
 interface DashboardTopExpensesSectionProps {
   monthsBack?: number
@@ -47,7 +48,7 @@ export async function DashboardTopExpensesSection({ monthsBack = 0 }: DashboardT
       </div>
     )
   } catch (error) {
-    console.error("Failed to load top expenses:", error)
+    logError("Failed to load top expenses:", error)
     return (
       <ErrorFallback
         error={error as Error}

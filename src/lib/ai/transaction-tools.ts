@@ -7,6 +7,7 @@ import { tool } from "ai"
 import { z } from "zod"
 import { getAllTransactions } from "@/lib/db/queries"
 import { getTransactionDate, isTransactionInDateRange, getTransactionMonth } from "@/lib/utils/transaction-date"
+import { logInfo, logError } from "@/lib/utils/logger"
 
 // Type for a single transaction from getAllTransactions
 type Transaction = Awaited<ReturnType<typeof getAllTransactions>>[number]
@@ -86,12 +87,11 @@ export const getSpendingByCategory = tool({
     limit?: number
     sortBy?: "amount" | "count"
   }) => {
-    console.log("\n🔧 [getSpendingByCategory] EXECUTING")
-    console.log("  Input:", { startDate, endDate, limit, sortBy })
+    logInfo("\n🔧 [getSpendingByCategory] EXECUTING", { startDate, endDate, limit, sortBy })
 
     try {
       const transactions = await getAllTransactions()
-      console.log("  Fetched transactions:", transactions.length)
+      logInfo("  Fetched transactions", { count: transactions.length })
 
       // Filter by date range
       const filtered = transactions.filter((t: Transaction) => {
@@ -136,10 +136,10 @@ export const getSpendingByCategory = tool({
         averageTransaction: Number((c.total / c.count).toFixed(2)),
       }))
 
-      console.log("  Returning result:", result.length, "categories")
+      logInfo("  Returning result", { categoryCount: result.length })
       return result
     } catch (error) {
-      console.error("  ❌ ERROR in getSpendingByCategory:", error)
+      logError("  ❌ ERROR in getSpendingByCategory:", error)
       throw error
     }
   },
@@ -208,12 +208,11 @@ export const getTotalSpending = tool({
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
   }),
   execute: async ({ startDate, endDate }: { startDate: string; endDate: string }) => {
-    console.log("\n💰 [getTotalSpending] EXECUTING")
-    console.log("  Input:", { startDate, endDate })
+    logInfo("\n💰 [getTotalSpending] EXECUTING", { startDate, endDate })
 
     try {
       const transactions = await getAllTransactions()
-      console.log("  Fetched transactions:", transactions.length)
+      logInfo("  Fetched transactions", { count: transactions.length })
 
       // Filter by date range
       const filtered = transactions.filter((t: Transaction) => {
@@ -243,10 +242,10 @@ export const getTotalSpending = tool({
         },
       }
 
-      console.log("  Returning result:", result)
+      logInfo("  Returning result", { result })
       return result
     } catch (error) {
-      console.error("  ❌ ERROR in getTotalSpending:", error)
+      logError("  ❌ ERROR in getTotalSpending:", error)
       throw error
     }
   },
@@ -369,10 +368,7 @@ export const renderChart = tool({
     yAxisLabel?: string
     formatValue?: "currency" | "number" | "percentage"
   }) => {
-    console.log("\n📊 [renderChart] EXECUTING")
-    console.log("  Type:", type)
-    console.log("  Title:", title)
-    console.log("  Data points:", data.length)
+    logInfo("\n📊 [renderChart] EXECUTING", { type, title, dataPointCount: data.length })
 
     // Return the chart configuration for the frontend to render
     const result = {
@@ -385,7 +381,7 @@ export const renderChart = tool({
       formatValue,
     }
 
-    console.log("  Returning chart config:", JSON.stringify(result, null, 2))
+    logInfo("  Returning chart config", { chartConfig: result })
     return result
   },
 })

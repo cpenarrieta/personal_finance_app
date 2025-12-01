@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { authClient } from "@/lib/auth/auth-client"
 import { Fingerprint, Smartphone, Trash2, Plus, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { logError } from "@/lib/utils/logger"
 
 interface Passkey {
   id: string
@@ -33,7 +34,7 @@ export default function PasskeyManagement() {
         setPasskeys(data.passkeys || [])
       }
     } catch (error) {
-      console.error("Failed to load passkeys:", error)
+      logError("Failed to load passkeys:", error)
       toast.error("Failed to load passkeys")
     } finally {
       setLoading(false)
@@ -64,7 +65,7 @@ export default function PasskeyManagement() {
       setShowAddForm(false)
       await loadPasskeys()
     } catch (error: any) {
-      console.error("Failed to add passkey:", error)
+      logError("Failed to add passkey:", error)
       toast.error(error.message || "Failed to add passkey. Please try again.")
     } finally {
       setAdding(false)
@@ -89,7 +90,7 @@ export default function PasskeyManagement() {
         toast.error("Failed to remove passkey")
       }
     } catch (error) {
-      console.error("Failed to delete passkey:", error)
+      logError("Failed to delete passkey:", error)
       toast.error("Failed to remove passkey")
     }
   }

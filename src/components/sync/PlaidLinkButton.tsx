@@ -5,6 +5,7 @@ import { usePlaidLink } from "react-plaid-link"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Loader2, AlertTriangle } from "lucide-react"
+import { logError } from "@/lib/utils/logger"
 import {
   Dialog,
   DialogContent,
@@ -61,7 +62,7 @@ export default function PlaidLinkButton({
       })
       .then((d) => setLinkToken(d.link_token))
       .catch((err) => {
-        console.error("Error creating link token:", err)
+        logError("Error creating link token:", err)
         setError(err.message)
       })
   }, [accessToken])
@@ -172,7 +173,7 @@ export default function PlaidLinkButton({
           router.refresh()
         }
       } catch (err: any) {
-        console.error("Error in onSuccess:", err)
+        logError("Error in onSuccess:", err)
         setError(err.message || "Failed to connect account")
       }
     },

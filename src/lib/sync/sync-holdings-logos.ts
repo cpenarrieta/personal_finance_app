@@ -1,5 +1,6 @@
 // lib/syncHoldingsLogos.ts
 import { prisma } from "../db/prisma"
+import { logInfo, logError } from "../utils/logger"
 
 const LOGO_DEV_TOKEN = process.env.LOGO_DEV_TOKEN || "pk_A4XxtLBuSvWdGiAYJMzjTA"
 
@@ -11,7 +12,7 @@ export async function syncHoldingsLogos() {
     },
   })
 
-  console.log(`Syncing logos for ${securities.length} securities...`)
+  logInfo(`Syncing logos for ${securities.length} securities...`)
 
   for (const security of securities) {
     if (!security.tickerSymbol) continue
@@ -21,7 +22,7 @@ export async function syncHoldingsLogos() {
 
       // Use logo.dev ticker search - it supports direct ticker lookups!
       const logoUrl = `https://img.logo.dev/ticker/${ticker}?token=${LOGO_DEV_TOKEN}&retina=true`
-      console.log(`${ticker}: ${logoUrl}`)
+      logInfo(`${ticker}: ${logoUrl}`)
 
       // Update the security with the logo URL
       await prisma.security.update({
@@ -29,9 +30,9 @@ export async function syncHoldingsLogos() {
         data: { logoUrl },
       })
     } catch (error) {
-      console.error(`Error setting logo for ${security.tickerSymbol}:`, error)
+      logError(`Error setting logo for ${security.tickerSymbol}:`, error)
     }
   }
 
-  console.log("Holdings logo sync completed!")
+  logInfo("Holdings logo sync completed!")
 }

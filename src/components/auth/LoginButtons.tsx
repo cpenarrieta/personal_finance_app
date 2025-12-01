@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Fingerprint } from "lucide-react"
 import { toast } from "sonner"
+import { logError } from "@/lib/utils/logger"
 
 export function LoginButtons() {
   const router = useRouter()
@@ -28,7 +29,7 @@ export function LoginButtons() {
         provider: "google",
       })
     } catch (error) {
-      console.error("Google login error:", error)
+      logError("Google login error:", error)
       setIsLoading(null)
     }
   }
@@ -40,7 +41,7 @@ export function LoginButtons() {
         provider: "github",
       })
     } catch (error) {
-      console.error("GitHub login error:", error)
+      logError("GitHub login error:", error)
       setIsLoading(null)
     }
   }
@@ -51,7 +52,7 @@ export function LoginButtons() {
       const result = await authClient.signIn.passkey()
 
       if (result.error) {
-        console.error("Passkey login error:", result.error)
+        logError("Passkey login error:", result.error)
         toast.error(result.error.message || "Failed to sign in with passkey")
         setIsLoading(null)
         return
@@ -61,7 +62,7 @@ export function LoginButtons() {
       router.push("/")
       router.refresh()
     } catch (error: any) {
-      console.error("Passkey login error:", error)
+      logError("Passkey login error:", error)
       toast.error(error.message || "Failed to sign in with passkey")
       setIsLoading(null)
     }

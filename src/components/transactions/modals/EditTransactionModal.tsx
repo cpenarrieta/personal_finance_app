@@ -6,6 +6,7 @@ import { format } from "date-fns"
 import { toast } from "sonner"
 import { formatAmount } from "@/lib/utils"
 import { formatTransactionDate } from "@/lib/utils/transaction-date"
+import { logError } from "@/lib/utils/logger"
 import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -102,7 +103,7 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
       router.refresh()
       onClose()
     } catch (error) {
-      console.error("Error updating transaction:", error)
+      logError("Error updating transaction:", error)
       toast.error("Failed to update transaction", { id: toastId })
     } finally {
       setIsSubmitting(false)

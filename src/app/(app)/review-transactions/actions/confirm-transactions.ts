@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db/prisma"
 import { revalidateTag } from "next/cache"
 import { z } from "zod"
+import { logError } from "@/lib/utils/logger"
 
 const TransactionUpdateSchema = z.object({
   id: z.string(),
@@ -109,7 +110,7 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
       updatedCount: validatedUpdates.length,
     }
   } catch (error) {
-    console.error("Error confirming transactions:", error)
+    logError("Error confirming transactions:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to confirm transactions",

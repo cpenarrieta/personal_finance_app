@@ -2,6 +2,7 @@ import { SpendingByCategoryChart } from "@/components/charts/SpendingByCategoryC
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareSpendingByCategory } from "@/lib/dashboard/calculations"
 import { ChartErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 
 interface SpendingByCategoryChartAsyncProps {
   monthsBack?: number
@@ -18,7 +19,7 @@ export async function SpendingByCategoryChartAsync({ monthsBack = 1 }: SpendingB
 
     return <SpendingByCategoryChart data={spendingByCategory} />
   } catch (error) {
-    console.error("Failed to load spending by category chart:", error)
+    logError("Failed to load spending by category chart:", error)
     return <ChartErrorFallback error={error as Error} />
   }
 }

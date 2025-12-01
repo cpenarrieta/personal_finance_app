@@ -2,6 +2,7 @@ import { SubcategoryChart } from "@/components/charts/SubcategoryChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareSpendingBySubcategory } from "@/lib/dashboard/calculations"
 import { ChartErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 
 interface SubcategoryChartAsyncProps {
   monthsBack?: number
@@ -18,7 +19,7 @@ export async function SubcategoryChartAsync({ monthsBack = 1 }: SubcategoryChart
 
     return <SubcategoryChart data={spendingBySubcategory} />
   } catch (error) {
-    console.error("Failed to load subcategory chart:", error)
+    logError("Failed to load subcategory chart:", error)
     return <ChartErrorFallback error={error as Error} />
   }
 }

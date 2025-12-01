@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { toast } from "sonner"
 import type { TransactionForClient, CategoryForClient } from "@/types"
+import { logError } from "@/lib/utils/logger"
 
 export function useBulkTransactionOperations() {
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set())
@@ -62,7 +63,7 @@ export function useBulkTransactionOperations() {
       // Refresh the page to show updated data
       window.location.reload()
     } catch (error) {
-      console.error("Error bulk updating transactions:", error)
+      logError("Error bulk updating transactions:", error)
       toast.error("Failed to update transactions", { id: toastId })
     } finally {
       setIsBulkUpdating(false)

@@ -1,6 +1,7 @@
 // lib/syncPrices.ts
 import { prisma } from "../db/prisma"
 import { Prisma } from "@prisma/client"
+import { logInfo, logError } from "../utils/logger"
 
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || ""
 
@@ -12,7 +13,7 @@ export async function syncStockPrices() {
     },
   })
 
-  console.log(`Syncing prices for ${securities.length} securities...`)
+  logInfo(`Syncing prices for ${securities.length} securities...`)
 
   for (const security of securities) {
     if (!security.tickerSymbol) continue
@@ -28,7 +29,7 @@ export async function syncStockPrices() {
         const price = parseFloat(data["Global Quote"]["05. price"])
         const priceDate = new Date() // Current timestamp
 
-        console.log(`${security.tickerSymbol}: $${price}`)
+        logInfo(`${security.tickerSymbol}: $${price}`)
 
         // Update all holdings for this security
         await prisma.holding.updateMany({
@@ -39,15 +40,15 @@ export async function syncStockPrices() {
           },
         })
       } else {
-        console.log(`${security.tickerSymbol}: No price data available`)
+        logInfo(`${security.tickerSymbol}: No price data available`)
       }
 
       // Add a small delay to respect API rate limits (5 calls per minute for free tier)
       await new Promise((resolve) => setTimeout(resolve, 12000)) // 12 seconds between calls
     } catch (error) {
-      console.error(`Error fetching price for ${security.tickerSymbol}:`, error)
+      logError(`Error fetching price for ${security.tickerSymbol}:`, error)
     }
   }
 
-  console.log("Price sync completed!")
+  logInfo("Price sync completed!")
 }

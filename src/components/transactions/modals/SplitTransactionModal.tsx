@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { formatAmount } from "@/lib/utils"
 import type { SplitItem, TransactionForClient, CategoryForClient } from "@/types"
+import { logError } from "@/lib/utils/logger"
 
 interface SplitTransactionModalProps {
   transaction: TransactionForClient
@@ -141,7 +142,7 @@ export function SplitTransactionModal({ transaction, onClose, categories }: Spli
       router.refresh()
       onClose()
     } catch (err) {
-      console.error("Error splitting transaction:", err)
+      logError("Error splitting transaction:", err)
       setError("An unexpected error occurred")
       setIsSubmitting(false)
     }

@@ -5,6 +5,7 @@ import { safeParseRequestBody } from "@/types/api"
 import { Decimal } from "@prisma/client/runtime/library"
 import { Prisma } from "@prisma/client"
 import { revalidateTag, revalidatePath } from "next/cache"
+import { logError } from "@/lib/utils/logger"
 
 // Schema for AI-generated split transaction request
 const aiSplitSchema = z.object({
@@ -164,7 +165,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       data: result,
     })
   } catch (error) {
-    console.error("Error splitting transaction with AI:", error)
+    logError("Error splitting transaction with AI:", error)
     return NextResponse.json({ error: "Failed to split transaction" }, { status: 500 })
   }
 }

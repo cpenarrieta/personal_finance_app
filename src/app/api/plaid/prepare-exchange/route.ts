@@ -3,6 +3,7 @@ import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
 import { CountryCode } from "plaid"
 import { storeReconnectionData } from "@/lib/cache/reconnection-cache"
+import { logInfo, logError } from "@/lib/utils/logger"
 
 /**
  * Prepares public token exchange by checking if it's a reauth or reconnection
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
       // Check if item_id has changed (reconnection) or stayed same (reauth)
       if (existingItem.plaidItemId === itemId) {
         // SIMPLE REAUTH: item_id unchanged, just update status
-        console.log(`✅ Simple reauth detected for ${institutionName} (item_id: ${itemId})`)
+        logInfo(`✅ Simple reauth detected for ${institutionName} (item_id: ${itemId})`)
 
         await prisma.item.update({
           where: { id: existingItemDbId },
@@ -67,9 +68,7 @@ export async function POST(req: NextRequest) {
         })
       } else {
         // RECONNECTION: item_id changed, need user confirmation
-        console.log(
-          `⚠️  Reconnection detected for ${institutionName} (old: ${existingItem.plaidItemId}, new: ${itemId})`,
-        )
+        logInfo(`⚠️  Reconnection detected for ${institutionName} (old: ${existingItem.plaidItemId}, new: ${itemId})`)
 
         // Count transactions that will be deleted
         const transactionCount = existingItem.accounts.reduce(
@@ -115,7 +114,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("❌ Error preparing exchange:", error)
+    logError("❌ Error preparing exchange:", error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

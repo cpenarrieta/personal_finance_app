@@ -5,6 +5,7 @@ import { TransactionItem } from "@/components/transactions/list/TransactionItem"
 import { CategorySelect } from "@/components/ui/category-select"
 import { SubcategorySelect } from "@/components/ui/subcategory-select"
 import type { TransactionForClient, CategoryForClient } from "@/types"
+import { logError } from "@/lib/utils/logger"
 
 interface MoveTransactionsClientProps {
   categories: CategoryForClient[]
@@ -53,7 +54,7 @@ export function MoveTransactionsClient({ categories }: MoveTransactionsClientPro
         setShowTransactions(true)
       }
     } catch (error) {
-      console.error("Error fetching transactions:", error)
+      logError("Error fetching transactions:", error)
     } finally {
       setLoadingTransactions(false)
     }
@@ -122,7 +123,7 @@ export function MoveTransactionsClient({ categories }: MoveTransactionsClientPro
         alert(`Error: ${error.error || "Failed to move transactions"}`)
       }
     } catch (error) {
-      console.error("Error moving transactions:", error)
+      logError("Error moving transactions:", error)
       alert("Failed to move transactions")
     } finally {
       setIsMoving(false)

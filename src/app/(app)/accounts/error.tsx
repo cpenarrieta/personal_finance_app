@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { logError } from "@/lib/utils/logger"
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error("Accounts page error:", error)
+    logError("Accounts page error:", error, { page: "accounts" })
 
     // Report error to Sentry
     import("@sentry/nextjs").then((Sentry) => {

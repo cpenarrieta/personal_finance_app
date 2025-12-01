@@ -3,6 +3,7 @@ import { getTransactionById } from "@/lib/db/queries-transactions"
 import { getAllCategories, getAllTags } from "@/lib/db/queries"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import type { TransactionForClient } from "@/types"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Async Server Component for Transaction Detail
@@ -29,7 +30,7 @@ export async function TransactionDetailAsync({ id }: { id: string }) {
 
     return <TransactionDetailView transaction={transaction} categories={categories} tags={tags} />
   } catch (error) {
-    console.error("Failed to load transaction detail:", error)
+    logError("Failed to load transaction detail:", error)
     return (
       <ErrorFallback
         error={error as Error}

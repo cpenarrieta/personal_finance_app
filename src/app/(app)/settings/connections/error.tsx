@@ -4,10 +4,11 @@ import { useEffect } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { AlertCircle } from "lucide-react"
+import { logError } from "@/lib/utils/logger"
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error("Manage connections error:", error)
+    logError("Manage connections error:", error, { page: "connections" })
 
     // Report error to Sentry
     import("@sentry/nextjs").then((Sentry) => {

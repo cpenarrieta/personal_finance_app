@@ -2,6 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { getAllAccountsWithInstitution } from "@/lib/db/queries"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Async Server Component for accounts list
@@ -93,7 +94,7 @@ export async function AccountsListAsync() {
       </div>
     )
   } catch (error) {
-    console.error("Failed to load accounts:", error)
+    logError("Failed to load accounts:", error)
     return (
       <ErrorFallback
         error={error as Error}

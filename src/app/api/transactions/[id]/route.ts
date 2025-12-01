@@ -4,6 +4,7 @@ import { updateTransactionSchema } from "@/types/api"
 import { safeParseRequestBody } from "@/types/api"
 import type { Prisma } from "@prisma/client"
 import { revalidateTag, revalidatePath } from "next/cache"
+import { logError } from "@/lib/utils/logger"
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -84,7 +85,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json(updatedTransaction)
   } catch (error) {
-    console.error("Error updating transaction:", error)
+    logError("Error updating transaction:", error)
     return NextResponse.json({ error: "Failed to update transaction" }, { status: 500 })
   }
 }
@@ -129,7 +130,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error deleting transaction:", error)
+    logError("Error deleting transaction:", error)
     return NextResponse.json({ error: "Failed to delete transaction" }, { status: 500 })
   }
 }

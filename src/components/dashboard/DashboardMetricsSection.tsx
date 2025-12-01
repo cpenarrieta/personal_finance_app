@@ -5,6 +5,7 @@ import { getDashboardMetrics, getStatsWithTrends, getUncategorizedTransactions }
 import { calculateTotalBalance, calculateInvestmentValue } from "@/lib/dashboard/calculations"
 import { format, subMonths, startOfMonth } from "date-fns"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 
 interface DashboardMetricsSectionProps {
   monthsBack?: number
@@ -92,7 +93,7 @@ export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetri
       </div>
     )
   } catch (error) {
-    console.error("Failed to load dashboard metrics:", error)
+    logError("Failed to load dashboard metrics:", error)
     return (
       <ErrorFallback
         error={error as Error}

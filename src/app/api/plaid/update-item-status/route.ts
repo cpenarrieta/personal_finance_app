@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { revalidateTag, revalidatePath } from "next/cache"
+import { logInfo, logError } from "@/lib/utils/logger"
 
 /**
  * Updates item status after successful reauth (when item_id hasn't changed)
@@ -27,11 +28,11 @@ export async function POST(req: NextRequest) {
     revalidateTag("dashboard", "max")
     revalidatePath("/", "layout") // Invalidate Router Cache
 
-    console.log(`✅ Item ${itemId} status updated to ACTIVE (reauth successful)`)
+    logInfo(`✅ Item ${itemId} status updated to ACTIVE (reauth successful)`)
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error("❌ Error updating item status:", error)
+    logError("❌ Error updating item status:", error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

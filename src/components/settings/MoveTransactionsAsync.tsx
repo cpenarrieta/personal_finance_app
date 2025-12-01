@@ -2,6 +2,7 @@ import { MoveTransactionsClient } from "@/components/settings/MoveTransactionsCl
 import { getAllCategoriesForMoveTransactions } from "@/lib/db/queries-settings"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import type { CategoryForClient } from "@/types"
+import { logError } from "@/lib/utils/logger"
 
 export async function MoveTransactionsAsync() {
   try {
@@ -9,7 +10,7 @@ export async function MoveTransactionsAsync() {
 
     return <MoveTransactionsClient categories={categories} />
   } catch (error) {
-    console.error("Failed to load categories for move transactions:", error)
+    logError("Failed to load categories for move transactions:", error)
     return (
       <ErrorFallback
         error={error as Error}

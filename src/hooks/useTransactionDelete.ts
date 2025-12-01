@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { logError } from "@/lib/utils/logger"
 
 export function useTransactionDelete(transactionId: string) {
   const [isDeleting, setIsDeleting] = useState(false)
@@ -21,7 +22,7 @@ export function useTransactionDelete(transactionId: string) {
       router.push("/transactions")
       router.refresh()
     } catch (error) {
-      console.error("Error deleting transaction:", error)
+      logError("Error deleting transaction:", error)
       alert("Failed to delete transaction. Please try again.")
       setIsDeleting(false)
       setIsDialogOpen(false)

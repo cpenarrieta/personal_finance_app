@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth/auth"
 import { headers } from "next/headers"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Generate Cloudinary upload signature
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     const apiKey = process.env.CLOUDINARY_API_KEY
 
     if (!apiSecret || !apiKey) {
-      console.error("Missing Cloudinary credentials")
+      logError("Missing Cloudinary credentials")
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
     }
 
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       signature,
     })
   } catch (error) {
-    console.error("Error generating Cloudinary signature:", error)
+    logError("Error generating Cloudinary signature:", error)
     return NextResponse.json({ error: "Failed to generate signature" }, { status: 500 })
   }
 }

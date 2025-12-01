@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CategoryGroupType, type CategoryForClient } from "@/types"
+import { logError } from "@/lib/utils/logger"
 
 interface CategoryOrderClientProps {
   categories: CategoryForClient[]
@@ -132,7 +133,7 @@ export function CategoryOrderClient({ categories: initialCategories }: CategoryO
       setSaveMessage({ type: "success", text: "Category order saved successfully!" })
       router.refresh()
     } catch (error) {
-      console.error("Error saving:", error)
+      logError("Error saving:", error)
       setSaveMessage({ type: "error", text: "Failed to save. Please try again." })
     } finally {
       setIsSaving(false)

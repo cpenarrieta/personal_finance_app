@@ -7,6 +7,7 @@ import { getAllTagsWithCounts } from "@/lib/db/queries-settings"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import { prisma } from "@/lib/db/prisma"
 import type { PrismaTagWithCount } from "@/types"
+import { logError } from "@/lib/utils/logger"
 
 // Server Actions
 async function createTag(formData: FormData) {
@@ -169,7 +170,7 @@ export async function ManageTagsAsync() {
       </div>
     )
   } catch (error) {
-    console.error("Failed to load tags:", error)
+    logError("Failed to load tags:", error)
     return <ErrorFallback error={error as Error} title="Failed to load tags" description="Unable to fetch tag data" />
   }
 }

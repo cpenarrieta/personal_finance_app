@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { TransferCategoryToggle } from "@/components/transactions/filters/TransferCategoryToggle"
 import { getAllCategoriesForManagement } from "@/lib/db/queries-settings"
+import { logError } from "@/lib/utils/logger"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import { prisma } from "@/lib/db/prisma"
 import type { Prisma } from "@prisma/client"
@@ -221,7 +222,7 @@ export async function ManageCategoriesAsync() {
       </>
     )
   } catch (error) {
-    console.error("Failed to load categories:", error)
+    logError("Failed to load categories:", error)
     return (
       <ErrorFallback
         error={error as Error}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma"
 import { Prisma } from "@prisma/client"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { getReconnectionData, clearReconnectionData } from "@/lib/cache/reconnection-cache"
+import { logInfo, logError } from "@/lib/utils/logger"
 
 /**
  * Completes a reconnection after user confirmation
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     const { accessToken, itemId, institutionId, institutionName, accounts, existingItemDbId } = data
 
-    console.log(`🔄 Completing reconnection for ${institutionName}...`)
+    logInfo(`🔄 Completing reconnection for ${institutionName}...`)
 
     // Upsert institution
     await prisma.institution.upsert({
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (convertedSplits.count > 0) {
-      console.log(`   Converted ${convertedSplits.count} split children to manual transactions`)
+      logInfo(`   Converted ${convertedSplits.count} split children to manual transactions`)
     }
 
     // STEP 2: Delete old Plaid transactions (including split parents)
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
         isManual: false, // Only delete Plaid-sourced transactions
       },
     })
-    console.log(`   Deleted ${deletedTxs.count} Plaid transactions (preserved manual & split children)`)
+    logInfo(`   Deleted ${deletedTxs.count} Plaid transactions (preserved manual & split children)`)
 
     // Update existing item with new access token and plaidItemId
     await prisma.item.update({
@@ -131,14 +132,14 @@ export async function POST(req: NextRequest) {
     revalidateTag("dashboard", "max")
     revalidatePath("/", "layout") // Invalidate Router Cache
 
-    console.log(`✅ Reconnection complete for ${institutionName}`)
+    logInfo(`✅ Reconnection complete for ${institutionName}`)
 
     return NextResponse.json({
       ok: true,
       transactionsDeleted: deletedTxs.count,
     })
   } catch (error) {
-    console.error("❌ Error completing reconnection:", error)
+    logError("❌ Error completing reconnection:", error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
   }
 }

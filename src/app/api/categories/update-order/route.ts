@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { CategoryGroupType } from "@prisma/client"
+import { logError } from "@/lib/utils/logger"
 
 export async function PUT(request: Request) {
   try {
@@ -28,7 +29,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error updating category order:", error)
+    logError("Error updating category order:", error)
     return NextResponse.json({ error: "Failed to update" }, { status: 500 })
   }
 }

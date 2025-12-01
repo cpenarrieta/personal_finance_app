@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Error boundary for transactions page
@@ -12,7 +13,7 @@ import { AlertCircle } from "lucide-react"
  */
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error("Transactions page error:", error)
+    logError("Transactions page error:", error, { page: "transactions" })
 
     // Report error to Sentry
     import("@sentry/nextjs").then((Sentry) => {

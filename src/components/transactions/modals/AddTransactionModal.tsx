@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
+import { logError } from "@/lib/utils/logger"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -103,7 +104,7 @@ export function AddTransactionModal({ onClose, categories, tags, accounts }: Add
       router.refresh()
       onClose()
     } catch (error) {
-      console.error("Error creating transaction:", error)
+      logError("Error creating transaction:", error)
       alert(error instanceof Error ? error.message : "Failed to create transaction. Please try again.")
     } finally {
       setIsSubmitting(false)

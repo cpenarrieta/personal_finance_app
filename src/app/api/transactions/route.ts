@@ -5,6 +5,7 @@ import { safeParseRequestBody } from "@/types/api"
 import { Prisma } from "@prisma/client"
 import { nanoid } from "nanoid"
 import { revalidateTag, revalidatePath } from "next/cache"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * GET /api/transactions - Fetch recent transactions
@@ -84,7 +85,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ transactions, count: transactions.length })
   } catch (error) {
-    console.error("Error fetching transactions:", error)
+    logError("Error fetching transactions:", error)
     return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 })
   }
 }
@@ -192,7 +193,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(newTransaction, { status: 201 })
   } catch (error) {
-    console.error("Error creating transaction:", error)
+    logError("Error creating transaction:", error)
 
     // Handle unique constraint violation for plaidTransactionId
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { auth } from "./lib/auth/auth"
 import { isEmailAllowed, getAllowedEmails } from "./lib/auth/auth-helpers"
+import { logError } from "./lib/utils/logger"
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -41,7 +42,7 @@ export async function proxy(request: NextRequest) {
     const allowedEmails = getAllowedEmails()
 
     if (allowedEmails.length === 0) {
-      console.error("ALLOWED_EMAILS not configured")
+      logError("ALLOWED_EMAILS not configured")
       return NextResponse.redirect(new URL("/login?error=unauthorized", request.url))
     }
 
@@ -52,7 +53,7 @@ export async function proxy(request: NextRequest) {
     // All checks passed
     return NextResponse.next()
   } catch (error) {
-    console.error("Proxy auth error:", error)
+    logError("Proxy auth error:", error)
     return NextResponse.redirect(new URL("/login", request.url))
   }
 }

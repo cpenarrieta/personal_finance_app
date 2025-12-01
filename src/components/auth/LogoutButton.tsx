@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth/auth-client"
 import { useState } from "react"
+import { logError } from "@/lib/utils/logger"
 
 interface LogoutButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
@@ -19,7 +20,7 @@ export function LogoutButton({ variant = "outline", size = "default", className 
       await authClient.signOut()
       window.location.href = "/login"
     } catch (error) {
-      console.error("Sign out error:", error)
+      logError("Sign out error:", error)
       setIsLoading(false)
     }
   }

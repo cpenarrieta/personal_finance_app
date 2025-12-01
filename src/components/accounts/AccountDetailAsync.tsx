@@ -4,6 +4,7 @@ import { InvestmentTransactionList } from "@/components/investments/transactions
 import { HoldingList } from "@/components/investments/holdings/HoldingList"
 import { format } from "date-fns"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
+import { logError } from "@/lib/utils/logger"
 import {
   getAccountById,
   getTransactionsForAccount,
@@ -128,7 +129,7 @@ export async function AccountDetailAsync({ id }: { id: string }) {
       </>
     )
   } catch (error) {
-    console.error("Failed to load account details:", error)
+    logError("Failed to load account details:", error)
     return (
       <ErrorFallback error={error as Error} title="Failed to load account" description="Unable to fetch account data" />
     )

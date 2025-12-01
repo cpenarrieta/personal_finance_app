@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Download, Sheet } from "lucide-react"
 import { toast } from "sonner"
 import { downloadTransactionsCSV, copyTransactionsForGoogleSheets } from "@/lib/transactions/export"
+import { logError } from "@/lib/utils/logger"
 import type { TransactionForClient, CategoryForClient, TagForClient, PlaidAccountForClient } from "@/types"
 import type { TransactionFiltersFromUrl } from "@/lib/transactions/url-params"
 
@@ -45,7 +46,7 @@ export function TransactionsPageClient({
       await downloadTransactionsCSV(filteredIds)
       toast.success(`Downloaded ${filteredIds.length} transaction(s) to CSV`)
     } catch (error) {
-      console.error("Error downloading CSV:", error)
+      logError("Error downloading CSV:", error)
       toast.error("Failed to download CSV. Please try again.")
     } finally {
       setIsDownloading(false)
@@ -67,7 +68,7 @@ export function TransactionsPageClient({
         `Copied ${filteredIds.length} transaction(s) to clipboard! Paste into Google Sheets (Ctrl+V or Cmd+V)`,
       )
     } catch (error) {
-      console.error("Error copying for Google Sheets:", error)
+      logError("Error copying for Google Sheets:", error)
       toast.error("Failed to copy to clipboard. Please try again.")
     } finally {
       setIsCopying(false)

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { logError } from "@/lib/utils/logger"
 
 /**
  * Error boundary for all pages in the (app) route group
@@ -12,8 +13,8 @@ import { AlertCircle } from "lucide-react"
  */
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    // Log error to console in development
-    console.error("Error caught by error boundary:", error)
+    // Log error using logger utility (logs to console in development and Sentry in production)
+    logError("Error caught by error boundary:", error)
 
     // Report error to Sentry
     import("@sentry/nextjs").then((Sentry) => {

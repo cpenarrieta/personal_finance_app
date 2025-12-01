@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { Prisma } from "@prisma/client"
+import { logError } from "@/lib/utils/logger"
 
 // Type for transaction with all relations we need
 type TransactionWithRelations = Prisma.TransactionGetPayload<{
@@ -160,7 +161,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Error exporting transactions to CSV:", error)
+    logError("Error exporting transactions to CSV:", error)
     return NextResponse.json({ error: "Failed to export transactions" }, { status: 500 })
   }
 }

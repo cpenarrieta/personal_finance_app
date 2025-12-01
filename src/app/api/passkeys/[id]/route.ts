@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth/auth"
 import { prisma } from "@/lib/db/prisma"
 import { NextRequest, NextResponse } from "next/server"
+import { logError } from "@/lib/utils/logger"
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -28,7 +29,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Failed to delete passkey:", error)
+    logError("Failed to delete passkey:", error)
     return NextResponse.json({ error: "Failed to delete passkey" }, { status: 500 })
   }
 }
