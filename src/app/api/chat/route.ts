@@ -70,7 +70,7 @@ Example responses:
 - "You've spent $245 at Starbucks over the past 3 months - that's about $82/month!"
 - "Here's a chart showing your top 5 expenses from the last 6 months" [followed by chart]`,
       tools: transactionTools,
-      stopWhen: [stepCountIs(10)], // Allow up to 10 tool calls
+      stopWhen: [stepCountIs(10)],
       onStepFinish: async (result) => {
         logInfo("\n=== STEP FINISHED ===", {
           finishReason: result.finishReason,
