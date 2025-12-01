@@ -113,7 +113,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.error).toBe("Unauthorized")
-      expect(console.error).toHaveBeenCalledWith("❌ Missing Plaid-Verification header", "", "")
+      expect(console.error).toHaveBeenCalledWith("❌ Missing Plaid-Verification header")
     })
 
     it("should accept webhook with verification header when no secret is set", async () => {
@@ -205,7 +205,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.error).toBe("Unauthorized")
-      expect(console.error).toHaveBeenCalledWith("❌ Webhook verification failed", "", "")
+      expect(console.error).toHaveBeenCalledWith("❌ Webhook verification failed")
     })
 
     it("should reject webhook when verification throws error", async () => {
@@ -236,7 +236,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.error).toBe("Unauthorized")
-      expect(console.error).toHaveBeenCalledWith("❌ Error verifying webhook:", expect.any(Error), "")
+      expect(console.error).toHaveBeenCalledWith("❌ Error verifying webhook:", expect.any(Error))
     })
   })
 
@@ -435,11 +435,10 @@ describe("Plaid Webhook API", () => {
         where: { id: mockItem.id },
         data: { status: "ERROR" },
       })
-      expect(console.error).toHaveBeenCalledWith(
-        "❌ Item error:",
-        webhookBody.error,
-        { itemId: mockItem.id, errorCode: "ITEM_LOGIN_REQUIRED" },
-      )
+      expect(console.error).toHaveBeenCalledWith("❌ Item error:", webhookBody.error, {
+        itemId: mockItem.id,
+        errorCode: "ITEM_LOGIN_REQUIRED",
+      })
     })
 
     it("should handle PENDING_EXPIRATION item webhook", async () => {
@@ -590,7 +589,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(data.error).toBe("Item not found: non-existent-item-id")
-      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error), "")
+      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error))
     })
 
     it("should return 200 with error when sync fails", async () => {
@@ -614,7 +613,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(data.error).toBe("Sync service error")
-      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error), "")
+      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error))
     })
 
     it("should return 200 with error when database update fails", async () => {
@@ -642,7 +641,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(data.error).toBe("Database error")
-      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error), "")
+      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error))
     })
 
     it("should handle malformed JSON gracefully", async () => {
@@ -662,7 +661,7 @@ describe("Plaid Webhook API", () => {
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
       expect(data.error).toBeDefined()
-      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error), "")
+      expect(console.error).toHaveBeenCalledWith("❌ Error processing webhook:", expect.any(Error))
     })
   })
 
@@ -729,14 +728,11 @@ describe("Plaid Webhook API", () => {
       await POST(request)
 
       // Assert
-      expect(console.log).toHaveBeenCalledWith(
-        "✅ Transaction sync complete",
-        {
-          added: 5,
-          modified: 2,
-          removed: 1,
-        },
-      )
+      expect(console.log).toHaveBeenCalledWith("✅ Transaction sync complete", {
+        added: 5,
+        modified: 2,
+        removed: 1,
+      })
     })
   })
 })

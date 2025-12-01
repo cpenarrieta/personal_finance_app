@@ -53,7 +53,14 @@ export function logError(message: string, error?: unknown, attributes?: LogAttri
     ...(errorObj && { error: errorObj.message, stack: errorObj.stack }),
   }
 
-  console.error(message, error || "", attributes || "")
+  // Only pass arguments that are actually provided
+  if (attributes) {
+    console.error(message, error || "", attributes)
+  } else if (error) {
+    console.error(message, error)
+  } else {
+    console.error(message)
+  }
 
   if (isProduction) {
     Sentry.logger.error(message, combinedAttrs)

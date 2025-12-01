@@ -214,13 +214,9 @@ describe("Plaid Create Link Token API - POST", () => {
         error: "Invalid client credentials",
         errorCode: "INVALID_CREDENTIALS",
       })
-      expect(console.error).toHaveBeenCalledWith(
-        "Error creating link token:",
-        expect.objectContaining({
-          error_message: "Invalid client credentials",
-          error_code: "INVALID_CREDENTIALS",
-        }),
-      )
+      expect(console.error).toHaveBeenCalledWith("Error creating link token:", plaidError, {
+        responseData: plaidError.response.data,
+      })
     })
 
     it("should handle error without response data", async () => {
@@ -240,7 +236,9 @@ describe("Plaid Create Link Token API - POST", () => {
         error: "Network error",
         errorCode: undefined,
       })
-      expect(console.error).toHaveBeenCalledWith("Error creating link token:", "Network error")
+      expect(console.error).toHaveBeenCalledWith("Error creating link token:", genericError, {
+        responseData: undefined,
+      })
     })
 
     it("should handle error without message", async () => {
