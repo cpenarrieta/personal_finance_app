@@ -3,6 +3,13 @@ import { withSentryConfig } from "@sentry/nextjs"
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  experimental: {
+    // Enable client-side Router Cache to prevent loading skeletons on repeat visits
+    staleTimes: {
+      dynamic: 60, // Cache dynamic pages for 60s on client-side navigation
+      static: 180, // Cache static pages for 3min
+    },
+  },
   images: {
     remotePatterns: [
       {
