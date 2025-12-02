@@ -5,7 +5,7 @@ import { PlaidAccountWithRelations } from "@/types"
 import { getPlaidClient } from "../api/plaid"
 import { prisma } from "../db/prisma"
 import { Prisma } from "@prisma/client"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 import type { Transaction, AccountBase, Security, Holding, InvestmentTransaction } from "../api/plaid"
 import { logInfo, logError } from "../utils/logger"
 
@@ -758,14 +758,16 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
     revalidateTag("transactions", "max")
     revalidateTag("accounts", "max")
     revalidateTag("dashboard", "max")
-    logInfo("  ✓ Invalidated: transactions, accounts, dashboard")
+    revalidatePath("/", "layout") // Invalidate Router Cache for all routes
+    logInfo("  ✓ Invalidated: transactions, accounts, dashboard + Router Cache")
   }
   if (options.syncInvestments) {
     revalidateTag("holdings", "max")
     revalidateTag("investments", "max")
     revalidateTag("accounts", "max")
     revalidateTag("dashboard", "max")
-    logInfo("  ✓ Invalidated: holdings, investments, accounts, dashboard")
+    revalidatePath("/", "layout") // Invalidate Router Cache for all routes
+    logInfo("  ✓ Invalidated: holdings, investments, accounts, dashboard + Router Cache")
   }
 
   // Print total summary

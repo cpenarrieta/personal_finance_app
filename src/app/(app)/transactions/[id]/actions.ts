@@ -2,7 +2,7 @@
 
 import { categorizeTransaction, applyCategorization } from "@/lib/ai/categorize-transaction"
 import { prisma } from "@/lib/db/prisma"
-import { revalidateTag } from "next/cache"
+import { revalidateTag, revalidatePath } from "next/cache"
 import { z } from "zod"
 import { logError } from "@/lib/utils/logger"
 
@@ -89,6 +89,7 @@ export async function applyAICategorization(
 
     // Revalidate caches
     revalidateTag("transactions", "max")
+    revalidatePath("/", "layout") // Invalidate Router Cache for all routes
 
     return {
       success: true,

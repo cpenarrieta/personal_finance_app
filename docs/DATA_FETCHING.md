@@ -134,6 +134,39 @@ select: {
 }
 ```
 
+## Cache Invalidation (Critical)
+
+**Next.js 16 has TWO separate caches:**
+1. **Data Cache** (server-side): Invalidated with `revalidateTag()`
+2. **Router Cache** (client-side): Invalidated with `revalidatePath()`
+
+**IMPORTANT:** When mutating data, you MUST invalidate BOTH caches:
+
+```typescript
+// ✅ DO: Invalidate both Data Cache and Router Cache
+import { revalidateTag, revalidatePath } from "next/cache"
+
+async function updateTransaction() {
+  await prisma.transaction.update(...)
+
+  revalidateTag("transactions", "max")  // Server cache
+  revalidatePath("/", "layout")          // Client Router Cache
+}
+
+// ❌ DON'T: Only invalidate Data Cache
+async function updateTransaction() {
+  await prisma.transaction.update(...)
+
+  revalidateTag("transactions", "max")  // Missing revalidatePath!
+  // User will see stale data on page navigation
+}
+```
+
+**Why both are needed:**
+- `revalidateTag()` clears server-side cached data
+- `revalidatePath("/", "layout")` clears client-side Router Cache for ALL routes
+- Without `revalidatePath()`, users see stale data when navigating between pages
+
 ## Checklist
 
 When adding pages needing reference data:
@@ -141,3 +174,8 @@ When adding pages needing reference data:
 2. Use generated columns for Client Components
 3. Pass as props (never fetch in `useEffect`)
 4. Update TypeScript interfaces in `@/types`
+
+When mutating data (Server Actions, API Routes):
+1. Use `revalidateTag()` to clear server Data Cache
+2. Use `revalidatePath("/", "layout")` to clear client Router Cache
+3. Both are required - missing either causes stale data issues
