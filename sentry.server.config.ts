@@ -14,7 +14,7 @@ Sentry.init({
   enableLogs: true,
   integrations: [
     // send console.log, console.warn, and console.error calls as logs to Sentry
-    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error", "debug", "info", "trace"] }),
   ],
 
   // Enable sending user PII (Personally Identifiable Information)
