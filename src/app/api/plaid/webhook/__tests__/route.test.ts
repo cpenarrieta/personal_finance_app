@@ -70,7 +70,7 @@ describe("Plaid Webhook API", () => {
     })
 
     // Mock AI categorization
-    ;(aiCategorizationModule.categorizeAndApply as jest.Mock).mockResolvedValue(undefined)
+    ;(aiCategorizationModule.categorizeTransactions as jest.Mock).mockResolvedValue(undefined)
 
     // Suppress console logs during tests
     jest.spyOn(console, "log").mockImplementation()
@@ -687,6 +687,105 @@ describe("Plaid Webhook API", () => {
       expect(console.log).toHaveBeenCalledWith("ℹ️  Unhandled webhook type: UNKNOWN_TYPE", {
         webhookType: "UNKNOWN_TYPE",
       })
+    })
+  })
+
+  describe("AI Categorization", () => {
+    it("should call AI categorization when new transactions are added", async () => {
+      // Arrange
+      const newTransactionIds = ["txn-1", "txn-2", "txn-3"]
+      const webhookBody = {
+        webhook_type: "TRANSACTIONS",
+        webhook_code: "SYNC_UPDATES_AVAILABLE",
+        item_id: "test-plaid-item-id",
+      }
+      const request = createMockRequest(webhookBody, {
+        "plaid-verification": "test-key",
+      })
+
+      ;(syncServiceModule.syncItemTransactions as jest.Mock).mockResolvedValue({
+        stats: {
+          ...mockSyncStats,
+          newTransactionIds,
+        },
+        newCursor: "new-cursor",
+      })
+
+      // Act
+      await POST(request)
+
+      // Assert
+      expect(aiCategorizationModule.categorizeTransactions).toHaveBeenCalledWith(newTransactionIds)
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("🤖 Starting AI categorization for 3 new transaction(s)"),
+        expect.objectContaining({ transactionCount: 3 }),
+      )
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("✅ AI categorization complete for 3 transaction(s)"),
+      )
+    })
+
+    it("should skip AI categorization when no new transactions", async () => {
+      // Arrange
+      const webhookBody = {
+        webhook_type: "TRANSACTIONS",
+        webhook_code: "SYNC_UPDATES_AVAILABLE",
+        item_id: "test-plaid-item-id",
+      }
+      const request = createMockRequest(webhookBody, {
+        "plaid-verification": "test-key",
+      })
+
+      ;(syncServiceModule.syncItemTransactions as jest.Mock).mockResolvedValue({
+        stats: {
+          ...mockSyncStats,
+          newTransactionIds: [],
+        },
+        newCursor: "new-cursor",
+      })
+
+      // Act
+      await POST(request)
+
+      // Assert
+      expect(aiCategorizationModule.categorizeTransactions).not.toHaveBeenCalled()
+    })
+
+    it("should continue webhook response even if AI categorization fails", async () => {
+      // Arrange
+      const newTransactionIds = ["txn-1", "txn-2"]
+      const webhookBody = {
+        webhook_type: "TRANSACTIONS",
+        webhook_code: "SYNC_UPDATES_AVAILABLE",
+        item_id: "test-plaid-item-id",
+      }
+      const request = createMockRequest(webhookBody, {
+        "plaid-verification": "test-key",
+      })
+
+      ;(syncServiceModule.syncItemTransactions as jest.Mock).mockResolvedValue({
+        stats: {
+          ...mockSyncStats,
+          newTransactionIds,
+        },
+        newCursor: "new-cursor",
+      })
+
+      const categorizationError = new Error("OpenAI API error")
+      ;(aiCategorizationModule.categorizeTransactions as jest.Mock).mockRejectedValue(categorizationError)
+
+      // Act
+      const response = await POST(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(data.received).toBe(true)
+      expect(console.error).toHaveBeenCalledWith(
+        "❌ Error in AI categorization:",
+        categorizationError,
+        expect.objectContaining({ transactionCount: 2 }),
+      )
     })
   })
 
