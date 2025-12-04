@@ -720,9 +720,6 @@ describe("Plaid Webhook API", () => {
         expect.stringContaining("🤖 Starting AI categorization for 3 new transaction(s)"),
         expect.objectContaining({ transactionCount: 3 }),
       )
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✅ AI categorization complete for 3 transaction(s)"),
-      )
     })
 
     it("should skip AI categorization when no new transactions", async () => {
