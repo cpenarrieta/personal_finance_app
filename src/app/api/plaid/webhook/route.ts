@@ -120,18 +120,22 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
         transactionCount: stats.newTransactionIds.length,
       })
 
-      // Run categorization in the background for all new transactions
-      // Don't await to avoid blocking the webhook response
-      categorizeTransactions(stats.newTransactionIds)
-        .then(() => {
-          logInfo(`✅ AI categorization complete`)
-          // Invalidate caches after categorization
-          revalidateTag("transactions", "max")
-          revalidatePath("/", "layout") // Invalidate Router Cache for all routes
+      try {
+        // IMPORTANT: Await categorization to ensure it completes before serverless function terminates
+        // Plaid webhooks have generous timeouts (30-60s), so this is safe
+        await categorizeTransactions(stats.newTransactionIds)
+
+        logInfo(`✅ AI categorization complete for ${stats.newTransactionIds.length} transaction(s)`)
+
+        // Invalidate caches after categorization
+        revalidateTag("transactions", "max")
+        revalidatePath("/", "layout") // Invalidate Router Cache for all routes
+      } catch (error) {
+        logError(`❌ Error in AI categorization:`, error, {
+          transactionCount: stats.newTransactionIds.length,
         })
-        .catch((error) => {
-          logError(`❌ Error in batch categorization:`, error)
-        })
+        // Continue with webhook response even if categorization fails
+      }
     }
 
     // Invalidate relevant caches
