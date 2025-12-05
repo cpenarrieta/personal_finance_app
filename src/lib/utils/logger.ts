@@ -10,6 +10,15 @@ import { inspect } from "util"
 
 const isProduction = process.env.NODE_ENV === "production"
 
+/**
+ * Format attributes for logging
+ * - Development: Use colors for better readability
+ * - Production: No colors (Vercel logs don't support ANSI codes)
+ */
+function formatAttributes(attributes: LogAttributes): string {
+  return inspect(attributes, { depth: null, colors: !isProduction })
+}
+
 interface LogAttributes {
   [key: string]: unknown
 }
@@ -19,7 +28,7 @@ interface LogAttributes {
  */
 export function logInfo(message: string, attributes?: LogAttributes) {
   if (attributes) {
-    console.log(message, inspect(attributes, { depth: null, colors: true }))
+    console.log(message, formatAttributes(attributes))
   } else {
     console.log(message)
   }
@@ -38,7 +47,7 @@ export function logInfo(message: string, attributes?: LogAttributes) {
  */
 export function logWarn(message: string, attributes?: LogAttributes) {
   if (attributes) {
-    console.warn(message, inspect(attributes, { depth: null, colors: true }))
+    console.warn(message, formatAttributes(attributes))
   } else {
     console.warn(message)
   }
@@ -81,7 +90,7 @@ export function logError(message: string, error?: unknown, attributes?: LogAttri
  */
 export function logDebug(message: string, attributes?: LogAttributes) {
   if (attributes) {
-    console.debug(message, inspect(attributes, { depth: null, colors: true }))
+    console.debug(message, formatAttributes(attributes))
   } else {
     console.debug(message)
   }
@@ -100,7 +109,7 @@ export function logDebug(message: string, attributes?: LogAttributes) {
  */
 export function logTrace(message: string, attributes?: LogAttributes) {
   if (attributes) {
-    console.trace(message, inspect(attributes, { depth: null, colors: true }))
+    console.trace(message, formatAttributes(attributes))
   } else {
     console.trace(message)
   }
