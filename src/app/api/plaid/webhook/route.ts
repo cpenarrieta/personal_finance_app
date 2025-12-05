@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
-import { syncItemTransactions } from "@/lib/sync/sync-service"
-import { categorizeTransactions } from "@/lib/ai/categorize-transaction"
+import { syncItemTransactionsWithCategorization } from "@/lib/sync/sync-service"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logInfo, logWarn, logError } from "@/lib/utils/logger"
 
@@ -99,8 +98,12 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
   logInfo(`🔄 Syncing transactions for item: ${item.id}`, { itemId: item.id })
 
   try {
-    // Sync transactions for this item
-    const { stats, newCursor } = await syncItemTransactions(item.id, item.accessToken, item.lastTransactionsCursor)
+    // Sync transactions and run AI categorization (handled within syncItemTransactionsWithCategorization)
+    const { stats, newCursor } = await syncItemTransactionsWithCategorization(
+      item.id,
+      item.accessToken,
+      item.lastTransactionsCursor,
+    )
 
     // Update the cursor
     await prisma.item.update({
@@ -113,30 +116,6 @@ async function handleTransactionWebhook(webhookCode: string, itemId: string): Pr
       modified: stats.transactionsModified,
       removed: stats.transactionsRemoved,
     })
-
-    // Categorize new transactions with AI
-    if (stats.newTransactionIds.length > 0) {
-      logInfo(`🤖 Starting AI categorization for ${stats.newTransactionIds.length} new transaction(s)...`, {
-        transactionCount: stats.newTransactionIds.length,
-      })
-
-      try {
-        // IMPORTANT: Await categorization to ensure it completes before serverless function terminates
-        // Plaid webhooks have generous timeouts (30-60s), so this is safe
-        await categorizeTransactions(stats.newTransactionIds)
-
-        logInfo(`✅ AI categorization complete for ${stats.newTransactionIds.length} transaction(s)`)
-
-        // Invalidate caches after categorization
-        revalidateTag("transactions", "max")
-        revalidatePath("/", "layout") // Invalidate Router Cache for all routes
-      } catch (error) {
-        logError(`❌ Error in AI categorization:`, error, {
-          transactionCount: stats.newTransactionIds.length,
-        })
-        // Continue with webhook response even if categorization fails
-      }
-    }
 
     // Invalidate relevant caches
     revalidateTag("transactions", "max")

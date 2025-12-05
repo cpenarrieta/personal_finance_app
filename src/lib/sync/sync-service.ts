@@ -8,6 +8,7 @@ import { Prisma } from "@prisma/client"
 import { revalidateTag, revalidatePath } from "next/cache"
 import type { Transaction, AccountBase, Security, Holding, InvestmentTransaction } from "../api/plaid"
 import { logInfo, logError } from "../utils/logger"
+import { categorizeTransactions } from "../ai/categorize-transaction"
 
 // Constants
 const HISTORICAL_START_DATE = "2024-01-01"
@@ -34,6 +35,7 @@ export interface SyncStats extends TransactionSyncStats, InvestmentSyncStats {}
 export interface SyncOptions {
   syncTransactions?: boolean
   syncInvestments?: boolean
+  runAICategorization?: boolean // Enable AI categorization for new transactions
 }
 
 // Helper functions
@@ -483,6 +485,37 @@ export async function syncItemTransactions(
 }
 
 /**
+ * Syncs transactions for a single item and runs AI categorization on new transactions
+ * Use this for webhook-triggered syncs where we want categorization included
+ */
+export async function syncItemTransactionsWithCategorization(
+  itemId: string,
+  accessToken: string,
+  lastCursor: string | null,
+): Promise<{ stats: TransactionSyncStats; newCursor: string }> {
+  const result = await syncItemTransactions(itemId, accessToken, lastCursor)
+
+  // Run AI categorization on new transactions
+  if (result.stats.newTransactionIds.length > 0) {
+    logInfo(`🤖 Starting AI categorization for ${result.stats.newTransactionIds.length} new transaction(s)...`, {
+      transactionCount: result.stats.newTransactionIds.length,
+    })
+
+    try {
+      await categorizeTransactions(result.stats.newTransactionIds)
+      logInfo(`✅ AI categorization complete for ${result.stats.newTransactionIds.length} transaction(s)`)
+    } catch (error) {
+      logError(`❌ Error in AI categorization:`, error, {
+        transactionCount: result.stats.newTransactionIds.length,
+      })
+      // Continue even if categorization fails
+    }
+  }
+
+  return result
+}
+
+/**
  * Syncs investments (holdings, securities, investment transactions) for a single item
  */
 export async function syncItemInvestments(itemId: string, accessToken: string): Promise<InvestmentSyncStats> {
@@ -640,7 +673,9 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
 /**
  * Generic sync function that can sync transactions and/or investments
  */
-export async function syncItems(options: SyncOptions = { syncTransactions: true, syncInvestments: true }) {
+export async function syncItems(
+  options: SyncOptions = { syncTransactions: true, syncInvestments: true, runAICategorization: true },
+) {
   const items = await prisma.item.findMany()
 
   const totalStats: SyncStats = {
@@ -750,6 +785,23 @@ export async function syncItems(options: SyncOptions = { syncTransactions: true,
       institutionName,
       ...itemStats,
     })
+  }
+
+  // AI categorization for new banking transactions
+  if (options.runAICategorization !== false && options.syncTransactions && totalStats.newTransactionIds.length > 0) {
+    logInfo(`\n🤖 Starting AI categorization for ${totalStats.newTransactionIds.length} new transaction(s)...`, {
+      transactionCount: totalStats.newTransactionIds.length,
+    })
+
+    try {
+      await categorizeTransactions(totalStats.newTransactionIds)
+      logInfo(`✅ AI categorization complete for ${totalStats.newTransactionIds.length} transaction(s)`)
+    } catch (error) {
+      logError(`❌ Error in AI categorization:`, error, {
+        transactionCount: totalStats.newTransactionIds.length,
+      })
+      // Continue with sync even if categorization fails
+    }
   }
 
   // Invalidate caches based on what was synced
