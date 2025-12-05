@@ -15,12 +15,25 @@ const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY || "",
 })
 
-// Schema for AI response
+// Schema for AI response (single transaction)
 const CategorizationResultSchema = z.object({
   categoryId: z.string().nullable().describe("The category ID, or null if uncertain"),
   subcategoryId: z.string().nullable().describe("The subcategory ID, or null if uncertain"),
   confidence: z.number().min(0).max(100).describe("Confidence score from 0-100"),
   reasoning: z.string().max(500).describe("Brief explanation for the categorization decision"),
+})
+
+// Schema for batch AI response (multiple transactions)
+const BatchCategorizationResultSchema = z.object({
+  results: z.array(
+    z.object({
+      transactionIndex: z.number().describe("The index of the transaction in the input array (0-based)"),
+      categoryId: z.string().nullable().describe("The category ID, or null if uncertain"),
+      subcategoryId: z.string().nullable().describe("The subcategory ID, or null if uncertain"),
+      confidence: z.number().min(0).max(100).describe("Confidence score from 0-100"),
+      reasoning: z.string().max(200).describe("Brief explanation for the categorization decision"),
+    }),
+  ),
 })
 
 // Type for categories with subcategories
@@ -480,14 +493,147 @@ export async function categorizeAndApply(transactionId: string): Promise<void> {
   }
 }
 
+// Type for transaction data used in batch categorization
+interface TransactionForBatch {
+  id: string
+  name: string
+  merchantName: string | null
+  amount: Prisma.Decimal
+  date: Date
+  plaidCategory: string | null
+  plaidSubcategory: string | null
+  notes: string | null
+}
+
+/**
+ * Batch categorize multiple transactions in a single LLM call
+ * More efficient than individual calls when categorizing many transactions at once
+ */
+async function categorizeTransactionsBatch(
+  transactions: TransactionForBatch[],
+  categories: CategoryWithSubs[],
+  recentHistory: (Transaction & { category: Category; subcategory: Subcategory })[],
+): Promise<
+  Map<
+    string,
+    {
+      categoryId: string | null
+      subcategoryId: string | null
+      confidence: number
+      reasoning: string
+    }
+  >
+> {
+  const resultMap = new Map<
+    string,
+    {
+      categoryId: string | null
+      subcategoryId: string | null
+      confidence: number
+      reasoning: string
+    }
+  >()
+
+  if (transactions.length === 0) return resultMap
+
+  // Build shared context
+  const categoriesContext = buildCategoriesContext(categories)
+  const historyContext = buildHistoryContext(recentHistory as any)
+
+  // Build transactions list for prompt
+  const transactionsContext = transactions
+    .map((t, index) => {
+      const amount = Math.abs(t.amount.toNumber()).toFixed(2)
+      const type = t.amount.toNumber() > 0 ? "expense" : "income"
+      return `[${index}] Name: "${t.name}" | Merchant: ${t.merchantName || "N/A"} | Amount: $${amount} (${type}) | Date: ${t.date.toISOString().split("T")[0]} | Plaid: ${t.plaidCategory || "N/A"}/${t.plaidSubcategory || "N/A"}`
+    })
+    .join("\n")
+
+  const prompt = `You are a financial transaction categorization expert. Categorize ALL the following transactions based on the available context.
+
+TRANSACTIONS TO CATEGORIZE:
+${transactionsContext}
+
+AVAILABLE CATEGORIES:
+${categoriesContext}
+
+RECENT TRANSACTION HISTORY (for context on user's spending patterns):
+${historyContext}
+
+INSTRUCTIONS:
+1. Categorize EVERY transaction in the list above
+2. Look for patterns - if multiple transactions have similar merchants/names, they likely belong to the same category
+3. Use the transaction history to understand spending patterns
+4. Use the Plaid category as a fallback reference but it's not always accurate
+5. Consider the amount and transaction type (expense vs income)
+6. Only assign a category if confidence > 60, otherwise use null
+7. If you can't match a subcategory but the category is clear, just use the category (subcategoryId = null)
+8. Use exact category/subcategory IDs from the available categories list
+9. Be conservative - when in doubt, return null values
+10. Return results for ALL ${transactions.length} transactions using their index (0 to ${transactions.length - 1})
+
+Provide categorization for each transaction with confidence and brief reasoning.`
+
+  try {
+    const result = await generateObject({
+      model: openai("gpt-5-mini"),
+      schema: BatchCategorizationResultSchema,
+      prompt,
+    })
+
+    // Process results
+    for (const item of result.object.results) {
+      const transaction = transactions[item.transactionIndex]
+      if (!transaction) continue
+
+      // Validate category exists
+      if (item.categoryId && item.confidence > 60) {
+        const category = categories.find((c) => c.id === item.categoryId)
+        if (category) {
+          const subcategory = item.subcategoryId
+            ? category.subcategories.find((s) => s.id === item.subcategoryId)
+            : null
+
+          resultMap.set(transaction.id, {
+            categoryId: category.id,
+            subcategoryId: subcategory?.id || null,
+            confidence: item.confidence,
+            reasoning: item.reasoning,
+          })
+
+          logInfo(`🤖 Batch categorized "${transaction.name}"`, {
+            transactionId: transaction.id,
+            categoryId: category.id,
+            subcategoryId: subcategory?.id || null,
+            confidence: item.confidence,
+          })
+        }
+      } else {
+        logInfo(`⚠️  Low confidence (${item.confidence}) for "${transaction.name}", skipping`, {
+          transactionId: transaction.id,
+          confidence: item.confidence,
+        })
+      }
+    }
+
+    return resultMap
+  } catch (error) {
+    logError("Error in batch categorization:", error, { transactionCount: transactions.length })
+    return resultMap
+  }
+}
+
 /**
  * Bulk categorize multiple transactions
- * Handles fetching shared context once and processing in parallel with concurrency limits
+ * Uses batch LLM call for efficiency - single API call for all transactions
  */
-export async function categorizeTransactions(transactionIds: string[], options: CategorizeOptions = {}): Promise<void> {
+export async function categorizeTransactions(
+  transactionIds: string[],
+  _options: CategorizeOptions = {},
+): Promise<void> {
   if (transactionIds.length === 0) return
 
-  logInfo(`🔄 Starting bulk categorization for ${transactionIds.length} transactions...`, {
+  logInfo(`🔄 Starting batch categorization for ${transactionIds.length} transactions...`, {
     transactionCount: transactionIds.length,
   })
 
@@ -495,50 +641,96 @@ export async function categorizeTransactions(transactionIds: string[], options: 
     // 1. Fetch shared context once
     const [categories, recentHistory] = await Promise.all([getAllCategories(), getRecentTransactionHistory()])
 
-    // 2. Define concurrency limit (e.g., 5 concurrent requests to avoid rate limits)
-    const CONCURRENCY_LIMIT = 5
-    const results = []
+    // 2. Fetch all transactions to categorize
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        id: { in: transactionIds },
+        categoryId: null, // Only uncategorized transactions
+      },
+      select: {
+        id: true,
+        name: true,
+        merchantName: true,
+        amount: true,
+        date: true,
+        plaidCategory: true,
+        plaidSubcategory: true,
+        notes: true,
+      },
+    })
 
-    // 3. Process in chunks
-    for (let i = 0; i < transactionIds.length; i += CONCURRENCY_LIMIT) {
-      const chunk = transactionIds.slice(i, i + CONCURRENCY_LIMIT)
-      const chunkPromises = chunk.map(async (id) => {
-        try {
-          // Merge the pre-fetched data into the options for each call
-          const txOptions: CategorizeOptions = {
-            ...options,
-            preFetchedCategories: categories,
-            preFetchedHistory: recentHistory,
-          }
-
-          const result = await categorizeTransaction(id, txOptions)
-          if (result && result.categoryId) {
-            await applyCategorization(id, result.categoryId, result.subcategoryId)
-            return { id, status: "categorized", result }
-          } else {
-            return { id, status: "skipped" }
-          }
-        } catch (error) {
-          logError(`Failed to categorize transaction ${id}`, error, { transactionId: id })
-          return { id, status: "error", error }
-        }
-      })
-
-      const chunkResults = await Promise.all(chunkPromises)
-      results.push(...chunkResults)
+    if (transactions.length === 0) {
+      logInfo("All transactions already categorized, skipping batch")
+      return
     }
 
-    const categorizedCount = results.filter((r) => r.status === "categorized").length
-    const skippedCount = results.filter((r) => r.status === "skipped").length
-    const errorCount = results.filter((r) => r.status === "error").length
+    logInfo(`📦 Found ${transactions.length} uncategorized transaction(s) to process`)
 
-    logInfo(`✅ Bulk categorization complete`, {
+    // 3. Process in batches of 20 (to avoid token limits)
+    const BATCH_SIZE = 20
+    let categorizedCount = 0
+    let skippedCount = 0
+
+    for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
+      const batch = transactions.slice(i, i + BATCH_SIZE)
+
+      logInfo(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(transactions.length / BATCH_SIZE)}...`)
+
+      // Single LLM call for the batch
+      const batchResults = await categorizeTransactionsBatch(
+        batch as TransactionForBatch[],
+        categories,
+        recentHistory as any,
+      )
+
+      // Apply categorizations and add for-review tag
+      // First ensure the for-review tag exists (once per batch)
+      const forReviewTag = await prisma.tag.upsert({
+        where: { name: "for-review" },
+        update: {},
+        create: {
+          name: "for-review",
+          color: "#fbbf24",
+        },
+      })
+
+      for (const tx of batch) {
+        const result = batchResults.get(tx.id)
+        if (result && result.categoryId) {
+          await prisma.transaction.update({
+            where: { id: tx.id },
+            data: {
+              categoryId: result.categoryId,
+              subcategoryId: result.subcategoryId,
+              tags: {
+                connectOrCreate: {
+                  where: {
+                    transactionId_tagId: {
+                      transactionId: tx.id,
+                      tagId: forReviewTag.id,
+                    },
+                  },
+                  create: {
+                    tagId: forReviewTag.id,
+                  },
+                },
+              },
+            },
+          })
+          categorizedCount++
+        } else {
+          skippedCount++
+        }
+      }
+    }
+
+    logInfo(`✅ Batch categorization complete`, {
       total: transactionIds.length,
+      processed: transactions.length,
       categorized: categorizedCount,
       skipped: skippedCount,
-      errors: errorCount,
     })
   } catch (error) {
-    logError("Error in bulk categorization:", error, { transactionCount: transactionIds.length })
+    logError("Error in batch categorization:", error, { transactionCount: transactionIds.length })
   }
 }
