@@ -1,6 +1,10 @@
 /**
  * AI Tools for querying transaction data
  * These tools wrap existing cached queries to provide transaction insights
+ *
+ * IMPORTANT: Spending/income calculations exclude transfer categories to match dashboard behavior.
+ * Transfer categories represent money movement between accounts (not true income/expense).
+ * This ensures consistent totals across AI chat and dashboard displays.
  */
 
 import { tool } from "ai"
@@ -42,6 +46,8 @@ export const getTransactionsByDateRange = tool({
       const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
       const matchesMerchant =
         !merchantName || (t.merchantName && t.merchantName.toLowerCase().includes(merchantName.toLowerCase()))
+      // Note: Include transfers for transaction listing (user may want to see them)
+      // For calculations (spending/income), transfers are excluded in other tools
 
       return isInRange && matchesCategory && matchesMerchant
     })
@@ -93,9 +99,11 @@ export const getSpendingByCategory = tool({
       const transactions = await getAllTransactions()
       logInfo("  Fetched transactions", { count: transactions.length })
 
-      // Filter by date range
+      // Filter by date range and exclude transfer categories
       const filtered = transactions.filter((t: Transaction) => {
-        return isTransactionInDateRange(t.datetime, startDate, endDate)
+        const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
+        const isNotTransfer = !t.category?.isTransferCategory
+        return isInRange && isNotTransfer
       })
 
       // Group by category
@@ -159,9 +167,12 @@ export const getSpendingByMerchant = tool({
   execute: async ({ startDate, endDate, limit = 10 }: { startDate: string; endDate: string; limit?: number }) => {
     const transactions = await getAllTransactions()
 
-    // Filter by date range and merchants only
+    // Filter by date range, merchants only, and exclude transfer categories
     const filtered = transactions.filter((t: Transaction) => {
-      return isTransactionInDateRange(t.datetime, startDate, endDate) && t.merchantName
+      const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
+      const hasMerchant = !!t.merchantName
+      const isNotTransfer = !t.category?.isTransferCategory
+      return isInRange && hasMerchant && isNotTransfer
     })
 
     // Group by merchant
@@ -214,9 +225,11 @@ export const getTotalSpending = tool({
       const transactions = await getAllTransactions()
       logInfo("  Fetched transactions", { count: transactions.length })
 
-      // Filter by date range
+      // Filter by date range and exclude transfer categories
       const filtered = transactions.filter((t: Transaction) => {
-        return isTransactionInDateRange(t.datetime, startDate, endDate)
+        const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
+        const isNotTransfer = !t.category?.isTransferCategory
+        return isInRange && isNotTransfer
       })
 
       // Calculate totals (negative = expense, positive = income)
@@ -276,11 +289,12 @@ export const getSpendingTrends = tool({
   }) => {
     const transactions = await getAllTransactions()
 
-    // Filter by date range and optional category
+    // Filter by date range, optional category, and exclude transfer categories
     const filtered = transactions.filter((t: Transaction) => {
       const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
-      return isInRange && matchesCategory
+      const isNotTransfer = !t.category?.isTransferCategory
+      return isInRange && matchesCategory && isNotTransfer
     })
 
     // Group by month
