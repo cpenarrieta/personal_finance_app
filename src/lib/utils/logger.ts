@@ -6,6 +6,7 @@
  */
 
 import * as Sentry from "@sentry/nextjs"
+import { inspect } from "util"
 
 const isProduction = process.env.NODE_ENV === "production"
 
@@ -17,7 +18,11 @@ interface LogAttributes {
  * Log an informational message
  */
 export function logInfo(message: string, attributes?: LogAttributes) {
-  console.log(message, attributes || "")
+  if (attributes) {
+    console.log(message, inspect(attributes, { depth: null, colors: true }))
+  } else {
+    console.log(message)
+  }
 
   if (isProduction) {
     if (attributes) {
@@ -32,7 +37,11 @@ export function logInfo(message: string, attributes?: LogAttributes) {
  * Log a warning message
  */
 export function logWarn(message: string, attributes?: LogAttributes) {
-  console.warn(message, attributes || "")
+  if (attributes) {
+    console.warn(message, inspect(attributes, { depth: null, colors: true }))
+  } else {
+    console.warn(message)
+  }
 
   if (isProduction) {
     if (attributes) {
@@ -71,7 +80,11 @@ export function logError(message: string, error?: unknown, attributes?: LogAttri
  * Log a debug message
  */
 export function logDebug(message: string, attributes?: LogAttributes) {
-  console.debug(message, attributes || "")
+  if (attributes) {
+    console.debug(message, inspect(attributes, { depth: null, colors: true }))
+  } else {
+    console.debug(message)
+  }
 
   if (isProduction) {
     if (attributes) {
@@ -86,7 +99,11 @@ export function logDebug(message: string, attributes?: LogAttributes) {
  * Log a trace message
  */
 export function logTrace(message: string, attributes?: LogAttributes) {
-  console.trace(message, attributes || "")
+  if (attributes) {
+    console.trace(message, inspect(attributes, { depth: null, colors: true }))
+  } else {
+    console.trace(message)
+  }
 
   if (isProduction) {
     if (attributes) {
