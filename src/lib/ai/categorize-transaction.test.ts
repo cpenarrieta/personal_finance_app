@@ -174,44 +174,42 @@ describe("categorizeTransactions (Bulk)", () => {
 
     // Mock shared context calls
     ;(prisma.category.findMany as jest.Mock).mockResolvedValue(mockCategories)
-    ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([]) // history
     ;(prisma.tag.upsert as jest.Mock).mockResolvedValue({ id: "tag_review" })
 
-    // Mock per-transaction calls with deterministic implementation
-    ;(prisma.transaction.findUnique as jest.Mock).mockImplementation((args) => {
-      const id = args.where.id
-
-      // Check if this is the "check existing category" call (has specific select)
-      if (args.select && Object.keys(args.select).length === 1 && args.select.categoryId) {
-        return Promise.resolve(null) // Not categorized yet
+    // Mock transaction.findMany for different purposes
+    ;(prisma.transaction.findMany as jest.Mock).mockImplementation((args) => {
+      // If querying by id with 'in' operator, return the transactions to categorize
+      if (args.where?.id?.in) {
+        return Promise.resolve([mockTx1, mockTx2])
       }
-
-      // Otherwise it's the main fetch
-      if (id === "tx_1") return Promise.resolve(mockTx1)
-      if (id === "tx_2") return Promise.resolve(mockTx2)
-
-      return Promise.resolve(null)
+      // Otherwise it's the history query - return empty
+      return Promise.resolve([])
     })
 
-    // Mock similar transactions for each
-    ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
-
-    // Mock AI responses
-    ;(generateObject as jest.Mock)
-      .mockResolvedValueOnce({
-        object: { categoryId: "c1", subcategoryId: null, confidence: 90, reasoning: "r1" },
-      })
-      .mockResolvedValueOnce({
-        object: { categoryId: "c2", subcategoryId: null, confidence: 85, reasoning: "r2" },
-      })
+    // Mock AI batch response
+    ;(generateObject as jest.Mock).mockResolvedValue({
+      object: {
+        results: [
+          { transactionIndex: 0, categoryId: "c1", subcategoryId: null, confidence: 90, reasoning: "r1" },
+          { transactionIndex: 1, categoryId: "c2", subcategoryId: null, confidence: 85, reasoning: "r2" },
+        ],
+      },
+    })
 
     await categorizeTransactions(mockTxIds)
 
     // Verify initial shared fetches
     expect(prisma.category.findMany).toHaveBeenCalledTimes(1)
 
-    // Verify processing (Fetch + Check Existing for each = 4 calls)
-    expect(prisma.transaction.findUnique).toHaveBeenCalledTimes(4)
+    // Verify transaction.findMany was called (once for history, once for fetching transactions to categorize)
+    expect(prisma.transaction.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: { in: mockTxIds },
+          categoryId: null,
+        },
+      }),
+    )
 
     // Verify updates happened (successful categorization)
     expect(prisma.transaction.update).toHaveBeenCalledTimes(2)

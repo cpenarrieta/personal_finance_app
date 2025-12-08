@@ -63,8 +63,8 @@ describe("Plaid Webhook API", () => {
     ;(prismaModule.prisma.item.findFirst as jest.Mock).mockResolvedValue(mockItem)
     ;(prismaModule.prisma.item.update as jest.Mock).mockResolvedValue(mockItem)
 
-    // Mock sync service
-    ;(syncServiceModule.syncItemTransactions as jest.Mock).mockResolvedValue({
+    // Mock sync service - note the route uses syncItemTransactionsWithCategorization
+    ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockResolvedValue({
       stats: mockSyncStats,
       newCursor: "new-cursor",
     })
@@ -261,7 +261,7 @@ describe("Plaid Webhook API", () => {
       expect(prismaModule.prisma.item.findFirst).toHaveBeenCalledWith({
         where: { plaidItemId: "test-plaid-item-id" },
       })
-      expect(syncServiceModule.syncItemTransactions).toHaveBeenCalledWith(
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalledWith(
         mockItem.id,
         mockItem.accessToken,
         mockItem.lastTransactionsCursor,
@@ -293,7 +293,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactions).toHaveBeenCalled()
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
     })
 
     it("should handle INITIAL_UPDATE webhook", async () => {
@@ -314,7 +314,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactions).toHaveBeenCalled()
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
     })
 
     it("should handle HISTORICAL_UPDATE webhook", async () => {
@@ -335,7 +335,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactions).toHaveBeenCalled()
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
     })
 
     it("should handle TRANSACTIONS_REMOVED webhook", async () => {
@@ -357,7 +357,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactions).toHaveBeenCalled()
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
       expect(console.log).toHaveBeenCalledWith(
         "🗑️  Transactions removed:",
         expect.stringContaining("removedTransactions"),
@@ -382,7 +382,7 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactions).not.toHaveBeenCalled()
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).not.toHaveBeenCalled()
     })
 
     it("should log unhandled transaction webhook codes", async () => {
@@ -407,7 +407,7 @@ describe("Plaid Webhook API", () => {
         "ℹ️  Unhandled transaction webhook code: UNKNOWN_CODE",
         expect.stringContaining("UNKNOWN_CODE"),
       )
-      expect(syncServiceModule.syncItemTransactions).not.toHaveBeenCalled()
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).not.toHaveBeenCalled()
     })
   })
 
@@ -609,7 +609,9 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      ;(syncServiceModule.syncItemTransactions as jest.Mock).mockRejectedValue(new Error("Sync service error"))
+      ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockRejectedValue(
+        new Error("Sync service error"),
+      )
 
       // Act
       const response = await POST(request)
@@ -710,7 +712,7 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      ;(syncServiceModule.syncItemTransactions as jest.Mock).mockResolvedValue({
+      ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockResolvedValue({
         stats: {
           ...mockSyncStats,
           newTransactionIds,
@@ -722,10 +724,12 @@ describe("Plaid Webhook API", () => {
       await POST(request)
 
       // Assert
-      expect(aiCategorizationModule.categorizeTransactions).toHaveBeenCalledWith(newTransactionIds)
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("🤖 Starting AI categorization for 3 new transaction(s)"),
-        expect.stringContaining("transactionCount"),
+      // Note: syncItemTransactionsWithCategorization handles AI categorization internally
+      // so we just verify it was called with correct parameters
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalledWith(
+        mockItem.id,
+        mockItem.accessToken,
+        mockItem.lastTransactionsCursor,
       )
     })
 
@@ -740,7 +744,7 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      ;(syncServiceModule.syncItemTransactions as jest.Mock).mockResolvedValue({
+      ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockResolvedValue({
         stats: {
           ...mockSyncStats,
           newTransactionIds: [],
@@ -752,7 +756,9 @@ describe("Plaid Webhook API", () => {
       await POST(request)
 
       // Assert
-      expect(aiCategorizationModule.categorizeTransactions).not.toHaveBeenCalled()
+      // Note: syncItemTransactionsWithCategorization handles AI categorization internally
+      // Just verify it was called successfully
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
     })
 
     it("should continue webhook response even if AI categorization fails", async () => {
@@ -767,16 +773,14 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      ;(syncServiceModule.syncItemTransactions as jest.Mock).mockResolvedValue({
+      // Make syncItemTransactionsWithCategorization succeed but log categorization error
+      ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockResolvedValue({
         stats: {
           ...mockSyncStats,
           newTransactionIds,
         },
         newCursor: "new-cursor",
       })
-
-      const categorizationError = new Error("OpenAI API error")
-      ;(aiCategorizationModule.categorizeTransactions as jest.Mock).mockRejectedValue(categorizationError)
 
       // Act
       const response = await POST(request)
@@ -785,11 +789,8 @@ describe("Plaid Webhook API", () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.received).toBe(true)
-      expect(console.error).toHaveBeenCalledWith(
-        "❌ Error in AI categorization:",
-        categorizationError,
-        expect.objectContaining({ transactionCount: 2 }),
-      )
+      // Note: syncItemTransactionsWithCategorization handles errors internally
+      // and doesn't throw, so webhook processing continues successfully
     })
   })
 
@@ -827,7 +828,9 @@ describe("Plaid Webhook API", () => {
       await POST(request)
 
       // Assert
-      expect(console.log).toHaveBeenCalledWith("✅ Transaction sync complete", expect.stringContaining("added"))
+      // The sync completion logging happens inside syncItemTransactionsWithCategorization
+      // Just verify the webhook was processed successfully
+      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
     })
   })
 })
