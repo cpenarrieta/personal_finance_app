@@ -31,7 +31,7 @@ const BatchCategorizationResultSchema = z.object({
       categoryId: z.string().nullable().describe("The category ID, or null if uncertain"),
       subcategoryId: z.string().nullable().describe("The subcategory ID, or null if uncertain"),
       confidence: z.number().min(0).max(100).describe("Confidence score from 0-100"),
-      reasoning: z.string().max(200).describe("Brief explanation for the categorization decision"),
+      reasoning: z.string().max(500).describe("Brief explanation for the categorization decision"),
     }),
   ),
 })
@@ -571,6 +571,7 @@ INSTRUCTIONS:
 8. Use exact category/subcategory IDs from the available categories list
 9. Be conservative - when in doubt, return null values
 10. Return results for ALL ${transactions.length} transactions using their index (0 to ${transactions.length - 1})
+11. Keep reasoning brief - max 300 characters per transaction
 
 Provide categorization for each transaction with confidence and brief reasoning.`
 
