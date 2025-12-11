@@ -2,6 +2,7 @@
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
+import { RefreshButton } from "@/components/layout/RefreshButton"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -18,6 +19,7 @@ export function AppShell({ children, sidebarSlot, breadcrumbsSlot }: AppShellPro
           <SidebarTrigger />
           <Separator orientation="vertical" className="mr-2 h-4" />
           {breadcrumbsSlot}
+          <RefreshButton />
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
