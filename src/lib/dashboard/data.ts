@@ -161,6 +161,48 @@ export async function getUncategorizedTransactions() {
 }
 
 /**
+ * Get count of transactions that need review
+ * Includes both uncategorized transactions AND transactions with "for-review" tag
+ */
+export async function getReviewTransactionsCount() {
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions", "dashboard", "tags")
+
+  // First, try to get the "for-review" tag ID
+  const forReviewTag = await prisma.tag.findUnique({
+    where: { name: "for-review" },
+    select: { id: true },
+  })
+
+  const reviewCount = await prisma.transaction.count({
+    where: {
+      AND: [
+        { isSplit: false }, // Filter out parent transactions that have been split
+        {
+          OR: [
+            { categoryId: null }, // Uncategorized transactions
+            ...(forReviewTag
+              ? [
+                  {
+                    tags: {
+                      some: {
+                        tagId: forReviewTag.id,
+                      },
+                    },
+                  },
+                ]
+              : []),
+          ],
+        },
+      ],
+    },
+  })
+
+  return reviewCount
+}
+
+/**
  * Get recent transactions
  */
 export async function getRecentTransactions(limit = 20) {
