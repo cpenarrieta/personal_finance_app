@@ -1,5 +1,5 @@
 import { formatAmount } from "@/lib/utils"
-import { Wallet, TrendingUp, ArrowUpCircle, ArrowDownCircle, PiggyBank, Receipt } from "lucide-react"
+import { Wallet, TrendingUp, ArrowUpCircle, ArrowDownCircle, PiggyBank, ClipboardCheck } from "lucide-react"
 import { MetricCard } from "@/components/shared/MetricCard"
 import { getDashboardMetrics, getStatsWithTrends, getUncategorizedTransactions } from "@/lib/dashboard/data"
 import { calculateTotalBalance, calculateInvestmentValue } from "@/lib/dashboard/calculations"
@@ -13,7 +13,7 @@ interface DashboardMetricsSectionProps {
 
 /**
  * Async Server Component for Dashboard Metrics
- * Displays all 6 metric cards (balance, investments, spending, income, net, transaction count)
+ * Displays all 6 metric cards (balance, investments, spending, income, net, transactions for review)
  * Fetches data independently with "use cache" and error handling
  */
 export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetricsSectionProps) {
@@ -63,12 +63,12 @@ export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetri
           icon={TrendingUp}
         />
         <MetricCard
-          title={`${periodLabel} Transactions`}
-          value={current.transactionCount}
-          subtitle={subtitle}
-          icon={Receipt}
-          uncategorizedCount={uncategorizedCount}
+          title="Transactions for Review"
+          value={uncategorizedCount}
+          subtitle={uncategorizedCount === 1 ? "transaction needs review" : "transactions need review"}
+          icon={ClipboardCheck}
           href="/review-transactions"
+          valueClassName={uncategorizedCount > 0 ? "text-destructive" : "text-success"}
         />
         <MetricCard
           title={`${periodLabel} Spending`}
