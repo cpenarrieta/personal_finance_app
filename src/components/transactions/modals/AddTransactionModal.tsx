@@ -81,7 +81,9 @@ export function AddTransactionModal({ onClose, categories, tags, accounts }: Add
         body: JSON.stringify({
           accountId,
           name: name.trim(),
-          amount: parseFloat(amount),
+          // Convert from display format (positive=income, negative=expense)
+          // to database format (positive=expense, negative=income)
+          amount: parseFloat(amount) * -1,
           date,
           pending,
           merchantName: merchantName.trim() || null,
@@ -170,7 +172,7 @@ export function AddTransactionModal({ onClose, categories, tags, accounts }: Add
                 placeholder="0.00"
                 required
               />
-              <p className="text-xs text-gray-500">Positive for income, negative for expenses</p>
+              <p className="text-xs text-muted-foreground">Use negative (-) for expenses, positive for income</p>
             </div>
 
             <div className="space-y-2">

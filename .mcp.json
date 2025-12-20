@@ -7,9 +7,6 @@
     "playwright": {
       "command": "npx",
       "args": ["-y", "@playwright/mcp@latest"]
-    },
-    "Sentry": {
-      "url": "https://mcp.sentry.dev/mcp/cristianpenarrieta/personal_finance_app"
     }
   }
 }
