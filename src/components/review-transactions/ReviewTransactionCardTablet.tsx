@@ -85,7 +85,9 @@ export function ReviewTransactionCardTablet({
 
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <span
-              className={`font-semibold text-sm whitespace-nowrap ${edit.newAmount !== null ? "text-primary" : "text-foreground"}`}
+              className={`font-semibold text-sm whitespace-nowrap ${
+                displayAmount < 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+              }`}
             >
               {formatCurrency(displayAmount)}
             </span>

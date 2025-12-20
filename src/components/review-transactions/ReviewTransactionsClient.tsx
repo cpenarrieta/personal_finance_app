@@ -364,7 +364,11 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
                   </TableCell>
                   <TableCell className="text-right font-medium whitespace-nowrap">
                     <div className="flex items-center justify-end gap-2">
-                      <span className={edit.newAmount !== null ? "text-primary" : ""}>
+                      <span
+                        className={
+                          displayAmount < 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+                        }
+                      >
                         {formatCurrency(displayAmount)}
                       </span>
                       <Button
