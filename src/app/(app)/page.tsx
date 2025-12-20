@@ -15,6 +15,7 @@ import { DashboardMetricsSection } from "@/components/dashboard/DashboardMetrics
 import { DashboardLastMonthSection } from "@/components/dashboard/DashboardLastMonthSection"
 import { DashboardTopExpensesSection } from "@/components/dashboard/DashboardTopExpensesSection"
 import { MonthFilter } from "@/components/dashboard/MonthFilter"
+import { CashflowSankeyChartAsync } from "@/components/dashboard/charts/CashflowSankeyChartAsync"
 
 // Skeleton loaders
 import {
@@ -74,6 +75,16 @@ export default async function Page({ searchParams }: PageProps) {
 
       <Suspense fallback={<MetricCardsSkeleton />}>
         <DashboardMetricsSection monthsBack={monthsBack} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton title={false} subtitle={false}>
+            <ChartsSkeleton />
+          </SectionSkeleton>
+        }
+      >
+        <CashflowSankeyChartAsync monthsBack={monthsBack} />
       </Suspense>
 
       <Suspense
