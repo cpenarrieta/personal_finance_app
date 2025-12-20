@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useTransition } from "react"
+import { useState, useMemo, useTransition, useEffect } from "react"
 import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
 import { CategorySelect } from "@/components/ui/category-select"
 import { SubcategorySelect } from "@/components/ui/subcategory-select"
@@ -68,9 +68,34 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
     return initialEdits
   })
 
-  // Get current edit for a transaction
-  const getEdit = (transactionId: string): TransactionEdit => {
-    return edits.get(transactionId)!
+  // Sync edits when transactions change (e.g., on page refresh)
+  useEffect(() => {
+    setEdits((prevEdits) => {
+      const newEdits = new Map<string, TransactionEdit>()
+      transactions.forEach((t) => {
+        // Preserve existing edit if it exists, otherwise create new
+        const existingEdit = prevEdits.get(t.id)
+        if (existingEdit) {
+          newEdits.set(t.id, existingEdit)
+        } else {
+          newEdits.set(t.id, {
+            id: t.id,
+            categoryId: t.categoryId,
+            subcategoryId: t.subcategoryId,
+            notes: t.notes,
+            newAmount: null,
+            tagIds: t.tags.map((tag) => tag.id),
+            isSelected: true,
+          })
+        }
+      })
+      return newEdits
+    })
+  }, [transactions])
+
+  // Get current edit for a transaction - with safety check
+  const getEdit = (transactionId: string): TransactionEdit | undefined => {
+    return edits.get(transactionId)
   }
 
   // Update edit for a transaction
@@ -85,7 +110,9 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
 
   // Toggle selection for a transaction
   const toggleSelection = (transactionId: string) => {
-    updateEdit(transactionId, { isSelected: !getEdit(transactionId).isSelected })
+    const edit = getEdit(transactionId)
+    if (!edit) return
+    updateEdit(transactionId, { isSelected: !edit.isSelected })
   }
 
   // Toggle all selections
@@ -160,6 +187,8 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
     if (!flipAmountData) return
 
     const edit = getEdit(flipAmountData.transactionId)
+    if (!edit) return
+
     const currentAmount = edit.newAmount !== null ? edit.newAmount : flipAmountData.originalAmount
     updateEdit(flipAmountData.transactionId, { newAmount: currentAmount * -1 })
 
@@ -170,6 +199,8 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
   // Toggle tag for a transaction
   const toggleTag = (transactionId: string, tagId: string) => {
     const edit = getEdit(transactionId)
+    if (!edit) return
+
     const newTagIds = edit.tagIds.includes(tagId) ? edit.tagIds.filter((id) => id !== tagId) : [...edit.tagIds, tagId]
     updateEdit(transactionId, { tagIds: newTagIds })
   }
@@ -243,34 +274,44 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
 
       {/* Mobile - Card layout (< 640px) */}
       <div className="sm:hidden space-y-3">
-        {transactions.map((transaction) => (
-          <ReviewTransactionCard
-            key={transaction.id}
-            transaction={transaction}
-            edit={getEdit(transaction.id)}
-            categories={categories}
-            tags={tags}
-            onToggleSelection={() => toggleSelection(transaction.id)}
-            onUpdateEdit={(update) => updateEdit(transaction.id, update)}
-            onFlipAmount={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
-          />
-        ))}
+        {transactions.map((transaction) => {
+          const edit = getEdit(transaction.id)
+          if (!edit) return null
+
+          return (
+            <ReviewTransactionCard
+              key={transaction.id}
+              transaction={transaction}
+              edit={edit}
+              categories={categories}
+              tags={tags}
+              onToggleSelection={() => toggleSelection(transaction.id)}
+              onUpdateEdit={(update) => updateEdit(transaction.id, update)}
+              onFlipAmount={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
+            />
+          )
+        })}
       </div>
 
       {/* Tablet - Wide card layout (640px - 1024px) */}
       <div className="hidden sm:block lg:hidden space-y-3">
-        {transactions.map((transaction) => (
-          <ReviewTransactionCardTablet
-            key={transaction.id}
-            transaction={transaction}
-            edit={getEdit(transaction.id)}
-            categories={categories}
-            tags={tags}
-            onToggleSelection={() => toggleSelection(transaction.id)}
-            onUpdateEdit={(update) => updateEdit(transaction.id, update)}
-            onFlipAmount={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
-          />
-        ))}
+        {transactions.map((transaction) => {
+          const edit = getEdit(transaction.id)
+          if (!edit) return null
+
+          return (
+            <ReviewTransactionCardTablet
+              key={transaction.id}
+              transaction={transaction}
+              edit={edit}
+              categories={categories}
+              tags={tags}
+              onToggleSelection={() => toggleSelection(transaction.id)}
+              onUpdateEdit={(update) => updateEdit(transaction.id, update)}
+              onFlipAmount={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
+            />
+          )
+        })}
       </div>
 
       {/* Desktop - Table layout (≥ 1024px) */}
@@ -293,6 +334,8 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
           <TableBody>
             {transactions.map((transaction) => {
               const edit = getEdit(transaction.id)
+              if (!edit) return null
+
               const needsCategory = !edit.categoryId
               const displayAmount = edit.newAmount !== null ? edit.newAmount : transaction.amount_number
 
