@@ -414,14 +414,18 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-sidebar-border/50 pb-4">
         <Link
           href="/"
-          className="flex items-center gap-2 px-2 py-2 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-sidebar-accent/50 transition-all duration-200"
           onClick={handleLinkClick}
         >
-          <Image src="/app_logo.svg" alt="Logo" width={24} height={24} className="h-6 w-6" />
-          <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">Personal Finance</span>
+          <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 dark:bg-primary/20">
+            <Image src="/app_logo.svg" alt="Logo" width={20} height={20} className="h-5 w-5" />
+          </div>
+          <span className="font-semibold text-lg tracking-tight group-data-[collapsible=icon]:hidden">
+            Finance
+          </span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -497,14 +501,17 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
-        <div className="space-y-2 p-2">
+      <SidebarFooter className="group-data-[collapsible=icon]:hidden border-t border-sidebar-border/50 pt-4">
+        <div className="space-y-2 px-2">
           <SyncDropdown />
-          <ThemeToggle />
-          <LogoutButton
-            variant="ghost"
-            className="w-full text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-          />
+          <div className="flex gap-2">
+            <ThemeToggle />
+            <LogoutButton
+              variant="ghost"
+              size="icon"
+              className="flex-1 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+            />
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>
