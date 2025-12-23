@@ -96,9 +96,9 @@
   --muted: oklch(0.955 0.006 155);
   --muted-foreground: oklch(0.48 0.02 155);
 
-  /* Accent - Warm amber/gold for highlights and CTAs */
-  --accent: oklch(0.78 0.14 75);
-  --accent-foreground: oklch(0.25 0.03 75);
+  /* Accent - Light sage green for hover states (matches sidebar) */
+  --accent: oklch(0.94 0.025 165);
+  --accent-foreground: oklch(0.25 0.06 165);
 
   /* Semantic colors */
   --destructive: oklch(0.60 0.22 25);
@@ -188,9 +188,9 @@
   --muted: oklch(0.22 0.02 165);
   --muted-foreground: oklch(0.58 0.02 155);
 
-  /* Accent - Warm gold that pops in dark mode */
-  --accent: oklch(0.80 0.14 75);
-  --accent-foreground: oklch(0.15 0.02 75);
+  /* Accent - Sage green for hover states (matches sidebar) */
+  --accent: oklch(0.24 0.035 165);
+  --accent-foreground: oklch(0.85 0.02 155);
 
   /* Semantic */
   --destructive: oklch(0.65 0.20 25);
