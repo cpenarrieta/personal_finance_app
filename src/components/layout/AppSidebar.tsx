@@ -409,15 +409,13 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border/50 pb-4">
+      <SidebarHeader className="border-b border-sidebar-border/50 pb-4 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:pb-2">
         <Link
           href="/"
-          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-sidebar-accent/50 transition-all duration-200"
+          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-sidebar-accent/50 transition-all duration-200 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
           onClick={handleLinkClick}
         >
-          <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 dark:bg-primary/20">
-            <Image src="/app_logo.svg" alt="Logo" width={20} height={20} className="h-5 w-5" />
-          </div>
+          <Image src="/app_logo.svg" alt="Logo" width={24} height={24} className="h-6 w-6" />
           <span className="font-semibold text-lg tracking-tight group-data-[collapsible=icon]:hidden">Finance</span>
         </Link>
       </SidebarHeader>
