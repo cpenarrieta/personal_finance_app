@@ -55,12 +55,14 @@ export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetri
           value={`$${formatAmount(totalCurrent)}`}
           subtitle={`${accounts.length} account${accounts.length !== 1 ? "s" : ""}`}
           icon={Wallet}
+          accentColor="default"
         />
         <MetricCard
           title="Investment Value"
           value={`$${formatAmount(totalInvestmentValue)}`}
           subtitle={`${holdings.length} holding${holdings.length !== 1 ? "s" : ""}`}
           icon={TrendingUp}
+          accentColor="success"
         />
         <MetricCard
           title="Transactions for Review"
@@ -69,12 +71,14 @@ export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetri
           icon={ClipboardCheck}
           href="/review-transactions"
           valueClassName={reviewCount > 0 ? "text-destructive" : "text-success"}
+          accentColor={reviewCount > 0 ? "warning" : "success"}
         />
         <MetricCard
           title={`${periodLabel} Spending`}
           value={`$${formatAmount(current.spending)}`}
           subtitle={subtitle}
           icon={ArrowDownCircle}
+          accentColor="destructive"
         />
         <MetricCard
           title={`${periodLabel} Income`}
@@ -82,6 +86,7 @@ export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetri
           subtitle={subtitle}
           icon={ArrowUpCircle}
           valueClassName="text-success"
+          accentColor="success"
         />
         <MetricCard
           title="Net Income"
@@ -89,6 +94,7 @@ export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetri
           subtitle={subtitle}
           icon={PiggyBank}
           valueClassName={netIncome >= 0 ? "text-success" : "text-destructive"}
+          accentColor={netIncome >= 0 ? "success" : "destructive"}
         />
       </div>
     )

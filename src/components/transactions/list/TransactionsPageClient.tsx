@@ -4,7 +4,13 @@ import { useState, useRef } from "react"
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList"
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal"
 import { Button } from "@/components/ui/button"
-import { Download, Sheet } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Download, Sheet, Plus, MoreHorizontal, ArrowDownToLine, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { downloadTransactionsCSV, copyTransactionsForGoogleSheets } from "@/lib/transactions/export"
 import { logError } from "@/lib/utils/logger"
@@ -77,40 +83,62 @@ export function TransactionsPageClient({
 
   return (
     <>
-      <div className="mb-4 space-y-3 md:space-y-0">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Header */}
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Banking Transactions</h1>
-            <p className="text-sm md:text-base text-muted-foreground mt-1">
-              View and search all your banking transactions
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+              Transactions
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {transactions.length.toLocaleString()} total transactions
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 flex-wrap md:flex-nowrap">
-            <Button
-              variant="outline"
-              onClick={handleCopyForGoogleSheets}
-              disabled={isCopying}
-              size="sm"
-              className="md:h-10"
-            >
-              <Sheet className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">{isCopying ? "Copying..." : "Copy to Clipboard"}</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleDownloadCSV}
-              disabled={isDownloading}
-              size="sm"
-              className="md:h-10"
-            >
-              <Download className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">{isDownloading ? "Downloading..." : "Download CSV"}</span>
-            </Button>
-            <Button onClick={() => setShowAddModal(true)} size="sm" className="md:h-10">
-              Add Transaction
+          <div className="flex items-center gap-2">
+            {/* Export dropdown for desktop */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden sm:flex">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleDownloadCSV} disabled={isDownloading}>
+                  <ArrowDownToLine className="h-4 w-4 mr-2" />
+                  {isDownloading ? "Downloading..." : "Download CSV"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopyForGoogleSheets} disabled={isCopying}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  {isCopying ? "Copying..." : "Copy for Google Sheets"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Mobile more menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="sm:hidden">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleDownloadCSV} disabled={isDownloading}>
+                  <ArrowDownToLine className="h-4 w-4 mr-2" />
+                  {isDownloading ? "Downloading..." : "Download CSV"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopyForGoogleSheets} disabled={isCopying}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  {isCopying ? "Copying..." : "Copy for Sheets"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button onClick={() => setShowAddModal(true)} size="sm">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Transaction</span>
             </Button>
           </div>
         </div>
