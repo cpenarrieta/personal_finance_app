@@ -357,19 +357,14 @@ function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon" className="w-full">
+      <Button variant="outline" size="icon">
         <Sun className="h-4 w-4" />
       </Button>
     )
   }
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="w-full"
-    >
+    <Button variant="outline" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
       {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       <span className="sr-only">Toggle theme</span>
     </Button>
@@ -423,9 +418,7 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
           <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 dark:bg-primary/20">
             <Image src="/app_logo.svg" alt="Logo" width={20} height={20} className="h-5 w-5" />
           </div>
-          <span className="font-semibold text-lg tracking-tight group-data-[collapsible=icon]:hidden">
-            Finance
-          </span>
+          <span className="font-semibold text-lg tracking-tight group-data-[collapsible=icon]:hidden">Finance</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -504,12 +497,11 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
       <SidebarFooter className="group-data-[collapsible=icon]:hidden border-t border-sidebar-border/50 pt-4">
         <div className="space-y-2 px-2">
           <SyncDropdown />
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
             <LogoutButton
               variant="ghost"
-              size="icon"
-              className="flex-1 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+              className="flex-1 justify-start text-destructive hover:text-destructive/80 hover:bg-destructive/10"
             />
           </div>
         </div>
