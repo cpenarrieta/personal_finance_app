@@ -357,19 +357,14 @@ function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon" className="w-full">
+      <Button variant="outline" size="icon">
         <Sun className="h-4 w-4" />
       </Button>
     )
   }
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="w-full"
-    >
+    <Button variant="outline" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
       {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       <span className="sr-only">Toggle theme</span>
     </Button>
@@ -414,14 +409,14 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-sidebar-border/50 pb-4 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:pb-2">
         <Link
           href="/"
-          className="flex items-center gap-2 px-2 py-2 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-sidebar-accent/50 transition-all duration-200 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
           onClick={handleLinkClick}
         >
           <Image src="/app_logo.svg" alt="Logo" width={24} height={24} className="h-6 w-6" />
-          <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">Personal Finance</span>
+          <span className="font-semibold text-lg tracking-tight group-data-[collapsible=icon]:hidden">Finance</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -497,14 +492,16 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
-        <div className="space-y-2 p-2">
+      <SidebarFooter className="group-data-[collapsible=icon]:hidden border-t border-sidebar-border/50 pt-4">
+        <div className="space-y-2 px-2">
           <SyncDropdown />
-          <ThemeToggle />
-          <LogoutButton
-            variant="ghost"
-            className="w-full text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-          />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <LogoutButton
+              variant="ghost"
+              className="flex-1 justify-start text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+            />
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>
