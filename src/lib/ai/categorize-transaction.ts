@@ -421,7 +421,36 @@ Provide your categorization decision with confidence and reasoning.`
 }
 
 /**
+ * Check if transaction amount sign mismatches category type
+ * Returns true if sign appears incorrect (e.g., income category with expense sign)
+ */
+async function detectSignMismatch(transactionId: string, categoryId: string): Promise<boolean> {
+  const [transaction, category] = await Promise.all([
+    prisma.transaction.findUnique({
+      where: { id: transactionId },
+      select: { amount: true },
+    }),
+    prisma.category.findUnique({
+      where: { id: categoryId },
+      select: { groupType: true },
+    }),
+  ])
+
+  if (!transaction || !category?.groupType) return false
+
+  const amount = transaction.amount.toNumber()
+  // Convention: positive amount = expense, negative = income
+  // INCOME category should have negative amount
+  // EXPENSES category should have positive amount
+  if (category.groupType === "INCOME" && amount > 0) return true
+  if (category.groupType === "EXPENSES" && amount < 0) return true
+
+  return false
+}
+
+/**
  * Apply categorization and add "for-review" tag to a transaction
+ * Also adds "sign-review" tag if amount sign doesn't match category type
  */
 export async function applyCategorization(
   transactionId: string,
@@ -430,7 +459,7 @@ export async function applyCategorization(
   skipReviewTag: boolean = false,
 ): Promise<void> {
   try {
-    let tagsUpdate = {}
+    const tagsToConnect: { tagId: string }[] = []
 
     if (!skipReviewTag) {
       // Ensure "for-review" tag exists
@@ -442,38 +471,62 @@ export async function applyCategorization(
           color: "#fbbf24", // Yellow color for review
         },
       })
-
-      tagsUpdate = {
-        connectOrCreate: {
-          where: {
-            transactionId_tagId: {
-              transactionId,
-              tagId: forReviewTag.id,
-            },
-          },
-          create: {
-            tagId: forReviewTag.id,
-          },
-        },
-      }
+      tagsToConnect.push({ tagId: forReviewTag.id })
     }
 
-    // Update transaction with category and optionally add tag
+    // Check for sign mismatch and add "sign-review" tag if needed
+    const hasSignMismatch = await detectSignMismatch(transactionId, categoryId)
+    if (hasSignMismatch) {
+      const signReviewTag = await prisma.tag.upsert({
+        where: { name: "sign-review" },
+        update: {},
+        create: {
+          name: "sign-review",
+          color: "#f97316", // Orange color for sign review
+        },
+      })
+      tagsToConnect.push({ tagId: signReviewTag.id })
+      logInfo(`⚠️  Sign mismatch detected for transaction ${transactionId}`, { transactionId, categoryId })
+    }
+
+    // Build tags update
+    const tagsUpdate =
+      tagsToConnect.length > 0
+        ? {
+            connectOrCreate: tagsToConnect.map((tag) => ({
+              where: {
+                transactionId_tagId: {
+                  transactionId,
+                  tagId: tag.tagId,
+                },
+              },
+              create: {
+                tagId: tag.tagId,
+              },
+            })),
+          }
+        : undefined
+
+    // Update transaction with category and optionally add tags
     await prisma.transaction.update({
       where: { id: transactionId },
       data: {
         categoryId,
         subcategoryId,
-        tags: !skipReviewTag ? tagsUpdate : undefined,
+        tags: tagsUpdate,
       },
     })
 
-    logInfo(`✅ Applied categorization${!skipReviewTag ? " and for-review tag" : ""} to transaction ${transactionId}`, {
-      transactionId,
-      categoryId,
-      subcategoryId,
-      hasReviewTag: !skipReviewTag,
-    })
+    logInfo(
+      `✅ Applied categorization${!skipReviewTag ? " and for-review tag" : ""}${hasSignMismatch ? " and sign-review tag" : ""} to transaction ${transactionId}`,
+      {
+        transactionId,
+        categoryId,
+        subcategoryId,
+        hasReviewTag: !skipReviewTag,
+        hasSignMismatch,
+      },
+    )
   } catch (error) {
     logError("Error applying categorization:", error, { transactionId, categoryId, subcategoryId })
     throw error
@@ -685,36 +738,58 @@ export async function categorizeTransactions(
       )
 
       // Apply categorizations and add for-review tag
-      // First ensure the for-review tag exists (once per batch)
-      const forReviewTag = await prisma.tag.upsert({
-        where: { name: "for-review" },
-        update: {},
-        create: {
-          name: "for-review",
-          color: "#fbbf24",
-        },
-      })
+      // Ensure both review tags exist (once per batch)
+      const [forReviewTag, signReviewTag] = await Promise.all([
+        prisma.tag.upsert({
+          where: { name: "for-review" },
+          update: {},
+          create: { name: "for-review", color: "#fbbf24" },
+        }),
+        prisma.tag.upsert({
+          where: { name: "sign-review" },
+          update: {},
+          create: { name: "sign-review", color: "#f97316" },
+        }),
+      ])
+
+      // Build category groupType map for sign mismatch detection
+      const categoryGroupTypes = new Map(categories.map((c) => [c.id, c.groupType]))
 
       for (const tx of batch) {
         const result = batchResults.get(tx.id)
         if (result && result.categoryId) {
+          const tagsToConnect: { tagId: string }[] = [{ tagId: forReviewTag.id }]
+
+          // Check for sign mismatch
+          const groupType = categoryGroupTypes.get(result.categoryId)
+          const amount = tx.amount.toNumber()
+          const hasSignMismatch = (groupType === "INCOME" && amount > 0) || (groupType === "EXPENSES" && amount < 0)
+
+          if (hasSignMismatch) {
+            tagsToConnect.push({ tagId: signReviewTag.id })
+            logInfo(`⚠️  Sign mismatch detected for transaction ${tx.id}`, {
+              transactionId: tx.id,
+              categoryId: result.categoryId,
+            })
+          }
+
           await prisma.transaction.update({
             where: { id: tx.id },
             data: {
               categoryId: result.categoryId,
               subcategoryId: result.subcategoryId,
               tags: {
-                connectOrCreate: {
+                connectOrCreate: tagsToConnect.map((tag) => ({
                   where: {
                     transactionId_tagId: {
                       transactionId: tx.id,
-                      tagId: forReviewTag.id,
+                      tagId: tag.tagId,
                     },
                   },
                   create: {
-                    tagId: forReviewTag.id,
+                    tagId: tag.tagId,
                   },
-                },
+                })),
               },
             },
           })

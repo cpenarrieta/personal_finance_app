@@ -19,7 +19,7 @@ type TransactionUpdate = z.infer<typeof TransactionUpdateSchema>
 /**
  * Confirm and save transaction updates
  * - Updates category, subcategory, notes, amount, and tags for selected transactions
- * - Removes "for-review" tag from confirmed transactions
+ * - Removes "for-review" and "sign-review" tags from confirmed transactions
  * - Revalidates transaction cache
  */
 export async function confirmTransactions(updates: TransactionUpdate[]) {
@@ -27,11 +27,12 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
     // Validate all updates
     const validatedUpdates = updates.map((update) => TransactionUpdateSchema.parse(update))
 
-    // Get the "for-review" tag
-    const forReviewTag = await prisma.tag.findUnique({
-      where: { name: "for-review" },
-      select: { id: true },
-    })
+    // Get review tags to remove on confirmation
+    const [forReviewTag, signReviewTag] = await Promise.all([
+      prisma.tag.findUnique({ where: { name: "for-review" }, select: { id: true } }),
+      prisma.tag.findUnique({ where: { name: "sign-review" }, select: { id: true } }),
+    ])
+    const reviewTagIds = [forReviewTag?.id, signReviewTag?.id].filter((id): id is string => !!id)
 
     // Fetch current transaction tags for all updates
     const currentTransactions = await prisma.transaction.findMany({
@@ -54,10 +55,8 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
         const tagsToConnect = update.tagIds.filter((tagId: string) => !currentTagIds.includes(tagId))
         const tagsToDisconnect = currentTagIds.filter((tagId: string) => !update.tagIds.includes(tagId))
 
-        // Filter out "for-review" tag from tagsToConnect to avoid re-adding it
-        const tagsToConnectFiltered = forReviewTag
-          ? tagsToConnect.filter((tagId: string) => tagId !== forReviewTag.id)
-          : tagsToConnect
+        // Filter out review tags from tagsToConnect to avoid re-adding them
+        const tagsToConnectFiltered = tagsToConnect.filter((tagId: string) => !reviewTagIds.includes(tagId))
 
         return prisma.transaction.update({
           where: { id: update.id },
@@ -68,11 +67,11 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
             // Update amount if newAmount is provided (convert back to database format: display * -1)
             ...(update.newAmount !== null ? { amount: update.newAmount * -1 } : {}),
             tags: {
-              // Remove "for-review" tag if it exists
-              ...(forReviewTag
+              // Remove review tags (for-review and sign-review)
+              ...(reviewTagIds.length > 0
                 ? {
                     deleteMany: {
-                      tagId: forReviewTag.id,
+                      tagId: { in: reviewTagIds },
                     },
                   }
                 : {}),
@@ -84,14 +83,12 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
                     })),
                   }
                 : {}),
-              // Disconnect removed tags (excluding for-review which is already handled)
+              // Disconnect removed tags (excluding review tags which are already handled)
               ...(tagsToDisconnect.length > 0
                 ? {
                     deleteMany: {
                       tagId: {
-                        in: forReviewTag
-                          ? tagsToDisconnect.filter((tagId: string) => tagId !== forReviewTag.id)
-                          : tagsToDisconnect,
+                        in: tagsToDisconnect.filter((tagId: string) => !reviewTagIds.includes(tagId)),
                       },
                     },
                   }

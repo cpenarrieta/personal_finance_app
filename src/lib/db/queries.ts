@@ -606,7 +606,7 @@ export async function getAllConnectedItems() {
 }
 
 /**
- * Get transactions that need review (uncategorized or tagged "for-review")
+ * Get transactions that need review (uncategorized, "for-review" tag, or "sign-review" tag)
  * Cached with 24h expiration, tagged with "transactions"
  */
 export async function getReviewTransactions() {
@@ -614,11 +614,16 @@ export async function getReviewTransactions() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("transactions")
 
-  // First, try to get the "for-review" tag ID
-  const forReviewTag = await prisma.tag.findUnique({
-    where: { name: "for-review" },
-    select: { id: true },
-  })
+  // Get review tag IDs
+  const [forReviewTag, signReviewTag] = await Promise.all([
+    prisma.tag.findUnique({ where: { name: "for-review" }, select: { id: true } }),
+    prisma.tag.findUnique({ where: { name: "sign-review" }, select: { id: true } }),
+  ])
+
+  // Build tag conditions
+  const tagConditions = [forReviewTag, signReviewTag]
+    .filter((tag): tag is { id: string } => tag !== null)
+    .map((tag) => ({ tags: { some: { tagId: tag.id } } }))
 
   return prisma.transaction.findMany({
     where: {
@@ -627,17 +632,7 @@ export async function getReviewTransactions() {
         {
           OR: [
             { categoryId: null }, // Uncategorized transactions
-            ...(forReviewTag
-              ? [
-                  {
-                    tags: {
-                      some: {
-                        tagId: forReviewTag.id,
-                      },
-                    },
-                  },
-                ]
-              : []),
+            ...tagConditions, // Transactions with for-review or sign-review tags
           ],
         },
       ],
