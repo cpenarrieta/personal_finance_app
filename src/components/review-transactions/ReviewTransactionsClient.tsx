@@ -24,7 +24,7 @@ import {
 import { TagSelector } from "@/components/transactions/filters/TagSelector"
 import { confirmTransactions } from "@/app/(app)/review-transactions/actions/confirm-transactions"
 import { useRouter } from "next/navigation"
-import { ArrowLeftRight, CheckCircle2, AlertCircle, ClipboardCheck } from "lucide-react"
+import { ArrowLeftRight, CheckCircle2, ClipboardCheck } from "lucide-react"
 import { ReviewTransactionCard } from "./ReviewTransactionCard"
 import { ReviewTransactionCardTablet } from "./ReviewTransactionCardTablet"
 
@@ -243,9 +243,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
       <div className="space-y-6">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Review and categorize your transactions
-          </p>
+          <p className="text-sm sm:text-base text-muted-foreground">Review and categorize your transactions</p>
         </div>
         <Card className="border-success/30 bg-success/5">
           <CardContent className="p-8 text-center">
@@ -268,12 +266,11 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <ClipboardCheck className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-                Review Transactions
-              </h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
             </div>
             <p className="text-sm text-muted-foreground">
-              Categorize {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} to keep your finances organized
+              Categorize {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} to keep your finances
+              organized
             </p>
           </div>
 
@@ -521,14 +518,11 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
         <div className="flex items-center gap-3">
           <div className="flex-shrink-0">
             <div className="text-xs text-muted-foreground">Selected</div>
-            <div className="text-lg font-semibold">{selectedCount}/{transactions.length}</div>
+            <div className="text-lg font-semibold">
+              {selectedCount}/{transactions.length}
+            </div>
           </div>
-          <Button
-            onClick={handleConfirmClick}
-            disabled={selectedCount === 0 || isPending}
-            size="lg"
-            className="flex-1"
-          >
+          <Button onClick={handleConfirmClick} disabled={selectedCount === 0 || isPending} size="lg" className="flex-1">
             {isPending ? (
               "Confirming..."
             ) : (

@@ -4,13 +4,8 @@ import { useState, useRef } from "react"
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList"
 import { AddTransactionModal } from "@/components/transactions/modals/AddTransactionModal"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Download, Sheet, Plus, MoreHorizontal, ArrowDownToLine, Copy } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Download, Plus, MoreHorizontal, ArrowDownToLine, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { downloadTransactionsCSV, copyTransactionsForGoogleSheets } from "@/lib/transactions/export"
 import { logError } from "@/lib/utils/logger"
@@ -87,12 +82,8 @@ export function TransactionsPageClient({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Header */}
           <div className="space-y-1">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              Transactions
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {transactions.length.toLocaleString()} total transactions
-            </p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Transactions</h1>
+            <p className="text-sm text-muted-foreground">{transactions.length.toLocaleString()} total transactions</p>
           </div>
 
           {/* Action Buttons */}

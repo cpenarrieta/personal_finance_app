@@ -8,7 +8,7 @@ import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { ChevronRight, Tag } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import type { TransactionForClient } from "@/types"
 
 interface TransactionItemProps {
@@ -69,17 +69,12 @@ export function TransactionItem({
         </div>
 
         {/* Transaction Details */}
-        <div
-          className="flex-1 min-w-0 cursor-pointer"
-          onClick={() => !showBulkUpdate && onEdit?.(t)}
-        >
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => !showBulkUpdate && onEdit?.(t)}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               {/* Primary: Merchant/Name */}
               <div className="flex items-center gap-2">
-                <span className="font-medium text-foreground truncate">
-                  {t.merchantName || t.name}
-                </span>
+                <span className="font-medium text-foreground truncate">{t.merchantName || t.name}</span>
                 {t.pending && (
                   <Badge variant="outline" className="border-warning text-warning text-xs px-1.5 py-0">
                     Pending
@@ -105,9 +100,7 @@ export function TransactionItem({
                   <>
                     <span className="text-muted-foreground/40">•</span>
                     <span className="text-primary/80">{t.category.name}</span>
-                    {t.subcategory && (
-                      <span className="text-muted-foreground/60">/ {t.subcategory.name}</span>
-                    )}
+                    {t.subcategory && <span className="text-muted-foreground/60">/ {t.subcategory.name}</span>}
                   </>
                 )}
                 {isUncategorized && (
@@ -119,11 +112,7 @@ export function TransactionItem({
               </div>
 
               {/* Notes (if any) */}
-              {t.notes && (
-                <p className="text-xs text-muted-foreground/80 mt-1 truncate italic">
-                  {t.notes}
-                </p>
-              )}
+              {t.notes && <p className="text-xs text-muted-foreground/80 mt-1 truncate italic">{t.notes}</p>}
 
               {/* Tags */}
               {t.tags && t.tags.length > 0 && (

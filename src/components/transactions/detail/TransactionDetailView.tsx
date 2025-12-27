@@ -54,7 +54,9 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Hero Header */}
       <Card className="overflow-hidden">
-        <div className={`relative p-6 md:p-8 ${isExpense ? "bg-gradient-to-br from-card to-destructive/5" : "bg-gradient-to-br from-card to-success/5"}`}>
+        <div
+          className={`relative p-6 md:p-8 ${isExpense ? "bg-gradient-to-br from-card to-destructive/5" : "bg-gradient-to-br from-card to-success/5"}`}
+        >
           <div className="flex items-start gap-4">
             {/* Logo/Avatar */}
             <div className="flex-shrink-0">
@@ -87,22 +89,22 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                   )}
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm text-muted-foreground">
-                      {formatTransactionDate(transaction.datetime, "full")}
+                      {formatTransactionDate(transaction.datetime, "long")}
                     </span>
                     {transaction.pending && (
                       <Badge variant="outline" className="border-warning text-warning">
                         Pending
                       </Badge>
                     )}
-                    {transaction.parentTransactionId && (
-                      <Badge variant="secondary">Split</Badge>
-                    )}
+                    {transaction.parentTransactionId && <Badge variant="secondary">Split</Badge>}
                   </div>
                 </div>
 
                 {/* Amount */}
                 <div className="text-right flex-shrink-0">
-                  <div className={`text-2xl md:text-3xl font-bold tabular-nums ${isExpense ? "text-foreground" : "text-success"}`}>
+                  <div
+                    className={`text-2xl md:text-3xl font-bold tabular-nums ${isExpense ? "text-foreground" : "text-success"}`}
+                  >
                     {isExpense ? "-" : "+"}${formatAmount(absoluteAmount)}
                   </div>
                   {transaction.isoCurrencyCode && (
@@ -141,7 +143,8 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                 <div>
                   <p className="text-sm font-medium">Part of a split transaction</p>
                   <p className="text-xs text-muted-foreground">
-                    Original: {transaction.parentTransaction.name} • ${formatAmount(transaction.parentTransaction.amount_number)}
+                    Original: {transaction.parentTransaction.name} • $
+                    {formatAmount(transaction.parentTransaction.amount_number)}
                   </p>
                 </div>
               </div>
@@ -213,8 +216,10 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm font-medium">{formatTransactionDate(transaction.datetime, "full")}</p>
-                <p className="text-xs text-muted-foreground">{formatTransactionDate(transaction.datetime, "weekday")}</p>
+                <p className="text-sm font-medium">{formatTransactionDate(transaction.datetime, "long")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatTransactionDate(transaction.datetime, "weekday")}
+                </p>
               </div>
             </div>
 
@@ -293,11 +298,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                   <p className="text-xs text-muted-foreground mb-2">Tags</p>
                   <div className="flex flex-wrap gap-1.5">
                     {transaction.tags.map((tag) => (
-                      <Badge
-                        key={tag.id}
-                        className="text-white text-xs"
-                        style={{ backgroundColor: tag.color }}
-                      >
+                      <Badge key={tag.id} className="text-white text-xs" style={{ backgroundColor: tag.color }}>
                         {tag.name}
                       </Badge>
                     ))}
@@ -316,7 +317,12 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             <div className="flex items-start gap-3">
               <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0">
                 <svg className="h-4 w-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
                 </svg>
               </div>
               <div className="flex-1">
@@ -347,11 +353,15 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
           <div className="grid gap-3 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Transaction ID</span>
-              <span className="font-mono truncate max-w-[200px]" title={transaction.id}>{transaction.id}</span>
+              <span className="font-mono truncate max-w-[200px]" title={transaction.id}>
+                {transaction.id}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Plaid ID</span>
-              <span className="font-mono truncate max-w-[200px]" title={transaction.plaidTransactionId}>{transaction.plaidTransactionId}</span>
+              <span className="font-mono truncate max-w-[200px]" title={transaction.plaidTransactionId}>
+                {transaction.plaidTransactionId}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Created</span>
