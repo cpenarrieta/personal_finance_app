@@ -29,22 +29,15 @@ export function MetricCard({
   trend,
   accentColor = "default",
 }: MetricCardProps) {
-  const accentClasses = {
-    default: "from-primary/5 to-transparent",
-    success: "from-success/10 to-transparent",
-    warning: "from-warning/10 to-transparent",
-    destructive: "from-destructive/10 to-transparent",
-  }
-
   const iconBgClasses = {
-    default: "bg-primary/10 text-primary",
-    success: "bg-success/10 text-success",
-    warning: "bg-warning/10 text-warning",
-    destructive: "bg-destructive/10 text-destructive",
+    default: "bg-muted text-muted-foreground",
+    success: "bg-muted text-muted-foreground",
+    warning: "bg-muted text-muted-foreground",
+    destructive: "bg-muted text-muted-foreground",
   }
 
   const content = (
-    <div className={`relative overflow-hidden bg-gradient-to-br ${accentClasses[accentColor]}`}>
+    <>
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div className="space-y-1">
           <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
@@ -56,33 +49,21 @@ export function MetricCard({
         )}
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className={`text-2xl md:text-3xl font-bold tracking-tight ${valueClassName || ""}`}>
-          {value}
-        </div>
+        <div className={`text-2xl md:text-3xl font-bold tracking-tight ${valueClassName || ""}`}>{value}</div>
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
-            {subtitle && (
-              <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
-            )}
+            {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
             {uncategorizedCount !== undefined && uncategorizedCount > 0 && (
-              <p className="text-xs mt-1 text-destructive font-medium">
-                {uncategorizedCount} uncategorized
-              </p>
+              <p className="text-xs mt-1 text-destructive font-medium">{uncategorizedCount} uncategorized</p>
             )}
           </div>
           {trend && (
             <div
               className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-                trend.value >= 0
-                  ? "bg-success/10 text-success"
-                  : "bg-destructive/10 text-destructive"
+                trend.value >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
               }`}
             >
-              {trend.value >= 0 ? (
-                <TrendingUp className="h-3 w-3" />
-              ) : (
-                <TrendingDown className="h-3 w-3" />
-              )}
+              {trend.value >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
               <span>{Math.abs(trend.value)}%</span>
             </div>
           )}
@@ -94,18 +75,18 @@ export function MetricCard({
           </div>
         )}
       </CardContent>
-    </div>
+    </>
   )
 
   if (href) {
     return (
       <Link href={href} className="group">
-        <Card className="cursor-pointer hover:shadow-md hover:border-primary/20 transition-all duration-200 overflow-hidden">
+        <Card className="cursor-pointer hover:shadow-md hover:border-primary/20 transition-all duration-200">
           {content}
         </Card>
       </Link>
     )
   }
 
-  return <Card className="overflow-hidden">{content}</Card>
+  return <Card>{content}</Card>
 }
