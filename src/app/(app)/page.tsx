@@ -16,6 +16,7 @@ import { DashboardLastMonthSection } from "@/components/dashboard/DashboardLastM
 import { DashboardTopExpensesSection } from "@/components/dashboard/DashboardTopExpensesSection"
 import { MonthFilter } from "@/components/dashboard/MonthFilter"
 import { CashflowSankeyChartAsync } from "@/components/dashboard/charts/CashflowSankeyChartAsync"
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 
 // Skeleton loaders
 import {
@@ -70,42 +71,58 @@ export default async function Page({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <MonthFilter />
+    <div className="space-y-8">
+      {/* Header with Greeting */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <DashboardHeader />
+        <MonthFilter />
+      </div>
 
-      <Suspense fallback={<MetricCardsSkeleton />}>
-        <DashboardMetricsSection monthsBack={monthsBack} />
-      </Suspense>
+      {/* Metrics Section */}
+      <section>
+        <Suspense fallback={<MetricCardsSkeleton />}>
+          <DashboardMetricsSection monthsBack={monthsBack} />
+        </Suspense>
+      </section>
 
-      <Suspense
-        fallback={
-          <SectionSkeleton title={false} subtitle={false}>
-            <ChartsSkeleton />
-          </SectionSkeleton>
-        }
-      >
-        <CashflowSankeyChartAsync monthsBack={monthsBack} />
-      </Suspense>
+      {/* Cashflow Visualization */}
+      <section>
+        <Suspense
+          fallback={
+            <SectionSkeleton title={false} subtitle={false}>
+              <ChartsSkeleton />
+            </SectionSkeleton>
+          }
+        >
+          <CashflowSankeyChartAsync monthsBack={monthsBack} />
+        </Suspense>
+      </section>
 
-      <Suspense
-        fallback={
-          <SectionSkeleton title subtitle>
-            <ChartsSkeleton />
-          </SectionSkeleton>
-        }
-      >
-        <DashboardLastMonthSection monthsBack={monthsBack} />
-      </Suspense>
+      {/* Monthly Overview Charts */}
+      <section>
+        <Suspense
+          fallback={
+            <SectionSkeleton title subtitle>
+              <ChartsSkeleton />
+            </SectionSkeleton>
+          }
+        >
+          <DashboardLastMonthSection monthsBack={monthsBack} />
+        </Suspense>
+      </section>
 
-      <Suspense
-        fallback={
-          <SectionSkeleton title subtitle>
-            <TransactionTableSkeleton rows={25} />
-          </SectionSkeleton>
-        }
-      >
-        <DashboardTopExpensesSection monthsBack={monthsBack} />
-      </Suspense>
+      {/* Top Expenses Table */}
+      <section>
+        <Suspense
+          fallback={
+            <SectionSkeleton title subtitle>
+              <TransactionTableSkeleton rows={25} />
+            </SectionSkeleton>
+          }
+        >
+          <DashboardTopExpensesSection monthsBack={monthsBack} />
+        </Suspense>
+      </section>
     </div>
   )
 }

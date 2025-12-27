@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +24,7 @@ import {
 import { TagSelector } from "@/components/transactions/filters/TagSelector"
 import { confirmTransactions } from "@/app/(app)/review-transactions/actions/confirm-transactions"
 import { useRouter } from "next/navigation"
-import { ArrowLeftRight } from "lucide-react"
+import { ArrowLeftRight, CheckCircle2, ClipboardCheck } from "lucide-react"
 import { ReviewTransactionCard } from "./ReviewTransactionCard"
 import { ReviewTransactionCardTablet } from "./ReviewTransactionCardTablet"
 
@@ -229,47 +231,105 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
     return `${month} ${day} ${year}`
   }
 
+  // Calculate progress - transactions with categories assigned
+  const categorizedCount = useMemo(() => {
+    return Array.from(edits.values()).filter((edit) => edit.categoryId !== null).length
+  }, [edits])
+
+  const progressPercent = transactions.length > 0 ? Math.round((categorizedCount / transactions.length) * 100) : 0
+
   if (transactions.length === 0) {
     return (
-      <div className="space-y-4">
-        <div>
+      <div className="space-y-6">
+        <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-2">
-            Review and categorize uncategorized transactions or transactions tagged for review
-          </p>
+          <p className="text-sm sm:text-base text-muted-foreground">Review and categorize your transactions</p>
         </div>
-        <div className="flex items-center justify-center h-64 border border-border rounded-lg bg-muted/50">
-          <p className="text-muted-foreground">No transactions need review</p>
-        </div>
+        <Card className="border-success/30 bg-success/5">
+          <CardContent className="p-8 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-success/10 mb-4">
+              <CheckCircle2 className="h-8 w-8 text-success" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">All caught up!</h2>
+            <p className="text-muted-foreground">No transactions need review right now.</p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4 pb-24 md:pb-4">
-      {/* Header - Responsive */}
-      <div className="space-y-3 md:space-y-0 md:flex md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
-            {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} need review
-          </p>
+    <div className="space-y-6 pb-24 md:pb-4">
+      {/* Header Section */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <ClipboardCheck className="h-6 w-6 text-primary" />
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Review Transactions</h1>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Categorize {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} to keep your finances
+              organized
+            </p>
+          </div>
+
+          {/* Desktop confirm button */}
+          <div className="hidden md:block">
+            <Button
+              onClick={handleConfirmClick}
+              disabled={selectedCount === 0 || isPending}
+              size="lg"
+              className="min-w-[180px]"
+            >
+              {isPending ? (
+                "Confirming..."
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Confirm {selectedCount}
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-        {/* Desktop confirm button */}
-        <div className="hidden md:flex md:items-center md:gap-4">
-          <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
-          <Button onClick={handleConfirmClick} disabled={selectedCount === 0 || isPending} size="lg">
-            {isPending ? "Confirming..." : `Confirm ${selectedCount} Transaction${selectedCount !== 1 ? "s" : ""}`}
-          </Button>
-        </div>
+
+        {/* Progress Card */}
+        <Card className="bg-muted/30">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Categorization Progress</span>
+                  <span className="text-muted-foreground">
+                    {categorizedCount} of {transactions.length} categorized
+                  </span>
+                </div>
+                <Progress value={progressPercent} className="h-2" />
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-success" />
+                  <span className="text-muted-foreground">{categorizedCount} ready</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-warning" />
+                  <span className="text-muted-foreground">{transactions.length - categorizedCount} uncategorized</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Mobile - Select all */}
-      <div className="md:hidden flex items-center gap-3 px-1">
-        <Checkbox checked={allSelected} onCheckedChange={toggleAllSelections} aria-label="Select all" />
-        <span className="text-sm text-muted-foreground">
-          Select all ({selectedCount} of {transactions.length})
-        </span>
+      <div className="md:hidden flex items-center justify-between gap-3 px-1">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox checked={allSelected} onCheckedChange={toggleAllSelections} aria-label="Select all" />
+          <span className="text-sm text-muted-foreground">
+            Select all ({selectedCount}/{transactions.length})
+          </span>
+        </label>
       </div>
 
       {/* Mobile - Card layout (< 640px) */}
@@ -454,11 +514,23 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
       </div>
 
       {/* Mobile/Tablet - Sticky bottom action bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 shadow-lg z-10">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 shadow-lg z-10">
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <div className="text-xs text-muted-foreground">Selected</div>
+            <div className="text-lg font-semibold">
+              {selectedCount}/{transactions.length}
+            </div>
+          </div>
           <Button onClick={handleConfirmClick} disabled={selectedCount === 0 || isPending} size="lg" className="flex-1">
-            {isPending ? "Confirming..." : `Confirm ${selectedCount}`}
+            {isPending ? (
+              "Confirming..."
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Confirm Selected
+              </>
+            )}
           </Button>
         </div>
       </div>
