@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { createTransactionSchema } from "@/types/api"
 import { safeParseRequestBody } from "@/types/api"
@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/generated"
 import { nanoid } from "nanoid"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 /**
  * GET /api/transactions - Fetch recent transactions
@@ -83,10 +84,10 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    return NextResponse.json({ transactions, count: transactions.length })
+    return apiSuccess({ transactions, count: transactions.length })
   } catch (error) {
     logError("Error fetching transactions:", error)
-    return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 })
+    return apiErrors.internalError("Failed to fetch transactions")
   }
 }
 
@@ -96,13 +97,7 @@ export async function POST(req: NextRequest) {
     const parseResult = await safeParseRequestBody(req, createTransactionSchema)
 
     if (!parseResult.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request data",
-          details: parseResult.error.message,
-        },
-        { status: 400 },
-      )
+      return apiErrors.validationError("Invalid request data", parseResult.error.message)
     }
 
     const {
@@ -129,7 +124,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!account) {
-      return NextResponse.json({ error: "Account not found" }, { status: 404 })
+      return apiErrors.notFound("Account")
     }
 
     // Generate a unique plaidTransactionId for manual transactions
@@ -191,17 +186,17 @@ export async function POST(req: NextRequest) {
     revalidateTag("dashboard", "max")
     revalidatePath("/", "layout") // Invalidate Router Cache
 
-    return NextResponse.json(newTransaction, { status: 201 })
+    return apiSuccess(newTransaction, 201)
   } catch (error) {
     logError("Error creating transaction:", error)
 
     // Handle unique constraint violation for plaidTransactionId
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
-        return NextResponse.json({ error: "A transaction with this ID already exists" }, { status: 409 })
+        return apiErrors.conflict("A transaction with this ID already exists")
       }
     }
 
-    return NextResponse.json({ error: "Failed to create transaction" }, { status: 500 })
+    return apiErrors.internalError("Failed to create transaction")
   }
 }

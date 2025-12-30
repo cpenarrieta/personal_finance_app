@@ -1,31 +1,18 @@
 import { format, startOfMonth, subMonths } from "date-fns"
 import { Suspense } from "react"
-import { SpendingByCategoryChartAsync } from "@/components/dashboard/charts/SpendingByCategoryChartAsync"
-import { SubcategoryChartAsync } from "@/components/dashboard/charts/SubcategoryChartAsync"
-import { DailySpendingChartAsync } from "@/components/dashboard/charts/DailySpendingChartAsync"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import {
+  SpendingByCategoryChartAsync,
+  SubcategoryChartAsync,
+  DailySpendingChartAsync,
+  SpendingByCategoryChartSkeleton,
+  SubcategoryChartSkeleton,
+  DailySpendingChartSkeleton,
+} from "@/components/charts"
 
 interface DashboardLastMonthSectionProps {
   monthsBack?: number
 }
 
-/**
- * Skeleton for individual chart
- */
-function ChartSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-32" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-64 w-full" />
-      </CardContent>
-    </Card>
-  )
-}
 
 /**
  * Server Component for Last Month Overview section header
@@ -57,13 +44,13 @@ export async function DashboardLastMonthSection({ monthsBack = 0 }: DashboardLas
         <p className="text-muted-foreground">{subtitle}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Suspense fallback={<ChartSkeleton />}>
+        <Suspense fallback={<SpendingByCategoryChartSkeleton />}>
           <SpendingByCategoryChartAsync monthsBack={monthsBack} />
         </Suspense>
-        <Suspense fallback={<ChartSkeleton />}>
+        <Suspense fallback={<SubcategoryChartSkeleton />}>
           <SubcategoryChartAsync monthsBack={monthsBack} />
         </Suspense>
-        <Suspense fallback={<ChartSkeleton />}>
+        <Suspense fallback={<DailySpendingChartSkeleton />}>
           <DailySpendingChartAsync monthsBack={monthsBack} />
         </Suspense>
       </div>

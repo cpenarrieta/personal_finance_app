@@ -224,6 +224,15 @@ export type TagWithCount = z.infer<typeof tagWithCountSchema>
 // ============================================================================
 
 /**
+ * Schema for link token creation request
+ */
+export const createLinkTokenRequestSchema = z.object({
+  access_token: z.string().optional(),
+})
+
+export type CreateLinkTokenRequest = z.infer<typeof createLinkTokenRequestSchema>
+
+/**
  * Schema for link token creation response
  */
 export const createLinkTokenResponseSchema = z.object({
@@ -237,14 +246,28 @@ export type CreateLinkTokenResponse = z.infer<typeof createLinkTokenResponseSche
  * Schema for public token exchange request
  */
 export const exchangePublicTokenSchema = z.object({
-  public_token: z.string(),
-  institution: z.object({
-    institution_id: z.string(),
-    name: z.string(),
-  }),
+  public_token: z.string().min(1, "Public token is required"),
 })
 
 export type ExchangePublicTokenPayload = z.infer<typeof exchangePublicTokenSchema>
+
+/**
+ * Schema for sync transactions request
+ */
+export const syncTransactionsRequestSchema = z.object({
+  itemId: z.string().min(1, "Item ID is required"),
+})
+
+export type SyncTransactionsRequest = z.infer<typeof syncTransactionsRequestSchema>
+
+/**
+ * Schema for delete item request
+ */
+export const deleteItemRequestSchema = z.object({
+  itemId: z.string().min(1, "Item ID is required"),
+})
+
+export type DeleteItemRequest = z.infer<typeof deleteItemRequestSchema>
 
 // ============================================================================
 // HOLDING API SCHEMAS

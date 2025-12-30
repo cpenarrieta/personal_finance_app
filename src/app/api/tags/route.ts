@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 export async function GET() {
   try {
@@ -8,9 +8,9 @@ export async function GET() {
       orderBy: { name: "asc" },
     })
 
-    return NextResponse.json(tags)
+    return apiSuccess(tags)
   } catch (error) {
     logError("Error fetching tags:", error)
-    return NextResponse.json({ error: "Failed to fetch tags" }, { status: 500 })
+    return apiErrors.internalError("Failed to fetch tags")
   }
 }

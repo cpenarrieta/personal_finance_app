@@ -1,14 +1,23 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
 import { Prisma } from "@prisma/generated"
 import { CountryCode } from "plaid"
 import { revalidateTag, revalidatePath } from "next/cache"
-import { logInfo, logWarn } from "@/lib/utils/logger"
+import { logInfo, logWarn, logError } from "@/lib/utils/logger"
+import { safeParseRequestBody, exchangePublicTokenSchema } from "@/types/api"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 export async function POST(req: NextRequest) {
-  const { public_token } = await req.json()
-  const plaid = getPlaidClient()
+  try {
+    // Validate request body
+    const parseResult = await safeParseRequestBody(req, exchangePublicTokenSchema)
+    if (!parseResult.success) {
+      return apiErrors.validationError("Invalid request data", parseResult.error.message)
+    }
+
+    const { public_token } = parseResult.data
+    const plaid = getPlaidClient()
 
   const exchange = await plaid.itemPublicTokenExchange({ public_token })
   const accessToken = exchange.data.access_token
@@ -161,7 +170,7 @@ export async function POST(req: NextRequest) {
       revalidateTag("items", "max")
       revalidatePath("/", "layout") // Invalidate Router Cache
 
-      return NextResponse.json({ ok: true, reconnected: true })
+      return apiSuccess({ reconnected: true })
     }
   }
 
@@ -211,5 +220,9 @@ export async function POST(req: NextRequest) {
   revalidateTag("items", "max")
   revalidatePath("/", "layout") // Invalidate Router Cache
 
-  return NextResponse.json({ ok: true })
+    return apiSuccess({ reconnected: false })
+  } catch (error) {
+    logError("Error exchanging public token:", error)
+    return apiErrors.internalError("Failed to exchange public token")
+  }
 }
