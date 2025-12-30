@@ -69,7 +69,7 @@ async function getRecentTransactionHistory(excludeTransactionId?: string, maxTra
     },
     orderBy: { datetime: "desc" },
     take: maxTransactions,
-  }) as (Transaction & { category: Category; subcategory: Subcategory })[]
+  })
 }
 
 /**

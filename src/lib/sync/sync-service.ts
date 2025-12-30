@@ -639,11 +639,11 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
     if (!account) continue
 
     const securityId = t.security_id
-      ? (
+      ? ((
           await prisma.security.findUnique({
             where: { plaidSecurityId: t.security_id },
           })
-        )?.id
+        )?.id ?? null)
       : null
 
     const existing = await prisma.investmentTransaction.findUnique({

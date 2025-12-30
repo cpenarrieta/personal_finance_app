@@ -9,7 +9,7 @@ interface ConnectedItemsListProps {
   items: Array<{
     id: string
     accessToken: string
-    status: string
+    status: string | null
     institution: {
       name: string
       logoUrl: string | null

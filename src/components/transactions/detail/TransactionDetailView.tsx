@@ -365,11 +365,19 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Created</span>
-              <span>{format(new Date(transaction.created_at_string), "MMM d, yyyy h:mm a")}</span>
+              <span>
+                {transaction.created_at_string
+                  ? format(new Date(transaction.created_at_string), "MMM d, yyyy h:mm a")
+                  : "-"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Updated</span>
-              <span>{format(new Date(transaction.updated_at_string), "MMM d, yyyy h:mm a")}</span>
+              <span>
+                {transaction.updated_at_string
+                  ? format(new Date(transaction.updated_at_string), "MMM d, yyyy h:mm a")
+                  : "-"}
+              </span>
             </div>
             {transaction.pendingTransactionId && (
               <div className="flex justify-between">

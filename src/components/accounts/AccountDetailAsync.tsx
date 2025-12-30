@@ -13,6 +13,7 @@ import {
   getAllCategories,
   getAllTags,
 } from "@/lib/db/queries"
+import type { TransactionForClient } from "@/types"
 
 export async function AccountDetailAsync({ id }: { id: string }) {
   try {
@@ -48,10 +49,12 @@ export async function AccountDetailAsync({ id }: { id: string }) {
       )
     } else {
       const txs = await getTransactionsForAccount(account.id)
-      const transactions = txs.map((t: (typeof txs)[0]) => ({
+      // Flatten tags and assert type (amount_number is never null in practice)
+      const transactions = txs.map((t) => ({
         ...t,
-        tags: t.tags.map((tt: (typeof t.tags)[0]) => tt.tag),
-      }))
+        amount_number: t.amount_number ?? 0,
+        tags: t.tags.map((tt) => tt.tag),
+      })) as TransactionForClient[]
 
       content = (
         <div>

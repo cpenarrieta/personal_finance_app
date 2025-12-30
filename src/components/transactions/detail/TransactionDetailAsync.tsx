@@ -22,11 +22,12 @@ export async function TransactionDetailAsync({ id }: { id: string }) {
       )
     }
 
-    // Flatten tags structure
-    const transaction: TransactionForClient = {
+    // Flatten tags structure (amount_number is never null in practice)
+    const transaction = {
       ...txResult,
+      amount_number: txResult.amount_number ?? 0,
       tags: txResult.tags.map((tt: (typeof txResult.tags)[0]) => tt.tag),
-    }
+    } as TransactionForClient
 
     return <TransactionDetailView transaction={transaction} categories={categories} tags={tags} />
   } catch (error) {

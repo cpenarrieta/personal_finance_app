@@ -45,19 +45,21 @@ export interface TransactionForClient {
   isSplit: boolean
   parentTransactionId: string | null
   originalTransactionId: string | null
-  files: string[] // Array of file URLs from Cloudinary
-  created_at_string: string // Generated from createdAt
-  updated_at_string: string // Generated from updatedAt
+  files?: string[] // Array of file URLs from Cloudinary (optional for backwards compatibility)
+  created_at_string: string | null // Generated from createdAt
+  updated_at_string: string | null // Generated from updatedAt
 
-  // Relations
+  // Relations - using partial types to allow queries that don't select all fields
+
+  // Relations - using Partial to allow queries that don't select all fields
   account: {
     id: string
     name: string
     type: string
     mask: string | null
   } | null
-  category: CategoryForClient | null
-  subcategory: SubcategoryForClient | null
+  category: (Partial<CategoryForClient> & { id: string; name: string }) | null
+  subcategory: (Partial<SubcategoryForClient> & { id: string; name: string }) | null
   tags: TagForClient[]
   parentTransaction?: {
     id: string
@@ -96,8 +98,8 @@ export interface CategoryForClient {
   groupType: CategoryGroupType | null
   displayOrder: number | null
   isTransferCategory: boolean
-  created_at_string: string // Generated from createdAt
-  updated_at_string: string // Generated from updatedAt
+  created_at_string: string | null // Generated from createdAt
+  updated_at_string: string | null // Generated from updatedAt
   subcategories?: SubcategoryForClient[]
 }
 
@@ -106,14 +108,14 @@ export interface SubcategoryForClient {
   categoryId: string
   name: string
   imageUrl: string | null
-  created_at_string: string // Generated from createdAt
-  updated_at_string: string // Generated from updatedAt
+  created_at_string: string | null // Generated from createdAt
+  updated_at_string: string | null // Generated from updatedAt
   category?: {
     id: string
     name: string
     imageUrl: string | null
-    created_at_string: string
-    updated_at_string: string
+    created_at_string: string | null
+    updated_at_string: string | null
   }
 }
 
@@ -125,8 +127,8 @@ export interface TagForClient {
   id: string
   name: string
   color: string
-  created_at_string: string // Generated from createdAt
-  updated_at_string: string // Generated from updatedAt
+  created_at_string: string | null // Generated from createdAt
+  updated_at_string: string | null // Generated from updatedAt
 }
 
 // ============================================================================

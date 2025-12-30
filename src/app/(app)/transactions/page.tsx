@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 import { getAllTransactions, getAllCategories, getAllTags, getAllAccounts } from "@/lib/db/queries"
 import { parseTransactionFiltersFromUrl } from "@/lib/transactions/url-params"
+import type { TransactionForClient } from "@/types"
 
 export const metadata: Metadata = {
   title: "Banking Transactions",
@@ -33,11 +34,13 @@ async function TransactionsData({
     getAllAccounts(),
   ] as const)
 
-  // Flatten tags structure (tags.tag → tags)
-  const transactionsWithFlatTags = transactions.map((t: (typeof transactions)[0]) => ({
+  // Flatten tags structure (tags.tag → tags) and assert type
+  // Note: amount_number is a PostgreSQL generated column that's never null in practice
+  const transactionsWithFlatTags = transactions.map((t) => ({
     ...t,
-    tags: t.tags.map((tt: (typeof t.tags)[0]) => tt.tag),
-  }))
+    amount_number: t.amount_number ?? 0, // Coerce to number for type safety
+    tags: t.tags.map((tt) => tt.tag),
+  })) as TransactionForClient[]
 
   return (
     <TransactionsPageClient

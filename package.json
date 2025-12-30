@@ -38,7 +38,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.76",
     "@ai-sdk/react": "^2.0.106",
-    "@better-auth/passkey": "^1.4.5",
+    "@better-auth/passkey": "^1.4.9",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",

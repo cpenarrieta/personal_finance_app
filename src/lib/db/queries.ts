@@ -44,6 +44,7 @@ export async function getAllTransactions() {
       isSplit: true,
       parentTransactionId: true,
       originalTransactionId: true,
+      files: true, // Array of file URLs
       created_at_string: true, // Generated column
       updated_at_string: true, // Generated column
       account: {

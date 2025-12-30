@@ -111,18 +111,19 @@ export const getSpendingByCategory = tool({
 
       filtered.forEach((t: Transaction) => {
         const categoryName = t.category?.name || "Uncategorized"
+        const amount = t.amount_number ?? 0
         const existing = categoryMap.get(categoryName)
 
         if (existing) {
-          existing.total += t.amount_number
+          existing.total += amount
           existing.count += 1
-          existing.transactions.push(t.amount_number)
+          existing.transactions.push(amount)
         } else {
           categoryMap.set(categoryName, {
             name: categoryName,
-            total: t.amount_number,
+            total: amount,
             count: 1,
-            transactions: [t.amount_number],
+            transactions: [amount],
           })
         }
       })
@@ -180,15 +181,16 @@ export const getSpendingByMerchant = tool({
 
     filtered.forEach((t: Transaction) => {
       const merchantName = t.merchantName!
+      const amount = t.amount_number ?? 0
       const existing = merchantMap.get(merchantName)
 
       if (existing) {
-        existing.total += t.amount_number
+        existing.total += amount
         existing.count += 1
       } else {
         merchantMap.set(merchantName, {
           name: merchantName,
-          total: t.amount_number,
+          total: amount,
           count: 1,
         })
       }
@@ -237,10 +239,11 @@ export const getTotalSpending = tool({
       let totalIncome = 0
 
       filtered.forEach((t: Transaction) => {
-        if (t.amount_number < 0) {
-          totalExpenses += Math.abs(t.amount_number)
+        const amount = t.amount_number ?? 0
+        if (amount < 0) {
+          totalExpenses += Math.abs(amount)
         } else {
-          totalIncome += t.amount_number
+          totalIncome += amount
         }
       })
 
@@ -302,10 +305,11 @@ export const getSpendingTrends = tool({
 
     filtered.forEach((t: Transaction) => {
       const monthKey = getTransactionMonth(t.datetime)
+      const amountNum = t.amount_number ?? 0
 
       const existing = monthMap.get(monthKey)
-      const isExpense = t.amount_number < 0
-      const amount = Math.abs(t.amount_number)
+      const isExpense = amountNum < 0
+      const amount = Math.abs(amountNum)
 
       if (existing) {
         if (isExpense) {

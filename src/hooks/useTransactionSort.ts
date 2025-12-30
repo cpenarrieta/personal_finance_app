@@ -25,7 +25,7 @@ export function useTransactionSort({
 
         switch (sortBy) {
           case "createdAt":
-            compareValue = new Date(a.created_at_string).getTime() - new Date(b.created_at_string).getTime()
+            compareValue = new Date(a.created_at_string ?? 0).getTime() - new Date(b.created_at_string ?? 0).getTime()
             break
           case "date":
             compareValue = compareTransactionDates(a.datetime, b.datetime)

@@ -201,7 +201,11 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
               <div className="text-muted-foreground">Transaction Date:</div>
               <div className="font-medium">{formatTransactionDate(transaction.datetime, "medium")}</div>
               <div className="text-muted-foreground">Creation Date:</div>
-              <div className="font-medium">{format(new Date(transaction.created_at_string), "MMM d yyyy, h:mm a")}</div>
+              <div className="font-medium">
+                {transaction.created_at_string
+                  ? format(new Date(transaction.created_at_string), "MMM d yyyy, h:mm a")
+                  : "-"}
+              </div>
               {transaction.merchantName && (
                 <>
                   <div className="text-muted-foreground">Merchant:</div>
