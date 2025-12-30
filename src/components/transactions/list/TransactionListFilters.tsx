@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { TagSelector } from "@/components/transactions/filters/TagSelector"
 import type { CategoryForClient, TagForClient, PlaidAccountForClient } from "@/types"
 import type { DateRange } from "@/hooks/useTransactionFilters"
+import type { SortField, SortDirection } from "@/hooks/useTransactionSort"
 import { sortCategoriesByGroupAndOrder } from "@/lib/utils"
 
 interface TransactionListFiltersProps {
@@ -48,10 +49,10 @@ interface TransactionListFiltersProps {
     clearAllFilters: () => void
   }
   sort: {
-    sortBy: string
-    setSortBy: (by: string) => void
-    sortDirection: "asc" | "desc"
-    setSortDirection: (direction: "asc" | "desc") => void
+    sortBy: SortField
+    setSortBy: (by: SortField) => void
+    sortDirection: SortDirection
+    setSortDirection: (direction: SortDirection) => void
   }
   dropdownRef: RefObject<HTMLDivElement | null>
   onClearLocalSearch: () => void
@@ -322,7 +323,7 @@ export function TransactionListFilters({
         {/* Sort Controls */}
         <div className="w-full md:w-auto md:ml-auto flex items-center gap-2">
           <span className="text-xs md:text-sm text-muted-foreground">Sort:</span>
-          <Select value={sort.sortBy} onValueChange={(value) => sort.setSortBy(value)}>
+          <Select value={sort.sortBy} onValueChange={(value) => sort.setSortBy(value as SortField)}>
             <SelectTrigger className="flex-1 md:w-[160px] text-sm md:text-base">
               <SelectValue />
             </SelectTrigger>
