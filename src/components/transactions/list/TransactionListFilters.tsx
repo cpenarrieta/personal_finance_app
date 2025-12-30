@@ -53,7 +53,7 @@ interface TransactionListFiltersProps {
     sortDirection: "asc" | "desc"
     setSortDirection: (direction: "asc" | "desc") => void
   }
-  dropdownRef: RefObject<HTMLDivElement>
+  dropdownRef: RefObject<HTMLDivElement | null>
   onClearLocalSearch: () => void
 }
 

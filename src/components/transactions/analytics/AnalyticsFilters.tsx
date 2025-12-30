@@ -35,7 +35,7 @@ interface AnalyticsFiltersProps {
   onToggleCategory: (categoryId: string) => void
   onToggleSubcategory: (subcategoryId: string, categoryId: string) => void
   onToggleExcludedCategory: (categoryId: string) => void
-  dropdownRef: RefObject<HTMLDivElement>
+  dropdownRef: RefObject<HTMLDivElement | null>
 }
 
 /**

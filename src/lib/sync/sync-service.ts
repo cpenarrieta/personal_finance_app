@@ -12,7 +12,7 @@ import { revalidateTag, revalidatePath } from "next/cache"
 import { logInfo, logError } from "../utils/logger"
 import { categorizeTransactions } from "../ai/categorize-transaction"
 import { SyncStats, SyncOptions, createSyncStats } from "./sync-types"
-import { syncItemTransactions, syncItemTransactionsWithCategorization } from "./sync-transactions"
+import { syncItemTransactions } from "./sync-transactions"
 import { syncItemInvestments } from "./sync-investments"
 
 // Re-export types and functions for backward compatibility
