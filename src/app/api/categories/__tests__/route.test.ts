@@ -92,10 +92,11 @@ describe("Categories API - GET", () => {
 
       // Assert
       expect(response.status).toBe(200)
+      expect(data.success).toBe(true)
       // Dates are serialized to strings in JSON response, so check structure instead
-      expect(data).toHaveLength(mockCategories.length)
-      expect(data[0]?.name).toBe(mockCategories[0]?.name)
-      expect(data[0]?.subcategories).toHaveLength(mockCategories[0]?.subcategories.length ?? 0)
+      expect(data.data).toHaveLength(mockCategories.length)
+      expect(data.data[0]?.name).toBe(mockCategories[0]?.name)
+      expect(data.data[0]?.subcategories).toHaveLength(mockCategories[0]?.subcategories.length ?? 0)
       expect(prismaModule.prisma.category.findMany).toHaveBeenCalledWith({
         include: {
           subcategories: {
@@ -116,7 +117,8 @@ describe("Categories API - GET", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual([])
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual([])
     })
 
     it("should return categories with empty subcategories array", async () => {
@@ -142,8 +144,9 @@ describe("Categories API - GET", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data[0]?.name).toBe("Category Without Subcategories")
-      expect(data[0]?.subcategories).toEqual([])
+      expect(data.success).toBe(true)
+      expect(data.data[0]?.name).toBe("Category Without Subcategories")
+      expect(data.data[0]?.subcategories).toEqual([])
     })
   })
 
@@ -159,7 +162,8 @@ describe("Categories API - GET", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to fetch categories" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to fetch categories")
       expect(console.error).toHaveBeenCalledWith("Error fetching categories:", dbError)
     })
 
@@ -174,7 +178,8 @@ describe("Categories API - GET", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to fetch categories" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to fetch categories")
       expect(console.error).toHaveBeenCalledWith("Error fetching categories:", timeoutError)
     })
 
@@ -188,7 +193,8 @@ describe("Categories API - GET", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to fetch categories" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to fetch categories")
     })
   })
 
@@ -202,11 +208,11 @@ describe("Categories API - GET", () => {
       const data = await response.json()
 
       // Assert
-      expect(data[0]).toHaveProperty("id")
-      expect(data[0]).toHaveProperty("name")
-      expect(data[0]).toHaveProperty("imageUrl")
-      expect(data[0]).toHaveProperty("isTransferCategory")
-      expect(data[0]).toHaveProperty("subcategories")
+      expect(data.data[0]).toHaveProperty("id")
+      expect(data.data[0]).toHaveProperty("name")
+      expect(data.data[0]).toHaveProperty("imageUrl")
+      expect(data.data[0]).toHaveProperty("isTransferCategory")
+      expect(data.data[0]).toHaveProperty("subcategories")
     })
 
     it("should include all expected fields in subcategory objects", async () => {
@@ -218,7 +224,7 @@ describe("Categories API - GET", () => {
       const data = await response.json()
 
       // Assert
-      const subcategory = data[0].subcategories[0]
+      const subcategory = data.data[0].subcategories[0]
       expect(subcategory).toHaveProperty("id")
       expect(subcategory).toHaveProperty("categoryId")
       expect(subcategory).toHaveProperty("name")

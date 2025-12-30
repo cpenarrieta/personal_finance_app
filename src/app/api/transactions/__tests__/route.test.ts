@@ -131,9 +131,10 @@ describe("Transactions API - POST", () => {
 
       // Assert
       expect(response.status).toBe(201)
-      expect(data.id).toBe(createdTransaction.id)
-      expect(data.accountId).toBe(createdTransaction.accountId)
-      expect(data.name).toBe(createdTransaction.name)
+      expect(data.success).toBe(true)
+      expect(data.data.id).toBe(createdTransaction.id)
+      expect(data.data.accountId).toBe(createdTransaction.accountId)
+      expect(data.data.name).toBe(createdTransaction.name)
       expect(prismaModule.prisma.transaction.create).toHaveBeenCalled()
       expect(nextCache.revalidateTag).toHaveBeenCalledWith("transactions", "max")
       expect(nextCache.revalidateTag).toHaveBeenCalledWith("dashboard", "max")
@@ -361,7 +362,8 @@ describe("Transactions API - POST", () => {
 
       // Assert
       expect(response.status).toBe(404)
-      expect(data).toEqual({ error: "Account not found" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Account not found")
       expect(prismaModule.prisma.transaction.create).not.toHaveBeenCalled()
     })
   })
@@ -387,7 +389,8 @@ describe("Transactions API - POST", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to create transaction" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to create transaction")
       expect(console.error).toHaveBeenCalledWith("Error creating transaction:", dbError)
     })
 
@@ -415,7 +418,8 @@ describe("Transactions API - POST", () => {
 
       // Assert
       expect(response.status).toBe(409)
-      expect(data).toEqual({ error: "A transaction with this ID already exists" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("A transaction with this ID already exists")
     })
 
     it("should handle tag creation failure gracefully", async () => {
@@ -452,7 +456,8 @@ describe("Transactions API - POST", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to create transaction" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to create transaction")
     })
   })
 })
