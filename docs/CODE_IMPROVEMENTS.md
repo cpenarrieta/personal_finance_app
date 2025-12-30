@@ -8,9 +8,9 @@ This document outlines recommended refactoring improvements for the personal fin
 
 | Status | Count | Items |
 |--------|-------|-------|
-| ✅ Completed | 3 | ChartsView split, Server actions extraction, Chart constants |
+| ✅ Completed | 4 | ChartsView split, Server actions extraction, Chart constants, Hook naming fix |
 | 🔄 In Progress | 0 | - |
-| ⏳ Pending | 15 | Remaining items below |
+| ⏳ Pending | 14 | Remaining items below |
 
 ### Completed Items
 
@@ -70,6 +70,16 @@ export const CHART_COLORS = [
   // ...
 ]
 ```
+
+---
+
+#### ✅ 13. Fix Naming Inconsistency in Hooks (Medium) - DONE
+**Commit**: `refactor: rename use-mobile.ts to useMobile.ts for consistent naming`
+
+- Renamed `src/hooks/use-mobile.ts` → `src/hooks/useMobile.ts`
+- Updated import in `src/components/ui/sidebar.tsx`
+
+All hooks now follow camelCase naming convention.
 
 ---
 
@@ -305,18 +315,6 @@ ComponentName/
 
 ---
 
-### 13. Fix Naming Inconsistency in Hooks
-
-**Problem**: `src/hooks/use-mobile.ts` uses kebab-case while all others use camelCase.
-
-**Files**:
-- `use-mobile.ts` → Rename to `useMobile.ts`
-
-Update imports in:
-- Any component using `use-mobile`
-
----
-
 ### 14. Refactor Long Webhook Route
 
 **Problem**: `src/app/api/plaid/webhook/route.ts` is 283 lines handling multiple webhook types.
@@ -424,7 +422,7 @@ function logToConsole(
 ## Quick Wins (Can Do Now)
 
 1. ~~Move hardcoded colors to CSS variables~~ ✅ Done
-2. Rename `use-mobile.ts` → `useMobile.ts` (5 minutes)
+2. ~~Rename `use-mobile.ts` → `useMobile.ts`~~ ✅ Done
 3. Extract `TRANSACTION_SELECT` constant (1 hour)
 4. Add index.ts to component directories (30 minutes)
 5. Create `src/lib/constants.ts` for sync config (45 minutes)
