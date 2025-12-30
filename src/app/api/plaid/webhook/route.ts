@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { handleTransactionWebhook, handleItemWebhook } from "@/lib/plaid/webhook-handlers"
 import { logInfo, logWarn, logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 /**
  * Plaid webhook types
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
     const isValid = await verifyPlaidWebhook(request, bodyText)
     if (!isValid) {
       logError("❌ Webhook verification failed")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return apiErrors.unauthorized()
     }
 
     switch (body.webhook_type) {
@@ -122,12 +123,10 @@ export async function POST(request: NextRequest) {
         logInfo(`ℹ️  Unhandled webhook type: ${body.webhook_type}`, { webhookType: body.webhook_type })
     }
 
-    return NextResponse.json({ received: true })
+    return apiSuccess({ received: true })
   } catch (error) {
     logError("❌ Error processing webhook:", error)
-    return NextResponse.json(
-      { received: true, error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 200 },
-    )
+    // Return 200 for webhooks even on error to prevent retries
+    return apiSuccess({ received: true, error: error instanceof Error ? error.message : "Unknown error" })
   }
 }

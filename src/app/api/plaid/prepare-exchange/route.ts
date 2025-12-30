@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
 import { CountryCode } from "plaid"
 import { storeReconnectionData } from "@/lib/cache/reconnection-cache"
 import { logInfo, logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 /**
  * Prepares public token exchange by checking if it's a reauth or reconnection
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     const { public_token, existingItemDbId } = await req.json()
 
     if (!public_token) {
-      return NextResponse.json({ error: "public_token is required" }, { status: 400 })
+      return apiErrors.badRequest("public_token is required")
     }
 
     const plaid = getPlaidClient()
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       })
 
       if (!existingItem) {
-        return NextResponse.json({ error: "Existing item not found" }, { status: 404 })
+        return apiErrors.notFound("Existing item")
       }
 
       // Check if item_id has changed (reconnection) or stayed same (reauth)
@@ -61,8 +62,7 @@ export async function POST(req: NextRequest) {
           data: { status: "ACTIVE" },
         })
 
-        return NextResponse.json({
-          ok: true,
+        return apiSuccess({
           type: "reauth",
           message: "Reauthorization successful!",
         })
@@ -88,8 +88,7 @@ export async function POST(req: NextRequest) {
           transactionCount,
         })
 
-        return NextResponse.json({
-          ok: true,
+        return apiSuccess({
           type: "reconnection",
           reconnectionId,
           transactionCount,
@@ -102,8 +101,7 @@ export async function POST(req: NextRequest) {
     // NEW CONNECTION: not update mode
     // For new connections, we handle this in the complete-reconnection endpoint
     // or the original exchange-public-token endpoint
-    return NextResponse.json({
-      ok: true,
+    return apiSuccess({
       type: "new",
       data: {
         accessToken,
@@ -115,6 +113,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     logError("❌ Error preparing exchange:", error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
+    return apiErrors.internalError(error instanceof Error ? error.message : "Unknown error")
   }
 }
