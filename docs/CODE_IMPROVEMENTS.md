@@ -4,52 +4,78 @@ This document outlines recommended refactoring improvements for the personal fin
 
 ---
 
-## Executive Summary
+## Progress Summary
 
-After thorough analysis of the codebase, I've identified **23 improvement opportunities** across 4 categories:
+| Status | Count | Items |
+|--------|-------|-------|
+| ✅ Completed | 3 | ChartsView split, Server actions extraction, Chart constants |
+| 🔄 In Progress | 0 | - |
+| ⏳ Pending | 15 | Remaining items below |
 
-| Category | Critical | High | Medium | Low |
-|----------|----------|------|--------|-----|
-| Component Organization | 2 | 3 | 2 | 1 |
-| Library/Utilities | 2 | 2 | 3 | 1 |
-| API Routes & Actions | 3 | 2 | 2 | 0 |
-| Type Safety & Patterns | 1 | 1 | 1 | 0 |
+### Completed Items
+
+#### ✅ 1. Split ChartsView.tsx (Critical) - DONE
+**Commit**: `refactor: split ChartsView.tsx (980 lines) into focused components`
+
+Reduced ChartsView.tsx from **980 lines to 125 lines** (87% reduction).
+
+**New files created:**
+- `src/hooks/useChartData.ts` - Chart data calculations hook
+- `src/lib/constants/charts.ts` - Chart colors and tab definitions
+- `src/components/transactions/analytics/ChartFiltersPanel.tsx` - Filter UI
+- `src/components/transactions/analytics/charts/SubcategoryChartTab.tsx`
+- `src/components/transactions/analytics/charts/MonthlyComparisonChartTab.tsx`
+- `src/components/transactions/analytics/charts/SpendingTrendsChartTab.tsx`
+- `src/components/transactions/analytics/charts/IncomeVsExpensesChartTab.tsx`
+- `src/components/transactions/analytics/charts/CategoryBreakdownChartTab.tsx`
+- `src/components/transactions/analytics/charts/index.ts`
+
+**Benefits:**
+- Reuses existing `useTransactionFilters` hook (no duplicate filter logic)
+- Each chart tab is a focused component under 100 lines
+- Chart colors now use CSS variables for theme consistency
+
+---
+
+#### ✅ 3. Extract Server Actions with Validation (Critical) - DONE
+**Commit**: `refactor: extract server actions with Zod validation`
+
+Moved inline server actions from component files to dedicated action files with Zod validation.
+
+**New files created:**
+- `src/app/(app)/settings/manage-categories/actions.ts` - 5 validated actions
+- `src/app/(app)/settings/manage-tags/actions.ts` - 3 validated actions
+
+**Updated files:**
+- `src/types/api.ts` - Added validation schemas
+- `src/components/settings/ManageCategoriesAsync.tsx` - Now imports from action file
+- `src/components/settings/ManageTagsAsync.tsx` - Now imports from action file
+
+**Validation schemas added:**
+- `createCategorySchema` with isTransferCategory field
+- `updateCategorySchema`, `deleteCategorySchema`
+- `createSubcategorySchema`, `deleteSubcategorySchema`
+- `updateTagSchema`, `deleteTagSchema`
 
 ---
 
-## Critical Priority
+#### ✅ 8. Chart Colors Using CSS Variables (High) - DONE
+**Included in ChartsView refactor**
 
-### 1. Split Large Monolithic Components
-
-**Problem**: Several components exceed 800+ lines, making them hard to maintain and test.
-
-| File | Lines | Issue |
-|------|-------|-------|
-| `src/components/transactions/analytics/ChartsView.tsx` | 980 | 5 chart tabs + filter logic in one file |
-| `src/components/transactions/analytics/TransactionAnalytics.tsx` | 833 | Duplicate filter logic with ChartsView |
-| `src/components/transactions/list/SearchableTransactionList.tsx` | 854 | Search, filters, summary, bulk ops, table combined |
-
-**Solution**: Extract focused sub-components:
-
+Created `src/lib/constants/charts.ts` with theme-aware colors:
+```typescript
+export const CHART_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  // ...
+]
 ```
-components/transactions/analytics/
-├── ChartsView.tsx              # Orchestrator only (~150 lines)
-├── charts/
-│   ├── SubcategoryChartTab.tsx
-│   ├── MonthlyComparisonTab.tsx
-│   ├── SpendingTrendsTab.tsx
-│   ├── IncomeVsExpensesTab.tsx
-│   └── CategoryBreakdownTab.tsx
-└── filters/
-    └── ChartFiltersPanel.tsx
-```
-
-**Files to modify**:
-- `src/components/transactions/analytics/ChartsView.tsx`
-- `src/components/transactions/analytics/TransactionAnalytics.tsx`
-- `src/components/transactions/list/SearchableTransactionList.tsx`
 
 ---
+
+## Remaining Items
+
+### Critical Priority
 
 ### 2. Consolidate Duplicate Chart Directories
 
@@ -81,56 +107,7 @@ src/components/charts/
 
 ---
 
-### 3. Extract Server Actions from Components
-
-**Problem**: Server actions are embedded inside component files without validation.
-
-**Files affected**:
-- `src/components/settings/ManageCategoriesAsync.tsx` (lines 21-78)
-- `src/components/settings/ManageTagsAsync.tsx` (lines 13-45)
-
-**Current pattern** (problematic):
-```typescript
-// Inside component file
-async function createCategory(formData: FormData) {
-  "use server"
-  const name = formData.get("name") as string  // No validation!
-  await prisma.category.create({ data: { name } })
-}
-```
-
-**Solution**: Create dedicated action files with validation:
-
-```typescript
-// src/app/(app)/settings/manage-categories/actions.ts
-import { z } from "zod"
-
-const CreateCategorySchema = z.object({
-  name: z.string().min(1).max(100).trim(),
-  imageUrl: z.string().url().optional(),
-  isTransferCategory: z.boolean().default(false),
-})
-
-export async function createCategory(formData: FormData) {
-  "use server"
-  const parsed = CreateCategorySchema.safeParse({
-    name: formData.get("name"),
-    imageUrl: formData.get("imageUrl"),
-    isTransferCategory: formData.get("isTransferCategory") === "true",
-  })
-
-  if (!parsed.success) {
-    return { error: parsed.error.flatten() }
-  }
-
-  await prisma.category.create({ data: parsed.data })
-  revalidateTag("categories")
-}
-```
-
----
-
-## High Priority
+### High Priority
 
 ### 4. Standardize Error Handling in API Routes
 
@@ -242,35 +219,7 @@ export async function splitTransaction(
 
 ---
 
-### 8. Remove Hardcoded Colors from ChartsView
-
-**Problem**: Hardcoded hex colors in chart components violate theming guidelines.
-
-**File**: `src/components/transactions/analytics/ChartsView.tsx:48-59`
-
-```typescript
-const COLORS = [
-  "#3b82f6",  // Should use CSS variables
-  "#10b981",
-  // ...
-]
-```
-
-**Solution**: Use theme variables per THEMING.md:
-
-```typescript
-const COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  // ...
-]
-```
-
-Also affects: `src/lib/dashboard/calculations.ts:123-139`
-
----
-
-## Medium Priority
+### Medium Priority
 
 ### 9. Split sync-service.ts
 
@@ -301,7 +250,6 @@ src/lib/sync/
 - `HISTORICAL_START_DATE = "2024-01-01"` (sync-service.ts:14)
 - `TRANSACTION_BATCH_SIZE = 500` (sync-service.ts:15)
 - `12000` ms delay (sync-service.ts:47) - no comment
-- Hardcoded color values (calculations.ts:123-139)
 
 **Solution**: Centralize configuration:
 
@@ -311,15 +259,6 @@ export const SYNC_CONFIG = {
   HISTORICAL_START_DATE: "2024-01-01",
   TRANSACTION_BATCH_SIZE: 500,
   API_RATE_LIMIT_DELAY_MS: 12000,
-} as const
-
-export const CHART_COLORS = {
-  DEFAULT: ["var(--chart-1)", "var(--chart-2)", /* ... */],
-  SANKEY: {
-    income: "hsl(var(--success))",
-    expense: "hsl(var(--destructive))",
-    surplus: "hsl(var(--success))",
-  },
 } as const
 ```
 
@@ -401,7 +340,7 @@ export const webhookHandlers = {
 
 ---
 
-## Low Priority
+### Low Priority
 
 ### 15. Create Component Index Files
 
@@ -482,51 +421,10 @@ function logToConsole(
 
 ---
 
-## Implementation Order
-
-1. **Week 1**: Critical items (1-3)
-   - Split ChartsView and TransactionAnalytics
-   - Consolidate chart directories
-   - Extract server actions with validation
-
-2. **Week 2**: High priority items (4-8)
-   - Standardize API error handling
-   - Reorganize query files
-   - Extract shared selects
-   - Fix duplicate split logic
-   - Remove hardcoded colors
-
-3. **Week 3**: Medium priority (9-14)
-   - Split sync-service
-   - Create constants file
-   - Add Plaid route validation
-   - Standardize component patterns
-   - Fix hook naming
-
-4. **Week 4**: Low priority (15-18)
-   - Add index files
-   - Extract modal logic
-   - Consolidate logger
-   - Document minimal directories
-
----
-
-## Metrics
-
-After implementing these improvements:
-
-- **Lines of code reduced**: ~15-20% through DRY refactoring
-- **Average component size**: From 400+ lines to <200 lines
-- **Test coverage opportunity**: Smaller components are easier to test
-- **Type safety**: Validation on all API inputs
-- **Maintainability**: Clear separation of concerns
-
----
-
 ## Quick Wins (Can Do Now)
 
-1. Rename `use-mobile.ts` → `useMobile.ts` (5 minutes)
-2. Move hardcoded colors to CSS variables (30 minutes)
+1. ~~Move hardcoded colors to CSS variables~~ ✅ Done
+2. Rename `use-mobile.ts` → `useMobile.ts` (5 minutes)
 3. Extract `TRANSACTION_SELECT` constant (1 hour)
 4. Add index.ts to component directories (30 minutes)
-5. Create `src/lib/constants.ts` (45 minutes)
+5. Create `src/lib/constants.ts` for sync config (45 minutes)
