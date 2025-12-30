@@ -105,7 +105,7 @@ export function CashflowSankeyChart({ data, title = "Cashflow" }: CashflowSankey
   }
 
   return (
-    <Card className="col-span-full">
+    <Card className="col-span-full hidden md:block">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{title}</CardTitle>
         <div className="text-sm text-muted-foreground">
