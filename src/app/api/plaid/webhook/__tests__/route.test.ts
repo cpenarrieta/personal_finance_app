@@ -112,6 +112,7 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(401)
+      expect(data.success).toBe(false)
       expect(data.error).toBe("Unauthorized")
       expect(console.error).toHaveBeenCalledWith("❌ Missing Plaid-Verification header")
     })
@@ -133,7 +134,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(console.warn).toHaveBeenCalledWith(
         "⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)",
       )
@@ -168,7 +170,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(mockPlaidClient.webhookVerificationKeyGet).toHaveBeenCalledWith({
         key_id: "test-verification-key",
       })
@@ -203,6 +206,7 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(401)
+      expect(data.success).toBe(false)
       expect(data.error).toBe("Unauthorized")
       expect(console.error).toHaveBeenCalledWith("❌ Webhook verification failed")
     })
@@ -234,6 +238,7 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(401)
+      expect(data.success).toBe(false)
       expect(data.error).toBe("Unauthorized")
       // logError is called with (message, error) - check that it was called
       expect(console.error).toHaveBeenCalledWith(
@@ -261,7 +266,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(prismaModule.prisma.item.findFirst).toHaveBeenCalledWith({
         where: { plaidItemId: "test-plaid-item-id" },
       })
@@ -296,7 +302,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
     })
 
@@ -317,7 +324,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
     })
 
@@ -338,7 +346,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
     })
 
@@ -360,7 +369,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
       // Sync service handles removed transactions internally
     })
@@ -382,7 +392,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(syncServiceModule.syncItemTransactionsWithCategorization).not.toHaveBeenCalled()
     })
 
@@ -403,7 +414,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(console.log).toHaveBeenCalledWith(
         "ℹ️  Unhandled transaction webhook code: UNKNOWN_CODE",
         expect.stringContaining("UNKNOWN_CODE"),
@@ -434,7 +446,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(prismaModule.prisma.item.update).toHaveBeenCalledWith({
         where: { id: mockItem.id },
         data: { status: "ERROR" },
@@ -464,7 +477,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(prismaModule.prisma.item.update).toHaveBeenCalledWith({
         where: { id: mockItem.id },
         data: { status: "PENDING_EXPIRATION" },
@@ -492,7 +506,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(prismaModule.prisma.item.update).toHaveBeenCalledWith({
         where: { id: mockItem.id },
         data: { status: "ACTIVE" },
@@ -517,7 +532,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(console.log).toHaveBeenCalledWith(
         "ℹ️  Unhandled item webhook code: UNKNOWN_CODE",
         expect.stringContaining("UNKNOWN_CODE"),
@@ -541,7 +557,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(prismaModule.prisma.item.update).not.toHaveBeenCalled()
     })
 
@@ -568,7 +585,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       // logError without error object uses formatted string for attributes
       expect(console.error).toHaveBeenCalledWith(
         "❌ Item not found: non-existent-item-id",
@@ -598,8 +616,9 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
-      expect(data.error).toBe("Item not found: non-existent-item-id")
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
+      expect(data.data.error).toBe("Item not found: non-existent-item-id")
       // Multiple log calls - just verify the final error was logged
       expect(console.error).toHaveBeenCalled()
     })
@@ -625,8 +644,9 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
-      expect(data.error).toBe("Sync service error")
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
+      expect(data.data.error).toBe("Sync service error")
       // Multiple log calls - just verify errors were logged
       expect(console.error).toHaveBeenCalled()
     })
@@ -654,8 +674,9 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
-      expect(data.error).toBe("Database error")
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
+      expect(data.data.error).toBe("Database error")
       // Multiple log calls - just verify errors were logged
       expect(console.error).toHaveBeenCalled()
     })
@@ -675,8 +696,9 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
-      expect(data.error).toBeDefined()
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
+      expect(data.data.error).toBeDefined()
       // Just verify error was logged
       expect(console.error).toHaveBeenCalled()
     })
@@ -700,7 +722,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       expect(console.log).toHaveBeenCalledWith(
         "ℹ️  Unhandled webhook type: UNKNOWN_TYPE",
         expect.stringContaining("UNKNOWN_TYPE"),
@@ -797,7 +820,8 @@ describe("Plaid Webhook API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.received).toBe(true)
+      expect(data.success).toBe(true)
+      expect(data.data.received).toBe(true)
       // Note: syncItemTransactionsWithCategorization handles errors internally
       // and doesn't throw, so webhook processing continues successfully
     })

@@ -79,7 +79,8 @@ describe("Transaction [id] API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual(updatedTransaction)
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual(updatedTransaction)
       expect(prismaModule.prisma.transaction.update).toHaveBeenCalledWith({
         where: { id: transactionId },
         data: { name: "Updated Transaction Name" },
@@ -262,7 +263,8 @@ describe("Transaction [id] API", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to update transaction" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to update transaction")
       expect(console.error).toHaveBeenCalledWith("Error updating transaction:", dbError)
     })
   })
@@ -290,7 +292,8 @@ describe("Transaction [id] API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true })
+      expect(data.success).toBe(true)
+      expect(data.data.deleted).toBe(true)
       expect(prismaModule.prisma.transactionTag.deleteMany).toHaveBeenCalledWith({
         where: { transactionId },
       })
@@ -327,7 +330,8 @@ describe("Transaction [id] API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true })
+      expect(data.success).toBe(true)
+      expect(data.data.deleted).toBe(true)
       expect(prismaModule.prisma.transaction.deleteMany).toHaveBeenCalledWith({
         where: { parentTransactionId: transactionId },
       })
@@ -350,7 +354,8 @@ describe("Transaction [id] API", () => {
 
       // Assert
       expect(response.status).toBe(404)
-      expect(data).toEqual({ error: "Transaction not found" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Transaction not found")
       expect(prismaModule.prisma.transaction.delete).not.toHaveBeenCalled()
     })
 
@@ -378,7 +383,8 @@ describe("Transaction [id] API", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to delete transaction" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to delete transaction")
       expect(console.error).toHaveBeenCalledWith("Error deleting transaction:", dbError)
     })
 
@@ -404,7 +410,8 @@ describe("Transaction [id] API", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true })
+      expect(data.success).toBe(true)
+      expect(data.data.deleted).toBe(true)
     })
   })
 })
