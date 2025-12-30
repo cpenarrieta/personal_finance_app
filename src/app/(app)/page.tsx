@@ -15,7 +15,7 @@ import { DashboardMetricsSection } from "@/components/dashboard/DashboardMetrics
 import { DashboardLastMonthSection } from "@/components/dashboard/DashboardLastMonthSection"
 import { DashboardTopExpensesSection } from "@/components/dashboard/DashboardTopExpensesSection"
 import { MonthFilter } from "@/components/dashboard/MonthFilter"
-import { CashflowSankeyChartAsync } from "@/components/dashboard/charts/CashflowSankeyChartAsync"
+import { CashflowSankeyChartAsync } from "@/components/charts"
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 
 // Skeleton loaders

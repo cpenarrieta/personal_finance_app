@@ -68,7 +68,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true, updatedCount: 3 })
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual({ updatedCount: 3 })
       expect(prismaModule.prisma.transaction.updateMany).toHaveBeenCalledWith({
         where: { id: { in: ["tx-1", "tx-2", "tx-3"] } },
         data: {
@@ -96,7 +97,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true, updatedCount: 2 })
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual({ updatedCount: 2 })
       expect(prismaModule.prisma.transaction.updateMany).toHaveBeenCalledWith({
         where: { id: { in: ["tx-1", "tx-2"] } },
         data: { categoryId: "cat-1" },
@@ -121,7 +123,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true, updatedCount: 2 })
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual({ updatedCount: 2 })
       expect(prismaModule.prisma.transactionTag.deleteMany).toHaveBeenCalledWith({
         where: { transactionId: { in: ["tx-1", "tx-2"] } },
       })
@@ -173,7 +176,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true, updatedCount: 1 })
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual({ updatedCount: 1 })
     })
 
     it("should update both category and tags together", async () => {
@@ -196,7 +200,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true, updatedCount: 2 })
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual({ updatedCount: 2 })
     })
 
     it("should handle large batch of transactions", async () => {
@@ -216,7 +221,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true, updatedCount: 100 })
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual({ updatedCount: 100 })
     })
   })
 
@@ -234,6 +240,7 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(400)
+      expect(data.success).toBe(false)
       expect(data.error).toBe("Invalid request data")
       expect(prismaModule.prisma.transaction.updateMany).not.toHaveBeenCalled()
     })
@@ -252,6 +259,7 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(400)
+      expect(data.success).toBe(false)
       expect(data.error).toBe("Invalid request data")
     })
 
@@ -269,6 +277,7 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(400)
+      expect(data.success).toBe(false)
       expect(data.error).toBe("Invalid request data")
     })
 
@@ -295,7 +304,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to bulk update transactions" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to bulk update transactions")
       expect(console.error).toHaveBeenCalledWith("Error bulk updating transactions:", dbError)
     })
 
@@ -316,7 +326,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to bulk update transactions" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to bulk update transactions")
     })
 
     it("should return 500 when tag creation fails", async () => {
@@ -339,7 +350,8 @@ describe("Transactions Bulk Update API - PATCH", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to bulk update transactions" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to bulk update transactions")
     })
   })
 })

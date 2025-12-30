@@ -1,4 +1,4 @@
-import { DailySpendingChart } from "@/components/charts/DailySpendingChart"
+import { DailySpendingChart } from "./DailySpendingChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareDailySpendingData } from "@/lib/dashboard/calculations"
 import { ChartErrorFallback } from "@/components/shared/ErrorFallback"

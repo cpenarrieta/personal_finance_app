@@ -1,4 +1,4 @@
-import { CashflowSankeyChart } from "@/components/charts/CashflowSankeyChart"
+import { CashflowSankeyChart } from "./CashflowSankeyChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareCashflowSankeyData } from "@/lib/dashboard/calculations"
 import { ChartErrorFallback } from "@/components/shared/ErrorFallback"

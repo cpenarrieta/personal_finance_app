@@ -1,4 +1,4 @@
-import { SubcategoryChart } from "@/components/charts/SubcategoryChart"
+import { SubcategoryChart } from "./SubcategoryChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareSpendingBySubcategory } from "@/lib/dashboard/calculations"
 import { ChartErrorFallback } from "@/components/shared/ErrorFallback"

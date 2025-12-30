@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
 import { safeParseRequestBody } from "@/types/api"
@@ -7,6 +7,7 @@ import { Prisma } from "@prisma/generated"
 const Decimal = Prisma.Decimal
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 // Schema for split transaction request
 const splitTransactionSchema = z.object({
@@ -34,13 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const parseResult = await safeParseRequestBody(req, splitTransactionSchema)
 
     if (!parseResult.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request data",
-          details: parseResult.error.message,
-        },
-        { status: 400 },
-      )
+      return apiErrors.validationError("Invalid request data", parseResult.error.message)
     }
 
     const { splits } = parseResult.data
@@ -51,28 +46,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     if (!originalTransaction) {
-      return NextResponse.json({ error: "Transaction not found" }, { status: 404 })
+      return apiErrors.notFound("Transaction")
     }
 
     // Check if transaction is already split
     if (originalTransaction.isSplit) {
-      return NextResponse.json({ error: "Transaction has already been split" }, { status: 400 })
+      return apiErrors.badRequest("Transaction has already been split")
     }
 
     // Validate that split amounts sum to original amount
     const totalSplitAmount = splits.reduce((sum, split) => sum.add(split.amount), new Decimal(0))
 
     if (!totalSplitAmount.equals(originalTransaction.amount)) {
-      return NextResponse.json(
-        {
-          error: "Split amounts must sum to original transaction amount",
-          details: {
-            original: originalTransaction.amount.toString(),
-            total: totalSplitAmount.toString(),
-          },
-        },
-        { status: 400 },
-      )
+      return apiErrors.validationError("Split amounts must sum to original transaction amount", {
+        original: originalTransaction.amount.toString(),
+        total: totalSplitAmount.toString(),
+      })
     }
 
     // Perform the split in a transaction
@@ -127,13 +116,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     revalidateTag("dashboard", "max")
     revalidatePath("/", "layout") // Invalidate Router Cache
 
-    return NextResponse.json({
-      success: true,
-      message: "Transaction split successfully",
-      data: result,
-    })
+    return apiSuccess({ message: "Transaction split successfully", ...result })
   } catch (error) {
     logError("Error splitting transaction:", error)
-    return NextResponse.json({ error: "Failed to split transaction" }, { status: 500 })
+    return apiErrors.internalError("Failed to split transaction")
   }
 }

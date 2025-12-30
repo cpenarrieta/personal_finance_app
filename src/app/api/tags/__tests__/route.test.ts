@@ -65,10 +65,11 @@ describe("Tags API - GET", () => {
 
       // Assert
       expect(response.status).toBe(200)
+      expect(data.success).toBe(true)
       // Dates are serialized to strings in JSON response
-      expect(data).toHaveLength(mockTags.length)
-      expect(data[0]?.name).toBe(mockTags[0]?.name)
-      expect(data[1]?.name).toBe(mockTags[1]?.name)
+      expect(data.data).toHaveLength(mockTags.length)
+      expect(data.data[0]?.name).toBe(mockTags[0]?.name)
+      expect(data.data[1]?.name).toBe(mockTags[1]?.name)
       expect(prismaModule.prisma.tag.findMany).toHaveBeenCalledWith({
         orderBy: { name: "asc" },
       })
@@ -84,7 +85,8 @@ describe("Tags API - GET", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual([])
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual([])
     })
 
     it("should return single tag", async () => {
@@ -98,8 +100,9 @@ describe("Tags API - GET", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data[0]?.name).toBe(singleTag[0]?.name)
-      expect(data).toHaveLength(1)
+      expect(data.success).toBe(true)
+      expect(data.data[0]?.name).toBe(singleTag[0]?.name)
+      expect(data.data).toHaveLength(1)
     })
 
     it("should handle tags with special characters in names", async () => {
@@ -128,9 +131,10 @@ describe("Tags API - GET", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toHaveLength(tagsWithSpecialChars.length)
-      expect(data[0].name).toBe("Work/Business")
-      expect(data[1].name).toBe("Tax - Q1 2024")
+      expect(data.success).toBe(true)
+      expect(data.data).toHaveLength(tagsWithSpecialChars.length)
+      expect(data.data[0].name).toBe("Work/Business")
+      expect(data.data[1].name).toBe("Tax - Q1 2024")
     })
   })
 
@@ -146,7 +150,8 @@ describe("Tags API - GET", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to fetch tags" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to fetch tags")
       expect(console.error).toHaveBeenCalledWith("Error fetching tags:", dbError)
     })
 
@@ -161,7 +166,8 @@ describe("Tags API - GET", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to fetch tags" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to fetch tags")
       expect(console.error).toHaveBeenCalledWith("Error fetching tags:", timeoutError)
     })
 
@@ -175,7 +181,8 @@ describe("Tags API - GET", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to fetch tags" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to fetch tags")
     })
 
     it("should handle null response from database", async () => {
@@ -188,7 +195,8 @@ describe("Tags API - GET", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toBeNull()
+      expect(data.success).toBe(true)
+      expect(data.data).toBeNull()
     })
   })
 
@@ -202,11 +210,11 @@ describe("Tags API - GET", () => {
       const data = await response.json()
 
       // Assert
-      expect(data[0]).toHaveProperty("id")
-      expect(data[0]).toHaveProperty("name")
-      expect(data[0]).toHaveProperty("color")
-      expect(data[0]).toHaveProperty("createdAt")
-      expect(data[0]).toHaveProperty("updatedAt")
+      expect(data.data[0]).toHaveProperty("id")
+      expect(data.data[0]).toHaveProperty("name")
+      expect(data.data[0]).toHaveProperty("color")
+      expect(data.data[0]).toHaveProperty("createdAt")
+      expect(data.data[0]).toHaveProperty("updatedAt")
     })
 
     it("should preserve color format", async () => {
@@ -218,9 +226,9 @@ describe("Tags API - GET", () => {
       const data = await response.json()
 
       // Assert
-      expect(data[0].color).toMatch(/^#[0-9A-F]{6}$/i)
-      expect(data[1].color).toMatch(/^#[0-9A-F]{6}$/i)
-      expect(data[2].color).toMatch(/^#[0-9A-F]{6}$/i)
+      expect(data.data[0].color).toMatch(/^#[0-9A-F]{6}$/i)
+      expect(data.data[1].color).toMatch(/^#[0-9A-F]{6}$/i)
+      expect(data.data[2].color).toMatch(/^#[0-9A-F]{6}$/i)
     })
   })
 })
