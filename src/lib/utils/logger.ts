@@ -89,9 +89,11 @@ export function logError(message: string, error?: unknown, attributes?: LogAttri
     ...(errorObj && { error: errorObj.message, stack: errorObj.stack }),
   }
 
-  // Log to console with error object
-  if (error !== undefined) {
-    console.error(message, error, attributes ? formatAttributes(attributes) : "")
+  // Log to console with error object - maintain consistent call signature
+  if (error !== undefined && attributes) {
+    console.error(message, error, attributes)
+  } else if (error !== undefined) {
+    console.error(message, error)
   } else if (attributes) {
     console.error(message, formatAttributes(attributes))
   } else {
