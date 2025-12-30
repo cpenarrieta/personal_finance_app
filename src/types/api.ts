@@ -91,8 +91,9 @@ export type BulkUpdateTransactionsPayload = z.infer<typeof bulkUpdateTransaction
  * Schema for creating a category
  */
 export const createCategorySchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().min(1, "Name is required").max(100, "Name too long"),
   imageUrl: z.string().url().nullable().optional(),
+  isTransferCategory: z.boolean().default(false),
 })
 
 export type CreateCategoryPayload = z.infer<typeof createCategorySchema>
@@ -101,9 +102,20 @@ export type CreateCategoryPayload = z.infer<typeof createCategorySchema>
  * Schema for updating a category
  */
 export const updateCategorySchema = z.object({
+  id: z.string().min(1, "Category ID is required"),
   name: z.string().min(1).max(100).optional(),
   imageUrl: z.string().url().nullable().optional(),
+  isTransferCategory: z.boolean().optional(),
 })
+
+/**
+ * Schema for deleting a category
+ */
+export const deleteCategorySchema = z.object({
+  id: z.string().min(1, "Category ID is required"),
+})
+
+export type DeleteCategoryPayload = z.infer<typeof deleteCategorySchema>
 
 export type UpdateCategoryPayload = z.infer<typeof updateCategorySchema>
 
@@ -111,12 +123,21 @@ export type UpdateCategoryPayload = z.infer<typeof updateCategorySchema>
  * Schema for creating a subcategory
  */
 export const createSubcategorySchema = z.object({
-  categoryId: z.string(),
-  name: z.string().min(1).max(100),
+  categoryId: z.string().min(1, "Category ID is required"),
+  name: z.string().min(1, "Name is required").max(100, "Name too long"),
   imageUrl: z.string().url().nullable().optional(),
 })
 
 export type CreateSubcategoryPayload = z.infer<typeof createSubcategorySchema>
+
+/**
+ * Schema for deleting a subcategory
+ */
+export const deleteSubcategorySchema = z.object({
+  id: z.string().min(1, "Subcategory ID is required"),
+})
+
+export type DeleteSubcategoryPayload = z.infer<typeof deleteSubcategorySchema>
 
 /**
  * Schema for category with subcategories (API response)
@@ -149,7 +170,7 @@ export type CategoryWithSubcategories = z.infer<typeof categoryWithSubcategories
  * Schema for creating a tag
  */
 export const createTagSchema = z.object({
-  name: z.string().min(1).max(50),
+  name: z.string().min(1, "Name is required").max(50, "Name too long"),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color"),
 })
 
@@ -159,12 +180,22 @@ export type CreateTagPayload = z.infer<typeof createTagSchema>
  * Schema for updating a tag
  */
 export const updateTagSchema = z.object({
+  id: z.string().min(1, "Tag ID is required"),
   name: z.string().min(1).max(50).optional(),
   color: z
     .string()
     .regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color")
     .optional(),
 })
+
+/**
+ * Schema for deleting a tag
+ */
+export const deleteTagSchema = z.object({
+  id: z.string().min(1, "Tag ID is required"),
+})
+
+export type DeleteTagPayload = z.infer<typeof deleteTagSchema>
 
 export type UpdateTagPayload = z.infer<typeof updateTagSchema>
 

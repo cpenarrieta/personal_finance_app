@@ -1,48 +1,12 @@
-import { revalidatePath, revalidateTag } from "next/cache"
 import { DeleteButton } from "@/components/shared/DeleteButton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { getAllTagsWithCounts } from "@/lib/db/queries-settings"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
-import { prisma } from "@/lib/db/prisma"
 import type { PrismaTagWithCount } from "@/types"
 import { logError } from "@/lib/utils/logger"
-
-// Server Actions
-async function createTag(formData: FormData) {
-  "use server"
-  const name = formData.get("name") as string
-  const color = formData.get("color") as string
-
-  await prisma.tag.create({
-    data: { name, color },
-  })
-  revalidatePath("/settings/manage-tags")
-  revalidateTag("tags", "max")
-}
-
-async function deleteTag(formData: FormData) {
-  "use server"
-  const id = formData.get("id") as string
-  await prisma.tag.delete({ where: { id } })
-  revalidatePath("/settings/manage-tags")
-  revalidateTag("tags", "max")
-}
-
-async function updateTag(formData: FormData) {
-  "use server"
-  const id = formData.get("id") as string
-  const name = formData.get("name") as string
-  const color = formData.get("color") as string
-
-  await prisma.tag.update({
-    where: { id },
-    data: { name, color },
-  })
-  revalidatePath("/settings/manage-tags")
-  revalidateTag("tags", "max")
-}
+import { createTag, updateTag, deleteTag } from "@/app/(app)/settings/manage-tags/actions"
 
 export async function ManageTagsAsync() {
   try {
