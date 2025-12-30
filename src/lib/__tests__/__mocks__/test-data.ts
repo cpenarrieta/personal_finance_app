@@ -208,13 +208,27 @@ export const mockDbSecurity = {
   isoCurrencyCode: "USD",
 }
 
+// Simple mock Decimal class for tests (avoids ESM import issues)
+class MockDecimal {
+  private value: number
+  constructor(value: number) {
+    this.value = value
+  }
+  toString() {
+    return String(this.value)
+  }
+  toNumber() {
+    return this.value
+  }
+}
+
 export const mockDbHolding = {
   id: "db-holding-1",
   accountId: "db-account-1",
   securityId: "db-security-1",
-  quantity: new (require("@prisma/client").Prisma.Decimal)(10.5),
-  costBasis: new (require("@prisma/client").Prisma.Decimal)(1500.0),
-  institutionPrice: new (require("@prisma/client").Prisma.Decimal)(175.5),
+  quantity: new MockDecimal(10.5),
+  costBasis: new MockDecimal(1500.0),
+  institutionPrice: new MockDecimal(175.5),
   institutionPriceAsOf: new Date("2024-01-15"),
   isoCurrencyCode: "USD",
   account: mockDbAccount,
