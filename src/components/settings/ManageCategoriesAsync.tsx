@@ -1,5 +1,4 @@
 import Image from "next/image"
-import { revalidatePath, revalidateTag } from "next/cache"
 import { DeleteButton } from "@/components/shared/DeleteButton"
 import { getCategoryImage } from "@/lib/categories/images"
 import { Input } from "@/components/ui/input"
@@ -10,72 +9,18 @@ import { TransferCategoryToggle } from "@/components/transactions/filters/Transf
 import { getAllCategoriesForManagement } from "@/lib/db/queries-settings"
 import { logError } from "@/lib/utils/logger"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
-import { prisma } from "@/lib/db/prisma"
 import type { Prisma } from "@prisma/generated"
+import {
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  createSubcategory,
+  deleteSubcategory,
+} from "@/app/(app)/settings/manage-categories/actions"
 
 type CategoryWithSubs = Prisma.CategoryGetPayload<{
   include: { subcategories: true }
 }>
-
-// Server Actions
-async function createCategory(formData: FormData) {
-  "use server"
-  const name = formData.get("name") as string
-  const imageUrl = formData.get("imageUrl") as string
-  const isTransferCategory = formData.get("isTransferCategory") === "true"
-
-  await prisma.category.create({
-    data: {
-      name,
-      imageUrl: imageUrl || null,
-      isTransferCategory,
-    },
-  })
-  revalidatePath("/settings/manage-categories")
-  revalidateTag("categories", "max")
-}
-
-async function updateCategory(formData: FormData) {
-  "use server"
-  const id = formData.get("id") as string
-  const isTransferCategory = formData.get("isTransferCategory") === "true"
-
-  await prisma.category.update({
-    where: { id },
-    data: { isTransferCategory },
-  })
-  revalidatePath("/settings/manage-categories")
-  revalidateTag("categories", "max")
-}
-
-async function deleteCategory(formData: FormData) {
-  "use server"
-  const id = formData.get("id") as string
-  await prisma.category.delete({ where: { id } })
-  revalidatePath("/settings/manage-categories")
-  revalidateTag("categories", "max")
-}
-
-async function createSubcategory(formData: FormData) {
-  "use server"
-  const categoryId = formData.get("categoryId") as string
-  const name = formData.get("name") as string
-  const imageUrl = formData.get("imageUrl") as string
-
-  await prisma.subcategory.create({
-    data: { categoryId, name, imageUrl: imageUrl || null },
-  })
-  revalidatePath("/settings/manage-categories")
-  revalidateTag("categories", "max")
-}
-
-async function deleteSubcategory(formData: FormData) {
-  "use server"
-  const id = formData.get("id") as string
-  await prisma.subcategory.delete({ where: { id } })
-  revalidatePath("/settings/manage-categories")
-  revalidateTag("categories", "max")
-}
 
 export async function ManageCategoriesAsync() {
   try {
