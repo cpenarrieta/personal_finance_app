@@ -1,58 +1,35 @@
 # Data Fetching Strategy
 
-## Overview
-Next.js 16 Server Components with **"use cache" directive** for explicit caching. Data fetched on server using Prisma, passed as props to Client Components.
+**Rule**: Fetch data in Server Components using cached queries. Pass as props to Client Components.
 
-## Key Principles
-
-1. **Server-Side Fetching**: Use cached query functions from `@/lib/db/queries`
-2. **Next.js 16 Caching**: Queries use `"use cache"` directive with `cacheLife()` and `cacheTag()`
-3. **No Client-Side Fetching**: Never fetch reference data (categories, tags) from Client Components
-4. **Props Over Context**: Pass data as props, not via React Context
-5. **Generated Columns**: Use PostgreSQL generated columns (`date_string`, `amount_number`) for client-compatible types
-
-## Implementation Pattern
+## Pattern
 
 ### Server Component (Page)
 ```typescript
-// app/(app)/page.tsx
 import { getAllTransactions, getAllCategories, getAllTags } from '@/lib/db/queries'
 
 export default async function Page() {
-  // Parallel fetching with Next.js 16 cached queries
   const [transactions, categories, tags] = await Promise.all([
-    getAllTransactions(),    // Cached 24h, tagged "transactions"
-    getAllCategories(),      // Cached 24h, tagged "categories"
-    getAllTags(),           // Cached 24h, tagged "tags"
+    getAllTransactions(),    // Cached 24h
+    getAllCategories(),      // Cached 24h
+    getAllTags(),           // Cached 24h
   ])
 
   return <ClientComponent transactions={transactions} categories={categories} tags={tags} />
 }
 ```
 
-### Cached Query Function (Next.js 16)
+### Cached Query (Next.js 16)
 ```typescript
 // lib/db/queries.ts
 import { cacheTag, cacheLife } from "next/cache"
-import { prisma } from "@/lib/db/prisma"
 
 export async function getAllCategories() {
-  "use cache"  // Next.js 16 explicit caching
+  "use cache"
   cacheLife({ stale: 60 * 60 * 24 })  // 24h
-  cacheTag("categories")  // Auto-invalidate with revalidateTag
+  cacheTag("categories")
 
-  return prisma.category.findMany({
-    select: {
-      id: true,
-      name: true,
-      imageUrl: true,
-      subcategories: {
-        select: { id: true, name: true },
-        orderBy: { name: "asc" },
-      },
-    },
-    orderBy: { name: "asc" },
-  })
+  return prisma.category.findMany({...})
 }
 ```
 
@@ -61,121 +38,58 @@ export async function getAllCategories() {
 'use client'
 
 interface Props {
-  transactions: Array<{ id: string; name: string; amount_number: number; date_string: string }>
-  categories: Array<{ id: string; name: string; subcategories: Array<{ id: string; name: string }> }>
-  tags: Array<{ id: string; name: string; color: string }>
+  transactions: Array<{ id: string; amount_number: number; date_string: string }>
+  categories: Array<{ id: string; name: string }>
 }
 
-export function ClientComponent({ transactions, categories, tags }: Props) {
-  return (
-    <div>
-      {transactions.map(t => (
-        <div key={t.id}>
-          {t.name} - ${t.amount_number.toFixed(2)} - {new Date(t.date_string).toLocaleDateString()}
-        </div>
-      ))}
-    </div>
-  )
+export function ClientComponent({ transactions, categories }: Props) {
+  return <div>{/* Use props directly */}</div>
 }
 ```
-
-## Reference Data
-
-Always fetch server-side and pass as props:
-- **Categories**: `getAllCategories()` with subcategories
-- **Tags**: `getAllTags()`
-- **Accounts**: `getAllAccounts()` when needed
-
-## Components Requiring Props
-
-These components need categories/tags passed as props (never fetch internally):
-- `SearchableTransactionList`
-- `EditTransactionModal`
-- `SplitTransactionModal`
-- `TransactionDetailView`
-
-## Benefits
-
-1. **Performance**: Data fetched once, cached 24h with Next.js 16 "use cache"
-2. **Auto-invalidation**: `cacheTag()` enables targeted cache invalidation
-3. **No Loading States**: Client components render immediately
-4. **Type Safety**: Full TypeScript support
-5. **No Client API Calls**: No `/api/categories` or `/api/tags` endpoints needed
-6. **Generated Columns**: Client-compatible types (numbers/strings) without conversion
-
-## When to Use Client-Side Fetching
-
-**Only for:**
-- User mutations (POST, PATCH, DELETE)
-- Real-time data requiring refresh
-- Conditional loading based on user interaction
-
-**Never for:**
-- Reference data (categories, tags)
-- Initial page data
 
 ## Generated Columns
 
-Use generated columns for client-compatible data types:
+Use for client-compatible types:
 
 ```typescript
-// ✅ Client components - use generated columns
+// ✅ Client components
 select: {
-  amount_number: true,        // Float (not Decimal)
-  date_string: true,          // String (not Date)
-  authorized_date_string: true,
-  created_at_string: true,
+  amount_number: true,    // Float (not Decimal)
+  date_string: true,      // String (not Date)
 }
 
-// ✅ Server calculations - use source columns
+// ✅ Server calculations
 select: {
-  amount: true,  // Decimal (for precise math)
-  date: true,    // Date (for date operations)
+  amount: true,           // Decimal (precise math)
+  date: true,             // Date (operations)
 }
 ```
 
-## Cache Invalidation (Critical)
+## Cache Invalidation
 
-**Next.js 16 has TWO separate caches:**
-1. **Data Cache** (server-side): Invalidated with `revalidateTag()`
-2. **Router Cache** (client-side): Invalidated with `revalidatePath()`
-
-**IMPORTANT:** When mutating data, you MUST invalidate BOTH caches:
+**Next.js 16 has TWO caches** - invalidate BOTH:
 
 ```typescript
-// ✅ DO: Invalidate both Data Cache and Router Cache
 import { revalidateTag, revalidatePath } from "next/cache"
 
-async function updateTransaction() {
+async function updateData() {
   await prisma.transaction.update(...)
 
-  revalidateTag("transactions", "max")  // Server cache
+  revalidateTag("transactions", "max")  // Server Data Cache
   revalidatePath("/", "layout")          // Client Router Cache
-}
-
-// ❌ DON'T: Only invalidate Data Cache
-async function updateTransaction() {
-  await prisma.transaction.update(...)
-
-  revalidateTag("transactions", "max")  // Missing revalidatePath!
-  // User will see stale data on page navigation
 }
 ```
 
-**Why both are needed:**
-- `revalidateTag()` clears server-side cached data
-- `revalidatePath("/", "layout")` clears client-side Router Cache for ALL routes
-- Without `revalidatePath()`, users see stale data when navigating between pages
+Missing `revalidatePath()` = stale data on navigation.
 
-## Checklist
+## Rules
 
-When adding pages needing reference data:
-1. Fetch with cached queries from `@/lib/db/queries`
-2. Use generated columns for Client Components
-3. Pass as props (never fetch in `useEffect`)
-4. Update TypeScript interfaces in `@/types`
+**Do**:
+- Fetch with cached queries from `@/lib/db/queries`
+- Use generated columns for Client Components
+- Pass as props (never fetch in `useEffect`)
+- Invalidate both caches on mutation
 
-When mutating data (Server Actions, API Routes):
-1. Use `revalidateTag()` to clear server Data Cache
-2. Use `revalidatePath("/", "layout")` to clear client Router Cache
-3. Both are required - missing either causes stale data issues
+**Don't**:
+- Fetch reference data client-side (`/api/categories`, `/api/tags`)
+- Use React Context for data that can be props
