@@ -6,6 +6,9 @@ const config = {
   testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx', '**/?(*.)+(spec|test).ts', '**/?(*.)+(spec|test).tsx'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@prisma/generated$': '<rootDir>/prisma/generated/prisma/client',
+    '^@prisma/generated/browser$': '<rootDir>/prisma/generated/prisma/browser',
+    '^@prisma/generated/enums$': '<rootDir>/prisma/generated/prisma/enums',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
