@@ -1,5 +1,5 @@
 // Mock Prisma client for testing
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 
 export const mockPrismaClient = {
   transaction: {

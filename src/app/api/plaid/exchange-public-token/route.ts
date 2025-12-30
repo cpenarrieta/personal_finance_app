@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { prisma } from "@/lib/db/prisma"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 import { CountryCode } from "plaid"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logInfo, logWarn } from "@/lib/utils/logger"

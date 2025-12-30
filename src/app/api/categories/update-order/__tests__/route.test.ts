@@ -10,7 +10,7 @@
 
 import { PUT } from "../route"
 import * as prismaModule from "@/lib/db/prisma"
-import { CategoryGroupType } from "@prisma/client"
+import { CategoryGroupType } from "@prisma/generated"
 
 // Mock modules
 jest.mock("@/lib/db/prisma", () => ({

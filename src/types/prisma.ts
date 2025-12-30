@@ -3,103 +3,111 @@
  *
  * This file contains type-safe extractors for all Prisma models with their relations.
  * Use these types throughout your application for consistency and type safety.
+ *
+ * Updated for Prisma v7 - uses direct type definitions instead of Prisma.validator
  */
 
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 
 // ============================================================================
 // TRANSACTION TYPES
 // ============================================================================
 
 /**
- * Transaction with all commonly used relations
+ * Transaction include object for all commonly used relations
  * Use this for full transaction queries with account, categories, and tags
  */
-export const transactionWithRelations = Prisma.validator<Prisma.TransactionDefaultArgs>()({
-  include: {
-    account: true,
-    category: true,
-    subcategory: {
-      include: {
-        category: true,
-      },
-    },
-    parentTransaction: {
-      include: {
-        category: true,
-      },
-    },
-    childTransactions: {
-      include: {
-        category: true,
-        subcategory: true,
-      },
-    },
-    tags: {
-      include: {
-        tag: true,
-      },
+export const transactionInclude = {
+  account: true,
+  category: true,
+  subcategory: {
+    include: {
+      category: true,
     },
   },
-})
+  parentTransaction: {
+    include: {
+      category: true,
+    },
+  },
+  childTransactions: {
+    include: {
+      category: true,
+      subcategory: true,
+    },
+  },
+  tags: {
+    include: {
+      tag: true,
+    },
+  },
+} as const satisfies Prisma.TransactionInclude
 
-export type TransactionWithRelations = Prisma.TransactionGetPayload<typeof transactionWithRelations>
+export type TransactionWithRelations = Prisma.TransactionGetPayload<{
+  include: typeof transactionInclude
+}>
 
 /**
  * Transaction with account only
  * Use for simpler queries where you only need account info
  */
-export const transactionWithAccount = Prisma.validator<Prisma.TransactionDefaultArgs>()({
-  include: {
-    account: true,
-  },
-})
+export const transactionWithAccountInclude = {
+  account: true,
+} as const satisfies Prisma.TransactionInclude
 
-export type TransactionWithAccount = Prisma.TransactionGetPayload<typeof transactionWithAccount>
+export type TransactionWithAccount = Prisma.TransactionGetPayload<{
+  include: typeof transactionWithAccountInclude
+}>
+
+// Legacy aliases for backward compatibility
+/** @deprecated Use transactionInclude instead */
+export const transactionWithRelations = { include: transactionInclude }
 
 // ============================================================================
 // PLAID ACCOUNT TYPES (Bank/Financial Accounts)
 // ============================================================================
 
 /**
- * PlaidAccount with item and institution relations
+ * PlaidAccount include object for item and institution relations
  * Use this for bank account queries with full institution details
  */
-export const plaidAccountWithRelations = Prisma.validator<Prisma.PlaidAccountDefaultArgs>()({
-  include: {
-    item: {
-      include: {
-        institution: true,
-      },
+export const plaidAccountInclude = {
+  item: {
+    include: {
+      institution: true,
     },
   },
-})
+} as const satisfies Prisma.PlaidAccountInclude
 
-export type PlaidAccountWithRelations = Prisma.PlaidAccountGetPayload<typeof plaidAccountWithRelations>
+export type PlaidAccountWithRelations = Prisma.PlaidAccountGetPayload<{
+  include: typeof plaidAccountInclude
+}>
 
 /**
- * PlaidAccount with transaction count
+ * PlaidAccount include for transaction count
  * Use this to show how many transactions are associated with each account
  */
-export const plaidAccountWithTransactionCount = Prisma.validator<Prisma.PlaidAccountDefaultArgs>()({
-  include: {
-    _count: {
-      select: {
-        transactions: true,
-      },
+export const plaidAccountWithTransactionCountInclude = {
+  _count: {
+    select: {
+      transactions: true,
     },
   },
-})
+} as const satisfies Prisma.PlaidAccountInclude
 
-export type PlaidAccountWithTransactionCount = Prisma.PlaidAccountGetPayload<typeof plaidAccountWithTransactionCount>
+export type PlaidAccountWithTransactionCount = Prisma.PlaidAccountGetPayload<{
+  include: typeof plaidAccountWithTransactionCountInclude
+}>
 
 // Legacy aliases for backward compatibility (deprecated - use PlaidAccount types)
-/** @deprecated Use plaidAccountWithRelations instead */
-export const accountWithRelations = plaidAccountWithRelations
+/** @deprecated Use plaidAccountInclude instead */
+export const plaidAccountWithRelations = { include: plaidAccountInclude }
+/** @deprecated Use plaidAccountInclude instead */
+export const accountWithRelations = { include: plaidAccountInclude }
 /** @deprecated Use PlaidAccountWithRelations instead */
 export type AccountWithRelations = PlaidAccountWithRelations
-/** @deprecated Use plaidAccountWithTransactionCount instead */
-export const accountWithTransactionCount = plaidAccountWithTransactionCount
+/** @deprecated Use plaidAccountWithTransactionCountInclude instead */
+export const accountWithTransactionCount = { include: plaidAccountWithTransactionCountInclude }
 /** @deprecated Use PlaidAccountWithTransactionCount instead */
 export type AccountWithTransactionCount = PlaidAccountWithTransactionCount
 
@@ -108,125 +116,149 @@ export type AccountWithTransactionCount = PlaidAccountWithTransactionCount
 // ============================================================================
 
 /**
- * Item with institution and accounts
+ * Item include object for institution and accounts
  */
-export const itemWithRelations = Prisma.validator<Prisma.ItemDefaultArgs>()({
-  include: {
-    institution: true,
-    accounts: true,
-  },
-})
+export const itemInclude = {
+  institution: true,
+  accounts: true,
+} as const satisfies Prisma.ItemInclude
 
-export type ItemWithRelations = Prisma.ItemGetPayload<typeof itemWithRelations>
+export type ItemWithRelations = Prisma.ItemGetPayload<{
+  include: typeof itemInclude
+}>
+
+// Legacy alias
+/** @deprecated Use itemInclude instead */
+export const itemWithRelations = { include: itemInclude }
 
 // ============================================================================
 // CATEGORY TYPES
 // ============================================================================
 
 /**
- * Category with subcategories
+ * Category include object with subcategories
  */
-export const categoryWithSubcategories = Prisma.validator<Prisma.CategoryDefaultArgs>()({
-  include: {
-    subcategories: {
-      orderBy: {
-        name: "asc" as const,
-      },
+export const categoryInclude = {
+  subcategories: {
+    orderBy: {
+      name: "asc" as const,
     },
   },
-})
+} as const satisfies Prisma.CategoryInclude
 
-export type CategoryWithSubcategories = Prisma.CategoryGetPayload<typeof categoryWithSubcategories>
+export type CategoryWithSubcategories = Prisma.CategoryGetPayload<{
+  include: typeof categoryInclude
+}>
 
 /**
- * Category with transaction count
+ * Category include for transaction count
  */
-export const categoryWithCount = Prisma.validator<Prisma.CategoryDefaultArgs>()({
-  include: {
-    _count: {
-      select: {
-        transactions: true,
-      },
+export const categoryWithCountInclude = {
+  _count: {
+    select: {
+      transactions: true,
     },
   },
-})
+} as const satisfies Prisma.CategoryInclude
 
-export type CategoryWithCount = Prisma.CategoryGetPayload<typeof categoryWithCount>
+export type CategoryWithCount = Prisma.CategoryGetPayload<{
+  include: typeof categoryWithCountInclude
+}>
+
+// Legacy aliases
+/** @deprecated Use categoryInclude instead */
+export const categoryWithSubcategories = { include: categoryInclude }
+/** @deprecated Use categoryWithCountInclude instead */
+export const categoryWithCount = { include: categoryWithCountInclude }
 
 // ============================================================================
 // TAG TYPES
 // ============================================================================
 
 /**
- * Tag with transaction count
+ * Tag include for transaction count
  */
-export const tagWithCount = Prisma.validator<Prisma.TagDefaultArgs>()({
-  include: {
-    _count: {
-      select: {
-        transactions: true,
-      },
+export const tagWithCountInclude = {
+  _count: {
+    select: {
+      transactions: true,
     },
   },
-})
+} as const satisfies Prisma.TagInclude
 
-export type TagWithCount = Prisma.TagGetPayload<typeof tagWithCount>
+export type TagWithCount = Prisma.TagGetPayload<{
+  include: typeof tagWithCountInclude
+}>
+
+// Legacy alias
+/** @deprecated Use tagWithCountInclude instead */
+export const tagWithCount = { include: tagWithCountInclude }
 
 // ============================================================================
 // HOLDING TYPES
 // ============================================================================
 
 /**
- * Holding with Plaid account and security
+ * Holding include for Plaid account and security
  * Use this for investment holdings with full account details
  */
-export const holdingWithRelations = Prisma.validator<Prisma.HoldingDefaultArgs>()({
-  include: {
-    account: true, // This is a PlaidAccount
-    security: true,
-  },
-})
+export const holdingInclude = {
+  account: true, // This is a PlaidAccount
+  security: true,
+} as const satisfies Prisma.HoldingInclude
 
-export type HoldingWithRelations = Prisma.HoldingGetPayload<typeof holdingWithRelations>
+export type HoldingWithRelations = Prisma.HoldingGetPayload<{
+  include: typeof holdingInclude
+}>
+
+// Legacy alias
+/** @deprecated Use holdingInclude instead */
+export const holdingWithRelations = { include: holdingInclude }
 
 // ============================================================================
 // INVESTMENT TRANSACTION TYPES
 // ============================================================================
 
 /**
- * Investment transaction with Plaid account and security
+ * Investment transaction include for Plaid account and security
  * Use this for investment transactions with full account and security details
  */
-export const investmentTransactionWithRelations = Prisma.validator<Prisma.InvestmentTransactionDefaultArgs>()({
-  include: {
-    account: true, // This is a PlaidAccount
-    security: true,
-  },
-})
+export const investmentTransactionInclude = {
+  account: true, // This is a PlaidAccount
+  security: true,
+} as const satisfies Prisma.InvestmentTransactionInclude
 
-export type InvestmentTransactionWithRelations = Prisma.InvestmentTransactionGetPayload<
-  typeof investmentTransactionWithRelations
->
+export type InvestmentTransactionWithRelations = Prisma.InvestmentTransactionGetPayload<{
+  include: typeof investmentTransactionInclude
+}>
+
+// Legacy alias
+/** @deprecated Use investmentTransactionInclude instead */
+export const investmentTransactionWithRelations = { include: investmentTransactionInclude }
 
 // ============================================================================
 // SECURITY TYPES
 // ============================================================================
 
 /**
- * Security with holdings count
+ * Security include for holdings count
  */
-export const securityWithCount = Prisma.validator<Prisma.SecurityDefaultArgs>()({
-  include: {
-    _count: {
-      select: {
-        holdings: true,
-        investmentTx: true,
-      },
+export const securityWithCountInclude = {
+  _count: {
+    select: {
+      holdings: true,
+      investmentTx: true,
     },
   },
-})
+} as const satisfies Prisma.SecurityInclude
 
-export type SecurityWithCount = Prisma.SecurityGetPayload<typeof securityWithCount>
+export type SecurityWithCount = Prisma.SecurityGetPayload<{
+  include: typeof securityWithCountInclude
+}>
+
+// Legacy alias
+/** @deprecated Use securityWithCountInclude instead */
+export const securityWithCount = { include: securityWithCountInclude }
 
 // ============================================================================
 // TYPE UTILITIES
@@ -245,7 +277,7 @@ export type TransactionTagData = {
  * Helper to extract tags from a transaction with relations
  */
 export function extractTags(transaction: TransactionWithRelations): TransactionTagData[] {
-  return transaction.tags.map((tt) => ({
+  return transaction.tags.map((tt: { tag: { id: string; name: string; color: string } }) => ({
     id: tt.tag.id,
     name: tt.tag.name,
     color: tt.tag.color,
@@ -257,11 +289,11 @@ export function extractTags(transaction: TransactionWithRelations): TransactionT
  * Import these to ensure consistency across your app
  */
 export const PrismaIncludes = {
-  transaction: transactionWithRelations.include,
-  plaidAccount: plaidAccountWithRelations.include,
-  account: plaidAccountWithRelations.include, // Legacy alias (deprecated)
-  item: itemWithRelations.include,
-  category: categoryWithSubcategories.include,
-  holding: holdingWithRelations.include,
-  investmentTransaction: investmentTransactionWithRelations.include,
+  transaction: transactionInclude,
+  plaidAccount: plaidAccountInclude,
+  account: plaidAccountInclude, // Legacy alias (deprecated)
+  item: itemInclude,
+  category: categoryInclude,
+  holding: holdingInclude,
+  investmentTransaction: investmentTransactionInclude,
 } as const

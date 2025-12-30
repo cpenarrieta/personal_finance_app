@@ -12,7 +12,8 @@
  * See docs/GENERATED_COLUMNS.md for more information.
  */
 
-import { CategoryGroupType } from "@prisma/client"
+// Import from browser-safe enums file (avoids Node.js runtime dependency)
+import { CategoryGroupType } from "@prisma/generated/enums"
 
 // Export the enum for use in components
 export { CategoryGroupType }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { updateTransactionSchema } from "@/types/api"
 import { safeParseRequestBody } from "@/types/api"
-import type { Prisma } from "@prisma/client"
+import type { Prisma } from "@prisma/generated"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logError } from "@/lib/utils/logger"
 

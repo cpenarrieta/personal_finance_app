@@ -8,7 +8,7 @@
  * 4. Investment transactions sync
  */
 
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 import { syncItemInvestments } from "../sync/sync-service"
 import * as plaidModule from "../api/plaid"
 import * as prismaModule from "../db/prisma"
@@ -75,7 +75,6 @@ describe("syncItemInvestments", () => {
       // Arrange
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(null) // New security
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -109,7 +108,6 @@ describe("syncItemInvestments", () => {
       // Arrange
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity) // Existing
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -133,7 +131,6 @@ describe("syncItemInvestments", () => {
       // Arrange
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock)
         .mockResolvedValueOnce(null) // For securities upsert
@@ -170,7 +167,6 @@ describe("syncItemInvestments", () => {
       // Arrange
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -205,7 +201,6 @@ describe("syncItemInvestments", () => {
 
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -250,7 +245,6 @@ describe("syncItemInvestments", () => {
         },
       })
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -273,7 +267,6 @@ describe("syncItemInvestments", () => {
       // Arrange
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -300,7 +293,6 @@ describe("syncItemInvestments", () => {
 
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -324,7 +316,6 @@ describe("syncItemInvestments", () => {
       // Arrange
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -361,7 +352,6 @@ describe("syncItemInvestments", () => {
       // Arrange
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       mockPlaidClient.investmentsTransactionsGet.mockResolvedValueOnce(mockInvestmentsTransactionsResponse)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -396,7 +386,6 @@ describe("syncItemInvestments", () => {
           investment_transactions: [txWithoutSecurity],
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -434,7 +423,6 @@ describe("syncItemInvestments", () => {
           total_investment_transactions: 0,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([])
       ;(prismaModule.prisma.holding.findMany as jest.Mock).mockResolvedValue([])
 
@@ -459,7 +447,6 @@ describe("syncItemInvestments", () => {
           total_investment_transactions: 0,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([]) // No accounts
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(null)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)

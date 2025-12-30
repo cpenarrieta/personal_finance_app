@@ -14,7 +14,7 @@ import { NextRequest } from "next/server"
 import * as prismaModule from "@/lib/db/prisma"
 import * as nextCache from "next/cache"
 import { POST } from "../route"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 
 // Mock the Prisma module - use factory function to avoid TDZ
 jest.mock("@prisma/client", () => {

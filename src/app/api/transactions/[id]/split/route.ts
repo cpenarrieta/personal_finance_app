@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
 import { safeParseRequestBody } from "@/types/api"
-import { Decimal } from "@prisma/client/runtime/library"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
+
+const Decimal = Prisma.Decimal
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logError } from "@/lib/utils/logger"
 

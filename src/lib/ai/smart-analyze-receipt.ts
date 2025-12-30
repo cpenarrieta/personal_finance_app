@@ -7,7 +7,7 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject } from "ai"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
-import { Category, Subcategory, Transaction } from "@prisma/client"
+import { Category, Subcategory, Transaction } from "@prisma/generated"
 import {
   buildCategoriesContext,
   buildHistoryContext,

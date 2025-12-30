@@ -4,7 +4,7 @@
 import { PlaidAccountWithRelations } from "@/types"
 import { getPlaidClient } from "../api/plaid"
 import { prisma } from "../db/prisma"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 import { revalidateTag, revalidatePath } from "next/cache"
 import type { Transaction, AccountBase, Security, Holding, InvestmentTransaction } from "../api/plaid"
 import { logInfo, logError } from "../utils/logger"

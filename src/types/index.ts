@@ -6,15 +6,17 @@
 // Re-export Prisma types (for database queries)
 export {
   // Transaction types
+  transactionInclude,
   transactionWithRelations,
   type TransactionWithRelations,
-  transactionWithAccount,
+  transactionWithAccountInclude,
   type TransactionWithAccount,
 
   // PlaidAccount types
+  plaidAccountInclude,
   plaidAccountWithRelations,
   type PlaidAccountWithRelations,
-  plaidAccountWithTransactionCount,
+  plaidAccountWithTransactionCountInclude,
   type PlaidAccountWithTransactionCount,
 
   // Legacy aliases (deprecated)
@@ -24,28 +26,35 @@ export {
   type AccountWithTransactionCount,
 
   // Item types
+  itemInclude,
   itemWithRelations,
   type ItemWithRelations,
 
   // Category types (Prisma version - for database queries)
+  categoryInclude,
   categoryWithSubcategories,
   type CategoryWithSubcategories as PrismaCategoryWithSubcategories,
+  categoryWithCountInclude,
   categoryWithCount,
   type CategoryWithCount,
 
   // Tag types (Prisma version - for database queries)
+  tagWithCountInclude,
   tagWithCount,
   type TagWithCount as PrismaTagWithCount,
 
   // Holding types
+  holdingInclude,
   holdingWithRelations,
   type HoldingWithRelations,
 
   // Investment transaction types
+  investmentTransactionInclude,
   investmentTransactionWithRelations,
   type InvestmentTransactionWithRelations,
 
   // Security types
+  securityWithCountInclude,
   securityWithCount,
   type SecurityWithCount,
 

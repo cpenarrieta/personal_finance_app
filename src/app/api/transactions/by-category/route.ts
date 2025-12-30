@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import type { Prisma } from "@prisma/client"
+import type { Prisma } from "@prisma/generated"
 import { logError } from "@/lib/utils/logger"
 
 /**

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { getReconnectionData, clearReconnectionData } from "@/lib/cache/reconnection-cache"
 import { logInfo, logError } from "@/lib/utils/logger"

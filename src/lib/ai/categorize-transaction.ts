@@ -7,7 +7,7 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject } from "ai"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
-import { Category, Prisma, Subcategory, Transaction } from "@prisma/client"
+import { Category, Prisma, Subcategory, Transaction } from "@prisma/generated"
 import { logInfo, logWarn, logError } from "@/lib/utils/logger"
 
 // Initialize OpenAI with API key

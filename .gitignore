@@ -53,6 +53,9 @@ next-env.d.ts
 *.db
 *.db-journal
 
+# Prisma generated client
+prisma/generated/
+
 # logs
 logs/
 *.log

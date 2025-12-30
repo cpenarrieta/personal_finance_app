@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 import { logError } from "@/lib/utils/logger"
 
 // Type for transaction with all relations we need

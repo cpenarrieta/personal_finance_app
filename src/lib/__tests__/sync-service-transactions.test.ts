@@ -10,7 +10,7 @@
  * 6. Transaction removals
  */
 
-import { Prisma } from "@prisma/client"
+import { Prisma } from "@prisma/generated"
 import { syncItemTransactions } from "../sync/sync-service"
 import * as plaidModule from "../api/plaid"
 import * as prismaModule from "../db/prisma"
@@ -207,7 +207,6 @@ describe("syncItemTransactions - Basic Path", () => {
 
       // Mock incremental sync
       mockPlaidClient.transactionsSync.mockResolvedValueOnce(mockTransactionsSyncResponse)
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
 
       // Act
@@ -243,7 +242,6 @@ describe("syncItemTransactions - Basic Path", () => {
             next_cursor: "cursor-page-2",
           },
         })
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
 
       // Act
@@ -261,7 +259,6 @@ describe("syncItemTransactions - Basic Path", () => {
       const lastCursor = "existing-cursor"
 
       mockPlaidClient.transactionsSync.mockResolvedValueOnce(mockTransactionsSyncResponse)
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
 
       // Act
@@ -290,7 +287,6 @@ describe("syncItemTransactions - Basic Path", () => {
       const lastCursor = "existing-cursor"
 
       mockPlaidClient.transactionsSync.mockResolvedValueOnce(mockTransactionsSyncResponse)
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
 
       // Act
@@ -309,7 +305,6 @@ describe("syncItemTransactions - Basic Path", () => {
       const lastCursor = "existing-cursor"
 
       mockPlaidClient.transactionsSync.mockResolvedValueOnce(mockTransactionsSyncResponseWithAdded)
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
       ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({ id: "test-transaction-id" })
@@ -342,7 +337,6 @@ describe("syncItemTransactions - Basic Path", () => {
       const lastCursor = "existing-cursor"
 
       mockPlaidClient.transactionsSync.mockResolvedValueOnce(mockTransactionsSyncResponseWithModified)
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue({})
 
@@ -367,7 +361,6 @@ describe("syncItemTransactions - Basic Path", () => {
       const lastCursor = "existing-cursor"
 
       mockPlaidClient.transactionsSync.mockResolvedValueOnce(mockTransactionsSyncResponseWithRemoved)
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.deleteMany as jest.Mock).mockResolvedValue({ count: 1 })
 
@@ -399,7 +392,6 @@ describe("syncItemTransactions - Basic Path", () => {
           has_more: false,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.deleteMany as jest.Mock).mockResolvedValue({ count: 3 })
 
@@ -470,7 +462,6 @@ describe("syncItemTransactions - Basic Path", () => {
           has_more: false,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
       ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({ id: "test-transaction-id" })

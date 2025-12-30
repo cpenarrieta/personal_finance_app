@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
-import { CategoryGroupType } from "@prisma/client"
+import { CategoryGroupType } from "@prisma/generated"
 import { logError } from "@/lib/utils/logger"
 
 export async function PUT(request: Request) {

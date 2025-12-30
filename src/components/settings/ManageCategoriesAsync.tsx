@@ -11,7 +11,7 @@ import { getAllCategoriesForManagement } from "@/lib/db/queries-settings"
 import { logError } from "@/lib/utils/logger"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import { prisma } from "@/lib/db/prisma"
-import type { Prisma } from "@prisma/client"
+import type { Prisma } from "@prisma/generated"
 
 type CategoryWithSubs = Prisma.CategoryGetPayload<{
   include: { subcategories: true }
