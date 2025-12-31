@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { CategoryGroupType } from "@prisma/generated"
 import { logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 export async function PUT(request: Request) {
   try {
@@ -11,7 +11,7 @@ export async function PUT(request: Request) {
     }
 
     if (!updates || !Array.isArray(updates)) {
-      return NextResponse.json({ error: "Invalid updates format" }, { status: 400 })
+      return apiErrors.badRequest("Invalid updates format")
     }
 
     // Update categories in a transaction
@@ -27,9 +27,9 @@ export async function PUT(request: Request) {
       ),
     )
 
-    return NextResponse.json({ success: true })
+    return apiSuccess({ updated: true })
   } catch (error) {
     logError("Error updating category order:", error)
-    return NextResponse.json({ error: "Failed to update" }, { status: 500 })
+    return apiErrors.internalError("Failed to update")
   }
 }

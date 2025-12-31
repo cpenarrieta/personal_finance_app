@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth/auth"
 import { headers } from "next/headers"
 import { logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 /**
  * Generate Cloudinary upload signature
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     })
 
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return apiErrors.unauthorized()
     }
 
     // Get upload parameters from request
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     if (!apiSecret || !apiKey) {
       logError("Missing Cloudinary credentials")
-      return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
+      return apiErrors.internalError("Server configuration error")
     }
 
     // Build params string for signature
@@ -56,11 +56,9 @@ export async function POST(request: Request) {
       .update(sortedParams + apiSecret)
       .digest("hex")
 
-    return NextResponse.json({
-      signature,
-    })
+    return apiSuccess({ signature })
   } catch (error) {
     logError("Error generating Cloudinary signature:", error)
-    return NextResponse.json({ error: "Failed to generate signature" }, { status: 500 })
+    return apiErrors.internalError("Failed to generate signature")
   }
 }

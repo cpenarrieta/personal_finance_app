@@ -1,7 +1,8 @@
 import { auth } from "@/lib/auth/auth"
 import { prisma } from "@/lib/db/prisma"
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -9,7 +10,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const session = await auth.api.getSession({ headers: req.headers })
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return apiErrors.unauthorized()
     }
 
     // Verify the passkey belongs to the user
@@ -19,7 +20,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     })
 
     if (!passkey || passkey.userId !== session.user.id) {
-      return NextResponse.json({ error: "Passkey not found" }, { status: 404 })
+      return apiErrors.notFound("Passkey")
     }
 
     // Delete the passkey
@@ -27,9 +28,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       where: { id },
     })
 
-    return NextResponse.json({ success: true })
+    return apiSuccess({ deleted: true })
   } catch (error) {
     logError("Failed to delete passkey:", error)
-    return NextResponse.json({ error: "Failed to delete passkey" }, { status: 500 })
+    return apiErrors.internalError("Failed to delete passkey")
   }
 }

@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { updateTransactionSchema } from "@/types/api"
 import { safeParseRequestBody } from "@/types/api"
 import type { Prisma } from "@prisma/generated"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -14,13 +15,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const parseResult = await safeParseRequestBody(req, updateTransactionSchema)
 
     if (!parseResult.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request data",
-          details: parseResult.error.message,
-        },
-        { status: 400 },
-      )
+      return apiErrors.validationError("Invalid request data", parseResult.error.message)
     }
 
     const { name, amount, plaidCategory, plaidSubcategory, categoryId, subcategoryId, notes, tagIds, files } =
@@ -83,10 +78,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     revalidateTag("dashboard", "max")
     revalidatePath("/", "layout") // Invalidate Router Cache
 
-    return NextResponse.json(updatedTransaction)
+    return apiSuccess(updatedTransaction)
   } catch (error) {
     logError("Error updating transaction:", error)
-    return NextResponse.json({ error: "Failed to update transaction" }, { status: 500 })
+    return apiErrors.internalError("Failed to update transaction")
   }
 }
 
@@ -103,7 +98,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!transaction) {
-      return NextResponse.json({ error: "Transaction not found" }, { status: 404 })
+      return apiErrors.notFound("Transaction")
     }
 
     // If transaction has child transactions (is a split parent), delete them first
@@ -128,9 +123,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     revalidateTag("dashboard", "max")
     revalidatePath("/", "layout") // Invalidate Router Cache
 
-    return NextResponse.json({ success: true })
+    return apiSuccess({ deleted: true })
   } catch (error) {
     logError("Error deleting transaction:", error)
-    return NextResponse.json({ error: "Failed to delete transaction" }, { status: 500 })
+    return apiErrors.internalError("Failed to delete transaction")
   }
 }
