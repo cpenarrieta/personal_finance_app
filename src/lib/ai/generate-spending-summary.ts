@@ -1,11 +1,13 @@
 /**
  * AI-powered spending summary generation using OpenAI via ai-sdk
  * Generates 5 facts and 2 saving opportunities based on Dave Ramsey's philosophy
+ * Summaries are cached in the database to avoid repeated API calls
  */
 
 import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject } from "ai"
 import { z } from "zod"
+import { prisma } from "@/lib/db/prisma"
 import { logInfo, logError } from "@/lib/utils/logger"
 
 // Initialize OpenAI with API key
@@ -76,7 +78,7 @@ interface TopExpense {
   groupType: string | null
 }
 
-interface SpendingSummaryInput {
+export interface SpendingSummaryInput {
   byCategory: CategorySpending[]
   bySuperCategory: SuperCategorySpending[]
   topExpenses: TopExpense[]
@@ -191,5 +193,133 @@ Be direct and specific. Use the actual dollar amounts from the data. Don't be ge
       dateRange: input.dateRange,
     })
     return null
+  }
+}
+
+/**
+ * Get cached spending summary from database
+ */
+export async function getCachedSpendingSummary(monthsBack: number): Promise<{
+  summary: SpendingSummary
+  dateRange: { start: string; end: string }
+  totalSpending: number
+  totalIncome: number
+  updatedAt: Date
+} | null> {
+  try {
+    const cached = await prisma.spendingSummary.findUnique({
+      where: { monthsBack },
+    })
+
+    if (!cached) return null
+
+    return {
+      summary: {
+        facts: cached.facts as SpendingSummary["facts"],
+        savingOpportunities: cached.savingOpportunities as SpendingSummary["savingOpportunities"],
+      },
+      dateRange: { start: cached.dateRangeStart, end: cached.dateRangeEnd },
+      totalSpending: cached.totalSpending,
+      totalIncome: cached.totalIncome,
+      updatedAt: cached.updatedAt,
+    }
+  } catch (error) {
+    logError("Error fetching cached spending summary:", error, { monthsBack })
+    return null
+  }
+}
+
+/**
+ * Save spending summary to database
+ */
+export async function saveSpendingSummary(
+  monthsBack: number,
+  summary: SpendingSummary,
+  input: SpendingSummaryInput,
+): Promise<void> {
+  try {
+    await prisma.spendingSummary.upsert({
+      where: { monthsBack },
+      create: {
+        monthsBack,
+        facts: summary.facts,
+        savingOpportunities: summary.savingOpportunities,
+        dateRangeStart: input.dateRange.start,
+        dateRangeEnd: input.dateRange.end,
+        totalSpending: input.totalSpending,
+        totalIncome: input.totalIncome,
+      },
+      update: {
+        facts: summary.facts,
+        savingOpportunities: summary.savingOpportunities,
+        dateRangeStart: input.dateRange.start,
+        dateRangeEnd: input.dateRange.end,
+        totalSpending: input.totalSpending,
+        totalIncome: input.totalIncome,
+      },
+    })
+
+    logInfo("💾 Saved spending summary to database", { monthsBack })
+  } catch (error) {
+    logError("Error saving spending summary:", error, { monthsBack })
+  }
+}
+
+/**
+ * Generate and save a new spending summary (used for refresh)
+ */
+export async function regenerateSpendingSummary(
+  monthsBack: number,
+  input: SpendingSummaryInput,
+): Promise<SpendingSummary | null> {
+  const summary = await generateSpendingSummary(input)
+
+  if (summary) {
+    await saveSpendingSummary(monthsBack, summary, input)
+  }
+
+  return summary
+}
+
+/**
+ * Get or generate spending summary
+ * Returns cached version if available, otherwise generates a new one
+ */
+export async function getOrGenerateSpendingSummary(
+  monthsBack: number,
+  input: SpendingSummaryInput,
+): Promise<{
+  summary: SpendingSummary
+  fromCache: boolean
+  updatedAt: Date
+} | null> {
+  // Try to get cached version first
+  const cached = await getCachedSpendingSummary(monthsBack)
+
+  if (cached) {
+    logInfo("📦 Using cached spending summary", {
+      monthsBack,
+      cachedAt: cached.updatedAt,
+    })
+
+    return {
+      summary: cached.summary,
+      fromCache: true,
+      updatedAt: cached.updatedAt,
+    }
+  }
+
+  // Generate new summary
+  const summary = await generateSpendingSummary(input)
+
+  if (!summary) return null
+
+  // Save to database
+  await saveSpendingSummary(monthsBack, summary, input)
+
+  return {
+    summary,
+    fromCache: false,
+    updatedAt: new Date(),
   }
 }

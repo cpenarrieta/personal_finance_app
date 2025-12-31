@@ -1,8 +1,8 @@
-import { format, startOfMonth, subMonths } from "date-fns"
+import { format, startOfMonth, subMonths, formatDistanceToNow } from "date-fns"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getSpendingByCategory, getTopExpensesForSummary, getLastMonthStats } from "@/lib/dashboard/data"
-import { generateSpendingSummary, type SpendingSummary } from "@/lib/ai/generate-spending-summary"
+import { getOrGenerateSpendingSummary, type SpendingSummary } from "@/lib/ai/generate-spending-summary"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import { logError } from "@/lib/utils/logger"
 import {
@@ -14,6 +14,7 @@ import {
   PiggyBank,
   Target,
 } from "lucide-react"
+import { RefreshSummaryButton } from "./RefreshSummaryButton"
 
 interface SpendingSummarySectionProps {
   monthsBack?: number
@@ -22,6 +23,7 @@ interface SpendingSummarySectionProps {
 /**
  * Async Server Component for AI-generated Spending Summary
  * Displays 5 facts and 2 saving opportunities based on Dave Ramsey's philosophy
+ * Summary is cached in the database to avoid repeated API calls
  */
 export async function SpendingSummarySection({ monthsBack = 0 }: SpendingSummarySectionProps) {
   try {
@@ -32,8 +34,8 @@ export async function SpendingSummarySection({ monthsBack = 0 }: SpendingSummary
       getLastMonthStats(monthsBack),
     ])
 
-    // Generate AI summary
-    const summary = await generateSpendingSummary({
+    // Get cached or generate new AI summary
+    const result = await getOrGenerateSpendingSummary(monthsBack, {
       byCategory: spendingData.byCategory,
       bySuperCategory: spendingData.bySuperCategory,
       topExpenses,
@@ -42,9 +44,11 @@ export async function SpendingSummarySection({ monthsBack = 0 }: SpendingSummary
       totalIncome: monthStats.totalLastMonthIncome,
     })
 
-    if (!summary) {
+    if (!result) {
       return null // Silently fail if AI generation fails
     }
+
+    const { summary, fromCache, updatedAt } = result
 
     // Generate period label
     const now = new Date()
@@ -60,16 +64,26 @@ export async function SpendingSummarySection({ monthsBack = 0 }: SpendingSummary
       periodLabel = `${startMonth} - ${endMonth}`
     }
 
+    const lastUpdated = formatDistanceToNow(updatedAt, { addSuffix: true })
+
     return (
       <div className="space-y-4">
-        <div>
-          <h2 className="flex items-center gap-2 text-2xl font-semibold">
-            <Sparkles className="h-6 w-6 text-primary" />
-            Spending Insights
-          </h2>
-          <p className="text-muted-foreground">
-            AI-powered analysis of your spending for {periodLabel.toLowerCase()}
-          </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-2xl font-semibold">
+              <Sparkles className="h-6 w-6 text-primary" />
+              Spending Insights
+            </h2>
+            <p className="text-muted-foreground">
+              AI-powered analysis of your spending for {periodLabel.toLowerCase()}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">
+              {fromCache ? `Updated ${lastUpdated}` : "Just generated"}
+            </span>
+            <RefreshSummaryButton monthsBack={monthsBack} />
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

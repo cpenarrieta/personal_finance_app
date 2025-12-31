@@ -303,3 +303,18 @@ model Subcategory {
   category          Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   transactions      Transaction[]
 }
+
+model SpendingSummary {
+  id                  String   @id @default(cuid())
+  monthsBack          Int      @unique // 0, 1, 2, 3, or 6
+  facts               Json     // Array of facts with title, description, type
+  savingOpportunities Json     // Array of opportunities with title, description, potentialSavings, priority
+  dateRangeStart      String   // YYYY-MM-DD
+  dateRangeEnd        String   // YYYY-MM-DD
+  totalSpending       Float
+  totalIncome         Float
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  created_at_string   String?  @default(dbgenerated("timestamp_to_string(\"createdAt\")"))
+  updated_at_string   String?  @default(dbgenerated("timestamp_to_string(\"updatedAt\")"))
+}
