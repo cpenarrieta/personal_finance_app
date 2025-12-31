@@ -8,12 +8,15 @@ import {
   getStatsWithTrends,
   getTopExpensiveTransactions,
   getLastMonthStats,
+  getSpendingByCategory,
+  getTopExpensesForSummary,
 } from "@/lib/dashboard/data"
 
 // Async Server Components
 import { DashboardMetricsSection } from "@/components/dashboard/DashboardMetricsSection"
 import { DashboardLastMonthSection } from "@/components/dashboard/DashboardLastMonthSection"
 import { DashboardTopExpensesSection } from "@/components/dashboard/DashboardTopExpensesSection"
+import { SpendingSummarySection } from "@/components/dashboard/SpendingSummarySection"
 import { MonthFilter } from "@/components/dashboard/MonthFilter"
 import { CashflowSankeyChartAsync } from "@/components/charts"
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
@@ -24,6 +27,7 @@ import {
   ChartsSkeleton,
   SectionSkeleton,
   TransactionTableSkeleton,
+  SpendingSummarySkeleton,
 } from "@/components/dashboard/DashboardSkeletons"
 
 export const metadata: Metadata = {
@@ -65,6 +69,15 @@ export default async function Page({ searchParams }: PageProps) {
       getLastMonthStats(2),
       getLastMonthStats(3),
       getLastMonthStats(6),
+      // Cache warm spending summary data
+      getSpendingByCategory(1),
+      getSpendingByCategory(2),
+      getSpendingByCategory(3),
+      getSpendingByCategory(6),
+      getTopExpensesForSummary(1, 100),
+      getTopExpensesForSummary(2, 100),
+      getTopExpensesForSummary(3, 100),
+      getTopExpensesForSummary(6, 100),
     ]).catch(() => {
       // Silently ignore errors - cache warming is best-effort
     })
@@ -82,6 +95,13 @@ export default async function Page({ searchParams }: PageProps) {
       <section>
         <Suspense fallback={<MetricCardsSkeleton />}>
           <DashboardMetricsSection monthsBack={monthsBack} />
+        </Suspense>
+      </section>
+
+      {/* AI Spending Summary */}
+      <section>
+        <Suspense fallback={<SpendingSummarySkeleton />}>
+          <SpendingSummarySection monthsBack={monthsBack} />
         </Suspense>
       </section>
 

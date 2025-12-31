@@ -580,6 +580,168 @@ export async function hasConnectedAccounts() {
 }
 
 /**
+ * Get spending grouped by category and super category (groupType) for AI summary
+ * @param monthsBack Number of full months to include (0 = current month, 1, 2, 3, or 6)
+ */
+export async function getSpendingByCategory(monthsBack: number = 0) {
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions", "dashboard", "categories")
+
+  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange(monthsBack)
+
+  // Get spending grouped by category with super category (groupType)
+  const spendingByCategory = await prisma.$queryRaw<
+    Array<{
+      category_id: string | null
+      category_name: string | null
+      group_type: string | null
+      subcategory_id: string | null
+      subcategory_name: string | null
+      total_spending: number
+      transaction_count: bigint
+    }>
+  >`
+    SELECT
+      c.id as category_id,
+      c.name as category_name,
+      c."groupType"::text as group_type,
+      s.id as subcategory_id,
+      s.name as subcategory_name,
+      CAST(SUM(ABS(t.amount_number)) AS double precision) as total_spending,
+      COUNT(*) as transaction_count
+    FROM "Transaction" t
+    LEFT JOIN "Category" c ON t."categoryId" = c.id
+    LEFT JOIN "Subcategory" s ON t."subcategoryId" = s.id
+    WHERE CAST(t.datetime AS date) >= CAST(${lastMonthStart} AS date)
+      AND CAST(t.datetime AS date) <= CAST(${lastMonthEnd} AS date)
+      AND t.amount_number < 0
+      AND t."isSplit" = false
+      AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+    GROUP BY c.id, c.name, c."groupType", s.id, s.name
+    ORDER BY total_spending DESC
+  `
+
+  // Also get totals by super category (groupType)
+  const spendingBySuperCategory = await prisma.$queryRaw<
+    Array<{
+      group_type: string | null
+      total_spending: number
+      transaction_count: bigint
+    }>
+  >`
+    SELECT
+      c."groupType"::text as group_type,
+      CAST(SUM(ABS(t.amount_number)) AS double precision) as total_spending,
+      COUNT(*) as transaction_count
+    FROM "Transaction" t
+    LEFT JOIN "Category" c ON t."categoryId" = c.id
+    WHERE CAST(t.datetime AS date) >= CAST(${lastMonthStart} AS date)
+      AND CAST(t.datetime AS date) <= CAST(${lastMonthEnd} AS date)
+      AND t.amount_number < 0
+      AND t."isSplit" = false
+      AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+    GROUP BY c."groupType"
+    ORDER BY total_spending DESC
+  `
+
+  return {
+    byCategory: spendingByCategory.map((row) => ({
+      categoryId: row.category_id,
+      categoryName: row.category_name || "Uncategorized",
+      groupType: row.group_type || "EXPENSES",
+      subcategoryId: row.subcategory_id,
+      subcategoryName: row.subcategory_name,
+      totalSpending: Number(row.total_spending || 0),
+      transactionCount: Number(row.transaction_count || 0),
+    })),
+    bySuperCategory: spendingBySuperCategory.map((row) => ({
+      groupType: row.group_type || "EXPENSES",
+      totalSpending: Number(row.total_spending || 0),
+      transactionCount: Number(row.transaction_count || 0),
+    })),
+    dateRange: { start: lastMonthStart, end: lastMonthEnd },
+  }
+}
+
+/**
+ * Get top N most expensive transactions for AI summary
+ * @param monthsBack Number of full months to include (0 = current month, 1, 2, 3, or 6)
+ * @param limit Maximum number of transactions to return (default 100)
+ */
+export async function getTopExpensesForSummary(monthsBack: number = 0, limit = 100) {
+  "use cache"
+  cacheLife({ stale: 60 * 60 * 24 })
+  cacheTag("transactions", "dashboard")
+
+  const { lastMonthStart, lastMonthEnd } = getLastMonthDateRange(monthsBack)
+
+  // Fetch IDs of top expensive transactions using optimized raw query
+  const expensiveIds = await prisma.$queryRaw<Array<{ id: string }>>`
+    SELECT t.id
+    FROM "Transaction" t
+    LEFT JOIN "Category" c ON t."categoryId" = c.id
+    WHERE CAST(t.datetime AS date) >= CAST(${lastMonthStart} AS date)
+      AND CAST(t.datetime AS date) <= CAST(${lastMonthEnd} AS date)
+      AND t.amount_number < 0
+      AND t."isSplit" = false
+      AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+    ORDER BY t.amount_number ASC
+    LIMIT ${limit}
+  `
+
+  const ids = expensiveIds.map((t: { id: string }) => t.id)
+
+  if (ids.length === 0) {
+    return []
+  }
+
+  // Fetch minimal transaction details for AI context
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      id: { in: ids },
+    },
+    select: {
+      id: true,
+      amount_number: true,
+      datetime: true,
+      merchantName: true,
+      name: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          groupType: true,
+        },
+      },
+      subcategory: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  })
+
+  // Sort by amount (most expensive first)
+  return transactions
+    .sort(
+      (a: { amount_number: number | null }, b: { amount_number: number | null }) =>
+        (a.amount_number || 0) - (b.amount_number || 0),
+    )
+    .map((t) => ({
+      id: t.id,
+      amount: Math.abs(t.amount_number || 0),
+      date: t.datetime,
+      merchant: t.merchantName || t.name,
+      name: t.name,
+      categoryName: t.category?.name || "Uncategorized",
+      subcategoryName: t.subcategory?.name || null,
+      groupType: t.category?.groupType || "EXPENSES",
+    }))
+}
+
+/**
  * Get stats with trends comparing current period to previous period
  * @param monthsBack Number of full months to include (0 = current month, 1, 2, 3, or 6)
  */
