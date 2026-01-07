@@ -33,7 +33,12 @@ function createPrismaClient(): PrismaClient {
 
   // Use Direct TCP with PostgreSQL adapter (recommended for Prisma v7)
   const adapter = new PrismaPg({ connectionString: databaseUrl })
-  return new PrismaClient({ adapter })
+  return new PrismaClient({
+    adapter,
+    transactionOptions: {
+      timeout: 10000, // 10 seconds global timeout for interactive transactions
+    },
+  })
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
