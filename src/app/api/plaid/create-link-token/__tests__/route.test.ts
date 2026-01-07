@@ -65,7 +65,8 @@ describe("Plaid Create Link Token API - POST", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ link_token: "link-token-12345" })
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual({ link_token: "link-token-12345" })
       expect(mockPlaidClient.linkTokenCreate).toHaveBeenCalledWith({
         user: { client_user_id: "local-user" },
         client_name: "Personal Finance (Local)",
@@ -158,7 +159,8 @@ describe("Plaid Create Link Token API - POST", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ link_token: "link-token-update-12345" })
+      expect(data.success).toBe(true)
+      expect(data.data).toEqual({ link_token: "link-token-update-12345" })
       expect(mockPlaidClient.linkTokenCreate).toHaveBeenCalledWith({
         user: { client_user_id: "local-user" },
         client_name: "Personal Finance (Local)",
@@ -210,10 +212,9 @@ describe("Plaid Create Link Token API - POST", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({
-        error: "Invalid client credentials",
-        errorCode: "INVALID_CREDENTIALS",
-      })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Invalid client credentials")
+      expect(data.code).toBe("INVALID_CREDENTIALS")
       expect(console.error).toHaveBeenCalledWith("Error creating link token:", plaidError, {
         responseData: plaidError.response.data,
       })
@@ -232,10 +233,9 @@ describe("Plaid Create Link Token API - POST", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({
-        error: "Network error",
-        errorCode: undefined,
-      })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Network error")
+      expect(data.code).toBe("LINK_TOKEN_ERROR")
       expect(console.error).toHaveBeenCalledWith("Error creating link token:", genericError, {
         responseData: undefined,
       })
@@ -253,6 +253,7 @@ describe("Plaid Create Link Token API - POST", () => {
 
       // Assert
       expect(response.status).toBe(500)
+      expect(data.success).toBe(false)
       expect(data.error).toBe("Failed to create link token")
     })
 
@@ -268,6 +269,7 @@ describe("Plaid Create Link Token API - POST", () => {
 
       // Assert
       expect(response.status).toBe(500)
+      expect(data.success).toBe(false)
       expect(data.error).toBeDefined()
     })
   })

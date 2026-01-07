@@ -56,7 +56,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true })
+      expect(data.success).toBe(true)
+      expect(data.data.updated).toBe(true)
       expect(prismaModule.prisma.$transaction).toHaveBeenCalledTimes(1)
     })
 
@@ -73,7 +74,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true })
+      expect(data.success).toBe(true)
+      expect(data.data.updated).toBe(true)
     })
 
     it("should handle updates with null displayOrder", async () => {
@@ -89,7 +91,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true })
+      expect(data.success).toBe(true)
+      expect(data.data.updated).toBe(true)
     })
 
     it("should handle large batch updates", async () => {
@@ -109,7 +112,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true })
+      expect(data.success).toBe(true)
+      expect(data.data.updated).toBe(true)
       expect(prismaModule.prisma.$transaction).toHaveBeenCalledTimes(1)
     })
   })
@@ -125,7 +129,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(400)
-      expect(data).toEqual({ error: "Invalid updates format" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Invalid updates format")
       expect(prismaModule.prisma.$transaction).not.toHaveBeenCalled()
     })
 
@@ -139,7 +144,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(400)
-      expect(data).toEqual({ error: "Invalid updates format" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Invalid updates format")
       expect(prismaModule.prisma.$transaction).not.toHaveBeenCalled()
     })
 
@@ -153,7 +159,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(400)
-      expect(data).toEqual({ error: "Invalid updates format" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Invalid updates format")
     })
 
     it("should handle empty updates array", async () => {
@@ -168,7 +175,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data).toEqual({ success: true })
+      expect(data.success).toBe(true)
+      expect(data.data.updated).toBe(true)
       expect(prismaModule.prisma.$transaction).toHaveBeenCalledWith([])
     })
   })
@@ -188,7 +196,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to update" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to update")
       expect(console.error).toHaveBeenCalledWith("Error updating category order:", dbError)
     })
 
@@ -206,7 +215,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to update" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to update")
     })
 
     it("should handle malformed JSON in request body", async () => {
@@ -221,7 +231,8 @@ describe("Categories Update Order API - PUT", () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data).toEqual({ error: "Failed to update" })
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Failed to update")
     })
   })
 })

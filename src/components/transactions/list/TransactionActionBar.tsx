@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { TransactionForClient, CategoryForClient, SubcategoryForClient } from "@/types"
+import type { TransactionForClient, CategoryForClient } from "@/types"
 
 interface TransactionActionBarProps {
   filteredTransactions: TransactionForClient[]
@@ -20,7 +20,7 @@ interface TransactionActionBarProps {
   onSelectAll: () => void
   onDeselectAll: () => void
   onBulkUpdate: () => void
-  availableSubcategories: SubcategoryForClient[]
+  availableSubcategories: Array<{ id: string; name: string }>
 }
 
 export function TransactionActionBar({

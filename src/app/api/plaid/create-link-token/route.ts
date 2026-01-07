@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { Products, CountryCode } from "plaid"
 import { logError } from "@/lib/utils/logger"
+import { apiSuccess, apiError } from "@/lib/api/response"
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,15 +32,11 @@ export async function POST(req: NextRequest) {
     }
 
     const resp = await plaid.linkTokenCreate(config)
-    return NextResponse.json({ link_token: resp.data.link_token })
+    return apiSuccess({ link_token: resp.data.link_token })
   } catch (error: any) {
     logError("Error creating link token:", error, { responseData: error.response?.data })
-    return NextResponse.json(
-      {
-        error: error.response?.data?.error_message || error.message || "Failed to create link token",
-        errorCode: error.response?.data?.error_code,
-      },
-      { status: 500 },
-    )
+    const errorMessage = error.response?.data?.error_message || error.message || "Failed to create link token"
+    const errorCode = error.response?.data?.error_code
+    return apiError(errorMessage, 500, errorCode || "LINK_TOKEN_ERROR")
   }
 }

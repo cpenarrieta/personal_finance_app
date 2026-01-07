@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { prisma } from "@/lib/db/prisma"
 import { Prisma } from "@prisma/generated"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { getReconnectionData, clearReconnectionData } from "@/lib/cache/reconnection-cache"
 import { logInfo, logError } from "@/lib/utils/logger"
+import { apiSuccess, apiErrors } from "@/lib/api/response"
 
 /**
  * Completes a reconnection after user confirmation
@@ -14,13 +15,13 @@ export async function POST(req: NextRequest) {
     const { reconnectionId } = await req.json()
 
     if (!reconnectionId) {
-      return NextResponse.json({ error: "reconnectionId is required" }, { status: 400 })
+      return apiErrors.badRequest("reconnectionId is required")
     }
 
     // Get stored reconnection data
     const data = getReconnectionData(reconnectionId)
     if (!data) {
-      return NextResponse.json({ error: "Reconnection data not found or expired" }, { status: 404 })
+      return apiErrors.notFound("Reconnection data not found or expired")
     }
 
     const { accessToken, itemId, institutionId, institutionName, accounts, existingItemDbId } = data
@@ -134,12 +135,9 @@ export async function POST(req: NextRequest) {
 
     logInfo(`✅ Reconnection complete for ${institutionName}`)
 
-    return NextResponse.json({
-      ok: true,
-      transactionsDeleted: deletedTxs.count,
-    })
+    return apiSuccess({ transactionsDeleted: deletedTxs.count })
   } catch (error) {
     logError("❌ Error completing reconnection:", error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })
+    return apiErrors.internalError(error instanceof Error ? error.message : "Unknown error")
   }
 }
