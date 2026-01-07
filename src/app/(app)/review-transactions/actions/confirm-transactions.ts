@@ -48,55 +48,58 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
       currentTransactions.map((t: TransactionWithTagIds) => [t.id, t.tags.map((tag: TransactionTagId) => tag.tagId)]),
     )
 
-    // Process all updates in a transaction
+    // Process all updates in an interactive transaction (30s timeout for large batches)
     await prisma.$transaction(
-      validatedUpdates.map((update) => {
-        const currentTagIds: string[] = currentTagsMap.get(update.id) || []
-        const tagsToConnect = update.tagIds.filter((tagId: string) => !currentTagIds.includes(tagId))
-        const tagsToDisconnect = currentTagIds.filter((tagId: string) => !update.tagIds.includes(tagId))
+      async (tx) => {
+        for (const update of validatedUpdates) {
+          const currentTagIds: string[] = currentTagsMap.get(update.id) || []
+          const tagsToConnect = update.tagIds.filter((tagId: string) => !currentTagIds.includes(tagId))
+          const tagsToDisconnect = currentTagIds.filter((tagId: string) => !update.tagIds.includes(tagId))
 
-        // Filter out review tags from tagsToConnect to avoid re-adding them
-        const tagsToConnectFiltered = tagsToConnect.filter((tagId: string) => !reviewTagIds.includes(tagId))
+          // Filter out review tags from tagsToConnect to avoid re-adding them
+          const tagsToConnectFiltered = tagsToConnect.filter((tagId: string) => !reviewTagIds.includes(tagId))
 
-        return prisma.transaction.update({
-          where: { id: update.id },
-          data: {
-            categoryId: update.categoryId,
-            subcategoryId: update.subcategoryId,
-            notes: update.notes,
-            // Update amount if newAmount is provided (convert back to database format: display * -1)
-            ...(update.newAmount !== null ? { amount: update.newAmount * -1 } : {}),
-            tags: {
-              // Remove review tags (for-review and sign-review)
-              ...(reviewTagIds.length > 0
-                ? {
-                    deleteMany: {
-                      tagId: { in: reviewTagIds },
-                    },
-                  }
-                : {}),
-              // Connect new tags
-              ...(tagsToConnectFiltered.length > 0
-                ? {
-                    create: tagsToConnectFiltered.map((tagId: string) => ({
-                      tag: { connect: { id: tagId } },
-                    })),
-                  }
-                : {}),
-              // Disconnect removed tags (excluding review tags which are already handled)
-              ...(tagsToDisconnect.length > 0
-                ? {
-                    deleteMany: {
-                      tagId: {
-                        in: tagsToDisconnect.filter((tagId: string) => !reviewTagIds.includes(tagId)),
+          await tx.transaction.update({
+            where: { id: update.id },
+            data: {
+              categoryId: update.categoryId,
+              subcategoryId: update.subcategoryId,
+              notes: update.notes,
+              // Update amount if newAmount is provided (convert back to database format: display * -1)
+              ...(update.newAmount !== null ? { amount: update.newAmount * -1 } : {}),
+              tags: {
+                // Remove review tags (for-review and sign-review)
+                ...(reviewTagIds.length > 0
+                  ? {
+                      deleteMany: {
+                        tagId: { in: reviewTagIds },
                       },
-                    },
-                  }
-                : {}),
+                    }
+                  : {}),
+                // Connect new tags
+                ...(tagsToConnectFiltered.length > 0
+                  ? {
+                      create: tagsToConnectFiltered.map((tagId: string) => ({
+                        tag: { connect: { id: tagId } },
+                      })),
+                    }
+                  : {}),
+                // Disconnect removed tags (excluding review tags which are already handled)
+                ...(tagsToDisconnect.length > 0
+                  ? {
+                      deleteMany: {
+                        tagId: {
+                          in: tagsToDisconnect.filter((tagId: string) => !reviewTagIds.includes(tagId)),
+                        },
+                      },
+                    }
+                  : {}),
+              },
             },
-          },
-        })
-      }),
+          })
+        }
+      },
+      { timeout: 30000 },
     )
 
     // Revalidate transactions cache
