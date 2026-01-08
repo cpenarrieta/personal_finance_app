@@ -80,7 +80,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             {/* Title & Meta */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
+                <div className="space-y-1 min-w-0">
                   <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">
                     {transaction.merchantName || transaction.name}
                   </h1>
