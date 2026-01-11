@@ -50,7 +50,12 @@ export function CategorySelect({
     }
 
     // Define group order
-    const groupOrder = [CategoryGroupType.EXPENSES, CategoryGroupType.INCOME, CategoryGroupType.INVESTMENT]
+    const groupOrder = [
+      CategoryGroupType.EXPENSES,
+      CategoryGroupType.INCOME,
+      CategoryGroupType.INVESTMENT,
+      CategoryGroupType.TRANSFER,
+    ]
 
     // Return groups in the defined order
     return groupOrder
