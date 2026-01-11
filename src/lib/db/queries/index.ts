@@ -20,19 +20,10 @@ export {
 } from "./transactions"
 
 // Account queries
-export {
-  getAllAccounts,
-  getAllAccountsWithInstitution,
-  getAccountById,
-  getAllConnectedItems,
-} from "./accounts"
+export { getAllAccounts, getAllAccountsWithInstitution, getAccountById, getAllConnectedItems } from "./accounts"
 
 // Category queries
-export {
-  getAllCategories,
-  getAllCategoriesForManagement,
-  getAllCategoriesForMoveTransactions,
-} from "./categories"
+export { getAllCategories, getAllCategoriesForManagement, getAllCategoriesForMoveTransactions } from "./categories"
 
 // Tag queries
 export { getAllTags, getAllTagsWithCounts } from "./tags"
@@ -44,6 +35,9 @@ export {
   getHoldingsForAccount,
   getInvestmentTransactionsForAccount,
 } from "./investments"
+
+// Weekly summary queries
+export { getLatestWeeklySummary } from "./weekly-summary"
 
 // Shared select statements
 export {

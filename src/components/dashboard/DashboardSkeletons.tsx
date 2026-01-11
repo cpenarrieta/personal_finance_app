@@ -97,6 +97,32 @@ export function ChartsSkeleton() {
 }
 
 /**
+ * Skeleton for executive summary card
+ */
+export function ExecutiveSummarySkeleton() {
+  return (
+    <Card className="col-span-full">
+      <CardHeader className="flex flex-row items-center gap-2 pb-2">
+        <Skeleton className="h-5 w-5" />
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="ml-auto h-4 w-28" />
+      </CardHeader>
+      <CardContent className="grid gap-6 md:grid-cols-3">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
  * Skeleton for section with header and content
  */
 export function SectionSkeleton({

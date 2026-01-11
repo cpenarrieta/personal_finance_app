@@ -24,7 +24,11 @@ import {
   ChartsSkeleton,
   SectionSkeleton,
   TransactionTableSkeleton,
+  ExecutiveSummarySkeleton,
 } from "@/components/dashboard/DashboardSkeletons"
+
+// Executive Summary
+import { ExecutiveSummaryCard } from "@/components/dashboard"
 
 export const metadata: Metadata = {
   title: "Dashboard | Personal Finance",
@@ -77,6 +81,13 @@ export default async function Page({ searchParams }: PageProps) {
         <DashboardHeader />
         <MonthFilter />
       </div>
+
+      {/* Weekly Executive Summary */}
+      <section>
+        <Suspense fallback={<ExecutiveSummarySkeleton />}>
+          <ExecutiveSummaryCard />
+        </Suspense>
+      </section>
 
       {/* Metrics Section */}
       <section>

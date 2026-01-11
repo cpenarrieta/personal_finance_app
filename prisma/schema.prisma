@@ -270,6 +270,15 @@ model Passkey {
   @@index([userId])
 }
 
+model WeeklySummary {
+  id                  String   @id @default(cuid())
+  generatedAt         DateTime @default(now())
+  summary             String   @db.Text // 5 bullet points of key insights
+  generated_at_string String?  @default(dbgenerated("timestamp_to_string(\"generatedAt\")"))
+
+  @@index([generatedAt])
+}
+
 enum CategoryGroupType {
   EXPENSES
   INCOME
