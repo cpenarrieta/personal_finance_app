@@ -64,7 +64,7 @@ export function useTransactionFilters({
   const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(() => {
     if (initialExcludedCategoryIds) return initialExcludedCategoryIds
     if (!excludeTransfersByDefault) return new Set()
-    const transfersCategory = categories.find((cat) => cat.name === "🔁 Transfers")
+    const transfersCategory = categories.find((cat) => cat.groupType === "TRANSFER")
     return transfersCategory ? new Set([transfersCategory.id]) : new Set()
   })
 

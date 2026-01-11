@@ -39,7 +39,7 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
     // Spending by Category (all filtered transactions, exclude transfers)
     const categorySpending = transactions
       .filter((t: TransactionForClient) => {
-        return t.amount_number < 0 && t.category && t.category.name !== "🔁 Transfers"
+        return t.amount_number < 0 && t.category && t.category.groupType !== "TRANSFER"
       })
       .reduce(
         (acc: Record<string, number>, t: TransactionForClient) => {
@@ -73,7 +73,7 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
     // Spending by Subcategory (all filtered transactions, exclude transfers)
     const subcategorySpending = transactions
       .filter((t: TransactionForClient) => {
-        return t.amount_number < 0 && t.subcategory && t.category && t.category.name !== "🔁 Transfers"
+        return t.amount_number < 0 && t.subcategory && t.category && t.category.groupType !== "TRANSFER"
       })
       .reduce(
         (acc: Record<string, number>, t: TransactionForClient) => {

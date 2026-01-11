@@ -50,9 +50,9 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
   const [sortBy, setSortBy] = useState<"date" | "amount" | "category">("date")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
 
-  // Set default exclusions (🔁 Transfers) on mount
+  // Set default exclusions (TRANSFER categories) on mount
   const [excludedCategoryIds, setExcludedCategoryIds] = useState<Set<string>>(() => {
-    const transfersCategory = categories.find((cat) => cat.name === "🔁 Transfers")
+    const transfersCategory = categories.find((cat) => cat.groupType === "TRANSFER")
     return transfersCategory ? new Set([transfersCategory.id]) : new Set()
   })
 
@@ -295,14 +295,14 @@ export function TransactionAnalytics({ transactions, categories }: TransactionAn
     setCustomEndDate("")
     setSelectedCategoryIds(new Set())
     setSelectedSubcategoryIds(new Set())
-    const transfersCategory = categories.find((c) => c.name === "🔁 Transfers")
+    const transfersCategory = categories.find((c) => c.groupType === "TRANSFER")
     setExcludedCategoryIds(transfersCategory ? new Set([transfersCategory.id]) : new Set())
     setShowIncome(false)
     setShowExpenses(true)
   }
 
   // Check if any filters are active
-  const defaultExcludedCategory = categories.find((c) => c.name === "🔁 Transfers")
+  const defaultExcludedCategory = categories.find((c) => c.groupType === "TRANSFER")
   const hasNonDefaultExclusions =
     excludedCategoryIds.size > 0 &&
     (excludedCategoryIds.size > 1 || !defaultExcludedCategory || !excludedCategoryIds.has(defaultExcludedCategory.id))
