@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
             id: true,
             name: true,
             imageUrl: true,
-            isTransferCategory: true,
+            groupType: true,
           },
         },
         subcategory: {

@@ -15,6 +15,7 @@ export function sortCategoriesByGroupAndOrder(categories: CategoryForClient[]): 
   const groupOrder: CategoryGroupType[] = [
     "EXPENSES" as CategoryGroupType,
     "INVESTMENT" as CategoryGroupType,
+    "TRANSFER" as CategoryGroupType,
     "INCOME" as CategoryGroupType,
   ]
   const grouped = new Map<CategoryGroupType, CategoryForClient[]>()

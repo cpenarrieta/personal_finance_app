@@ -20,7 +20,7 @@ export const CATEGORY_SELECT = {
   id: true,
   name: true,
   imageUrl: true,
-  isTransferCategory: true,
+  groupType: true,
   created_at_string: true,
   updated_at_string: true,
 } as const

@@ -93,7 +93,6 @@ export type BulkUpdateTransactionsPayload = z.infer<typeof bulkUpdateTransaction
 export const createCategorySchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
   imageUrl: z.string().url().nullable().optional(),
-  isTransferCategory: z.boolean().default(false),
 })
 
 export type CreateCategoryPayload = z.infer<typeof createCategorySchema>
@@ -105,7 +104,7 @@ export const updateCategorySchema = z.object({
   id: z.string().min(1, "Category ID is required"),
   name: z.string().min(1).max(100).optional(),
   imageUrl: z.string().url().nullable().optional(),
-  isTransferCategory: z.boolean().optional(),
+  groupType: z.enum(["EXPENSES", "INCOME", "INVESTMENT", "TRANSFER"]).optional(),
 })
 
 /**

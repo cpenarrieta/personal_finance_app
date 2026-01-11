@@ -4,7 +4,6 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { prisma } from "@/lib/db/prisma"
 import {
   createCategorySchema,
-  updateCategorySchema,
   deleteCategorySchema,
   createSubcategorySchema,
   deleteSubcategorySchema,
@@ -17,7 +16,6 @@ export async function createCategory(formData: FormData): Promise<void> {
   const rawData = {
     name: formData.get("name"),
     imageUrl: formData.get("imageUrl") || null,
-    isTransferCategory: formData.get("isTransferCategory") === "true",
   }
 
   const parsed = createCategorySchema.safeParse(rawData)
@@ -26,11 +24,13 @@ export async function createCategory(formData: FormData): Promise<void> {
     throw new Error(parsed.error.issues[0]?.message || "Invalid input")
   }
 
+  const isTransfer = formData.get("isTransferCategory") === "true"
+
   await prisma.category.create({
     data: {
       name: parsed.data.name,
       imageUrl: parsed.data.imageUrl,
-      isTransferCategory: parsed.data.isTransferCategory,
+      groupType: isTransfer ? "TRANSFER" : undefined,
     },
   })
 
@@ -39,23 +39,19 @@ export async function createCategory(formData: FormData): Promise<void> {
 }
 
 /**
- * Update an existing category with validation
+ * Update a category's groupType (toggle transfer status)
  */
-export async function updateCategory(formData: FormData): Promise<void> {
-  const rawData = {
-    id: formData.get("id"),
-    isTransferCategory: formData.get("isTransferCategory") === "true",
-  }
+export async function updateCategoryGroupType(formData: FormData): Promise<void> {
+  const id = formData.get("id") as string
+  const isTransfer = formData.get("isTransferCategory") === "true"
 
-  const parsed = updateCategorySchema.safeParse(rawData)
-
-  if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message || "Invalid input")
+  if (!id) {
+    throw new Error("Category ID is required")
   }
 
   await prisma.category.update({
-    where: { id: parsed.data.id },
-    data: { isTransferCategory: parsed.data.isTransferCategory },
+    where: { id },
+    data: { groupType: isTransfer ? "TRANSFER" : null },
   })
 
   revalidatePath("/settings/manage-categories")

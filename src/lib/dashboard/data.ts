@@ -256,7 +256,7 @@ export async function getRecentTransactions(limit = 20) {
           id: true,
           name: true,
           imageUrl: true,
-          isTransferCategory: true,
+          groupType: true,
           created_at_string: true,
           updated_at_string: true,
         },
@@ -345,7 +345,7 @@ export async function getLastMonthStats(monthsBack: number = 0) {
     WHERE CAST(t.datetime AS date) >= CAST(${lastMonthStart} AS date)
       AND CAST(t.datetime AS date) <= CAST(${lastMonthEnd} AS date)
       AND t."isSplit" = false
-      AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+      AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
   `
 
   const totalLastMonthSpending = Number(stats?.total_spending || 0)
@@ -410,7 +410,7 @@ export async function getLastMonthStats(monthsBack: number = 0) {
                 id: true,
                 name: true,
                 imageUrl: true,
-                isTransferCategory: true,
+                groupType: true,
                 created_at_string: true,
                 updated_at_string: true,
               },
@@ -473,7 +473,7 @@ export async function getTopExpensiveTransactions(monthsBack: number = 0, limit 
       AND CAST(t.datetime AS date) <= CAST(${lastMonthEnd} AS date)
       AND t.amount_number < 0
       AND t."isSplit" = false
-      AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+      AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
     ORDER BY t.amount_number ASC
     LIMIT ${limit}
   `
@@ -529,7 +529,7 @@ export async function getTopExpensiveTransactions(monthsBack: number = 0, limit 
           id: true,
           name: true,
           imageUrl: true,
-          isTransferCategory: true,
+          groupType: true,
           created_at_string: true,
           updated_at_string: true,
         },
@@ -631,7 +631,7 @@ export async function getStatsWithTrends(monthsBack: number = 0) {
       WHERE CAST(t.datetime AS date) >= CAST(${currentPeriodStart} AS date)
         AND CAST(t.datetime AS date) <= CAST(${currentPeriodEnd} AS date)
         AND t."isSplit" = false
-        AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
     `,
     prisma.$queryRaw<
       Array<{
@@ -649,7 +649,7 @@ export async function getStatsWithTrends(monthsBack: number = 0) {
       WHERE CAST(t.datetime AS date) >= CAST(${previousPeriodStart} AS date)
         AND CAST(t.datetime AS date) <= CAST(${previousPeriodEnd} AS date)
         AND t."isSplit" = false
-        AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
     `,
   ])
 

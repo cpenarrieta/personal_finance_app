@@ -69,7 +69,7 @@ async function getRawTransactions(sixMonthsAgo: string): Promise<RawTransaction[
     LEFT JOIN "Category" c ON t."categoryId" = c.id
     WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
       AND t."isSplit" = false
-      AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+      AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
     ORDER BY t.datetime DESC
   `
 
@@ -87,7 +87,7 @@ async function getRawTransactions(sixMonthsAgo: string): Promise<RawTransaction[
  */
 async function getAllCategories(): Promise<string> {
   const categories = await prisma.category.findMany({
-    where: { isTransferCategory: false },
+    where: { NOT: { groupType: "TRANSFER" } },
     include: { subcategories: true },
     orderBy: { displayOrder: "asc" },
   })
@@ -121,7 +121,7 @@ export async function aggregateFinancialData(): Promise<
       LEFT JOIN "Category" c ON t."categoryId" = c.id
       WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
         AND t."isSplit" = false
-        AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
     `,
 
       // Spending by category
@@ -134,7 +134,7 @@ export async function aggregateFinancialData(): Promise<
       WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
         AND t."isSplit" = false
         AND t.amount_number < 0
-        AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
       GROUP BY c.name
       ORDER BY amount DESC
       LIMIT 10
@@ -151,7 +151,7 @@ export async function aggregateFinancialData(): Promise<
       WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
         AND t."isSplit" = false
         AND t.amount_number < 0
-        AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
       GROUP BY COALESCE(t."merchantName", t.name)
       ORDER BY amount DESC
       LIMIT 10
@@ -167,7 +167,7 @@ export async function aggregateFinancialData(): Promise<
       LEFT JOIN "Category" c ON t."categoryId" = c.id
       WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
         AND t."isSplit" = false
-        AND (c."isTransferCategory" = false OR c."isTransferCategory" IS NULL)
+        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
       GROUP BY to_char(CAST(t.datetime AS date), 'YYYY-MM')
       ORDER BY month DESC
     `,

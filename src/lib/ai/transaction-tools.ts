@@ -102,7 +102,7 @@ export const getSpendingByCategory = tool({
       // Filter by date range and exclude transfer categories
       const filtered = transactions.filter((t: Transaction) => {
         const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
-        const isNotTransfer = !t.category?.isTransferCategory
+        const isNotTransfer = t.category?.groupType !== "TRANSFER"
         return isInRange && isNotTransfer
       })
 
@@ -172,7 +172,7 @@ export const getSpendingByMerchant = tool({
     const filtered = transactions.filter((t: Transaction) => {
       const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const hasMerchant = !!t.merchantName
-      const isNotTransfer = !t.category?.isTransferCategory
+      const isNotTransfer = t.category?.groupType !== "TRANSFER"
       return isInRange && hasMerchant && isNotTransfer
     })
 
@@ -230,7 +230,7 @@ export const getTotalSpending = tool({
       // Filter by date range and exclude transfer categories
       const filtered = transactions.filter((t: Transaction) => {
         const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
-        const isNotTransfer = !t.category?.isTransferCategory
+        const isNotTransfer = t.category?.groupType !== "TRANSFER"
         return isInRange && isNotTransfer
       })
 
@@ -296,7 +296,7 @@ export const getSpendingTrends = tool({
     const filtered = transactions.filter((t: Transaction) => {
       const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
-      const isNotTransfer = !t.category?.isTransferCategory
+      const isNotTransfer = t.category?.groupType !== "TRANSFER"
       return isInRange && matchesCategory && isNotTransfer
     })
 

@@ -26,8 +26,7 @@ describe("Categories API - GET", () => {
       id: "cat-1",
       name: "🍔 Food & Dining",
       imageUrl: null,
-      isTransferCategory: false,
-      groupType: "EXPENSE",
+      groupType: "EXPENSES",
       displayOrder: 1,
       createdAt: new Date("2024-01-01"),
       updatedAt: new Date("2024-01-01"),
@@ -54,8 +53,7 @@ describe("Categories API - GET", () => {
       id: "cat-2",
       name: "🚗 Transportation",
       imageUrl: null,
-      isTransferCategory: false,
-      groupType: "EXPENSE",
+      groupType: "EXPENSES",
       displayOrder: 2,
       createdAt: new Date("2024-01-02"),
       updatedAt: new Date("2024-01-02"),
@@ -128,8 +126,7 @@ describe("Categories API - GET", () => {
           id: "cat-1",
           name: "Category Without Subcategories",
           imageUrl: null,
-          isTransferCategory: false,
-          groupType: "EXPENSE",
+          groupType: "EXPENSES",
           displayOrder: 1,
           createdAt: new Date("2024-01-01"),
           updatedAt: new Date("2024-01-01"),
@@ -211,7 +208,7 @@ describe("Categories API - GET", () => {
       expect(data.data[0]).toHaveProperty("id")
       expect(data.data[0]).toHaveProperty("name")
       expect(data.data[0]).toHaveProperty("imageUrl")
-      expect(data.data[0]).toHaveProperty("isTransferCategory")
+      expect(data.data[0]).toHaveProperty("groupType")
       expect(data.data[0]).toHaveProperty("subcategories")
     })
 

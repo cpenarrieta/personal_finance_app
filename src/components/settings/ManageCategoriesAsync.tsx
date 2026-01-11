@@ -12,7 +12,7 @@ import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import type { Prisma } from "@prisma/generated"
 import {
   createCategory,
-  updateCategory,
+  updateCategoryGroupType,
   deleteCategory,
   createSubcategory,
   deleteSubcategory,
@@ -51,7 +51,7 @@ export async function ManageCategoriesAsync() {
             <div className="flex items-center gap-2">
               <Checkbox id="is-transfer-category" name="isTransferCategory" value="true" />
               <Label htmlFor="is-transfer-category" className="text-sm font-normal cursor-pointer">
-                This is a transfer category (transactions moving money between accounts)
+                This is a transfer category (transactions moving between accounts)
               </Label>
             </div>
             <Button type="submit">+ Add Category</Button>
@@ -95,8 +95,8 @@ export async function ManageCategoriesAsync() {
                         <div className="mt-2">
                           <TransferCategoryToggle
                             categoryId={cat.id}
-                            isTransferCategory={cat.isTransferCategory}
-                            updateAction={updateCategory}
+                            isTransferCategory={cat.groupType === "TRANSFER"}
+                            updateAction={updateCategoryGroupType}
                           />
                         </div>
                       </div>

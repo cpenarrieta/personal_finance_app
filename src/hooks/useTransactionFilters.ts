@@ -148,7 +148,7 @@ export function useTransactionFilters({
       }
 
       // Transfer filter (check first - if it's a transfer and showTransfers is false, exclude)
-      const isTransfer = t.category?.isTransferCategory === true
+      const isTransfer = t.category?.groupType === "TRANSFER"
       if (isTransfer && !showTransfers) return false
 
       // Income/Expense filter (skip if it's a transfer, already handled above)
