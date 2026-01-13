@@ -37,7 +37,7 @@ export function ChatPageClient() {
   }
 
   const handleSuggestionClick = (text: string) => {
-    setInput(text)
+    sendMessage({ text })
   }
 
   return (
@@ -85,6 +85,22 @@ export function ChatPageClient() {
                   className="text-xs"
                 >
                   📈 Spending trends
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSuggestionClick("Where do I spend the most money?")}
+                  className="text-xs"
+                >
+                  🏪 Top merchants
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSuggestionClick("What's my income vs expenses this month?")}
+                  className="text-xs"
+                >
+                  💵 Income vs expenses
                 </Button>
               </div>
             </div>

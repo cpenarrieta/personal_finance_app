@@ -31,6 +31,18 @@ export async function POST(req: Request) {
 
 When users ask about their transactions or spending, use the available tools to query their transaction data.
 
+DATA MODEL:
+- Expense transactions have negative amount_number (e.g., -100.00)
+- Income transactions have positive amount_number (e.g., +500.00)
+- Categories have a groupType: EXPENSES, INCOME, INVESTMENT, or TRANSFER
+- TRANSFER groupType = money movement between accounts, always excluded
+
+SPENDING DETECTION (matches dashboard):
+- Expense = negative amount AND groupType !== "TRANSFER"
+- The spending tools automatically filter this way
+- When users ask about "spending", "breakdown", or "categories" → shows expenses only
+- When users ask about "income" → shows income only
+
 IMPORTANT GUIDELINES:
 1. Always interpret relative dates correctly (e.g., "last month", "this year")
 2. Today's date is ${new Date().toISOString().split("T")[0]}
@@ -38,8 +50,7 @@ IMPORTANT GUIDELINES:
 4. Be conversational and friendly in your responses
 5. When showing spending data, provide insights and context
 6. If data shows concerning patterns, mention them tactfully
-7. Remember: negative amounts are expenses, positive amounts are income
-8. Categories and merchants are case-insensitive when searching
+7. Categories and merchants are case-insensitive when searching
 
 CHART USAGE:
 - Use the renderChart tool to visualize data when appropriate
@@ -55,6 +66,7 @@ CHART USAGE:
   * line: Best for trends over time with many data points
   * area: Similar to line but emphasizes volume/magnitude
   * pie: Best for showing proportions (use sparingly, bar charts often better)
+- CRITICAL: Never create artificial categories like "Other" or aggregate data. Always use the exact category/merchant names from tool results. Show all items returned by the tool, or show the top N without grouping the rest.
 
 RESPONSE FORMAT:
 - For simple questions, provide a clear, concise answer

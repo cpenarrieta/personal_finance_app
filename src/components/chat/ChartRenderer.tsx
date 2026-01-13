@@ -1,17 +1,25 @@
 "use client"
 
-import { Bar, BarChart, Line, LineChart, Pie, PieChart, Area, AreaChart, XAxis, YAxis, CartesianGrid, Cell, Legend } from "recharts"
+import {
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  Area,
+  AreaChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Cell,
+  Legend,
+} from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import type { ChartConfig } from "@/components/ui/chart"
 
 // Default colors for charts (following project color scheme)
-const DEFAULT_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-]
+const DEFAULT_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
 
 interface ChartData {
   label: string
@@ -46,17 +54,14 @@ export function ChartRenderer({
   }))
 
   // Create chart config
-  const chartConfig: ChartConfig = data.reduce(
-    (acc, item, index) => {
-      const key = `item${index}`
-      acc[key] = {
-        label: item.label,
-        color: item.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length],
-      }
-      return acc
-    },
-    {} as ChartConfig,
-  )
+  const chartConfig: ChartConfig = data.reduce((acc, item, index) => {
+    const key = `item${index}`
+    acc[key] = {
+      label: item.label,
+      color: item.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length],
+    }
+    return acc
+  }, {} as ChartConfig)
 
   // Value formatter
   const formatValueFn = (value: number) => {
@@ -117,7 +122,7 @@ export function ChartRenderer({
               label={yAxisLabel ? { value: yAxisLabel, angle: -90, position: "insideLeft" } : undefined}
             />
             <ChartTooltip content={<ChartTooltipContent />} formatter={(value) => formatValueFn(value as number)} />
-            <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
+            <Line type="monotone" dataKey="value" stroke="var(--chart-1)" strokeWidth={2} dot={{ r: 4 }} />
           </LineChart>
         ) : type === "area" ? (
           <AreaChart data={chartData}>
@@ -135,13 +140,7 @@ export function ChartRenderer({
               label={yAxisLabel ? { value: yAxisLabel, angle: -90, position: "insideLeft" } : undefined}
             />
             <ChartTooltip content={<ChartTooltipContent />} formatter={(value) => formatValueFn(value as number)} />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke="hsl(var(--primary))"
-              fill="hsl(var(--primary))"
-              fillOpacity={0.2}
-            />
+            <Area type="monotone" dataKey="value" stroke="var(--chart-1)" fill="var(--chart-1)" fillOpacity={0.2} />
           </AreaChart>
         ) : (
           <PieChart>

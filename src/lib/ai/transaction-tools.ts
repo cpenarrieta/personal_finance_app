@@ -2,9 +2,16 @@
  * AI Tools for querying transaction data
  * These tools wrap existing cached queries to provide transaction insights
  *
- * IMPORTANT: Spending/income calculations exclude transfer categories to match dashboard behavior.
- * Transfer categories represent money movement between accounts (not true income/expense).
- * This ensures consistent totals across AI chat and dashboard displays.
+ * CATEGORY GROUP TYPES:
+ * - EXPENSES: Regular spending categories
+ * - INCOME: Income categories (salary, refunds, etc.)
+ * - INVESTMENT: Investment transactions
+ * - TRANSFER: Money movement between accounts - always excluded
+ *
+ * SPENDING DETECTION (matches dashboard logic):
+ * - Expense = negative amount_number AND groupType !== "TRANSFER"
+ * - Income = positive amount_number AND groupType !== "TRANSFER"
+ * - This allows categories with null groupType to be included based on amount sign
  */
 
 import { tool } from "ai"
@@ -68,10 +75,11 @@ export const getTransactionsByDateRange = tool({
 
 /**
  * Get spending grouped by category for a date range
+ * Uses dashboard logic: negative amount AND not TRANSFER
  */
 export const getSpendingByCategory = tool({
   description:
-    "Get total spending grouped by category for a date range. Returns aggregated spending data. Use this to answer questions like 'What are my top spending categories?' or 'How much did I spend on food vs shopping?'",
+    "Get total spending grouped by category for a date range. Only includes expenses (excludes income and transfers). Use this to answer questions like 'What are my top spending categories?' or 'How much did I spend on food vs shopping?'",
   inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
@@ -99,31 +107,31 @@ export const getSpendingByCategory = tool({
       const transactions = await getAllTransactions()
       logInfo("  Fetched transactions", { count: transactions.length })
 
-      // Filter by date range and exclude transfer categories
+      // Filter by date range and expenses only (matches dashboard logic)
+      // Expense = negative amount_number AND not TRANSFER
       const filtered = transactions.filter((t: Transaction) => {
         const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
-        const isNotTransfer = t.category?.groupType !== "TRANSFER"
-        return isInRange && isNotTransfer
+        const amount = t.amount_number ?? 0
+        const isExpense = amount < 0 && t.category?.groupType !== "TRANSFER"
+        return isInRange && isExpense
       })
 
-      // Group by category
-      const categoryMap = new Map<string, { name: string; total: number; count: number; transactions: number[] }>()
+      // Group by category (use absolute values to match dashboard)
+      const categoryMap = new Map<string, { name: string; total: number; count: number }>()
 
       filtered.forEach((t: Transaction) => {
         const categoryName = t.category?.name || "Uncategorized"
-        const amount = t.amount_number ?? 0
+        const amount = Math.abs(t.amount_number ?? 0)
         const existing = categoryMap.get(categoryName)
 
         if (existing) {
           existing.total += amount
           existing.count += 1
-          existing.transactions.push(amount)
         } else {
           categoryMap.set(categoryName, {
             name: categoryName,
             total: amount,
             count: 1,
-            transactions: [amount],
           })
         }
       })
@@ -156,10 +164,11 @@ export const getSpendingByCategory = tool({
 
 /**
  * Get spending grouped by merchant
+ * Uses dashboard logic: negative amount AND not TRANSFER
  */
 export const getSpendingByMerchant = tool({
   description:
-    "Get total spending grouped by merchant for a date range. Use this to answer questions like 'Where do I spend the most money?' or 'How much have I spent at Starbucks?'",
+    "Get total spending grouped by merchant for a date range. Only includes expenses (excludes income and transfers). Use this to answer questions like 'Where do I spend the most money?' or 'How much have I spent at Starbucks?'",
   inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
@@ -168,20 +177,21 @@ export const getSpendingByMerchant = tool({
   execute: async ({ startDate, endDate, limit = 10 }: { startDate: string; endDate: string; limit?: number }) => {
     const transactions = await getAllTransactions()
 
-    // Filter by date range, merchants only, and exclude transfer categories
+    // Filter by date range, merchants only, and expenses (matches dashboard logic)
     const filtered = transactions.filter((t: Transaction) => {
       const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const hasMerchant = !!t.merchantName
-      const isNotTransfer = t.category?.groupType !== "TRANSFER"
-      return isInRange && hasMerchant && isNotTransfer
+      const amount = t.amount_number ?? 0
+      const isExpense = amount < 0 && t.category?.groupType !== "TRANSFER"
+      return isInRange && hasMerchant && isExpense
     })
 
-    // Group by merchant
+    // Group by merchant (use absolute values to match dashboard)
     const merchantMap = new Map<string, { name: string; total: number; count: number }>()
 
     filtered.forEach((t: Transaction) => {
       const merchantName = t.merchantName!
-      const amount = t.amount_number ?? 0
+      const amount = Math.abs(t.amount_number ?? 0)
       const existing = merchantMap.get(merchantName)
 
       if (existing) {
@@ -269,10 +279,11 @@ export const getTotalSpending = tool({
 
 /**
  * Get spending trends over time (monthly breakdown)
+ * Uses dashboard logic: negative amount AND not TRANSFER
  */
 export const getSpendingTrends = tool({
   description:
-    "Get spending trends broken down by month. Use this to answer questions like 'Show me my spending trend over the last 6 months' or 'How does my spending vary by month?'",
+    "Get spending trends broken down by month. Only includes expenses (excludes income and transfers). Use this to answer questions like 'Show me my spending trend over the last 6 months' or 'How does my spending vary by month?'",
   inputSchema: z.object({
     startDate: z.string().describe("Start date in YYYY-MM-DD format"),
     endDate: z.string().describe("End date in YYYY-MM-DD format"),
@@ -292,36 +303,29 @@ export const getSpendingTrends = tool({
   }) => {
     const transactions = await getAllTransactions()
 
-    // Filter by date range, optional category, and exclude transfer categories
+    // Filter by date range, optional category, and expenses (matches dashboard logic)
     const filtered = transactions.filter((t: Transaction) => {
       const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
-      const isNotTransfer = t.category?.groupType !== "TRANSFER"
-      return isInRange && matchesCategory && isNotTransfer
+      const amount = t.amount_number ?? 0
+      const isExpense = amount < 0 && t.category?.groupType !== "TRANSFER"
+      return isInRange && matchesCategory && isExpense
     })
 
     // Group by month
-    const monthMap = new Map<string, { expenses: number; income: number; count: number }>()
+    const monthMap = new Map<string, { total: number; count: number }>()
 
     filtered.forEach((t: Transaction) => {
       const monthKey = getTransactionMonth(t.datetime)
-      const amountNum = t.amount_number ?? 0
+      const amount = Math.abs(t.amount_number ?? 0)
 
       const existing = monthMap.get(monthKey)
-      const isExpense = amountNum < 0
-      const amount = Math.abs(amountNum)
-
       if (existing) {
-        if (isExpense) {
-          existing.expenses += amount
-        } else {
-          existing.income += amount
-        }
+        existing.total += amount
         existing.count += 1
       } else {
         monthMap.set(monthKey, {
-          expenses: isExpense ? amount : 0,
-          income: isExpense ? 0 : amount,
+          total: amount,
           count: 1,
         })
       }
@@ -331,9 +335,7 @@ export const getSpendingTrends = tool({
     const monthData = Array.from(monthMap.entries())
       .map(([month, data]) => ({
         month,
-        totalExpenses: Number(data.expenses.toFixed(2)),
-        totalIncome: Number(data.income.toFixed(2)),
-        netAmount: Number((data.income - data.expenses).toFixed(2)),
+        totalSpending: Number(data.total.toFixed(2)),
         transactionCount: data.count,
       }))
       .sort((a, b) => a.month.localeCompare(b.month))
