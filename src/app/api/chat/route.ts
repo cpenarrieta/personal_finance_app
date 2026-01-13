@@ -1,6 +1,6 @@
 /**
  * AI Chat API Route for Transaction Insights
- * Uses AI SDK v5 with custom tools for querying transaction data
+ * Uses AI SDK v6 with custom tools for querying transaction data
  */
 
 import { openai } from "@ai-sdk/openai"
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: openai("gpt-5-mini"),
-      messages: convertToModelMessages(messages),
+      messages: await convertToModelMessages(messages),
       system: `You are a helpful personal finance assistant. You help users understand their spending patterns and financial habits.
 
 When users ask about their transactions or spending, use the available tools to query their transaction data.

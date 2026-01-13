@@ -1,6 +1,7 @@
 /**
  * AI-powered weekly executive summary generation
  * Analyzes last 6 months of financial data, generates 5 key bullet points
+ * Updated for AI SDK v6
  */
 
 import { createOpenAI } from "@ai-sdk/openai"

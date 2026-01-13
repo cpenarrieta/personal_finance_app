@@ -1,15 +1,25 @@
 "use client"
 
 import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport } from "ai"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Bot, User } from "lucide-react"
-import { useRef, useEffect, useState, type FormEvent } from "react"
+import { Send, Bot, User, Loader2 } from "lucide-react"
+import { useRef, useEffect, useState, useMemo, type FormEvent } from "react"
 import type { MyUIMessage } from "@/app/api/chat/route"
 import { ChartRenderer } from "@/components/chat/ChartRenderer"
 
 export function ChatPageClient() {
-  const { messages, sendMessage } = useChat<MyUIMessage>({})
+  // AI SDK v6: Use transport pattern for chat configuration
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/chat",
+      }),
+    [],
+  )
+
+  const { messages, sendMessage, status } = useChat<MyUIMessage>({ transport })
   const [input, setInput] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -172,9 +182,14 @@ export function ChatPageClient() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about your transactions..."
           className="flex-1"
+          disabled={status === "streaming" || status === "submitted"}
         />
-        <Button type="submit" disabled={!input.trim()}>
-          <Send className="h-4 w-4" />
+        <Button type="submit" disabled={!input.trim() || status === "streaming" || status === "submitted"}>
+          {status === "streaming" || status === "submitted" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
         </Button>
       </form>
     </div>

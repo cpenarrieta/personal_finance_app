@@ -1,6 +1,7 @@
 /**
  * AI-powered transaction categorization using OpenAI via ai-sdk
  * This service is called after new transactions are synced from Plaid
+ * Updated for AI SDK v6
  */
 
 import { createOpenAI } from "@ai-sdk/openai"

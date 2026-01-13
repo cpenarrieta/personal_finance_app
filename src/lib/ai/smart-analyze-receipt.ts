@@ -1,6 +1,7 @@
 /**
  * AI-powered smart receipt analysis using OpenAI vision via ai-sdk
  * Analyzes receipts to determine if transaction should be split or recategorized
+ * Updated for AI SDK v6
  */
 
 import { createOpenAI } from "@ai-sdk/openai"

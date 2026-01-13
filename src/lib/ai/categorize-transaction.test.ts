@@ -19,6 +19,7 @@ jest.mock("@/lib/db/prisma", () => ({
   },
 }))
 
+// AI SDK v6
 jest.mock("ai", () => ({
   generateObject: jest.fn(),
 }))
