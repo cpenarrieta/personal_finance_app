@@ -1,6 +1,5 @@
 import { TransactionDetailView } from "@/components/transactions/detail/TransactionDetailView"
-import { getTransactionById } from "@/lib/db/queries-transactions"
-import { getAllCategories, getAllTags } from "@/lib/db/queries"
+import { getTransactionById, getAllCategories, getAllTags } from "@/lib/db/queries"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import type { TransactionForClient } from "@/types"
 import { logError } from "@/lib/utils/logger"

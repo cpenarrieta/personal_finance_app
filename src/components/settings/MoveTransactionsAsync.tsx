@@ -1,5 +1,5 @@
 import { MoveTransactionsClient } from "@/components/settings/MoveTransactionsClient"
-import { getAllCategoriesForMoveTransactions } from "@/lib/db/queries-settings"
+import { getAllCategoriesForMoveTransactions } from "@/lib/db/queries"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import type { CategoryForClient } from "@/types"
 import { logError } from "@/lib/utils/logger"

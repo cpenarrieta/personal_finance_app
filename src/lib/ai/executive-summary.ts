@@ -105,7 +105,7 @@ async function getAllCategories(): Promise<string> {
 /**
  * Aggregate last 6 months of financial data
  */
-export async function aggregateFinancialData(): Promise<
+async function aggregateFinancialData(): Promise<
   FinancialData & { rawTransactions: RawTransaction[]; categoriesContext: string }
 > {
   const now = new Date()
@@ -243,7 +243,7 @@ function formatTransactionsForLLM(transactions: RawTransaction[]): string {
 /**
  * Generate 5 bullet point summary using OpenAI
  */
-export async function generateExecutiveSummary(
+async function generateExecutiveSummary(
   data: FinancialData & { rawTransactions: RawTransaction[]; categoriesContext: string },
 ): Promise<string> {
   const transactionsContext = formatTransactionsForLLM(data.rawTransactions)

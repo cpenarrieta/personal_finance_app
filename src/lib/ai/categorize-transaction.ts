@@ -534,19 +534,6 @@ export async function applyCategorization(
   }
 }
 
-/**
- * Main function to categorize and apply to a newly synced transaction
- */
-export async function categorizeAndApply(transactionId: string): Promise<void> {
-  const result = await categorizeTransaction(transactionId)
-
-  if (result && result.categoryId) {
-    await applyCategorization(transactionId, result.categoryId, result.subcategoryId)
-  } else {
-    logInfo(`ℹ️  Skipping auto-categorization for transaction ${transactionId}`, { transactionId })
-  }
-}
-
 // Type for transaction data used in batch categorization
 interface TransactionForBatch {
   id: string

@@ -118,32 +118,6 @@ export function formatTransactionMonth(yearMonth: string): string {
 }
 
 /**
- * Check if two transaction datetimes are on the same day
- * @param datetime1 - First datetime string
- * @param datetime2 - Second datetime string
- * @returns True if both are on the same date
- */
-export function isSameTransactionDay(datetime1: string, datetime2: string): boolean {
-  return getTransactionDate(datetime1) === getTransactionDate(datetime2)
-}
-
-/**
- * Compare a transaction datetime with a JavaScript Date object
- * Used for filtering with date picker values
- * @param datetime - Transaction datetime string
- * @param date - JavaScript Date object
- * @returns True if they represent the same day
- */
-export function isTransactionOnDate(datetime: string, date: Date): boolean {
-  const transactionDate = getTransactionDate(datetime)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  const compareDate = `${year}-${month}-${day}`
-  return transactionDate === compareDate
-}
-
-/**
  * Convert JavaScript Date to YYYY-MM-DD string
  * @param date - JavaScript Date object
  * @returns Date string in YYYY-MM-DD format
