@@ -2,9 +2,11 @@
 
 import { useMemo } from "react"
 import { format, startOfMonth as dateStartOfMonth, eachMonthOfInterval } from "date-fns"
+import { CashflowSankeyChart } from "@/components/charts/CashflowSankeyChart"
 import { SpendingByCategoryChart } from "@/components/charts/SpendingByCategoryChart"
 import { MonthlyTrendChart } from "@/components/charts/MonthlyTrendChart"
 import { IncomeVsExpenseChart } from "@/components/charts/IncomeVsExpenseChart"
+import { prepareCashflowSankeyData } from "@/lib/dashboard/calculations"
 import type { TransactionForClient, CategoryForClient } from "@/types"
 import { getTransactionDate, dateToString } from "@/lib/utils/transaction-date"
 
@@ -22,6 +24,7 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
         spendingBySubcategory: [],
         monthlyTrendData: [],
         incomeVsExpenseData: [],
+        cashflowData: { nodes: [], links: [], totalIncome: 0, totalExpenses: 0, surplus: 0 },
       }
     }
 
@@ -150,16 +153,45 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
       }
     })
 
+    // Cashflow Sankey data
+    const cashflowMappedTransactions = transactions.map((t) => ({
+      amount_number: t.amount_number,
+      datetime: t.datetime,
+      category: t.category
+        ? {
+            id: t.category.id,
+            name: t.category.name,
+            imageUrl: t.category.imageUrl ?? null,
+            groupType: t.category.groupType ?? null,
+            created_at_string: t.category.created_at_string ?? null,
+            updated_at_string: t.category.updated_at_string ?? null,
+          }
+        : null,
+      subcategory: t.subcategory
+        ? {
+            id: t.subcategory.id,
+            categoryId: t.subcategory.categoryId ?? "",
+            name: t.subcategory.name,
+            imageUrl: t.subcategory.imageUrl ?? null,
+            created_at_string: t.subcategory.created_at_string ?? null,
+            updated_at_string: t.subcategory.updated_at_string ?? null,
+          }
+        : null,
+    }))
+    const cashflowData = prepareCashflowSankeyData(cashflowMappedTransactions)
+
     return {
       spendingByCategory,
       spendingBySubcategory,
       monthlyTrendData,
       incomeVsExpenseData,
+      cashflowData,
     }
   }, [transactions, categories])
 
   return (
     <div className="space-y-6">
+      <CashflowSankeyChart data={chartData.cashflowData} />
       <SpendingByCategoryChart data={chartData.spendingByCategory} title="Spending by Category" />
       <SpendingByCategoryChart data={chartData.spendingBySubcategory} title="Spending by Sub-Category" />
       <MonthlyTrendChart data={chartData.monthlyTrendData} />
