@@ -134,6 +134,68 @@ export function buildHoldingUpsertData(
 }
 
 /**
+ * Checks if the sign of the amount has changed between existing and incoming transaction
+ * Returns true if the signs differ (e.g., one is positive, other is negative)
+ */
+export function hasAmountSignChanged(existingAmount: Prisma.Decimal, incomingAmount: number): boolean {
+  const existingSign = existingAmount.toNumber() >= 0 ? 1 : -1
+  const incomingSign = incomingAmount >= 0 ? 1 : -1
+  return existingSign !== incomingSign
+}
+
+/**
+ * Adds "for-review" and "sign-review" tags to a transaction
+ * Used when the amount sign changes during sync
+ */
+export async function addSignReviewTags(transactionId: string): Promise<void> {
+  // Get or create the review tags
+  const [forReviewTag, signReviewTag] = await Promise.all([
+    prisma.tag.upsert({
+      where: { name: "for-review" },
+      create: { name: "for-review", color: "#f97316" }, // Orange color
+      update: {},
+      select: { id: true },
+    }),
+    prisma.tag.upsert({
+      where: { name: "sign-review" },
+      create: { name: "sign-review", color: "#ef4444" }, // Red color
+      update: {},
+      select: { id: true },
+    }),
+  ])
+
+  // Add tags to transaction (using upsert to avoid duplicates)
+  await Promise.all([
+    prisma.transactionTag.upsert({
+      where: {
+        transactionId_tagId: {
+          transactionId,
+          tagId: forReviewTag.id,
+        },
+      },
+      create: {
+        transactionId,
+        tagId: forReviewTag.id,
+      },
+      update: {},
+    }),
+    prisma.transactionTag.upsert({
+      where: {
+        transactionId_tagId: {
+          transactionId,
+          tagId: signReviewTag.id,
+        },
+      },
+      create: {
+        transactionId,
+        tagId: signReviewTag.id,
+      },
+      update: {},
+    }),
+  ])
+}
+
+/**
  * Builds investment transaction upsert data from Plaid investment transaction
  */
 export function buildInvestmentTransactionUpsertData(t: InvestmentTransaction, accountId: string, securityId: string | null) {

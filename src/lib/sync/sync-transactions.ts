@@ -8,7 +8,7 @@ import { revalidateTag } from "next/cache"
 import { logInfo, logError } from "../utils/logger"
 import { categorizeTransactions } from "../ai/categorize-transaction"
 import { TransactionSyncStats, createTransactionSyncStats } from "./sync-types"
-import { buildTransactionData, buildAccountUpsertData, isSplitTransaction } from "./sync-helpers"
+import { buildTransactionData, buildAccountUpsertData, isSplitTransaction, hasAmountSignChanged, addSignReviewTags } from "./sync-helpers"
 
 // Constants
 const HISTORICAL_START_DATE = "2024-01-01"
@@ -135,6 +135,7 @@ async function syncHistoricalTransactions(accessToken: string, stats: Transactio
           { originalTransactionId: t.transaction_id }, // Match split parents
         ],
       },
+      select: { id: true, plaidTransactionId: true, isSplit: true, amount: true },
     })
 
     // If split transaction exists, skip it (don't overwrite user's split)
@@ -150,12 +151,15 @@ async function syncHistoricalTransactions(accessToken: string, stats: Transactio
     const isNew = !existing
     const transactionData = buildTransactionData(t)
 
+    // Check if the amount sign has changed (only for existing transactions)
+    const signChanged = existing && hasAmountSignChanged(existing.amount, t.amount)
+
     // Log transaction details
     logInfo(
       `    ${isNew ? "➕ NEW" : "🔄 UPDATE"} [HISTORICAL]\n` +
         `       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}\n` +
         `       Name: ${t.name}\n` +
-        `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)\n` +
+        `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)${signChanged ? " ⚠️ SIGN CHANGED" : ""}\n` +
         `       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}\n` +
         `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
       {
@@ -169,6 +173,7 @@ async function syncHistoricalTransactions(accessToken: string, stats: Transactio
         currency: t.iso_currency_code,
         category: t.personal_finance_category?.primary,
         subcategory: t.personal_finance_category?.detailed,
+        signChanged,
       },
     )
 
@@ -189,6 +194,14 @@ async function syncHistoricalTransactions(accessToken: string, stats: Transactio
     if (isNew) {
       stats.transactionsAdded++
       stats.newTransactionIds.push(upsertedTransaction.id)
+    }
+
+    // Add review tags if the sign changed (for existing transactions only)
+    if (signChanged) {
+      await addSignReviewTags(upsertedTransaction.id)
+      logInfo(`    🏷️  Added review tags (for-review, sign-review) due to sign change`, {
+        transactionId: upsertedTransaction.id,
+      })
     }
   }
 
@@ -275,14 +288,23 @@ async function processModifiedTransactions(modifiedTransactions: any[], stats: T
       continue
     }
 
+    // Fetch existing transaction to check for sign changes
+    const existingTransaction = await prisma.transaction.findUnique({
+      where: { plaidTransactionId: t.transaction_id },
+      select: { id: true, amount: true },
+    })
+
     stats.transactionsModified++
     const transactionData = buildTransactionData(t)
+
+    // Check if the amount sign has changed
+    const signChanged = existingTransaction && hasAmountSignChanged(existingTransaction.amount, t.amount)
 
     logInfo(
       `    📝 MODIFIED [UPDATE]\n` +
         `       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}\n` +
         `       Name: ${t.name}\n` +
-        `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)\n` +
+        `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)${signChanged ? " ⚠️ SIGN CHANGED" : ""}\n` +
         `       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}\n` +
         `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
       {
@@ -295,13 +317,23 @@ async function processModifiedTransactions(modifiedTransactions: any[], stats: T
         currency: t.iso_currency_code,
         category: t.personal_finance_category?.primary,
         subcategory: t.personal_finance_category?.detailed,
+        signChanged,
       },
     )
 
-    await prisma.transaction.update({
+    const updatedTransaction = await prisma.transaction.update({
       where: { plaidTransactionId: t.transaction_id },
       data: transactionData,
+      select: { id: true },
     })
+
+    // Add review tags if the sign changed
+    if (signChanged) {
+      await addSignReviewTags(updatedTransaction.id)
+      logInfo(`    🏷️  Added review tags (for-review, sign-review) due to sign change`, {
+        transactionId: updatedTransaction.id,
+      })
+    }
   }
 }
 
