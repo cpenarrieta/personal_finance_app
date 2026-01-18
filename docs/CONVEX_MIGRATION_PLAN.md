@@ -199,10 +199,21 @@ export default defineSchema({
     .index("by_accountId", ["accountId"])
     .index("by_datetime", ["datetime"])
     .index("by_categoryId", ["categoryId"])
+    .index("by_subcategoryId", ["subcategoryId"])
     .index("by_pending", ["pending"])
     .index("by_parentTransactionId", ["parentTransactionId"])
+    // Compound indexes for common filter combinations
+    .index("by_categoryId_datetime", ["categoryId", "datetime"])
+    .index("by_accountId_datetime", ["accountId", "datetime"])
+    .index("by_accountId_categoryId", ["accountId", "categoryId"])
+    // Search indexes for text search
     .searchIndex("search_name", { searchField: "name" })
-    .searchIndex("search_merchant", { searchField: "merchantName" }),
+    .searchIndex("search_merchant", { searchField: "merchantName" })
+    // Search index with category filter (for filtering by category while searching)
+    .searchIndex("search_name_with_category", {
+      searchField: "name",
+      filterFields: ["categoryId", "accountId", "pending"]
+    }),
 
   // ============================================================================
   // CATEGORIES & TAGS
@@ -211,12 +222,12 @@ export default defineSchema({
   categories: defineTable({
     name: v.string(),
     imageUrl: v.optional(v.string()),
+    // Matches Prisma enum: EXPENSES, INCOME, INVESTMENT, TRANSFER
     groupType: v.optional(v.union(
+      v.literal("EXPENSES"),
       v.literal("INCOME"),
-      v.literal("NEEDS"),
-      v.literal("WANTS"),
-      v.literal("SAVINGS"),
-      v.literal("NONE")
+      v.literal("INVESTMENT"),
+      v.literal("TRANSFER")
     )),
     displayOrder: v.optional(v.number()),
     createdAt: v.number(),
@@ -543,55 +554,548 @@ npx convex import --table stockPrices exports/stockPrices.jsonl
 npx convex import --table transactionTags exports/transactionTags.jsonl
 ```
 
-### Phase 3: ID Mapping Strategy
+### Phase 3: ID Mapping Strategy (Recommended: Temporary Migration Table)
 
-Since Convex generates its own `_id` values, we need to handle ID mapping:
+Since Convex generates its own `_id` values and we want to use Convex's auto-generated IDs (not preserve old Prisma IDs), we'll use a **temporary migration table** approach:
 
-**Option A: Use Convex Import with ID Preservation**
-- Export as ZIP from dashboard, modify, re-import
-- IDs are preserved in ZIP format
+#### Step 1: Add Temporary Migration Schema
 
-**Option B: Create ID Mapping Table**
 ```typescript
-// convex/schema.ts - temporary migration table
+// convex/schema.ts - ADD THIS TEMPORARILY during migration
+// Remove after migration is complete and verified
+
 idMappings: defineTable({
-  tableName: v.string(),
-  oldId: v.string(),
-  newId: v.string(),
+  tableName: v.string(),    // e.g., "accounts", "transactions", "categories"
+  oldId: v.string(),        // Original Prisma UUID
+  newId: v.string(),        // New Convex ID (stored as string for flexibility)
 }).index("by_table_oldId", ["tableName", "oldId"])
+  .index("by_table_newId", ["tableName", "newId"]),
 ```
 
-**Option C: Use Original IDs as Secondary Index**
-- Store `legacyId` field during migration
-- Update foreign keys via mutation after import
-- Remove `legacyId` fields after verification
+#### Step 2: Migration Process
 
-### Phase 4: Validation Script
+```typescript
+// convex/migrations/importWithMapping.ts
+import { internalMutation, internalQuery } from "../_generated/server";
+import { v } from "convex/values";
+
+// Helper to get mapped ID
+export const getMappedId = internalQuery({
+  args: { tableName: v.string(), oldId: v.string() },
+  handler: async (ctx, { tableName, oldId }) => {
+    const mapping = await ctx.db
+      .query("idMappings")
+      .withIndex("by_table_oldId", q =>
+        q.eq("tableName", tableName).eq("oldId", oldId)
+      )
+      .first();
+    return mapping?.newId ?? null;
+  },
+});
+
+// Import categories (no dependencies - import first)
+export const importCategories = internalMutation({
+  args: { categories: v.array(v.any()) },
+  handler: async (ctx, { categories }) => {
+    for (const cat of categories) {
+      const newId = await ctx.db.insert("categories", {
+        name: cat.name,
+        imageUrl: cat.imageUrl,
+        groupType: cat.groupType,
+        displayOrder: cat.displayOrder,
+        createdAt: cat.createdAt,
+        updatedAt: cat.updatedAt,
+      });
+
+      // Store the mapping
+      await ctx.db.insert("idMappings", {
+        tableName: "categories",
+        oldId: cat._oldId, // Original Prisma ID passed in export
+        newId: newId,
+      });
+    }
+  },
+});
+
+// Import transactions (depends on accounts, categories, subcategories)
+export const importTransactions = internalMutation({
+  args: { transactions: v.array(v.any()) },
+  handler: async (ctx, { transactions }) => {
+    for (const t of transactions) {
+      // Look up mapped IDs for foreign keys
+      const accountMapping = await ctx.db
+        .query("idMappings")
+        .withIndex("by_table_oldId", q =>
+          q.eq("tableName", "accounts").eq("oldId", t._oldAccountId)
+        )
+        .first();
+
+      const categoryMapping = t._oldCategoryId ? await ctx.db
+        .query("idMappings")
+        .withIndex("by_table_oldId", q =>
+          q.eq("tableName", "categories").eq("oldId", t._oldCategoryId)
+        )
+        .first() : null;
+
+      const subcategoryMapping = t._oldSubcategoryId ? await ctx.db
+        .query("idMappings")
+        .withIndex("by_table_oldId", q =>
+          q.eq("tableName", "subcategories").eq("oldId", t._oldSubcategoryId)
+        )
+        .first() : null;
+
+      if (!accountMapping) {
+        console.error(`No account mapping found for ${t._oldAccountId}`);
+        continue;
+      }
+
+      const newId = await ctx.db.insert("transactions", {
+        plaidTransactionId: t.plaidTransactionId,
+        accountId: accountMapping.newId as any, // Cast to Id<"accounts">
+        amount: t.amount,
+        isoCurrencyCode: t.isoCurrencyCode,
+        datetime: t.datetime,
+        authorizedDatetime: t.authorizedDatetime,
+        pending: t.pending,
+        merchantName: t.merchantName,
+        name: t.name,
+        plaidCategory: t.plaidCategory,
+        plaidSubcategory: t.plaidSubcategory,
+        paymentChannel: t.paymentChannel,
+        pendingTransactionId: t.pendingTransactionId,
+        logoUrl: t.logoUrl,
+        categoryIconUrl: t.categoryIconUrl,
+        categoryId: categoryMapping?.newId as any ?? undefined,
+        subcategoryId: subcategoryMapping?.newId as any ?? undefined,
+        notes: t.notes,
+        files: t.files ?? [],
+        isSplit: t.isSplit,
+        parentTransactionId: undefined, // Handle in second pass
+        originalTransactionId: t.originalTransactionId,
+        reviewTags: t.reviewTags ?? [],
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt,
+      });
+
+      await ctx.db.insert("idMappings", {
+        tableName: "transactions",
+        oldId: t._oldId,
+        newId: newId,
+      });
+    }
+  },
+});
+
+// Second pass: Update parent transaction references
+export const updateParentTransactionRefs = internalMutation({
+  args: { mappings: v.array(v.object({ oldId: v.string(), oldParentId: v.string() })) },
+  handler: async (ctx, { mappings }) => {
+    for (const { oldId, oldParentId } of mappings) {
+      const txMapping = await ctx.db
+        .query("idMappings")
+        .withIndex("by_table_oldId", q =>
+          q.eq("tableName", "transactions").eq("oldId", oldId)
+        )
+        .first();
+
+      const parentMapping = await ctx.db
+        .query("idMappings")
+        .withIndex("by_table_oldId", q =>
+          q.eq("tableName", "transactions").eq("oldId", oldParentId)
+        )
+        .first();
+
+      if (txMapping && parentMapping) {
+        await ctx.db.patch(txMapping.newId as any, {
+          parentTransactionId: parentMapping.newId as any,
+        });
+      }
+    }
+  },
+});
+```
+
+#### Step 3: Export Script with Old IDs
+
+```typescript
+// scripts/export-for-convex.ts
+// Export data with _oldId fields for mapping
+
+const transactions = await prisma.transaction.findMany({
+  include: { tags: { include: { tag: true } } },
+});
+
+const exportData = transactions.map(t => ({
+  _oldId: t.id,                    // For mapping table
+  _oldAccountId: t.accountId,      // For FK resolution
+  _oldCategoryId: t.categoryId,    // For FK resolution
+  _oldSubcategoryId: t.subcategoryId,
+  _oldParentTransactionId: t.parentTransactionId, // For second pass
+  _tagOldIds: t.tags.map(tt => tt.tagId), // For junction table
+  // ... actual data fields
+  plaidTransactionId: t.plaidTransactionId,
+  amount: Number(t.amount) * -1, // Convert Decimal and flip sign
+  // ... rest of fields
+}));
+```
+
+#### Step 4: Cleanup After Verification
+
+```typescript
+// convex/migrations/cleanup.ts
+export const deleteIdMappings = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const allMappings = await ctx.db.query("idMappings").collect();
+    for (const mapping of allMappings) {
+      await ctx.db.delete(mapping._id);
+    }
+    return { deleted: allMappings.length };
+  },
+});
+```
+
+Then remove `idMappings` table from schema.ts and run `npx convex dev` to apply.
+
+### Phase 4: Comprehensive Validation Script
 
 ```typescript
 // convex/migrations/validate.ts
 import { internalQuery } from "../_generated/server";
+import { v } from "convex/values";
+
+// Expected counts from Prisma export (pass these in)
+interface ExpectedCounts {
+  institutions: number;
+  items: number;
+  accounts: number;
+  transactions: number;
+  categories: number;
+  subcategories: number;
+  tags: number;
+  transactionTags: number;
+  holdings: number;
+  securities: number;
+  investmentTransactions: number;
+  stockPrices: number;
+  categoryRules: number;
+  weeklySummaries: number;
+  llmChats: number;
+  llmMessages: number;
+  users: number;
+  sessions: number;
+  oauthAccounts: number;
+  verifications: number;
+}
 
 export const validateMigration = internalQuery({
-  args: {},
-  handler: async (ctx) => {
-    const counts = {
-      transactions: (await ctx.db.query("transactions").collect()).length,
-      accounts: (await ctx.db.query("accounts").collect()).length,
-      categories: (await ctx.db.query("categories").collect()).length,
-      // ... etc
+  args: {
+    expectedCounts: v.object({
+      institutions: v.number(),
+      items: v.number(),
+      accounts: v.number(),
+      transactions: v.number(),
+      categories: v.number(),
+      subcategories: v.number(),
+      tags: v.number(),
+      transactionTags: v.number(),
+      holdings: v.number(),
+      securities: v.number(),
+      investmentTransactions: v.number(),
+      stockPrices: v.number(),
+      categoryRules: v.number(),
+      weeklySummaries: v.number(),
+      llmChats: v.number(),
+      llmMessages: v.number(),
+      users: v.number(),
+      sessions: v.number(),
+      oauthAccounts: v.number(),
+      verifications: v.number(),
+    }),
+    // Sample Prisma data for spot-checking
+    sampleTransactions: v.optional(v.array(v.object({
+      plaidTransactionId: v.string(),
+      amount: v.number(),
+      name: v.string(),
+    }))),
+  },
+  handler: async (ctx, { expectedCounts, sampleTransactions }) => {
+    const results: {
+      countComparison: Record<string, { expected: number; actual: number; match: boolean }>;
+      relationshipIntegrity: {
+        orphanedTransactions: number;
+        orphanedHoldings: number;
+        orphanedSubcategories: number;
+        orphanedTransactionTags: number;
+        orphanedLlmMessages: number;
+        invalidCategoryRefs: number;
+        invalidSubcategoryRefs: number;
+      };
+      dataIntegrity: {
+        transactionsWithoutPlaidId: number;
+        accountsWithoutPlaidId: number;
+        transactionsWithInvalidAmount: number;
+        transactionsWithInvalidDatetime: number;
+      };
+      sampleDataVerification: {
+        checked: number;
+        matched: number;
+        mismatches: Array<{ plaidTransactionId: string; field: string; expected: any; actual: any }>;
+      };
+      summary: {
+        allCountsMatch: boolean;
+        allRelationsValid: boolean;
+        allDataValid: boolean;
+        allSamplesMatch: boolean;
+        overallSuccess: boolean;
+      };
+    } = {
+      countComparison: {},
+      relationshipIntegrity: {
+        orphanedTransactions: 0,
+        orphanedHoldings: 0,
+        orphanedSubcategories: 0,
+        orphanedTransactionTags: 0,
+        orphanedLlmMessages: 0,
+        invalidCategoryRefs: 0,
+        invalidSubcategoryRefs: 0,
+      },
+      dataIntegrity: {
+        transactionsWithoutPlaidId: 0,
+        accountsWithoutPlaidId: 0,
+        transactionsWithInvalidAmount: 0,
+        transactionsWithInvalidDatetime: 0,
+      },
+      sampleDataVerification: {
+        checked: 0,
+        matched: 0,
+        mismatches: [],
+      },
+      summary: {
+        allCountsMatch: true,
+        allRelationsValid: true,
+        allDataValid: true,
+        allSamplesMatch: true,
+        overallSuccess: true,
+      },
     };
 
-    // Validate relationships
-    const orphanedTransactions = await ctx.db
-      .query("transactions")
-      .filter(q => q.eq(q.field("accountId"), null))
-      .collect();
+    // ========================================
+    // 1. COUNT COMPARISON
+    // ========================================
+    const tables = [
+      "institutions", "items", "accounts", "transactions", "categories",
+      "subcategories", "tags", "transactionTags", "holdings", "securities",
+      "investmentTransactions", "stockPrices", "categoryRules", "weeklySummaries",
+      "llmChats", "llmMessages", "users", "sessions", "oauthAccounts", "verifications"
+    ] as const;
 
+    for (const table of tables) {
+      const actual = (await ctx.db.query(table as any).collect()).length;
+      const expected = expectedCounts[table];
+      const match = actual === expected;
+      results.countComparison[table] = { expected, actual, match };
+      if (!match) results.summary.allCountsMatch = false;
+    }
+
+    // ========================================
+    // 2. RELATIONSHIP INTEGRITY
+    // ========================================
+
+    // Check transactions have valid account references
+    const allTransactions = await ctx.db.query("transactions").collect();
+    const allAccountIds = new Set((await ctx.db.query("accounts").collect()).map(a => a._id));
+    const allCategoryIds = new Set((await ctx.db.query("categories").collect()).map(c => c._id));
+    const allSubcategoryIds = new Set((await ctx.db.query("subcategories").collect()).map(s => s._id));
+
+    for (const tx of allTransactions) {
+      if (!allAccountIds.has(tx.accountId)) {
+        results.relationshipIntegrity.orphanedTransactions++;
+      }
+      if (tx.categoryId && !allCategoryIds.has(tx.categoryId)) {
+        results.relationshipIntegrity.invalidCategoryRefs++;
+      }
+      if (tx.subcategoryId && !allSubcategoryIds.has(tx.subcategoryId)) {
+        results.relationshipIntegrity.invalidSubcategoryRefs++;
+      }
+    }
+
+    // Check holdings have valid account and security references
+    const allHoldings = await ctx.db.query("holdings").collect();
+    const allSecurityIds = new Set((await ctx.db.query("securities").collect()).map(s => s._id));
+    for (const holding of allHoldings) {
+      if (!allAccountIds.has(holding.accountId) || !allSecurityIds.has(holding.securityId)) {
+        results.relationshipIntegrity.orphanedHoldings++;
+      }
+    }
+
+    // Check subcategories have valid category references
+    const allSubcategories = await ctx.db.query("subcategories").collect();
+    for (const sub of allSubcategories) {
+      if (!allCategoryIds.has(sub.categoryId)) {
+        results.relationshipIntegrity.orphanedSubcategories++;
+      }
+    }
+
+    // Check transaction tags have valid references
+    const allTransactionTags = await ctx.db.query("transactionTags").collect();
+    const allTransactionIds = new Set(allTransactions.map(t => t._id));
+    const allTagIds = new Set((await ctx.db.query("tags").collect()).map(t => t._id));
+    for (const tt of allTransactionTags) {
+      if (!allTransactionIds.has(tt.transactionId) || !allTagIds.has(tt.tagId)) {
+        results.relationshipIntegrity.orphanedTransactionTags++;
+      }
+    }
+
+    // Check LLM messages have valid chat references
+    const allLlmMessages = await ctx.db.query("llmMessages").collect();
+    const allChatIds = new Set((await ctx.db.query("llmChats").collect()).map(c => c._id));
+    for (const msg of allLlmMessages) {
+      if (!allChatIds.has(msg.chatId)) {
+        results.relationshipIntegrity.orphanedLlmMessages++;
+      }
+    }
+
+    // Summarize relationship integrity
+    const relIntegrity = results.relationshipIntegrity;
+    if (Object.values(relIntegrity).some(v => v > 0)) {
+      results.summary.allRelationsValid = false;
+    }
+
+    // ========================================
+    // 3. DATA INTEGRITY
+    // ========================================
+
+    for (const tx of allTransactions) {
+      if (!tx.plaidTransactionId) {
+        results.dataIntegrity.transactionsWithoutPlaidId++;
+      }
+      if (typeof tx.amount !== 'number' || isNaN(tx.amount)) {
+        results.dataIntegrity.transactionsWithInvalidAmount++;
+      }
+      // Validate datetime is ISO 8601 format
+      if (!tx.datetime || !/^\d{4}-\d{2}-\d{2}/.test(tx.datetime)) {
+        results.dataIntegrity.transactionsWithInvalidDatetime++;
+      }
+    }
+
+    const allAccounts = await ctx.db.query("accounts").collect();
+    for (const acc of allAccounts) {
+      if (!acc.plaidAccountId) {
+        results.dataIntegrity.accountsWithoutPlaidId++;
+      }
+    }
+
+    if (Object.values(results.dataIntegrity).some(v => v > 0)) {
+      results.summary.allDataValid = false;
+    }
+
+    // ========================================
+    // 4. SAMPLE DATA VERIFICATION
+    // ========================================
+
+    if (sampleTransactions && sampleTransactions.length > 0) {
+      for (const sample of sampleTransactions) {
+        results.sampleDataVerification.checked++;
+
+        const convexTx = await ctx.db
+          .query("transactions")
+          .withIndex("by_plaidTransactionId", q =>
+            q.eq("plaidTransactionId", sample.plaidTransactionId)
+          )
+          .first();
+
+        if (!convexTx) {
+          results.sampleDataVerification.mismatches.push({
+            plaidTransactionId: sample.plaidTransactionId,
+            field: "existence",
+            expected: "exists",
+            actual: "not found",
+          });
+          continue;
+        }
+
+        let matched = true;
+
+        // Compare amount (with small tolerance for float precision)
+        if (Math.abs(convexTx.amount - sample.amount) > 0.01) {
+          results.sampleDataVerification.mismatches.push({
+            plaidTransactionId: sample.plaidTransactionId,
+            field: "amount",
+            expected: sample.amount,
+            actual: convexTx.amount,
+          });
+          matched = false;
+        }
+
+        // Compare name
+        if (convexTx.name !== sample.name) {
+          results.sampleDataVerification.mismatches.push({
+            plaidTransactionId: sample.plaidTransactionId,
+            field: "name",
+            expected: sample.name,
+            actual: convexTx.name,
+          });
+          matched = false;
+        }
+
+        if (matched) {
+          results.sampleDataVerification.matched++;
+        }
+      }
+
+      if (results.sampleDataVerification.mismatches.length > 0) {
+        results.summary.allSamplesMatch = false;
+      }
+    }
+
+    // ========================================
+    // 5. OVERALL SUMMARY
+    // ========================================
+
+    results.summary.overallSuccess =
+      results.summary.allCountsMatch &&
+      results.summary.allRelationsValid &&
+      results.summary.allDataValid &&
+      results.summary.allSamplesMatch;
+
+    return results;
+  },
+});
+
+// Helper to generate expected counts from Prisma
+// Run this BEFORE migration to get baseline numbers
+export const generateExpectedCounts = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    // This would be run against Prisma, not Convex
+    // Included here as a template
     return {
-      counts,
-      orphanedTransactions: orphanedTransactions.length,
-      // ... more validation
+      note: "Run equivalent query against Prisma to get expected counts",
+      template: `
+        const counts = {
+          institutions: await prisma.institution.count(),
+          items: await prisma.item.count(),
+          accounts: await prisma.account.count(),
+          transactions: await prisma.transaction.count(),
+          categories: await prisma.category.count(),
+          subcategories: await prisma.subcategory.count(),
+          tags: await prisma.tag.count(),
+          transactionTags: await prisma.transactionTag.count(),
+          holdings: await prisma.holding.count(),
+          securities: await prisma.security.count(),
+          investmentTransactions: await prisma.investmentTransaction.count(),
+          stockPrices: await prisma.stockPrice.count(),
+          categoryRules: await prisma.categoryRule.count(),
+          weeklySummaries: await prisma.weeklySummary.count(),
+          llmChats: await prisma.llmChat.count(),
+          llmMessages: await prisma.llmMessage.count(),
+          users: await prisma.user.count(),
+          sessions: await prisma.session.count(),
+          oauthAccounts: await prisma.account.count(), // OAuth accounts table
+          verifications: await prisma.verification.count(),
+        };
+      `,
     };
   },
 });
@@ -881,7 +1385,17 @@ export const saveTransactions = internalMutation({
 });
 ```
 
-### Cron Job for Scheduled Sync
+### Cron Job for Scheduled Sync (Replaces Vercel Cron)
+
+> **Important**: Convex provides built-in cron job functionality. This means you **no longer need Vercel Cron** (or any external cron service). Convex crons run directly on Convex's infrastructure with these benefits:
+>
+> - **No Vercel Pro plan required** - Vercel crons require Pro plan for schedules under 1 hour
+> - **Seconds-level granularity** - Using `crons.interval()` you can run jobs every few seconds
+> - **Integrated with your backend** - No HTTP endpoints to expose, no API keys to manage
+> - **Automatic retries** - Convex retries failed mutations automatically
+> - **Dashboard visibility** - View cron history and logs in Convex dashboard
+>
+> After migration, you can **delete your Vercel cron configuration** (`vercel.json` crons section) and remove any `/api/cron/*` routes.
 
 ```typescript
 // convex/crons.ts
@@ -891,6 +1405,7 @@ import { internal } from "./_generated/api";
 const crons = cronJobs();
 
 // Sync all Plaid items every 4 hours
+// Replaces: Vercel cron hitting /api/cron/sync-plaid
 crons.interval(
   "sync-plaid-transactions",
   { hours: 4 },
@@ -898,14 +1413,30 @@ crons.interval(
 );
 
 // Generate weekly summary every Monday at 9am UTC
+// Replaces: Vercel cron hitting /api/cron/weekly-summary
 crons.weekly(
   "generate-weekly-summary",
   { dayOfWeek: "monday", hourUTC: 9, minuteUTC: 0 },
   internal.ai.generateWeeklySummary
 );
 
+// You can also use these scheduling methods:
+// crons.hourly("job-name", { minuteUTC: 30 }, handler) - Every hour at :30
+// crons.daily("job-name", { hourUTC: 2, minuteUTC: 0 }, handler) - Daily at 2am UTC
+// crons.monthly("job-name", { day: 1, hourUTC: 0, minuteUTC: 0 }, handler) - 1st of month
+// crons.cron("job-name", "0 */6 * * *", handler) - Standard cron syntax (every 6 hours)
+
 export default crons;
 ```
+
+#### Vercel Cron to Convex Cron Migration
+
+| Vercel Cron | Convex Equivalent |
+|-------------|-------------------|
+| `"0 */4 * * *"` (every 4 hours) | `crons.interval("name", { hours: 4 }, handler)` |
+| `"0 9 * * 1"` (Monday 9am) | `crons.weekly("name", { dayOfWeek: "monday", hourUTC: 9, minuteUTC: 0 }, handler)` |
+| `"0 0 * * *"` (daily midnight) | `crons.daily("name", { hourUTC: 0, minuteUTC: 0 }, handler)` |
+| `"*/5 * * * *"` (every 5 min) | `crons.interval("name", { minutes: 5 }, handler)` |
 
 ---
 
