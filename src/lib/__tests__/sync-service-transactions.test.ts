@@ -183,10 +183,13 @@ describe("syncItemTransactions - Basic Path", () => {
       ;(prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue({
         id: "existing-id",
         plaidTransactionId: "test-transaction-id",
+        isSplit: false,
+        amount: new Prisma.Decimal(25),
       })
       ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue({
         id: "existing-id",
         plaidTransactionId: "test-transaction-id",
+        amount: new Prisma.Decimal(25),
       })
       ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
@@ -338,7 +341,14 @@ describe("syncItemTransactions - Basic Path", () => {
 
       mockPlaidClient.transactionsSync.mockResolvedValueOnce(mockTransactionsSyncResponseWithModified)
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
-      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue({})
+      // Mock findFirst for isSplitTransaction check
+      ;(prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
+      // Mock findUnique for sign change check
+      ;(prismaModule.prisma.transaction.findUnique as jest.Mock).mockResolvedValue({
+        id: "existing-id",
+        amount: new Prisma.Decimal(25),
+      })
+      ;(prismaModule.prisma.transaction.update as jest.Mock).mockResolvedValue({ id: "updated-id" })
 
       // Act
       const result = await syncItemTransactions(itemId, accessToken, lastCursor)
@@ -351,6 +361,7 @@ describe("syncItemTransactions - Basic Path", () => {
           pending: false,
           amount: expect.any(Prisma.Decimal),
         }),
+        select: { id: true },
       })
     })
   })
