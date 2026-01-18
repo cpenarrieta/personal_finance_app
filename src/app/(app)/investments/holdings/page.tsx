@@ -1,11 +1,9 @@
-import { Suspense } from "react"
 import { syncStockPrices } from "@/lib/sync/sync-prices"
 import { syncHoldingsLogos } from "@/lib/sync/sync-holdings-logos"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { SyncPricesButton } from "@/components/sync/SyncPricesButton"
 import { SyncHoldingsLogosButton } from "@/components/sync/SyncHoldingsLogosButton"
-import { HoldingsPortfolioAsync } from "@/components/investments/holdings/HoldingsPortfolioAsync"
-import { HoldingsPortfolioSkeleton } from "@/components/investments/holdings/HoldingsPortfolioSkeleton"
+import { HoldingsPortfolioConvex } from "@/components/investments/holdings/HoldingsPortfolioConvex"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -31,7 +29,7 @@ async function doSyncHoldingsLogos() {
   revalidateTag("holdings", "max")
 }
 
-export default async function HoldingsPage() {
+export default function HoldingsPage() {
   return (
     <div className="overflow-hidden">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
@@ -45,9 +43,7 @@ export default async function HoldingsPage() {
         </div>
       </div>
 
-      <Suspense fallback={<HoldingsPortfolioSkeleton />}>
-        <HoldingsPortfolioAsync />
-      </Suspense>
+      <HoldingsPortfolioConvex />
     </div>
   )
 }

@@ -1,6 +1,8 @@
 "use server"
 
-import { prisma } from "@/lib/db/prisma"
+import { fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { z } from "zod"
 import { logError } from "@/lib/utils/logger"
@@ -27,80 +29,20 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
     // Validate all updates
     const validatedUpdates = updates.map((update) => TransactionUpdateSchema.parse(update))
 
-    // Get review tags to remove on confirmation
-    const [forReviewTag, signReviewTag] = await Promise.all([
-      prisma.tag.findUnique({ where: { name: "for-review" }, select: { id: true } }),
-      prisma.tag.findUnique({ where: { name: "sign-review" }, select: { id: true } }),
-    ])
-    const reviewTagIds = [forReviewTag?.id, signReviewTag?.id].filter((id): id is string => !!id)
+    // Convert to Convex format
+    const convexUpdates = validatedUpdates.map((update) => ({
+      id: update.id as Id<"transactions">,
+      categoryId: update.categoryId as Id<"categories"> | null,
+      subcategoryId: update.subcategoryId as Id<"subcategories"> | null,
+      notes: update.notes,
+      newAmount: update.newAmount,
+      tagIds: update.tagIds as Id<"tags">[],
+    }))
 
-    // Fetch current transaction tags for all updates
-    const currentTransactions = await prisma.transaction.findMany({
-      where: { id: { in: validatedUpdates.map((u) => u.id) } },
-      select: { id: true, tags: { select: { tagId: true } } },
+    // Call Convex mutation
+    const result = await fetchMutation(api.transactions.confirmTransactions, {
+      updates: convexUpdates,
     })
-
-    type TransactionWithTagIds = (typeof currentTransactions)[0]
-    type TransactionTagId = TransactionWithTagIds["tags"][0]
-
-    // Build a map of current tags for quick lookup
-    const currentTagsMap = new Map<string, string[]>(
-      currentTransactions.map((t: TransactionWithTagIds) => [t.id, t.tags.map((tag: TransactionTagId) => tag.tagId)]),
-    )
-
-    // Process all updates in an interactive transaction (30s timeout for large batches)
-    await prisma.$transaction(
-      async (tx) => {
-        for (const update of validatedUpdates) {
-          const currentTagIds: string[] = currentTagsMap.get(update.id) || []
-          const tagsToConnect = update.tagIds.filter((tagId: string) => !currentTagIds.includes(tagId))
-          const tagsToDisconnect = currentTagIds.filter((tagId: string) => !update.tagIds.includes(tagId))
-
-          // Filter out review tags from tagsToConnect to avoid re-adding them
-          const tagsToConnectFiltered = tagsToConnect.filter((tagId: string) => !reviewTagIds.includes(tagId))
-
-          await tx.transaction.update({
-            where: { id: update.id },
-            data: {
-              categoryId: update.categoryId,
-              subcategoryId: update.subcategoryId,
-              notes: update.notes,
-              // Update amount if newAmount is provided (convert back to database format: display * -1)
-              ...(update.newAmount !== null ? { amount: update.newAmount * -1 } : {}),
-              tags: {
-                // Remove review tags (for-review and sign-review)
-                ...(reviewTagIds.length > 0
-                  ? {
-                      deleteMany: {
-                        tagId: { in: reviewTagIds },
-                      },
-                    }
-                  : {}),
-                // Connect new tags
-                ...(tagsToConnectFiltered.length > 0
-                  ? {
-                      create: tagsToConnectFiltered.map((tagId: string) => ({
-                        tag: { connect: { id: tagId } },
-                      })),
-                    }
-                  : {}),
-                // Disconnect removed tags (excluding review tags which are already handled)
-                ...(tagsToDisconnect.length > 0
-                  ? {
-                      deleteMany: {
-                        tagId: {
-                          in: tagsToDisconnect.filter((tagId: string) => !reviewTagIds.includes(tagId)),
-                        },
-                      },
-                    }
-                  : {}),
-              },
-            },
-          })
-        }
-      },
-      { timeout: 30000 },
-    )
 
     // Revalidate transactions cache
     revalidateTag("transactions", "max")
@@ -108,7 +50,7 @@ export async function confirmTransactions(updates: TransactionUpdate[]) {
 
     return {
       success: true,
-      updatedCount: validatedUpdates.length,
+      updatedCount: result.updatedCount,
     }
   } catch (error) {
     logError("Error confirming transactions:", error)

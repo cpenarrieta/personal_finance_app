@@ -175,14 +175,14 @@ export interface HoldingForClient {
     type: string | null
     isoCurrencyCode: string | null
     logoUrl: string | null
-  }
+  } | null
 
   account: {
     id: string
     name: string
     type: string
     mask: string | null
-  }
+  } | null
 }
 
 // ============================================================================

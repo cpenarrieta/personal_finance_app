@@ -8,7 +8,7 @@
  * - tags: Tag queries
  * - investments: Holdings and investment transaction queries
  *
- * All queries use Next.js 16 "use cache" directive with cacheLife() and cacheTag()
+ * All queries use Convex with Next.js 16 "use cache" directive
  */
 
 // Transaction queries
@@ -38,14 +38,3 @@ export {
 
 // Weekly summary queries
 export { getLatestWeeklySummary } from "./weekly-summary"
-
-// Shared select statements
-export {
-  TRANSACTION_SELECT,
-  TRANSACTION_SELECT_MINIMAL,
-  ACCOUNT_SELECT_MINIMAL,
-  CATEGORY_SELECT,
-  SUBCATEGORY_SELECT,
-  TAG_SELECT,
-  SECURITY_SELECT,
-} from "./selects"

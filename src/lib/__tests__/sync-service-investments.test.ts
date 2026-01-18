@@ -22,6 +22,7 @@ import {
   mockDbSecurity,
   mockDbHolding,
 } from "./__mocks__/test-data"
+import type { Id } from "../../../convex/_generated/dataModel"
 
 // Mock modules
 jest.mock("../api/plaid")
@@ -53,7 +54,7 @@ describe("syncItemInvestments", () => {
     investmentsTransactionsGet: jest.fn(),
   }
 
-  const itemId = "test-item-id"
+  const itemId = "test-item-id" as Id<"items">
   const accessToken = "test-access-token"
 
   beforeEach(() => {

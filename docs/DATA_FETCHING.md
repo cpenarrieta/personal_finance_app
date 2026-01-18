@@ -1,95 +1,87 @@
 # Data Fetching Strategy
 
-**Rule**: Fetch data in Server Components using cached queries. Pass as props to Client Components.
+**Rule**: Use Convex for all data operations. Server Components use `fetchQuery`, Client Components use `useQuery` for real-time updates.
 
 ## Pattern
 
 ### Server Component (Page)
 ```typescript
-import { getAllTransactions, getAllCategories, getAllTags } from '@/lib/db/queries'
+import { fetchQuery } from "convex/nextjs"
+import { api } from "@/convex/_generated/api"
 
 export default async function Page() {
   const [transactions, categories, tags] = await Promise.all([
-    getAllTransactions(),    // Cached 24h
-    getAllCategories(),      // Cached 24h
-    getAllTags(),           // Cached 24h
+    fetchQuery(api.transactions.getAll),
+    fetchQuery(api.categories.getAll),
+    fetchQuery(api.tags.getAll),
   ])
 
   return <ClientComponent transactions={transactions} categories={categories} tags={tags} />
 }
 ```
 
-### Cached Query (Next.js 16)
-```typescript
-// lib/db/queries.ts
-import { cacheTag, cacheLife } from "next/cache"
-
-export async function getAllCategories() {
-  "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })  // 24h
-  cacheTag("categories")
-
-  return prisma.category.findMany({...})
-}
-```
-
-### Client Component
+### Client Component (Real-time)
 ```typescript
 'use client'
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
-interface Props {
-  transactions: Array<{ id: string; amount_number: number; date_string: string }>
-  categories: Array<{ id: string; name: string }>
-}
+export function ClientComponent() {
+  // Real-time data - auto-updates when data changes
+  const transactions = useQuery(api.transactions.getAll)
 
-export function ClientComponent({ transactions, categories }: Props) {
-  return <div>{/* Use props directly */}</div>
+  // Mutations
+  const updateTransaction = useMutation(api.transactions.update)
+
+  const handleUpdate = async (id: string, name: string) => {
+    await updateTransaction({ id, name })
+    // No manual refetch needed - useQuery auto-updates
+  }
 }
 ```
 
-## Generated Columns
-
-Use for client-compatible types:
-
+### Convex Query Definition
 ```typescript
-// ✅ Client components
-select: {
-  amount_number: true,    // Float (not Decimal)
-  date_string: true,      // String (not Date)
-}
+// convex/transactions.ts
+import { query, mutation } from "./_generated/server"
+import { v } from "convex/values"
 
-// ✅ Server calculations
-select: {
-  amount: true,           // Decimal (precise math)
-  date: true,             // Date (operations)
-}
+export const getAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("transactions").collect()
+  },
+})
+
+export const update = mutation({
+  args: {
+    id: v.id("transactions"),
+    name: v.string()
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { name: args.name })
+  },
+})
 ```
 
-## Cache Invalidation
+## Server vs Client Components
 
-**Next.js 16 has TWO caches** - invalidate BOTH:
-
-```typescript
-import { revalidateTag, revalidatePath } from "next/cache"
-
-async function updateData() {
-  await prisma.transaction.update(...)
-
-  revalidateTag("transactions", "max")  // Server Data Cache
-  revalidatePath("/", "layout")          // Client Router Cache
-}
-```
-
-Missing `revalidatePath()` = stale data on navigation.
+| Use Case | Pattern |
+|----------|---------|
+| Initial page load | Server Component + `fetchQuery` |
+| Real-time updates needed | Client Component + `useQuery` |
+| User interactions/mutations | Client Component + `useMutation` |
+| Static reference data | Either (Server preferred) |
 
 ## Rules
 
 **Do**:
-- Fetch with cached queries from `@/lib/db/queries`
-- Use generated columns for Client Components
-- Pass as props (never fetch in `useEffect`)
-- Invalidate both caches on mutation
+- Use `fetchQuery` in Server Components for initial data
+- Use `useQuery` in Client Components for real-time updates
+- Use `useMutation` for write operations
+- Pass data as props when real-time not needed
 
 **Don't**:
-- Fetch reference data client-side (`/api/categories`, `/api/tags`)
-- Use React Context for data that can be props
+- Use fetch API for Convex data
+- Create API routes for CRUD (use Convex directly)
+- Manually refetch after mutations (Convex handles this)

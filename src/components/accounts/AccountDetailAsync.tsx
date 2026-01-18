@@ -50,10 +50,14 @@ export async function AccountDetailAsync({ id }: { id: string }) {
     } else {
       const txs = await getTransactionsForAccount(account.id)
       // Flatten tags and assert type (amount_number is never null in practice)
+      // Convex returns flat tags array, handle both formats for compatibility
       const transactions = txs.map((t) => ({
         ...t,
         amount_number: t.amount_number ?? 0,
-        tags: t.tags.map((tt) => tt.tag),
+        tags: t.tags.map(
+          (tag: { id: string; name: string; color: string } | { tag: { id: string; name: string; color: string } }) =>
+            "tag" in tag ? tag.tag : tag,
+        ),
       })) as TransactionForClient[]
 
       content = (

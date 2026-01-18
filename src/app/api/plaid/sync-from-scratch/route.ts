@@ -1,16 +1,12 @@
+import { fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
 import { syncAllItems } from "@/lib/sync/sync"
-import { prisma } from "@/lib/db/prisma"
 import { apiSuccess, apiError } from "@/lib/api/response"
 
 export async function POST() {
   try {
     // Clear all cursors
-    await prisma.item.updateMany({
-      data: {
-        lastTransactionsCursor: null,
-        lastInvestmentsCursor: null,
-      },
-    })
+    await fetchMutation(api.items.clearAllCursors, {})
 
     // Run full sync
     await syncAllItems()

@@ -1,14 +1,15 @@
 /**
  * AI-powered transaction categorization using OpenAI via ai-sdk
  * This service is called after new transactions are synced from Plaid
- * Updated for AI SDK v6
+ * Updated to use Convex instead of Prisma
  */
 
 import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject } from "ai"
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
+import type { Id } from "../../../convex/_generated/dataModel"
 import { z } from "zod"
-import { Category, Prisma, Subcategory, Transaction } from "@prisma/generated"
 import { logInfo, logWarn, logError } from "@/lib/utils/logger"
 
 // Initialize OpenAI with API key
@@ -38,114 +39,57 @@ const BatchCategorizationResultSchema = z.object({
 })
 
 // Type for categories with subcategories
-type CategoryWithSubs = Category & { subcategories: Subcategory[] }
+interface CategoryWithSubs {
+  id: Id<"categories">
+  name: string
+  groupType: string | null
+  displayOrder: number
+  subcategories: Array<{ id: Id<"subcategories">; name: string }>
+}
+
+// Type for transaction history
+interface TransactionHistoryItem {
+  name: string
+  merchantName: string | null
+  amount: number
+  datetime: string
+  category: { id: string; name: string } | null
+  subcategory: { id: string; name: string } | null
+}
 
 /**
  * Fetch transactions from the last 2 months for context
  */
-async function getRecentTransactionHistory(excludeTransactionId?: string, maxTransactions: number = 100) {
-  return prisma.transaction.findMany({
-    where: {
-      id: excludeTransactionId ? { not: excludeTransactionId } : undefined,
-      categoryId: { not: null }, // Only get categorized transactions
-      isSplit: false,
-    },
-    select: {
-      name: true,
-      merchantName: true,
-      amount: true,
-      datetime: true,
-      category: {
-        select: {
-          name: true,
-          id: true,
-        },
-      },
-      subcategory: {
-        select: {
-          name: true,
-          id: true,
-        },
-      },
-    },
-    orderBy: { datetime: "desc" },
-    take: maxTransactions,
+export async function getRecentTransactionHistory(
+  excludeTransactionId?: Id<"transactions">,
+  maxTransactions: number = 100,
+): Promise<TransactionHistoryItem[]> {
+  return fetchQuery(api.sync.getRecentCategorizedTransactions, {
+    limit: maxTransactions,
+    excludeId: excludeTransactionId,
   })
 }
 
 /**
  * Find similar transactions based on merchant, amount, and description
  */
-export async function getSimilarTransactions(merchantName: string | null, name: string, excludeTransactionId?: string) {
-  // Build conditions for similar transactions
-  const conditions: Prisma.TransactionWhereInput[] = []
-
-  // Match by merchant name (if available)
-  if (merchantName) {
-    conditions.push({
-      merchantName: {
-        equals: merchantName,
-        mode: "insensitive",
-      },
-      categoryId: { not: null },
-    })
-  }
-
-  // Match by similar transaction name (fuzzy)
-  conditions.push({
-    name: {
-      contains: name.slice(0, 10), // Use first 10 chars for fuzzy matching
-      mode: "insensitive",
-    },
-    categoryId: { not: null },
+export async function getSimilarTransactions(
+  merchantName: string | null,
+  name: string,
+  excludeTransactionId?: Id<"transactions">,
+): Promise<TransactionHistoryItem[]> {
+  return fetchQuery(api.sync.getSimilarTransactions, {
+    merchantName: merchantName ?? undefined,
+    name,
+    excludeId: excludeTransactionId,
   })
-
-  // If no conditions, return empty
-  if (conditions.length === 0) {
-    return []
-  }
-
-  const similarTransactions = (await prisma.transaction.findMany({
-    where: {
-      OR: conditions,
-      id: excludeTransactionId ? { not: excludeTransactionId } : undefined,
-      isSplit: false,
-    },
-    select: {
-      name: true,
-      merchantName: true,
-      amount: true,
-      datetime: true,
-      category: {
-        select: {
-          name: true,
-          id: true,
-        },
-      },
-      subcategory: {
-        select: {
-          name: true,
-          id: true,
-        },
-      },
-    },
-    orderBy: { datetime: "desc" },
-    take: 50,
-  })) as (Transaction & { category: Category; subcategory: Subcategory })[]
-
-  return similarTransactions
 }
 
 /**
  * Fetch all categories once
  */
-async function getAllCategories() {
-  return (await prisma.category.findMany({
-    include: {
-      subcategories: true,
-    },
-    orderBy: { displayOrder: "asc" },
-  })) as CategoryWithSubs[]
+async function getAllCategories(): Promise<CategoryWithSubs[]> {
+  return fetchQuery(api.sync.getAllCategoriesWithSubcategories)
 }
 
 export function buildCategoriesContext(categories: CategoryWithSubs[]): string {
@@ -157,47 +101,28 @@ export function buildCategoriesContext(categories: CategoryWithSubs[]): string {
     .join("\n")
 }
 
-export function buildSimilarTransactionsContext(
-  similarTransactions: (Transaction & { category: Category; subcategory: Subcategory })[],
-): string {
+export function buildSimilarTransactionsContext(similarTransactions: TransactionHistoryItem[]): string {
   return similarTransactions.length > 0
     ? similarTransactions
-        .map(
-          (t: {
-            name: string
-            amount: Prisma.Decimal
-            category: { name: string; id: string } | null
-            subcategory: { name: string; id: string } | null
-          }) => {
-            const amt = Math.abs(t.amount.toNumber()).toFixed(2)
-            return `  - "${t.name}" | $${amt} | Category: ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
-              t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
-            }`
-          },
-        )
+        .map((t) => {
+          const amt = Math.abs(t.amount).toFixed(2)
+          return `  - "${t.name}" | $${amt} | Category: ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
+            t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
+          }`
+        })
         .join("\n")
     : "  No similar transactions found"
 }
 
-export function buildHistoryContext(
-  recentHistory: (Transaction & { category: Category; subcategory: Subcategory })[],
-): string {
+export function buildHistoryContext(recentHistory: TransactionHistoryItem[]): string {
   return recentHistory.length > 0
     ? recentHistory
-        .map(
-          (t: {
-            name: string
-            merchantName: string | null
-            amount: Prisma.Decimal
-            category: { name: string; id: string } | null
-            subcategory: { name: string; id: string } | null
-          }) => {
-            const amt = Math.abs(t.amount.toNumber()).toFixed(2)
-            return `  - "${t.merchantName || t.name}" | $${amt} | ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
-              t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
-            }`
-          },
-        )
+        .map((t) => {
+          const amt = Math.abs(t.amount).toFixed(2)
+          return `  - "${t.merchantName || t.name}" | $${amt} | ${t.category?.name || "N/A"} (ID: ${t.category?.id || "N/A"})${
+            t.subcategory ? ` > ${t.subcategory.name} (ID: ${t.subcategory.id})` : ""
+          }`
+        })
         .join("\n")
     : "  No recent history"
 }
@@ -205,7 +130,7 @@ export function buildHistoryContext(
 interface CategorizeOptions {
   allowRecategorize?: boolean
   preFetchedCategories?: CategoryWithSubs[]
-  preFetchedHistory?: (Transaction & { category: Category; subcategory: Subcategory })[]
+  preFetchedHistory?: TransactionHistoryItem[]
 }
 
 /**
@@ -214,7 +139,7 @@ interface CategorizeOptions {
  * @param options - Options for categorization including pre-fetched data
  */
 export async function categorizeTransaction(
-  transactionId: string,
+  transactionId: Id<"transactions">,
   options: CategorizeOptions = {},
 ): Promise<{
   categoryId: string | null
@@ -226,21 +151,7 @@ export async function categorizeTransaction(
 
   try {
     // Fetch the transaction to be categorized
-    const transaction = (await prisma.transaction.findUnique({
-      where: { id: transactionId },
-      select: {
-        id: true,
-        name: true,
-        merchantName: true,
-        amount: true,
-        date: true,
-        datetime: true,
-        plaidCategory: true,
-        plaidSubcategory: true,
-        notes: true,
-        files: true,
-      },
-    })) as Transaction | null
+    const transaction = await fetchQuery(api.sync.getTransactionForCategorization, { id: transactionId })
 
     if (!transaction) {
       logError(`Transaction ${transactionId} not found`, undefined, { transactionId })
@@ -248,35 +159,28 @@ export async function categorizeTransaction(
     }
 
     // Skip if already categorized (unless allowRecategorize is true)
-    if (!allowRecategorize) {
-      const existingCategory = await prisma.transaction.findUnique({
-        where: { id: transactionId },
-        select: { categoryId: true },
-      })
-
-      if (existingCategory?.categoryId) {
-        logInfo(`Transaction ${transactionId} already categorized, skipping`, { transactionId })
-        return null
-      }
+    if (!allowRecategorize && transaction.categoryId) {
+      logInfo(`Transaction ${transactionId} already categorized, skipping`, { transactionId })
+      return null
     }
 
     // Fetch categories if not provided
     const categories = preFetchedCategories || (await getAllCategories())
 
     // Get similar transactions based on merchant name and transaction name
-    // This is specific to the transaction so we can't easily pre-fetch in bulk without complex logic
-    const similarTransactions = await getSimilarTransactions(transaction.merchantName, transaction.name, transaction.id)
+    const similarTransactions = await getSimilarTransactions(transaction.merchantName, transaction.name, transactionId)
 
     // Get recent transaction history if not provided
-    const recentHistory = preFetchedHistory || (await getRecentTransactionHistory(transaction.id))
+    const recentHistory = preFetchedHistory || (await getRecentTransactionHistory(transactionId))
 
     // Build categorization prompt context
     const categoriesContext = buildCategoriesContext(categories)
-    const similarContext = buildSimilarTransactionsContext(similarTransactions as any)
-    const historyContext = buildHistoryContext(recentHistory as any)
+    const similarContext = buildSimilarTransactionsContext(similarTransactions)
+    const historyContext = buildHistoryContext(recentHistory)
 
-    const transactionAmount = Math.abs(transaction.amount.toNumber()).toFixed(2)
-    const transactionType = transaction.amount.toNumber() > 0 ? "expense" : "income" // negative = income, positive = expense
+    const transactionAmount = Math.abs(transaction.amount).toFixed(2)
+    const transactionType = transaction.amount > 0 ? "expense" : "income" // positive = expense, negative = income
+    const dateStr = new Date(transaction.date).toISOString().split("T")[0]
 
     const prompt = `You are a financial transaction categorization expert. Your task is to categorize this transaction based on available context.
 
@@ -284,7 +188,7 @@ TRANSACTION TO CATEGORIZE:
   Name: ${transaction.name}
   Merchant: ${transaction.merchantName || "N/A"}
   Amount: $${transactionAmount} (${transactionType})
-  Date: ${transaction.date.toISOString().split("T")[0]}
+  Date: ${dateStr}
   Plaid Category: ${transaction.plaidCategory || "N/A"} / ${transaction.plaidSubcategory || "N/A"}
   Notes: ${transaction.notes || "N/A"}
 
@@ -328,7 +232,6 @@ Provide your categorization decision with confidence and reasoning.`
     }
 
     // Call OpenAI using ai-sdk with structured output
-    // If transaction has files, use vision with messages format; otherwise use text-only prompt
     let result
     if (transaction.files && transaction.files.length > 0) {
       // Build content array with text and images
@@ -425,26 +328,14 @@ Provide your categorization decision with confidence and reasoning.`
  * Check if transaction amount sign mismatches category type
  * Returns true if sign appears incorrect (e.g., income category with expense sign)
  */
-async function detectSignMismatch(transactionId: string, categoryId: string): Promise<boolean> {
-  const [transaction, category] = await Promise.all([
-    prisma.transaction.findUnique({
-      where: { id: transactionId },
-      select: { amount: true },
-    }),
-    prisma.category.findUnique({
-      where: { id: categoryId },
-      select: { groupType: true },
-    }),
-  ])
+function detectSignMismatch(amount: number, groupType: string | null): boolean {
+  if (!groupType) return false
 
-  if (!transaction || !category?.groupType) return false
-
-  const amount = transaction.amount.toNumber()
   // Convention: positive amount = expense, negative = income
   // INCOME category should have negative amount
   // EXPENSES category should have positive amount
-  if (category.groupType === "INCOME" && amount > 0) return true
-  if (category.groupType === "EXPENSES" && amount < 0) return true
+  if (groupType === "INCOME" && amount > 0) return true
+  if (groupType === "EXPENSES" && amount < 0) return true
 
   return false
 }
@@ -454,80 +345,51 @@ async function detectSignMismatch(transactionId: string, categoryId: string): Pr
  * Also adds "sign-review" tag if amount sign doesn't match category type
  */
 export async function applyCategorization(
-  transactionId: string,
-  categoryId: string,
-  subcategoryId: string | null,
+  transactionId: Id<"transactions">,
+  categoryId: Id<"categories">,
+  subcategoryId: Id<"subcategories"> | null,
   skipReviewTag: boolean = false,
 ): Promise<void> {
   try {
-    const tagsToConnect: { tagId: string }[] = []
+    const tagIds: Id<"tags">[] = []
+
+    // Get the transaction to check amount
+    const transaction = await fetchQuery(api.sync.getTransactionForCategorization, { id: transactionId })
+
+    // Get or create review tags
+    const { forReviewTagId, signReviewTagId } = await fetchMutation(api.sync.getOrCreateReviewTags, {})
 
     if (!skipReviewTag) {
-      // Ensure "for-review" tag exists
-      const forReviewTag = await prisma.tag.upsert({
-        where: { name: "for-review" },
-        update: {},
-        create: {
-          name: "for-review",
-          color: "#fbbf24", // Yellow color for review
-        },
-      })
-      tagsToConnect.push({ tagId: forReviewTag.id })
+      tagIds.push(forReviewTagId)
     }
 
-    // Check for sign mismatch and add "sign-review" tag if needed
-    const hasSignMismatch = await detectSignMismatch(transactionId, categoryId)
-    if (hasSignMismatch) {
-      const signReviewTag = await prisma.tag.upsert({
-        where: { name: "sign-review" },
-        update: {},
-        create: {
-          name: "sign-review",
-          color: "#f97316", // Orange color for sign review
-        },
-      })
-      tagsToConnect.push({ tagId: signReviewTag.id })
-      logInfo(`⚠️  Sign mismatch detected for transaction ${transactionId}`, { transactionId, categoryId })
+    // Get category to check groupType
+    const categories = await fetchQuery(api.sync.getAllCategoriesWithSubcategories)
+    const category = categories.find((c) => c.id === categoryId)
+
+    // Check for sign mismatch
+    if (transaction && category) {
+      const hasSignMismatch = detectSignMismatch(transaction.amount, category.groupType)
+      if (hasSignMismatch) {
+        tagIds.push(signReviewTagId)
+        logInfo(`⚠️  Sign mismatch detected for transaction ${transactionId}`, { transactionId, categoryId })
+      }
     }
 
-    // Build tags update
-    const tagsUpdate =
-      tagsToConnect.length > 0
-        ? {
-            connectOrCreate: tagsToConnect.map((tag) => ({
-              where: {
-                transactionId_tagId: {
-                  transactionId,
-                  tagId: tag.tagId,
-                },
-              },
-              create: {
-                tagId: tag.tagId,
-              },
-            })),
-          }
-        : undefined
-
-    // Update transaction with category and optionally add tags
-    await prisma.transaction.update({
-      where: { id: transactionId },
-      data: {
-        categoryId,
-        subcategoryId,
-        tags: tagsUpdate,
-      },
+    // Apply categorization with tags
+    await fetchMutation(api.sync.applyCategorization, {
+      transactionId,
+      categoryId,
+      subcategoryId: subcategoryId ?? undefined,
+      tagIds: tagIds.length > 0 ? tagIds : undefined,
     })
 
-    logInfo(
-      `✅ Applied categorization${!skipReviewTag ? " and for-review tag" : ""}${hasSignMismatch ? " and sign-review tag" : ""} to transaction ${transactionId}`,
-      {
-        transactionId,
-        categoryId,
-        subcategoryId,
-        hasReviewTag: !skipReviewTag,
-        hasSignMismatch,
-      },
-    )
+    logInfo(`✅ Applied categorization${!skipReviewTag ? " and for-review tag" : ""} to transaction ${transactionId}`, {
+      transactionId,
+      categoryId,
+      subcategoryId,
+      hasReviewTag: !skipReviewTag,
+    })
   } catch (error) {
     logError("Error applying categorization:", error, { transactionId, categoryId, subcategoryId })
     throw error
@@ -536,11 +398,11 @@ export async function applyCategorization(
 
 // Type for transaction data used in batch categorization
 interface TransactionForBatch {
-  id: string
+  id: Id<"transactions">
   name: string
   merchantName: string | null
-  amount: Prisma.Decimal
-  date: Date
+  amount: number
+  date: number
   plaidCategory: string | null
   plaidSubcategory: string | null
   notes: string | null
@@ -553,7 +415,7 @@ interface TransactionForBatch {
 async function categorizeTransactionsBatch(
   transactions: TransactionForBatch[],
   categories: CategoryWithSubs[],
-  recentHistory: (Transaction & { category: Category; subcategory: Subcategory })[],
+  recentHistory: TransactionHistoryItem[],
 ): Promise<
   Map<
     string,
@@ -579,14 +441,15 @@ async function categorizeTransactionsBatch(
 
   // Build shared context
   const categoriesContext = buildCategoriesContext(categories)
-  const historyContext = buildHistoryContext(recentHistory as any)
+  const historyContext = buildHistoryContext(recentHistory)
 
   // Build transactions list for prompt
   const transactionsContext = transactions
     .map((t, index) => {
-      const amount = Math.abs(t.amount.toNumber()).toFixed(2)
-      const type = t.amount.toNumber() > 0 ? "expense" : "income"
-      return `[${index}] Name: "${t.name}" | Merchant: ${t.merchantName || "N/A"} | Amount: $${amount} (${type}) | Date: ${t.date.toISOString().split("T")[0]} | Plaid: ${t.plaidCategory || "N/A"}/${t.plaidSubcategory || "N/A"}`
+      const amount = Math.abs(t.amount).toFixed(2)
+      const type = t.amount > 0 ? "expense" : "income"
+      const dateStr = new Date(t.date).toISOString().split("T")[0]
+      return `[${index}] Name: "${t.name}" | Merchant: ${t.merchantName || "N/A"} | Amount: $${amount} (${type}) | Date: ${dateStr} | Plaid: ${t.plaidCategory || "N/A"}/${t.plaidSubcategory || "N/A"}`
     })
     .join("\n")
 
@@ -684,21 +547,8 @@ export async function categorizeTransactions(
     const [categories, recentHistory] = await Promise.all([getAllCategories(), getRecentTransactionHistory()])
 
     // 2. Fetch all transactions to categorize
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        id: { in: transactionIds },
-        categoryId: null, // Only uncategorized transactions
-      },
-      select: {
-        id: true,
-        name: true,
-        merchantName: true,
-        amount: true,
-        date: true,
-        plaidCategory: true,
-        plaidSubcategory: true,
-        notes: true,
-      },
+    const transactions = await fetchQuery(api.sync.getUncategorizedTransactions, {
+      ids: transactionIds as Id<"transactions">[],
     })
 
     if (transactions.length === 0) {
@@ -713,73 +563,43 @@ export async function categorizeTransactions(
     let categorizedCount = 0
     let skippedCount = 0
 
+    // Get or create review tags once
+    const { forReviewTagId, signReviewTagId } = await fetchMutation(api.sync.getOrCreateReviewTags, {})
+
+    // Build category groupType map for sign mismatch detection
+    const categoryGroupTypes = new Map(categories.map((c) => [c.id, c.groupType]))
+
     for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
       const batch = transactions.slice(i, i + BATCH_SIZE)
 
       logInfo(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(transactions.length / BATCH_SIZE)}...`)
 
       // Single LLM call for the batch
-      const batchResults = await categorizeTransactionsBatch(
-        batch as TransactionForBatch[],
-        categories,
-        recentHistory as any,
-      )
+      const batchResults = await categorizeTransactionsBatch(batch as TransactionForBatch[], categories, recentHistory)
 
-      // Apply categorizations and add for-review tag
-      // Ensure both review tags exist (once per batch)
-      const [forReviewTag, signReviewTag] = await Promise.all([
-        prisma.tag.upsert({
-          where: { name: "for-review" },
-          update: {},
-          create: { name: "for-review", color: "#fbbf24" },
-        }),
-        prisma.tag.upsert({
-          where: { name: "sign-review" },
-          update: {},
-          create: { name: "sign-review", color: "#f97316" },
-        }),
-      ])
-
-      // Build category groupType map for sign mismatch detection
-      const categoryGroupTypes = new Map(categories.map((c) => [c.id, c.groupType]))
-
+      // Apply categorizations
       for (const tx of batch) {
         const result = batchResults.get(tx.id)
         if (result && result.categoryId) {
-          const tagsToConnect: { tagId: string }[] = [{ tagId: forReviewTag.id }]
+          const tagIds: Id<"tags">[] = [forReviewTagId]
 
           // Check for sign mismatch
-          const groupType = categoryGroupTypes.get(result.categoryId)
-          const amount = tx.amount.toNumber()
-          const hasSignMismatch = (groupType === "INCOME" && amount > 0) || (groupType === "EXPENSES" && amount < 0)
+          const groupType = categoryGroupTypes.get(result.categoryId as Id<"categories">)
+          const hasSignMismatch = detectSignMismatch(tx.amount, groupType ?? null)
 
           if (hasSignMismatch) {
-            tagsToConnect.push({ tagId: signReviewTag.id })
+            tagIds.push(signReviewTagId)
             logInfo(`⚠️  Sign mismatch detected for transaction ${tx.id}`, {
               transactionId: tx.id,
               categoryId: result.categoryId,
             })
           }
 
-          await prisma.transaction.update({
-            where: { id: tx.id },
-            data: {
-              categoryId: result.categoryId,
-              subcategoryId: result.subcategoryId,
-              tags: {
-                connectOrCreate: tagsToConnect.map((tag) => ({
-                  where: {
-                    transactionId_tagId: {
-                      transactionId: tx.id,
-                      tagId: tag.tagId,
-                    },
-                  },
-                  create: {
-                    tagId: tag.tagId,
-                  },
-                })),
-              },
-            },
+          await fetchMutation(api.sync.applyCategorization, {
+            transactionId: tx.id as Id<"transactions">,
+            categoryId: result.categoryId as Id<"categories">,
+            subcategoryId: result.subcategoryId ? (result.subcategoryId as Id<"subcategories">) : undefined,
+            tagIds,
           })
           categorizedCount++
         } else {

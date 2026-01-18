@@ -16,12 +16,18 @@
 
 import { tool } from "ai"
 import { z } from "zod"
-import { getAllTransactions } from "@/lib/db/queries"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
 import { getTransactionDate, isTransactionInDateRange, getTransactionMonth } from "@/lib/utils/transaction-date"
 import { logInfo, logError } from "@/lib/utils/logger"
 
-// Type for a single transaction from getAllTransactions
-type Transaction = Awaited<ReturnType<typeof getAllTransactions>>[number]
+// Type for a single transaction from Convex getAll
+type Transaction = Awaited<ReturnType<typeof fetchQuery<typeof api.transactions.getAll>>>[number]
+
+// Helper to fetch all transactions from Convex
+async function getAllTransactions() {
+  return fetchQuery(api.transactions.getAll)
+}
 
 /**
  * Get transactions within a date range with optional filters

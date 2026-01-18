@@ -1,31 +1,30 @@
-import { prisma } from "@/lib/db/prisma"
-import { CategoryGroupType } from "@prisma/generated"
+import { fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import { logError } from "@/lib/utils/logger"
 import { apiSuccess, apiErrors } from "@/lib/api/response"
+
+type GroupType = "EXPENSES" | "INCOME" | "INVESTMENT" | "TRANSFER" | null
 
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
     const { updates } = body as {
-      updates: Array<{ id: string; groupType: CategoryGroupType | null; displayOrder: number | null }>
+      updates: Array<{ id: string; groupType: GroupType; displayOrder: number | null }>
     }
 
     if (!updates || !Array.isArray(updates)) {
       return apiErrors.badRequest("Invalid updates format")
     }
 
-    // Update categories in a transaction
-    await prisma.$transaction(
-      updates.map((update) =>
-        prisma.category.update({
-          where: { id: update.id },
-          data: {
-            groupType: update.groupType,
-            displayOrder: update.displayOrder,
-          },
-        }),
-      ),
-    )
+    // Convert to Convex format and call mutation
+    await fetchMutation(api.categories.updateOrder, {
+      updates: updates.map((update) => ({
+        id: update.id as Id<"categories">,
+        groupType: update.groupType,
+        displayOrder: update.displayOrder ?? undefined,
+      })),
+    })
 
     return apiSuccess({ updated: true })
   } catch (error) {

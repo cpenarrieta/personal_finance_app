@@ -1,10 +1,11 @@
 /**
  * Tag-related queries with Next.js 16+ caching
+ * Uses Convex for data fetching
  */
 
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../convex/_generated/api"
 import { cacheTag, cacheLife } from "next/cache"
-import type { TagForClient } from "@/types"
 
 /**
  * Get all tags
@@ -15,16 +16,7 @@ export async function getAllTags() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("tags")
 
-  return prisma.tag.findMany({
-    select: {
-      id: true,
-      name: true,
-      color: true,
-      created_at_string: true, // Generated column
-      updated_at_string: true, // Generated column
-    },
-    orderBy: { name: "asc" },
-  }) as Promise<TagForClient[]>
+  return fetchQuery(api.tags.getAll)
 }
 
 /**
@@ -36,12 +28,5 @@ export async function getAllTagsWithCounts() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("tags")
 
-  return prisma.tag.findMany({
-    include: {
-      _count: {
-        select: { transactions: true },
-      },
-    },
-    orderBy: { name: "asc" },
-  })
+  return fetchQuery(api.tags.getAllWithCounts)
 }

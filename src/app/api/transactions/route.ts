@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../../convex/_generated/api"
+import type { Id } from "../../../../convex/_generated/dataModel"
 import { createTransactionSchema } from "@/types/api"
 import { safeParseRequestBody } from "@/types/api"
-import { Prisma } from "@prisma/generated"
-import { nanoid } from "nanoid"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logError } from "@/lib/utils/logger"
 import { apiSuccess, apiErrors } from "@/lib/api/response"
@@ -17,72 +17,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 500) // Max 500
 
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        isSplit: false, // Filter out parent transactions that have been split
-      },
-      orderBy: { datetime: "desc" },
-      take: limit,
-      select: {
-        id: true,
-        plaidTransactionId: true,
-        accountId: true,
-        amount_number: true,
-        isoCurrencyCode: true,
-        datetime: true,
-        authorizedDatetime: true,
-        pending: true,
-        merchantName: true,
-        name: true,
-        plaidCategory: true,
-        plaidSubcategory: true,
-        paymentChannel: true,
-        logoUrl: true,
-        categoryIconUrl: true,
-        categoryId: true,
-        subcategoryId: true,
-        notes: true,
-        isSplit: true,
-        isManual: true,
-        created_at_string: true,
-        updated_at_string: true,
-        account: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            mask: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-            groupType: true,
-          },
-        },
-        subcategory: {
-          select: {
-            id: true,
-            categoryId: true,
-            name: true,
-            imageUrl: true,
-          },
-        },
-        tags: {
-          select: {
-            tag: {
-              select: {
-                id: true,
-                name: true,
-                color: true,
-              },
-            },
-          },
-        },
-      },
-    })
+    const transactions = await fetchQuery(api.transactions.getRecent, { limit })
 
     return apiSuccess({ transactions, count: transactions.length })
   } catch (error) {
@@ -119,82 +54,43 @@ export async function POST(req: NextRequest) {
     } = parseResult.data
 
     // Verify the account exists
-    const account = await prisma.plaidAccount.findUnique({
-      where: { id: accountId },
-    })
+    const account = await fetchQuery(api.accounts.getById, { id: accountId as Id<"accounts"> })
 
     if (!account) {
       return apiErrors.notFound("Account")
     }
 
-    // Generate a unique plaidTransactionId for manual transactions
-    // Using "manual_" prefix to distinguish from Plaid IDs
-    const plaidTransactionId = `manual_${nanoid()}`
-
-    // Build transaction data object with proper typing
-    const transactionData: Prisma.TransactionCreateInput = {
-      plaidTransactionId,
-      account: {
-        connect: { id: accountId },
-      },
+    // Create the transaction using Convex mutation
+    const transactionId = await fetchMutation(api.transactions.create, {
+      accountId: accountId as Id<"accounts">,
       name,
-      amount: new Prisma.Decimal(amount),
-      date: new Date(date),
-      datetime: date, // Store as string (ISO format)
+      amount,
+      date,
       pending,
-      merchantName: merchantName || null,
-      isoCurrencyCode: isoCurrencyCode || null,
-      authorizedDate: authorizedDate ? new Date(authorizedDate) : null,
-      authorizedDatetime: authorizedDate || null, // Store as string (ISO format)
-      plaidCategory: plaidCategory || null,
-      plaidSubcategory: plaidSubcategory || null,
-      paymentChannel: paymentChannel || null,
-      notes: notes || null,
-      isSplit: false,
-      isManual: true, // Mark manual transactions
-    }
-
-    // Handle category relation
-    if (categoryId) {
-      transactionData.category = { connect: { id: categoryId } }
-    }
-
-    // Handle subcategory relation
-    if (subcategoryId) {
-      transactionData.subcategory = {
-        connect: { id: subcategoryId },
-      }
-    }
-
-    // Create the transaction
-    const newTransaction = await prisma.transaction.create({
-      data: transactionData,
+      merchantName: merchantName || undefined,
+      isoCurrencyCode: isoCurrencyCode || undefined,
+      authorizedDate: authorizedDate || undefined,
+      plaidCategory: plaidCategory || undefined,
+      plaidSubcategory: plaidSubcategory || undefined,
+      paymentChannel: paymentChannel || undefined,
+      categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
+      subcategoryId: subcategoryId ? (subcategoryId as Id<"subcategories">) : undefined,
+      notes: notes || undefined,
+      tagIds: tagIds ? (tagIds as Id<"tags">[]) : undefined,
     })
-
-    // Handle tags if provided
-    if (tagIds && tagIds.length > 0) {
-      await prisma.transactionTag.createMany({
-        data: tagIds.map((tagId) => ({
-          transactionId: newTransaction.id,
-          tagId,
-        })),
-      })
-    }
 
     // Invalidate transaction and dashboard caches
     revalidateTag("transactions", "max")
     revalidateTag("dashboard", "max")
     revalidatePath("/", "layout") // Invalidate Router Cache
 
-    return apiSuccess(newTransaction, 201)
+    return apiSuccess({ id: transactionId }, 201)
   } catch (error) {
     logError("Error creating transaction:", error)
 
-    // Handle unique constraint violation for plaidTransactionId
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        return apiErrors.conflict("A transaction with this ID already exists")
-      }
+    // Handle duplicate error
+    if (error instanceof Error && error.message.includes("already exists")) {
+      return apiErrors.conflict("A transaction with this ID already exists")
     }
 
     return apiErrors.internalError("Failed to create transaction")

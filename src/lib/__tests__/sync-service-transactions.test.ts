@@ -23,6 +23,7 @@ import {
   mockTransactionsSyncResponseWithModified,
   mockTransactionsSyncResponseWithRemoved,
 } from "./__mocks__/test-data"
+import type { Id } from "../../../convex/_generated/dataModel"
 
 // Mock modules
 jest.mock("../api/plaid")
@@ -47,7 +48,7 @@ describe("syncItemTransactions - Basic Path", () => {
     transactionsSync: jest.fn(),
   }
 
-  const itemId = "test-item-id"
+  const itemId = "test-item-id" as Id<"items">
   const accessToken = "test-access-token"
 
   beforeEach(() => {

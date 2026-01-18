@@ -12,6 +12,7 @@ import { syncItemTransactions, syncItemInvestments } from "../sync/sync-service"
 import * as plaidModule from "../api/plaid"
 import * as prismaModule from "../db/prisma"
 import { mockPlaidAccount, mockInvestmentsHoldingsResponse } from "./__mocks__/test-data"
+import type { Id } from "../../../convex/_generated/dataModel"
 
 // Mock modules
 jest.mock("../api/plaid")
@@ -53,7 +54,7 @@ describe("Sync Service Error Handling", () => {
     investmentsTransactionsGet: jest.fn(),
   }
 
-  const itemId = "test-item-id"
+  const itemId = "test-item-id" as Id<"items">
   const accessToken = "test-access-token"
 
   beforeEach(() => {
@@ -89,7 +90,6 @@ describe("Sync Service Error Handling", () => {
       // Arrange
       const plaidError = new Error("ITEM_NOT_FOUND")
       mockPlaidClient.investmentsHoldingsGet.mockRejectedValueOnce(plaidError)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([])
 
       // Act & Assert
@@ -101,7 +101,6 @@ describe("Sync Service Error Handling", () => {
       mockPlaidClient.investmentsHoldingsGet.mockResolvedValueOnce(mockInvestmentsHoldingsResponse)
       const plaidError = new Error("RATE_LIMIT_EXCEEDED")
       mockPlaidClient.investmentsTransactionsGet.mockRejectedValueOnce(plaidError)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(null)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue({})
@@ -134,7 +133,6 @@ describe("Sync Service Error Handling", () => {
           has_more: false,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
       const dbError = new Error("Database connection failed")
@@ -176,7 +174,6 @@ describe("Sync Service Error Handling", () => {
           has_more: false,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       const dbError = new Error("Foreign key constraint failed")
       ;(prismaModule.prisma.transaction.deleteMany as jest.Mock).mockRejectedValueOnce(dbError)
@@ -196,7 +193,6 @@ describe("Sync Service Error Handling", () => {
           total_investment_transactions: 0,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(null)
       const dbError = new Error("Database write failed")
@@ -228,7 +224,6 @@ describe("Sync Service Error Handling", () => {
           total_investment_transactions: 0,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([mockDbAccount])
       ;(prismaModule.prisma.security.findUnique as jest.Mock).mockResolvedValue(mockDbSecurity)
       ;(prismaModule.prisma.security.upsert as jest.Mock).mockResolvedValue(mockDbSecurity)
@@ -257,7 +252,6 @@ describe("Sync Service Error Handling", () => {
       // Arrange
       const networkError = new Error("ECONNREFUSED")
       mockPlaidClient.investmentsHoldingsGet.mockRejectedValueOnce(networkError)
-
       ;(prismaModule.prisma.plaidAccount.findMany as jest.Mock).mockResolvedValue([])
 
       // Act & Assert
@@ -287,7 +281,6 @@ describe("Sync Service Error Handling", () => {
           has_more: false,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockRejectedValueOnce(new Error("account_id is required"))
 
@@ -316,7 +309,6 @@ describe("Sync Service Error Handling", () => {
           has_more: false,
         },
       })
-
       ;(prismaModule.prisma.plaidAccount.upsert as jest.Mock).mockResolvedValue({})
       ;(prismaModule.prisma.transaction.findFirst as jest.Mock).mockResolvedValue(null)
       ;(prismaModule.prisma.transaction.upsert as jest.Mock).mockResolvedValue({})

@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/db/prisma"
+import { fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logInfo, logError } from "@/lib/utils/logger"
 import { apiSuccess, apiErrors } from "@/lib/api/response"
@@ -18,9 +20,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Update item status to ACTIVE (login repaired)
-    await prisma.item.update({
-      where: { id: itemId },
-      data: { status: "ACTIVE" },
+    await fetchMutation(api.items.updateStatus, {
+      id: itemId as Id<"items">,
+      status: "ACTIVE",
     })
 
     // Invalidate caches so UI updates immediately

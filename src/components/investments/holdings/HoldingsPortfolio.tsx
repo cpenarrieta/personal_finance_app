@@ -41,7 +41,9 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
   const uniqueAccounts = useMemo(() => {
     const accounts = new Map<string, string>()
     holdings.forEach((h) => {
-      accounts.set(h.account.id, h.account.name)
+      if (h.account) {
+        accounts.set(h.account.id, h.account.name)
+      }
     })
     return Array.from(accounts.entries())
   }, [holdings])
@@ -52,14 +54,15 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
 
     // Account filter
     if (selectedAccount !== "all") {
-      filtered = filtered.filter((h) => h.account.id === selectedAccount)
+      filtered = filtered.filter((h) => h.account?.id === selectedAccount)
     }
 
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        (h) => h.security.tickerSymbol?.toLowerCase().includes(query) || h.security.name?.toLowerCase().includes(query),
+        (h) =>
+          h.security?.tickerSymbol?.toLowerCase().includes(query) || h.security?.name?.toLowerCase().includes(query),
       )
     }
 
@@ -100,7 +103,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
     const groups = new Map<string, typeof enhancedHoldings>()
 
     enhancedHoldings.forEach((h) => {
-      const key = h.security.tickerSymbol || "Unknown"
+      const key = h.security?.tickerSymbol || "Unknown"
 
       if (!groups.has(key)) {
         groups.set(key, [])
@@ -202,7 +205,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
     const tickerMap = new Map<string, number>()
 
     enhancedHoldings.forEach((h) => {
-      const ticker = h.security.tickerSymbol || "Unknown"
+      const ticker = h.security?.tickerSymbol || "Unknown"
       tickerMap.set(ticker, (tickerMap.get(ticker) || 0) + h.marketValue)
     })
 
@@ -320,7 +323,9 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           <div className="text-sm text-muted-foreground mb-1">Best Performer</div>
           {portfolioStats.bestPerformer ? (
             <>
-              <div className="text-lg font-bold text-success">{portfolioStats.bestPerformer.security.tickerSymbol}</div>
+              <div className="text-lg font-bold text-success">
+                {portfolioStats.bestPerformer.security?.tickerSymbol}
+              </div>
               <div className="text-sm text-success">+{portfolioStats.bestPerformer.gainLossPercent.toFixed(2)}%</div>
             </>
           ) : (
@@ -333,7 +338,7 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
           {portfolioStats.worstPerformer ? (
             <>
               <div className="text-lg font-bold text-destructive">
-                {portfolioStats.worstPerformer.security.tickerSymbol}
+                {portfolioStats.worstPerformer.security?.tickerSymbol}
               </div>
               <div className="text-sm text-destructive">
                 {portfolioStats.worstPerformer.gainLossPercent.toFixed(2)}%

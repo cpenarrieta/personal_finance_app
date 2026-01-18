@@ -1,8 +1,10 @@
 /**
  * Weekly summary queries with Next.js 16+ caching
+ * Uses Convex for data fetching
  */
 
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../convex/_generated/api"
 import { cacheTag, cacheLife } from "next/cache"
 
 /**
@@ -13,12 +15,5 @@ export async function getLatestWeeklySummary() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("weekly-summary", "dashboard")
 
-  return prisma.weeklySummary.findFirst({
-    orderBy: { generatedAt: "desc" },
-    select: {
-      id: true,
-      generated_at_string: true,
-      summary: true,
-    },
-  })
+  return fetchQuery(api.weeklySummary.getLatest)
 }

@@ -1,7 +1,5 @@
-import { Suspense } from "react"
 import type { Metadata } from "next"
-import { CategoryOrderAsync } from "@/components/settings/CategoryOrderAsync"
-import { CategoryOrderSkeleton } from "@/components/settings/CategoryOrderSkeleton"
+import { CategoryOrderConvex } from "@/components/settings/CategoryOrderConvex"
 
 export const metadata: Metadata = {
   title: "Manage Category Order",
@@ -11,7 +9,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function CategoryOrderPage() {
+export default function CategoryOrderPage() {
   return (
     <div>
       <div className="mb-6">
@@ -19,9 +17,7 @@ export default async function CategoryOrderPage() {
         <p className="text-muted-foreground mt-1">Organize how categories appear in dropdown lists</p>
       </div>
 
-      <Suspense fallback={<CategoryOrderSkeleton />}>
-        <CategoryOrderAsync />
-      </Suspense>
+      <CategoryOrderConvex />
     </div>
   )
 }

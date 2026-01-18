@@ -1,25 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/db/prisma"
-import { Prisma } from "@prisma/generated"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../../../convex/_generated/api"
+import type { Id } from "../../../../../../convex/_generated/dataModel"
 import { logError } from "@/lib/utils/logger"
-
-// Type for transaction with all relations we need
-type TransactionWithRelations = Prisma.TransactionGetPayload<{
-  include: {
-    account: {
-      include: {
-        item: true
-      }
-    }
-    category: true
-    subcategory: true
-    tags: {
-      include: {
-        tag: true
-      }
-    }
-  }
-}>
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,35 +18,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No transactions to export" }, { status: 400 })
     }
 
-    // Fetch only the specified transactions with full relations
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        id: { in: transactionIds },
-      },
-      include: {
-        account: {
-          include: {
-            item: true,
-          },
-        },
-        category: true,
-        subcategory: true,
-        tags: {
-          include: {
-            tag: true,
-          },
-        },
-      },
-      orderBy: { datetime: "desc" },
+    // Fetch transactions with full relations
+    const rawTransactions = await fetchQuery(api.transactions.getByIds, {
+      ids: transactionIds as Id<"transactions">[],
     })
 
-    // Maintain the order from the frontend (important for sorting)
-    const transactionsMap = new Map<string, TransactionWithRelations>(
-      transactions.map((t: TransactionWithRelations) => [t.id, t]),
-    )
+    // Filter out nulls
+    const transactions = rawTransactions.filter((t: any): t is NonNullable<typeof t> => t !== null)
+
+    // Maintain the order from the frontend
+    const transactionsMap = new Map(transactions.map((t) => [t.id, t]))
     const orderedTransactions = transactionIds
-      .map((id) => transactionsMap.get(id))
-      .filter((t): t is TransactionWithRelations => t !== undefined)
+      .map((id: string) => transactionsMap.get(id))
+      .filter((t): t is (typeof transactions)[number] => t !== undefined)
 
     // CSV Headers
     const headers = [
@@ -104,7 +71,7 @@ export async function POST(req: NextRequest) {
     // Convert transactions to CSV rows
     const csvRows = orderedTransactions.map((transaction) => {
       // Collect tag names
-      const tagNames = transaction.tags.map((tt) => tt.tag.name).join("; ")
+      const tagNames = transaction.tags.map((tag: { name: string }) => tag.name).join("; ")
 
       return [
         transaction.id,
@@ -119,7 +86,7 @@ export async function POST(req: NextRequest) {
         transaction.account?.mask || "",
         transaction.amount_number?.toString() || "",
         transaction.isoCurrencyCode || "",
-        transaction.datetime.split("T")[0], // Format as YYYY-MM-DD (already ISO string)
+        transaction.datetime.split("T")[0], // Format as YYYY-MM-DD
         transaction.authorizedDatetime ? transaction.authorizedDatetime.split("T")[0] : "",
         transaction.pending ? "Yes" : "No",
         transaction.merchantName || "",
@@ -137,8 +104,8 @@ export async function POST(req: NextRequest) {
         transaction.originalTransactionId || "",
         transaction.logoUrl || "",
         transaction.categoryIconUrl || "",
-        transaction.createdAt.toISOString(),
-        transaction.updatedAt.toISOString(),
+        new Date(transaction.createdAt).toISOString(),
+        new Date(transaction.updatedAt).toISOString(),
       ].map((field) => {
         // Escape fields containing commas, quotes, or newlines
         const stringField = String(field)

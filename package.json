@@ -32,7 +32,6 @@
     "sync": "tsx scripts/sync.ts",
     "sync:transactions": "tsx scripts/sync-transactions.ts",
     "sync:investments": "tsx scripts/sync-investments.ts",
-    "sync:fresh": "tsx scripts/sync-from-scratch.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -63,6 +62,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "convex": "^1.31.5",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "js-cookie": "^3.0.5",

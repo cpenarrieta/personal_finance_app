@@ -1,10 +1,9 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../../convex/_generated/api"
+import type { Id } from "../../../../../../convex/_generated/dataModel"
 import { z } from "zod"
 import { safeParseRequestBody } from "@/types/api"
-import { Prisma } from "@prisma/generated"
-
-const Decimal = Prisma.Decimal
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logError } from "@/lib/utils/logger"
 import { apiSuccess, apiErrors } from "@/lib/api/response"
@@ -36,8 +35,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { splits } = parseResult.data
 
     // Fetch the original transaction
-    const originalTransaction = await prisma.transaction.findUnique({
-      where: { id },
+    const originalTransaction = await fetchQuery(api.transactions.getById, {
+      id: id as Id<"transactions">,
     })
 
     if (!originalTransaction) {
@@ -51,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Validate that split amounts sum to original amount (with tolerance for rounding)
     const totalSplitAmount = splits.reduce((sum, split) => sum + split.amount, 0)
-    const originalAmount = Math.abs(originalTransaction.amount.toNumber())
+    const originalAmount = Math.abs(originalTransaction.amount_number)
     const difference = Math.abs(totalSplitAmount - originalAmount)
 
     if (difference > 0.02) {
@@ -62,86 +61,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       })
     }
 
-    // Ensure "ai-split" tag exists
-    const aiSplitTag = await prisma.tag.upsert({
-      where: { name: "ai-split" },
-      update: {},
-      create: {
-        name: "ai-split",
-        color: "#8b5cf6", // Purple color for AI splits
-      },
-    })
-
-    // Perform the split in a transaction
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      // Mark original transaction as split
-      const updatedOriginal = await tx.transaction.update({
-        where: { id },
-        data: {
-          isSplit: true,
-          tags: {
-            connectOrCreate: {
-              where: {
-                transactionId_tagId: {
-                  transactionId: id,
-                  tagId: aiSplitTag.id,
-                },
-              },
-              create: {
-                tagId: aiSplitTag.id,
-              },
-            },
-          },
-        },
-      })
-
-      // Create child transactions
-      const childTransactions = await Promise.all(
-        splits.map((split, index) => {
-          // Convert amount to Decimal, preserving the negative sign for expenses
-          const isExpense = originalTransaction.amount.toNumber() > 0
-          const splitAmount = new Decimal(split.amount)
-          const signedAmount = isExpense ? splitAmount : splitAmount.mul(-1)
-
-          return tx.transaction.create({
-            data: {
-              // Generate a unique plaidTransactionId for split children
-              plaidTransactionId: `${originalTransaction.plaidTransactionId}_ai_split_${index + 1}_${Date.now()}`,
-              accountId: originalTransaction.accountId,
-              amount: signedAmount,
-              isoCurrencyCode: originalTransaction.isoCurrencyCode,
-              date: originalTransaction.date,
-              datetime: originalTransaction.datetime,
-              authorizedDate: originalTransaction.authorizedDate,
-              authorizedDatetime: originalTransaction.authorizedDatetime,
-              pending: originalTransaction.pending,
-              merchantName: originalTransaction.merchantName,
-              name: split.description,
-              plaidCategory: originalTransaction.plaidCategory,
-              plaidSubcategory: originalTransaction.plaidSubcategory,
-              paymentChannel: originalTransaction.paymentChannel,
-              logoUrl: originalTransaction.logoUrl,
-              categoryIconUrl: originalTransaction.categoryIconUrl,
-              categoryId: split.categoryId,
-              subcategoryId: split.subcategoryId,
-              notes: split.reasoning || null,
-              parentTransactionId: originalTransaction.id,
-              originalTransactionId: originalTransaction.id,
-              isSplit: false,
-              tags: {
-                create: {
-                  tagId: aiSplitTag.id,
-                },
-              },
-            },
-          })
-        }),
-      )
-
-      return {
-        original: updatedOriginal,
-        children: childTransactions,
-      }
+    // Perform the AI split
+    const result = await fetchMutation(api.transactions.aiSplit, {
+      id: id as Id<"transactions">,
+      splits: splits.map((split) => ({
+        categoryId: split.categoryId as Id<"categories">,
+        subcategoryId: split.subcategoryId as Id<"subcategories"> | null,
+        amount: split.amount,
+        description: split.description,
+        reasoning: split.reasoning,
+      })),
     })
 
     // Invalidate transaction and dashboard caches

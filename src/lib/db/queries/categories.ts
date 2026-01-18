@@ -1,10 +1,11 @@
 /**
  * Category-related queries with Next.js 16+ caching
+ * Uses Convex for data fetching
  */
 
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../convex/_generated/api"
 import { cacheTag, cacheLife } from "next/cache"
-import type { CategoryForClient } from "@/types"
 
 /**
  * Get all categories with subcategories
@@ -15,29 +16,7 @@ export async function getAllCategories() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("categories")
 
-  return prisma.category.findMany({
-    select: {
-      id: true,
-      name: true,
-      imageUrl: true,
-      groupType: true,
-      displayOrder: true,
-      created_at_string: true, // Generated column
-      updated_at_string: true, // Generated column
-      subcategories: {
-        select: {
-          id: true,
-          categoryId: true,
-          name: true,
-          imageUrl: true,
-          created_at_string: true, // Generated column
-          updated_at_string: true, // Generated column
-        },
-        orderBy: { name: "asc" },
-      },
-    },
-    orderBy: [{ groupType: "asc" }, { displayOrder: "asc" }, { name: "asc" }],
-  }) as Promise<CategoryForClient[]>
+  return fetchQuery(api.categories.getAll)
 }
 
 /**
@@ -49,10 +28,7 @@ export async function getAllCategoriesForManagement() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("categories")
 
-  return prisma.category.findMany({
-    include: { subcategories: true },
-    orderBy: { name: "asc" },
-  })
+  return fetchQuery(api.categories.getAllForManagement)
 }
 
 /**
@@ -64,27 +40,6 @@ export async function getAllCategoriesForMoveTransactions() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("categories")
 
-  return prisma.category.findMany({
-    select: {
-      id: true,
-      name: true,
-      imageUrl: true,
-      groupType: true,
-      displayOrder: true,
-      created_at_string: true, // Generated column
-      updated_at_string: true, // Generated column
-      subcategories: {
-        select: {
-          id: true,
-          categoryId: true,
-          name: true,
-          imageUrl: true,
-          created_at_string: true, // Generated column
-          updated_at_string: true, // Generated column
-        },
-        orderBy: { name: "asc" },
-      },
-    },
-    orderBy: [{ groupType: "asc" }, { displayOrder: "asc" }, { name: "asc" }],
-  })
+  // Uses same query as getAllCategories
+  return fetchQuery(api.categories.getAll)
 }

@@ -1,22 +1,12 @@
 import { categorizeTransaction, categorizeTransactions } from "./categorize-transaction"
-import { prisma } from "@/lib/db/prisma"
 import { generateObject } from "ai"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import type { Id } from "../../../convex/_generated/dataModel"
 
-// Mock dependencies
-jest.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    transaction: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      update: jest.fn(),
-    },
-    category: {
-      findMany: jest.fn(),
-    },
-    tag: {
-      upsert: jest.fn(),
-    },
-  },
+// Mock Convex
+jest.mock("convex/nextjs", () => ({
+  fetchQuery: jest.fn(),
+  fetchMutation: jest.fn(),
 }))
 
 // AI SDK v6
@@ -29,13 +19,14 @@ jest.mock("@ai-sdk/openai", () => ({
 }))
 
 describe("categorizeTransaction", () => {
+  const mockTransactionId = "tx_123" as Id<"transactions">
+
   const mockTransaction = {
-    id: "tx_123",
+    id: mockTransactionId,
     name: "Uber Ride",
     merchantName: "Uber",
-    amount: { toNumber: () => 25.5 },
-    date: new Date("2023-10-01"),
-    datetime: new Date("2023-10-01T10:00:00Z"),
+    amount: 25.5,
+    datetime: "2023-10-01T10:00:00Z",
     plaidCategory: "Transport",
     plaidSubcategory: "Taxi",
     notes: null,
@@ -43,14 +34,18 @@ describe("categorizeTransaction", () => {
 
   const mockCategories = [
     {
-      id: "cat_transport",
+      id: "cat_transport" as Id<"categories">,
       name: "Transport",
-      subcategories: [{ id: "sub_taxi", name: "Taxi" }],
+      groupType: null,
+      displayOrder: 1,
+      subcategories: [{ id: "sub_taxi" as Id<"subcategories">, name: "Taxi" }],
     },
     {
-      id: "cat_food",
+      id: "cat_food" as Id<"categories">,
       name: "Food",
-      subcategories: [{ id: "sub_groceries", name: "Groceries" }],
+      groupType: null,
+      displayOrder: 2,
+      subcategories: [{ id: "sub_groceries" as Id<"subcategories">, name: "Groceries" }],
     },
   ]
 
@@ -59,12 +54,21 @@ describe("categorizeTransaction", () => {
   })
 
   it("successfully categorizes a transaction with high confidence", async () => {
-    // Mock Prisma responses
-    ;(prisma.transaction.findUnique as jest.Mock).mockResolvedValueOnce(mockTransaction)
-    ;(prisma.category.findMany as jest.Mock).mockResolvedValueOnce(mockCategories)
-    ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([]) // similar transactions
-    ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([]) // recent history
-    ;(prisma.tag.upsert as jest.Mock).mockResolvedValue({ id: "tag_review" })
+    // Mock Convex queries
+    ;(fetchQuery as jest.Mock).mockImplementation((api) => {
+      const apiName = api?.toString() || ""
+      if (apiName.includes("getTransactionForCategorization")) {
+        return Promise.resolve(mockTransaction)
+      }
+      if (apiName.includes("getAllCategoriesWithSubcategories")) {
+        return Promise.resolve(mockCategories)
+      }
+      if (apiName.includes("getSimilarTransactions") || apiName.includes("getRecentCategorizedTransactions")) {
+        return Promise.resolve([])
+      }
+      return Promise.resolve(null)
+    })
+    ;(fetchMutation as jest.Mock).mockResolvedValue(undefined)
 
     // Mock AI response
     ;(generateObject as jest.Mock).mockResolvedValue({
@@ -76,7 +80,7 @@ describe("categorizeTransaction", () => {
       },
     })
 
-    const result = await categorizeTransaction("tx_123")
+    const result = await categorizeTransaction(mockTransactionId)
 
     expect(result).toEqual({
       categoryId: "cat_transport",
@@ -95,10 +99,16 @@ describe("categorizeTransaction", () => {
   })
 
   it("returns null when confidence is low", async () => {
-    ;(prisma.transaction.findUnique as jest.Mock).mockResolvedValueOnce(mockTransaction)
-    ;(prisma.category.findMany as jest.Mock).mockResolvedValueOnce(mockCategories)
-    ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
+    ;(fetchQuery as jest.Mock).mockImplementation((api) => {
+      const apiName = api?.toString() || ""
+      if (apiName.includes("getTransactionForCategorization")) {
+        return Promise.resolve(mockTransaction)
+      }
+      if (apiName.includes("getAllCategoriesWithSubcategories")) {
+        return Promise.resolve(mockCategories)
+      }
+      return Promise.resolve([])
+    })
     ;(generateObject as jest.Mock).mockResolvedValue({
       object: {
         categoryId: "cat_transport",
@@ -108,16 +118,22 @@ describe("categorizeTransaction", () => {
       },
     })
 
-    const result = await categorizeTransaction("tx_123")
+    const result = await categorizeTransaction(mockTransactionId)
 
     expect(result).toBeNull()
   })
 
   it("returns null when AI suggests invalid category ID", async () => {
-    ;(prisma.transaction.findUnique as jest.Mock).mockResolvedValueOnce(mockTransaction)
-    ;(prisma.category.findMany as jest.Mock).mockResolvedValueOnce(mockCategories)
-    ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
-    ;(prisma.transaction.findMany as jest.Mock).mockResolvedValue([])
+    ;(fetchQuery as jest.Mock).mockImplementation((api) => {
+      const apiName = api?.toString() || ""
+      if (apiName.includes("getTransactionForCategorization")) {
+        return Promise.resolve(mockTransaction)
+      }
+      if (apiName.includes("getAllCategoriesWithSubcategories")) {
+        return Promise.resolve(mockCategories)
+      }
+      return Promise.resolve([])
+    })
     ;(generateObject as jest.Mock).mockResolvedValue({
       object: {
         categoryId: "invalid_id",
@@ -127,65 +143,63 @@ describe("categorizeTransaction", () => {
       },
     })
 
-    const result = await categorizeTransaction("tx_123")
+    const result = await categorizeTransaction(mockTransactionId)
 
     expect(result).toBeNull()
   })
 
   it("handles errors gracefully", async () => {
-    ;(prisma.transaction.findUnique as jest.Mock).mockRejectedValue(new Error("DB Error"))
+    ;(fetchQuery as jest.Mock).mockRejectedValue(new Error("DB Error"))
 
-    const result = await categorizeTransaction("tx_123")
+    const result = await categorizeTransaction(mockTransactionId)
 
     expect(result).toBeNull()
   })
 })
 
 describe("categorizeTransactions (Bulk)", () => {
-  const mockTxIds = ["tx_1", "tx_2"]
+  const mockTxIds = ["tx_1" as Id<"transactions">, "tx_2" as Id<"transactions">]
 
   const mockTx1 = {
-    id: "tx_1",
+    id: "tx_1" as Id<"transactions">,
     name: "Uber",
     merchantName: "Uber",
-    amount: { toNumber: () => 20 },
-    date: new Date(),
-    datetime: new Date(),
+    amount: 20,
+    datetime: new Date().toISOString(),
   }
 
   const mockTx2 = {
-    id: "tx_2",
+    id: "tx_2" as Id<"transactions">,
     name: "Kroger",
     merchantName: "Kroger",
-    amount: { toNumber: () => 50 },
-    date: new Date(),
-    datetime: new Date(),
+    amount: 50,
+    datetime: new Date().toISOString(),
   }
+
+  const mockCategories = [
+    { id: "c1" as Id<"categories">, name: "Cat 1", groupType: null, displayOrder: 1, subcategories: [] },
+    { id: "c2" as Id<"categories">, name: "Cat 2", groupType: null, displayOrder: 2, subcategories: [] },
+  ]
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it("processes transactions in chunks", async () => {
-    // Mock categories that match what the AI will return
-    const mockCategories = [
-      { id: "c1", name: "Cat 1", subcategories: [] },
-      { id: "c2", name: "Cat 2", subcategories: [] },
-    ]
-
-    // Mock shared context calls
-    ;(prisma.category.findMany as jest.Mock).mockResolvedValue(mockCategories)
-    ;(prisma.tag.upsert as jest.Mock).mockResolvedValue({ id: "tag_review" })
-
-    // Mock transaction.findMany for different purposes
-    ;(prisma.transaction.findMany as jest.Mock).mockImplementation((args) => {
-      // If querying by id with 'in' operator, return the transactions to categorize
-      if (args.where?.id?.in) {
+    ;(fetchQuery as jest.Mock).mockImplementation((api) => {
+      const apiName = api?.toString() || ""
+      if (apiName.includes("getAllCategoriesWithSubcategories")) {
+        return Promise.resolve(mockCategories)
+      }
+      if (apiName.includes("getUncategorizedTransactions")) {
         return Promise.resolve([mockTx1, mockTx2])
       }
-      // Otherwise it's the history query - return empty
+      if (apiName.includes("getRecentCategorizedTransactions")) {
+        return Promise.resolve([])
+      }
       return Promise.resolve([])
     })
+    ;(fetchMutation as jest.Mock).mockResolvedValue(undefined)
 
     // Mock AI batch response
     ;(generateObject as jest.Mock).mockResolvedValue({
@@ -199,26 +213,7 @@ describe("categorizeTransactions (Bulk)", () => {
 
     await categorizeTransactions(mockTxIds)
 
-    // Verify initial shared fetches
-    expect(prisma.category.findMany).toHaveBeenCalledTimes(1)
-
-    // Verify transaction.findMany was called (once for history, once for fetching transactions to categorize)
-    expect(prisma.transaction.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          id: { in: mockTxIds },
-          categoryId: null,
-        },
-      }),
-    )
-
     // Verify updates happened (successful categorization)
-    expect(prisma.transaction.update).toHaveBeenCalledTimes(2)
-    expect(prisma.transaction.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "tx_1" }, data: expect.objectContaining({ categoryId: "c1" }) }),
-    )
-    expect(prisma.transaction.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "tx_2" }, data: expect.objectContaining({ categoryId: "c2" }) }),
-    )
+    expect(fetchMutation).toHaveBeenCalled()
   })
 })

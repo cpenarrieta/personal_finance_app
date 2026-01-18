@@ -8,9 +8,9 @@ This document outlines recommended refactoring improvements for the personal fin
 
 | Status | Count | Items |
 |--------|-------|-------|
-| ✅ Completed | 4 | ChartsView split, Server actions extraction, Chart constants, Hook naming fix |
+| ✅ Completed | 5 | ChartsView split, Server actions extraction, Chart constants, Hook naming fix, Convex migration |
 | 🔄 In Progress | 0 | - |
-| ⏳ Pending | 14 | Remaining items below |
+| ⏳ Pending | 10 | Remaining items below |
 
 ### Completed Items
 
@@ -51,12 +51,6 @@ Moved inline server actions from component files to dedicated action files with 
 - `src/components/settings/ManageCategoriesAsync.tsx` - Now imports from action file
 - `src/components/settings/ManageTagsAsync.tsx` - Now imports from action file
 
-**Validation schemas added:**
-- `createCategorySchema` with isTransferCategory field
-- `updateCategorySchema`, `deleteCategorySchema`
-- `createSubcategorySchema`, `deleteSubcategorySchema`
-- `updateTagSchema`, `deleteTagSchema`
-
 ---
 
 #### ✅ 8. Chart Colors Using CSS Variables (High) - DONE
@@ -83,9 +77,20 @@ All hooks now follow camelCase naming convention.
 
 ---
 
+#### ✅ Convex Migration - DONE
+Migrated from Prisma to Convex for all data operations (except auth).
+
+**Changes:**
+- All queries/mutations now in `convex/*.ts`
+- Real-time updates via Convex subscriptions
+- Removed Prisma-based query files
+- Auth still uses Prisma for User, Session, Account, Verification tables
+
+---
+
 ## Remaining Items
 
-### Critical Priority
+### High Priority
 
 ### 2. Consolidate Duplicate Chart Directories
 
@@ -117,8 +122,6 @@ src/components/charts/
 
 ---
 
-### High Priority
-
 ### 4. Standardize Error Handling in API Routes
 
 **Problem**: Error responses vary wildly across routes.
@@ -143,87 +146,6 @@ export function apiError(message: string, status = 500, code?: string) {
 
 export function apiSuccess<T>(data: T) {
   return NextResponse.json({ success: true, data })
-}
-```
-
-**Files to update**: All 25 API routes in `src/app/api/`
-
----
-
-### 5. Complete Query File Organization
-
-**Problem**: Query files are inconsistently split with no clear pattern.
-
-**Current state**:
-- `queries.ts` (709 lines) - transactions, accounts, categories, tags, holdings, investments
-- `queries-transactions.ts` (125 lines) - only `getTransactionById`
-- `queries-settings.ts` (74 lines) - management queries
-
-**Solution**: Split by domain:
-
-```
-src/lib/db/
-├── queries/
-│   ├── index.ts                    # Re-exports all
-│   ├── transactions.ts             # All transaction queries
-│   ├── accounts.ts                 # All account queries
-│   ├── categories.ts               # All category queries
-│   ├── tags.ts                     # All tag queries
-│   ├── investments.ts              # Holdings, securities, investment transactions
-│   └── settings.ts                 # Management-specific queries
-└── prisma.ts
-```
-
----
-
-### 6. Extract Shared Transaction Select Statement
-
-**Problem**: The 65+ line transaction select object is repeated in 3+ queries.
-
-**Files affected**:
-- `src/lib/db/queries.ts:24-89` (getAllTransactions)
-- `src/lib/db/queries.ts:401-467` (getTransactionsForAccount)
-- `src/lib/db/queries-transactions.ts:20-124` (getTransactionById)
-
-**Solution**: Create shared select constant:
-
-```typescript
-// src/lib/db/selects.ts
-export const TRANSACTION_SELECT = {
-  id: true,
-  plaidTransactionId: true,
-  accountId: true,
-  amount_number: true,
-  // ... all 30+ fields
-  account: { select: ACCOUNT_SELECT_MINIMAL },
-  category: { select: CATEGORY_SELECT },
-  subcategory: { select: SUBCATEGORY_SELECT },
-  tags: { select: TAG_SELECT },
-} as const
-```
-
----
-
-### 7. Fix Duplicate Transaction Split Logic
-
-**Problem**: Nearly identical split logic in two routes.
-
-**Files**:
-- `src/app/api/transactions/[id]/split/route.ts` (lines 77-122)
-- `src/app/api/transactions/[id]/ai-split/route.ts` (lines 85-155)
-
-**Solution**: Extract to service:
-
-```typescript
-// src/lib/transactions/split-service.ts
-export async function splitTransaction(
-  originalId: string,
-  splits: SplitItem[],
-  options?: { applyTagsToChildren?: boolean }
-) {
-  return prisma.$transaction(async (tx) => {
-    // Shared validation and creation logic
-  })
 }
 ```
 
@@ -408,21 +330,9 @@ function logToConsole(
 
 ---
 
-### 18. Document Minimal Utility Directories
-
-**Problem**: Some directories have only 1 file, unclear if intentional.
-
-- `src/lib/categories/` - only `images.ts`
-- `src/lib/cache/` - only `reconnection-cache.ts`
-
-**Solution**: Either consolidate into `utils/` or add README explaining future expansion plans.
-
----
-
 ## Quick Wins (Can Do Now)
 
 1. ~~Move hardcoded colors to CSS variables~~ ✅ Done
 2. ~~Rename `use-mobile.ts` → `useMobile.ts`~~ ✅ Done
-3. Extract `TRANSACTION_SELECT` constant (1 hour)
-4. Add index.ts to component directories (30 minutes)
-5. Create `src/lib/constants.ts` for sync config (45 minutes)
+3. Add index.ts to component directories (30 minutes)
+4. Create `src/lib/constants.ts` for sync config (45 minutes)
