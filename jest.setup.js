@@ -104,3 +104,18 @@ jest.mock('@prisma/generated/browser', () => ({
     INVESTMENT: 'INVESTMENT',
   },
 }));
+
+// Mock convex/react (npm package)
+jest.mock('convex/react', () => ({
+  useQuery: jest.fn(),
+  useMutation: jest.fn(),
+  useConvex: jest.fn(),
+  ConvexProvider: ({ children }) => children,
+}));
+
+// Mock convex/nextjs
+jest.mock('convex/nextjs', () => ({
+  fetchQuery: jest.fn(),
+  fetchMutation: jest.fn(),
+  preloadQuery: jest.fn(),
+}));

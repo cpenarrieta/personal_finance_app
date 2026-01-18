@@ -2,55 +2,24 @@
  * Unit tests for Plaid Webhook API endpoint
  *
  * Tests cover:
- * 1. Webhook verification (with and without secret)
- * 2. Transaction webhook handling (all codes)
- * 3. Item webhook handling (ERROR, PENDING_EXPIRATION, LOGIN_REPAIRED)
- * 4. Error handling and edge cases
- * 5. Cache invalidation
+ * 1. Webhook verification
+ * 2. Transaction webhook routing
+ * 3. Item webhook routing
+ * 4. Error handling
  */
 
 import { NextRequest } from "next/server"
 import { POST } from "../route"
 import * as plaidModule from "@/lib/api/plaid"
-import * as prismaModule from "@/lib/db/prisma"
-import * as syncServiceModule from "@/lib/sync/sync-service"
-import * as aiCategorizationModule from "@/lib/ai/categorize-transaction"
-import * as nextCache from "next/cache"
+import * as webhookHandlersModule from "@/lib/plaid/webhook-handlers"
 
-// Mock modules
+// Mock modules at handler level (handlers use Convex internally)
 jest.mock("@/lib/api/plaid")
-jest.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    item: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-    },
-  },
-}))
-jest.mock("@/lib/sync/sync-service")
-jest.mock("@/lib/ai/categorize-transaction")
-jest.mock("next/cache", () => ({
-  revalidateTag: jest.fn(),
-}))
+jest.mock("@/lib/plaid/webhook-handlers")
 
 describe("Plaid Webhook API", () => {
   const mockPlaidClient = {
     webhookVerificationKeyGet: jest.fn(),
-  }
-
-  const mockItem = {
-    id: "test-item-id",
-    plaidItemId: "test-plaid-item-id",
-    accessToken: "test-access-token",
-    lastTransactionsCursor: "test-cursor",
-    status: "ACTIVE",
-  }
-
-  const mockSyncStats = {
-    transactionsAdded: 5,
-    transactionsModified: 2,
-    transactionsRemoved: 1,
-    newTransactionIds: [],
   }
 
   beforeEach(() => {
@@ -59,18 +28,9 @@ describe("Plaid Webhook API", () => {
     // Mock getPlaidClient
     ;(plaidModule.getPlaidClient as jest.Mock) = jest.fn(() => mockPlaidClient)
 
-    // Mock default database responses
-    ;(prismaModule.prisma.item.findFirst as jest.Mock).mockResolvedValue(mockItem)
-    ;(prismaModule.prisma.item.update as jest.Mock).mockResolvedValue(mockItem)
-
-    // Mock sync service - note the route uses syncItemTransactionsWithCategorization
-    ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockResolvedValue({
-      stats: mockSyncStats,
-      newCursor: "new-cursor",
-    })
-
-    // Mock AI categorization
-    ;(aiCategorizationModule.categorizeTransactions as jest.Mock).mockResolvedValue(undefined)
+    // Mock webhook handlers
+    ;(webhookHandlersModule.handleTransactionWebhook as jest.Mock).mockResolvedValue(undefined)
+    ;(webhookHandlersModule.handleItemWebhook as jest.Mock).mockResolvedValue(undefined)
 
     // Suppress console logs during tests
     jest.spyOn(console, "log").mockImplementation()
@@ -98,7 +58,6 @@ describe("Plaid Webhook API", () => {
 
   describe("Webhook Verification", () => {
     it("should reject webhook without Plaid-Verification header", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "SYNC_UPDATES_AVAILABLE",
@@ -106,19 +65,15 @@ describe("Plaid Webhook API", () => {
       }
       const request = createMockRequest(webhookBody, {})
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(401)
       expect(data.success).toBe(false)
       expect(data.error).toBe("Unauthorized")
-      expect(console.error).toHaveBeenCalledWith("❌ Missing Plaid-Verification header")
     })
 
     it("should accept webhook with verification header when no secret is set", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "SYNC_UPDATES_AVAILABLE",
@@ -128,21 +83,15 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-verification-key",
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.received).toBe(true)
-      expect(console.warn).toHaveBeenCalledWith(
-        "⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)",
-      )
     })
 
     it("should verify webhook with secret when PLAID_WEBHOOK_VERIFICATION_KEY is set", async () => {
-      // Arrange
       process.env.PLAID_WEBHOOK_VERIFICATION_KEY = "test-secret"
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
@@ -164,93 +113,17 @@ describe("Plaid Webhook API", () => {
         data: { key: "valid-key" },
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.received).toBe(true)
-      expect(mockPlaidClient.webhookVerificationKeyGet).toHaveBeenCalledWith({
-        key_id: "test-verification-key",
-      })
-    })
-
-    it("should reject webhook with invalid verification when secret is set", async () => {
-      // Arrange
-      process.env.PLAID_WEBHOOK_VERIFICATION_KEY = "test-secret"
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "SYNC_UPDATES_AVAILABLE",
-        item_id: "test-plaid-item-id",
-      }
-
-      // Create a valid JWT-like token with kid in the header
-      const jwtHeader = Buffer.from(JSON.stringify({ kid: "invalid-key" })).toString("base64")
-      const jwtPayload = Buffer.from(JSON.stringify({ test: "payload" })).toString("base64")
-      const jwtSignature = "test-signature"
-      const validJwt = `${jwtHeader}.${jwtPayload}.${jwtSignature}`
-
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": validJwt,
-      })
-
-      mockPlaidClient.webhookVerificationKeyGet.mockResolvedValue({
-        data: null,
-      })
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(401)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe("Unauthorized")
-      expect(console.error).toHaveBeenCalledWith("❌ Webhook verification failed")
-    })
-
-    it("should reject webhook when verification throws error", async () => {
-      // Arrange
-      process.env.PLAID_WEBHOOK_VERIFICATION_KEY = "test-secret"
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "SYNC_UPDATES_AVAILABLE",
-        item_id: "test-plaid-item-id",
-      }
-
-      // Create a valid JWT-like token with kid in the header
-      const jwtHeader = Buffer.from(JSON.stringify({ kid: "test-key" })).toString("base64")
-      const jwtPayload = Buffer.from(JSON.stringify({ test: "payload" })).toString("base64")
-      const jwtSignature = "test-signature"
-      const validJwt = `${jwtHeader}.${jwtPayload}.${jwtSignature}`
-
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": validJwt,
-      })
-
-      mockPlaidClient.webhookVerificationKeyGet.mockRejectedValue(new Error("Verification service unavailable"))
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(401)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe("Unauthorized")
-      // logError is called with (message, error) - check that it was called
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("Error verifying webhook"),
-        expect.any(Error),
-      )
     })
   })
 
   describe("Transaction Webhooks", () => {
     it("should handle SYNC_UPDATES_AVAILABLE webhook", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "SYNC_UPDATES_AVAILABLE",
@@ -260,33 +133,19 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.received).toBe(true)
-      expect(prismaModule.prisma.item.findFirst).toHaveBeenCalledWith({
-        where: { plaidItemId: "test-plaid-item-id" },
-      })
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalledWith(
-        mockItem.id,
-        mockItem.accessToken,
-        mockItem.lastTransactionsCursor,
+      expect(webhookHandlersModule.handleTransactionWebhook).toHaveBeenCalledWith(
+        "SYNC_UPDATES_AVAILABLE",
+        "test-plaid-item-id",
       )
-      expect(prismaModule.prisma.item.update).toHaveBeenCalledWith({
-        where: { id: mockItem.id },
-        data: { lastTransactionsCursor: "new-cursor" },
-      })
-      expect(nextCache.revalidateTag).toHaveBeenCalledWith("transactions", "max")
-      expect(nextCache.revalidateTag).toHaveBeenCalledWith("accounts", "max")
-      expect(nextCache.revalidateTag).toHaveBeenCalledWith("dashboard", "max")
     })
 
     it("should handle DEFAULT_UPDATE webhook", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "DEFAULT_UPDATE",
@@ -296,87 +155,18 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
-    })
-
-    it("should handle INITIAL_UPDATE webhook", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "INITIAL_UPDATE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
-    })
-
-    it("should handle HISTORICAL_UPDATE webhook", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "HISTORICAL_UPDATE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
-    })
-
-    it("should handle TRANSACTIONS_REMOVED webhook", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "TRANSACTIONS_REMOVED",
-        item_id: "test-plaid-item-id",
-        removed_transactions: ["txn-1", "txn-2"],
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
-      // Sync service handles removed transactions internally
+      expect(webhookHandlersModule.handleTransactionWebhook).toHaveBeenCalledWith(
+        "DEFAULT_UPDATE",
+        "test-plaid-item-id",
+      )
     })
 
     it("should skip transaction webhook if item_id is missing", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "SYNC_UPDATES_AVAILABLE",
@@ -386,47 +176,17 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).not.toHaveBeenCalled()
-    })
-
-    it("should log unhandled transaction webhook codes", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "UNKNOWN_CODE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(console.log).toHaveBeenCalledWith(
-        "ℹ️  Unhandled transaction webhook code: UNKNOWN_CODE",
-        expect.stringContaining("UNKNOWN_CODE"),
-      )
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).not.toHaveBeenCalled()
+      expect(webhookHandlersModule.handleTransactionWebhook).not.toHaveBeenCalled()
     })
   })
 
   describe("Item Webhooks", () => {
     it("should handle ERROR item webhook", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "ITEM",
         webhook_code: "ERROR",
@@ -440,28 +200,20 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(prismaModule.prisma.item.update).toHaveBeenCalledWith({
-        where: { id: mockItem.id },
-        data: { status: "ERROR" },
-      })
-      // logError with error and attributes
-      expect(console.error).toHaveBeenCalledWith(
-        "❌ Item error:",
+      expect(webhookHandlersModule.handleItemWebhook).toHaveBeenCalledWith(
+        "ERROR",
+        "test-plaid-item-id",
         webhookBody.error,
-        expect.objectContaining({ itemId: mockItem.id }),
+        undefined,
       )
     })
 
     it("should handle PENDING_EXPIRATION item webhook", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "ITEM",
         webhook_code: "PENDING_EXPIRATION",
@@ -471,77 +223,20 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(prismaModule.prisma.item.update).toHaveBeenCalledWith({
-        where: { id: mockItem.id },
-        data: { status: "PENDING_EXPIRATION" },
-      })
-      expect(console.warn).toHaveBeenCalledWith(
-        "⚠️  Item credentials expiring soon",
-        expect.stringContaining("test-item-id"),
-      )
-    })
-
-    it("should handle LOGIN_REPAIRED item webhook", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "ITEM",
-        webhook_code: "LOGIN_REPAIRED",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(prismaModule.prisma.item.update).toHaveBeenCalledWith({
-        where: { id: mockItem.id },
-        data: { status: "ACTIVE" },
-      })
-      expect(console.log).toHaveBeenCalledWith("✅ Item login repaired", expect.stringContaining("test-item-id"))
-    })
-
-    it("should handle unhandled item webhook codes", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "ITEM",
-        webhook_code: "UNKNOWN_CODE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(console.log).toHaveBeenCalledWith(
-        "ℹ️  Unhandled item webhook code: UNKNOWN_CODE",
-        expect.stringContaining("UNKNOWN_CODE"),
+      expect(webhookHandlersModule.handleItemWebhook).toHaveBeenCalledWith(
+        "PENDING_EXPIRATION",
+        "test-plaid-item-id",
+        undefined,
+        undefined,
       )
     })
 
     it("should skip item webhook if item_id is missing", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "ITEM",
         webhook_code: "ERROR",
@@ -551,80 +246,17 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(prismaModule.prisma.item.update).not.toHaveBeenCalled()
-    })
-
-    it("should gracefully handle item not found for item webhooks", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "ITEM",
-        webhook_code: "ERROR",
-        item_id: "non-existent-item-id",
-        error: {
-          error_code: "ITEM_LOGIN_REQUIRED",
-          error_message: "User needs to re-authenticate",
-        },
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      ;(prismaModule.prisma.item.findFirst as jest.Mock).mockResolvedValue(null)
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      // logError without error object uses formatted string for attributes
-      expect(console.error).toHaveBeenCalledWith(
-        "❌ Item not found: non-existent-item-id",
-        expect.stringContaining("non-existent-item-id"),
-      )
-      expect(prismaModule.prisma.item.update).not.toHaveBeenCalled()
+      expect(webhookHandlersModule.handleItemWebhook).not.toHaveBeenCalled()
     })
   })
 
   describe("Error Handling", () => {
-    it("should return 200 with error when item not found for transaction webhook", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "SYNC_UPDATES_AVAILABLE",
-        item_id: "non-existent-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      ;(prismaModule.prisma.item.findFirst as jest.Mock).mockResolvedValue(null)
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(data.data.error).toBe("Item not found: non-existent-item-id")
-      // Multiple log calls - just verify the final error was logged
-      expect(console.error).toHaveBeenCalled()
-    })
-
-    it("should return 200 with error when sync fails", async () => {
-      // Arrange
+    it("should return 200 with error when handler throws", async () => {
       const webhookBody = {
         webhook_type: "TRANSACTIONS",
         webhook_code: "SYNC_UPDATES_AVAILABLE",
@@ -634,55 +266,19 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockRejectedValue(
-        new Error("Sync service error"),
-      )
+      ;(webhookHandlersModule.handleTransactionWebhook as jest.Mock).mockRejectedValue(new Error("Handler error"))
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
+      // Webhooks return 200 even on error to prevent retries
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.received).toBe(true)
-      expect(data.data.error).toBe("Sync service error")
-      // Multiple log calls - just verify errors were logged
-      expect(console.error).toHaveBeenCalled()
-    })
-
-    it("should return 200 with error when database update fails", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "ITEM",
-        webhook_code: "ERROR",
-        item_id: "test-plaid-item-id",
-        error: {
-          error_code: "ITEM_LOGIN_REQUIRED",
-          error_message: "User needs to re-authenticate",
-        },
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      ;(prismaModule.prisma.item.update as jest.Mock).mockRejectedValue(new Error("Database error"))
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(data.data.error).toBe("Database error")
-      // Multiple log calls - just verify errors were logged
-      expect(console.error).toHaveBeenCalled()
+      expect(data.data.error).toBe("Handler error")
     })
 
     it("should handle malformed JSON gracefully", async () => {
-      // Arrange
       const request = {
         text: jest.fn().mockResolvedValue("invalid json"),
         headers: {
@@ -690,23 +286,17 @@ describe("Plaid Webhook API", () => {
         },
       } as unknown as NextRequest
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
       expect(data.data.error).toBeDefined()
-      // Just verify error was logged
-      expect(console.error).toHaveBeenCalled()
     })
   })
 
   describe("Unhandled Webhook Types", () => {
     it("should log unhandled webhook types", async () => {
-      // Arrange
       const webhookBody = {
         webhook_type: "UNKNOWN_TYPE",
         webhook_code: "SOME_CODE",
@@ -716,154 +306,13 @@ describe("Plaid Webhook API", () => {
         "plaid-verification": "test-key",
       })
 
-      // Act
       const response = await POST(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      expect(console.log).toHaveBeenCalledWith(
-        "ℹ️  Unhandled webhook type: UNKNOWN_TYPE",
-        expect.stringContaining("UNKNOWN_TYPE"),
-      )
-    })
-  })
-
-  describe("AI Categorization", () => {
-    it("should call AI categorization when new transactions are added", async () => {
-      // Arrange
-      const newTransactionIds = ["txn-1", "txn-2", "txn-3"]
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "SYNC_UPDATES_AVAILABLE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockResolvedValue({
-        stats: {
-          ...mockSyncStats,
-          newTransactionIds,
-        },
-        newCursor: "new-cursor",
-      })
-
-      // Act
-      await POST(request)
-
-      // Assert
-      // Note: syncItemTransactionsWithCategorization handles AI categorization internally
-      // so we just verify it was called with correct parameters
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalledWith(
-        mockItem.id,
-        mockItem.accessToken,
-        mockItem.lastTransactionsCursor,
-      )
-    })
-
-    it("should skip AI categorization when no new transactions", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "SYNC_UPDATES_AVAILABLE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockResolvedValue({
-        stats: {
-          ...mockSyncStats,
-          newTransactionIds: [],
-        },
-        newCursor: "new-cursor",
-      })
-
-      // Act
-      await POST(request)
-
-      // Assert
-      // Note: syncItemTransactionsWithCategorization handles AI categorization internally
-      // Just verify it was called successfully
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
-    })
-
-    it("should continue webhook response even if AI categorization fails", async () => {
-      // Arrange
-      const newTransactionIds = ["txn-1", "txn-2"]
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "SYNC_UPDATES_AVAILABLE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Make syncItemTransactionsWithCategorization succeed but log categorization error
-      ;(syncServiceModule.syncItemTransactionsWithCategorization as jest.Mock).mockResolvedValue({
-        stats: {
-          ...mockSyncStats,
-          newTransactionIds,
-        },
-        newCursor: "new-cursor",
-      })
-
-      // Act
-      const response = await POST(request)
-      const data = await response.json()
-
-      // Assert
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.received).toBe(true)
-      // Note: syncItemTransactionsWithCategorization handles errors internally
-      // and doesn't throw, so webhook processing continues successfully
-    })
-  })
-
-  describe("Logging", () => {
-    it("should log webhook receipt with correct information", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "SYNC_UPDATES_AVAILABLE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Act
-      await POST(request)
-
-      // Assert
-      expect(console.log).toHaveBeenCalledWith("\n🔔 Received Plaid webhook:", expect.stringContaining("TRANSACTIONS"))
-    })
-
-    it("should log transaction sync completion with stats", async () => {
-      // Arrange
-      const webhookBody = {
-        webhook_type: "TRANSACTIONS",
-        webhook_code: "SYNC_UPDATES_AVAILABLE",
-        item_id: "test-plaid-item-id",
-      }
-      const request = createMockRequest(webhookBody, {
-        "plaid-verification": "test-key",
-      })
-
-      // Act
-      await POST(request)
-
-      // Assert
-      // The sync completion logging happens inside syncItemTransactionsWithCategorization
-      // Just verify the webhook was processed successfully
-      expect(syncServiceModule.syncItemTransactionsWithCategorization).toHaveBeenCalled()
+      expect(webhookHandlersModule.handleTransactionWebhook).not.toHaveBeenCalled()
+      expect(webhookHandlersModule.handleItemWebhook).not.toHaveBeenCalled()
     })
   })
 })

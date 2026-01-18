@@ -1,30 +1,21 @@
 /**
  * Unit tests for Transactions Page
  *
- * Note: Full integration testing of Next.js 16 async Server Components with
- * "use cache" directives is limited in Jest. These tests verify basic module structure.
- * For comprehensive testing, use E2E tests with Playwright.
+ * Note: This page uses Convex for data fetching via a client component.
+ * These tests verify basic module structure. For comprehensive testing,
+ * use E2E tests with Playwright.
  */
 
-import * as cachedQueries from "@/lib/db/queries"
+import React from "react"
 
-// Mock cached queries module
-jest.mock("@/lib/db/queries", () => ({
-  getAllTransactions: jest.fn(),
-  getAllCategories: jest.fn(),
-  getAllTags: jest.fn(),
-  getAllAccounts: jest.fn(),
+// Mock the TransactionsPageConvex component (uses Convex internally)
+jest.mock("@/components/transactions/list/TransactionsPageConvex", () => ({
+  TransactionsPageConvex: jest.fn(() => <div data-testid="transactions-page">Transactions Page</div>),
 }))
 
 describe("TransactionsPage", () => {
   beforeEach(() => {
     jest.clearAllMocks()
-
-    // Set up default mock returns
-    ;(cachedQueries.getAllTransactions as jest.Mock).mockResolvedValue([])
-    ;(cachedQueries.getAllCategories as jest.Mock).mockResolvedValue([])
-    ;(cachedQueries.getAllTags as jest.Mock).mockResolvedValue([])
-    ;(cachedQueries.getAllAccounts as jest.Mock).mockResolvedValue([])
   })
 
   it("should export a default function", async () => {
@@ -70,16 +61,13 @@ describe("TransactionsPage", () => {
 /**
  * NOTE FOR DEVELOPERS:
  *
- * The above tests are intentionally simple because Next.js 16 async Server Components
- * with "use cache" directives are difficult to unit test in Jest. The mocks don't
- * work as expected due to how Next.js handles caching at the framework level.
- *
- * For comprehensive testing of this page including:
+ * The above tests are intentionally simple because the transactions page uses
+ * Convex for data fetching via client components. For comprehensive testing of:
  * - Data fetching behavior
  * - User interactions
  * - UI rendering
  * - Filter functionality
  *
  * Please use E2E tests with tools like Playwright that run in an actual browser
- * environment where Next.js caching works as intended.
+ * environment where Convex and React work as intended.
  */

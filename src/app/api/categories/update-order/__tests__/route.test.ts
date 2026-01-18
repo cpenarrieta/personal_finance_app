@@ -4,23 +4,13 @@
  * Tests cover:
  * 1. Successful batch update of category order
  * 2. Invalid request format handling
- * 3. Database transaction failures
- * 4. Empty updates array
+ * 3. Database failures
  */
 
 import { PUT } from "../route"
-import * as prismaModule from "@/lib/db/prisma"
-import { CategoryGroupType } from "@prisma/generated"
+import { fetchMutation } from "convex/nextjs"
 
-// Mock modules
-jest.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    $transaction: jest.fn(),
-    category: {
-      update: jest.fn(),
-    },
-  },
-}))
+const mockFetchMutation = fetchMutation as jest.MockedFunction<typeof fetchMutation>
 
 describe("Categories Update Order API - PUT", () => {
   const createMockRequest = (body: object) => {
@@ -40,196 +30,156 @@ describe("Categories Update Order API - PUT", () => {
 
   describe("Successful Updates", () => {
     it("should update category order successfully", async () => {
-      // Arrange
       const updates = [
-        { id: "cat-1", groupType: "EXPENSE" as CategoryGroupType, displayOrder: 1 },
-        { id: "cat-2", groupType: "EXPENSE" as CategoryGroupType, displayOrder: 2 },
-        { id: "cat-3", groupType: "INCOME" as CategoryGroupType, displayOrder: 1 },
+        { id: "cat-1", groupType: "EXPENSES", displayOrder: 1 },
+        { id: "cat-2", groupType: "EXPENSES", displayOrder: 2 },
+        { id: "cat-3", groupType: "INCOME", displayOrder: 1 },
       ]
       const request = createMockRequest({ updates })
+      mockFetchMutation.mockResolvedValue(undefined)
 
-      ;(prismaModule.prisma.$transaction as jest.Mock).mockResolvedValue([])
-
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.updated).toBe(true)
-      expect(prismaModule.prisma.$transaction).toHaveBeenCalledTimes(1)
+      expect(mockFetchMutation).toHaveBeenCalledTimes(1)
     })
 
     it("should handle updates with null groupType", async () => {
-      // Arrange
       const updates = [{ id: "cat-1", groupType: null, displayOrder: 1 }]
       const request = createMockRequest({ updates })
+      mockFetchMutation.mockResolvedValue(undefined)
 
-      ;(prismaModule.prisma.$transaction as jest.Mock).mockResolvedValue([])
-
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.updated).toBe(true)
     })
 
     it("should handle updates with null displayOrder", async () => {
-      // Arrange
-      const updates = [{ id: "cat-1", groupType: "EXPENSE" as CategoryGroupType, displayOrder: null }]
+      const updates = [{ id: "cat-1", groupType: "EXPENSES", displayOrder: null }]
       const request = createMockRequest({ updates })
+      mockFetchMutation.mockResolvedValue(undefined)
 
-      ;(prismaModule.prisma.$transaction as jest.Mock).mockResolvedValue([])
-
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.updated).toBe(true)
     })
 
     it("should handle large batch updates", async () => {
-      // Arrange
       const updates = Array.from({ length: 50 }, (_, i) => ({
         id: `cat-${i}`,
-        groupType: i % 2 === 0 ? ("EXPENSE" as CategoryGroupType) : ("INCOME" as CategoryGroupType),
+        groupType: i % 2 === 0 ? "EXPENSES" : "INCOME",
         displayOrder: i,
       }))
       const request = createMockRequest({ updates })
+      mockFetchMutation.mockResolvedValue(undefined)
 
-      ;(prismaModule.prisma.$transaction as jest.Mock).mockResolvedValue([])
-
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.updated).toBe(true)
-      expect(prismaModule.prisma.$transaction).toHaveBeenCalledTimes(1)
+      expect(mockFetchMutation).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("Invalid Request Handling", () => {
     it("should return 400 when updates is missing", async () => {
-      // Arrange
       const request = createMockRequest({})
 
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(400)
       expect(data.success).toBe(false)
       expect(data.error).toBe("Invalid updates format")
-      expect(prismaModule.prisma.$transaction).not.toHaveBeenCalled()
+      expect(mockFetchMutation).not.toHaveBeenCalled()
     })
 
     it("should return 400 when updates is not an array", async () => {
-      // Arrange
       const request = createMockRequest({ updates: "not-an-array" })
 
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(400)
       expect(data.success).toBe(false)
       expect(data.error).toBe("Invalid updates format")
-      expect(prismaModule.prisma.$transaction).not.toHaveBeenCalled()
+      expect(mockFetchMutation).not.toHaveBeenCalled()
     })
 
     it("should return 400 when updates is null", async () => {
-      // Arrange
       const request = createMockRequest({ updates: null })
 
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(400)
       expect(data.success).toBe(false)
       expect(data.error).toBe("Invalid updates format")
     })
 
     it("should handle empty updates array", async () => {
-      // Arrange
       const request = createMockRequest({ updates: [] })
+      mockFetchMutation.mockResolvedValue(undefined)
 
-      ;(prismaModule.prisma.$transaction as jest.Mock).mockResolvedValue([])
-
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.updated).toBe(true)
-      expect(prismaModule.prisma.$transaction).toHaveBeenCalledWith([])
     })
   })
 
   describe("Error Handling", () => {
-    it("should return 500 when transaction fails", async () => {
-      // Arrange
-      const updates = [{ id: "cat-1", groupType: "EXPENSE" as CategoryGroupType, displayOrder: 1 }]
+    it("should return 500 when mutation fails", async () => {
+      const updates = [{ id: "cat-1", groupType: "EXPENSES", displayOrder: 1 }]
       const request = createMockRequest({ updates })
 
-      const dbError = new Error("Transaction failed")
-      ;(prismaModule.prisma.$transaction as jest.Mock).mockRejectedValue(dbError)
+      const dbError = new Error("Mutation failed")
+      mockFetchMutation.mockRejectedValue(dbError)
 
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(500)
       expect(data.success).toBe(false)
       expect(data.error).toBe("Failed to update")
-      expect(console.error).toHaveBeenCalledWith("Error updating category order:", dbError)
     })
 
     it("should handle category not found errors", async () => {
-      // Arrange
-      const updates = [{ id: "non-existent-id", groupType: "EXPENSE" as CategoryGroupType, displayOrder: 1 }]
+      const updates = [{ id: "non-existent-id", groupType: "EXPENSES", displayOrder: 1 }]
       const request = createMockRequest({ updates })
 
       const notFoundError = new Error("Record not found")
-      ;(prismaModule.prisma.$transaction as jest.Mock).mockRejectedValue(notFoundError)
+      mockFetchMutation.mockRejectedValue(notFoundError)
 
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(500)
       expect(data.success).toBe(false)
       expect(data.error).toBe("Failed to update")
     })
 
     it("should handle malformed JSON in request body", async () => {
-      // Arrange
       const request = {
         json: jest.fn().mockRejectedValue(new Error("Invalid JSON")),
       } as unknown as Request
 
-      // Act
       const response = await PUT(request)
       const data = await response.json()
 
-      // Assert
       expect(response.status).toBe(500)
       expect(data.success).toBe(false)
       expect(data.error).toBe("Failed to update")

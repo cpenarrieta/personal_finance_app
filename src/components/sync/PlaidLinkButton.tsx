@@ -60,7 +60,7 @@ export default function PlaidLinkButton({
         }
         return data
       })
-      .then((d) => setLinkToken(d.link_token))
+      .then((d) => setLinkToken(d.data.link_token))
       .catch((err) => {
         logError("Error creating link token:", err)
         setError(err.message)
