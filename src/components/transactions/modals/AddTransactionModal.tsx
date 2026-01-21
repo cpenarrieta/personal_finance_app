@@ -81,9 +81,8 @@ export function AddTransactionModal({ onClose, categories, tags, accounts }: Add
         body: JSON.stringify({
           accountId,
           name: name.trim(),
-          // Convert from display format (positive=income, negative=expense)
-          // to database format (positive=expense, negative=income)
-          amount: parseFloat(amount) * -1,
+          // User enters final sign: negative=expense, positive=income
+          amount: parseFloat(amount),
           date,
           pending,
           merchantName: merchantName.trim() || null,

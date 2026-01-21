@@ -750,7 +750,7 @@ export const confirmTransactions = mutation({
         categoryId: update.categoryId ?? undefined,
         subcategoryId: update.subcategoryId ?? undefined,
         notes: update.notes ?? undefined,
-        ...(update.newAmount !== null ? { amount: update.newAmount * -1 } : {}),
+        ...(update.newAmount !== null ? { amount: update.newAmount } : {}),
         updatedAt: now,
       })
 
@@ -768,10 +768,11 @@ export const confirmTransactions = mutation({
         }
       }
 
-      // Calculate tags to add and remove (excluding review tags)
+      // Calculate tags to add and remove (excluding review tags from both)
       const nonReviewCurrentTags = currentTagIds.filter((id) => !reviewTagIds.includes(id))
-      const tagsToAdd = update.tagIds.filter((id) => !nonReviewCurrentTags.includes(id))
-      const tagsToRemove = nonReviewCurrentTags.filter((id) => !update.tagIds.includes(id))
+      const nonReviewUpdateTags = update.tagIds.filter((id) => !reviewTagIds.includes(id))
+      const tagsToAdd = nonReviewUpdateTags.filter((id) => !nonReviewCurrentTags.includes(id))
+      const tagsToRemove = nonReviewCurrentTags.filter((id) => !nonReviewUpdateTags.includes(id))
 
       // Add new tags
       for (const tagId of tagsToAdd) {
@@ -1027,12 +1028,12 @@ export const aiSplit = mutation({
 
     // Create child transactions
     const childTransactions: Array<{ _id: Id<"transactions">; amount: number; name: string }> = []
-    const isExpense = original.amount > 0
+    const isExpense = original.amount < 0 // negative = expense
 
     for (let i = 0; i < splits.length; i++) {
       const split = splits[i]!
-      // Preserve the sign based on original transaction
-      const signedAmount = isExpense ? split.amount : split.amount * -1
+      // Preserve the sign based on original transaction (split.amount is always positive from AI)
+      const signedAmount = isExpense ? -Math.abs(split.amount) : Math.abs(split.amount)
 
       const childId = await ctx.db.insert("transactions", {
         plaidTransactionId: `${original.plaidTransactionId}_ai_split_${i + 1}_${now}`,

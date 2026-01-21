@@ -179,7 +179,7 @@ export async function categorizeTransaction(
     const historyContext = buildHistoryContext(recentHistory)
 
     const transactionAmount = Math.abs(transaction.amount).toFixed(2)
-    const transactionType = transaction.amount > 0 ? "expense" : "income" // positive = expense, negative = income
+    const transactionType = transaction.amount < 0 ? "expense" : "income" // negative = expense, positive = income
     const dateStr = new Date(transaction.date).toISOString().split("T")[0]
 
     const prompt = `You are a financial transaction categorization expert. Your task is to categorize this transaction based on available context.
@@ -331,11 +331,11 @@ Provide your categorization decision with confidence and reasoning.`
 function detectSignMismatch(amount: number, groupType: string | null): boolean {
   if (!groupType) return false
 
-  // Convention: positive amount = expense, negative = income
-  // INCOME category should have negative amount
-  // EXPENSES category should have positive amount
-  if (groupType === "INCOME" && amount > 0) return true
-  if (groupType === "EXPENSES" && amount < 0) return true
+  // Convention: negative amount = expense, positive = income
+  // INCOME category should have positive amount
+  // EXPENSES category should have negative amount
+  if (groupType === "INCOME" && amount < 0) return true // income shouldn't be negative
+  if (groupType === "EXPENSES" && amount > 0) return true // expense shouldn't be positive
 
   return false
 }
@@ -447,7 +447,7 @@ async function categorizeTransactionsBatch(
   const transactionsContext = transactions
     .map((t, index) => {
       const amount = Math.abs(t.amount).toFixed(2)
-      const type = t.amount > 0 ? "expense" : "income"
+      const type = t.amount < 0 ? "expense" : "income"
       const dateStr = new Date(t.date).toISOString().split("T")[0]
       return `[${index}] Name: "${t.name}" | Merchant: ${t.merchantName || "N/A"} | Amount: $${amount} (${type}) | Date: ${dateStr} | Plaid: ${t.plaidCategory || "N/A"}/${t.plaidSubcategory || "N/A"}`
     })

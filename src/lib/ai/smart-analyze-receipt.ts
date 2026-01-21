@@ -137,7 +137,7 @@ export async function smartAnalyzeReceipt(transactionId: string): Promise<SmartA
     }
 
     const transactionAmount = Math.abs(transaction.amount)
-    const transactionType = transaction.amount > 0 ? "expense" : "income"
+    const transactionType = transaction.amount < 0 ? "expense" : "income"
     const transactionDateStr = new Date(transaction.date).toISOString().split("T")[0]
 
     // Build the prompt - different versions for with/without receipt images

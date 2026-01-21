@@ -26,7 +26,7 @@ export interface TransactionForClient {
   id: string
   plaidTransactionId: string
   accountId: string
-  amount_number: number // Generated from amount * -1 - Display format: negative=expense, positive=income
+  amount_number: number // Display format: negative=expense, positive=income (direct from amount)
   isoCurrencyCode: string | null
   datetime: string // ISO 8601 datetime string from Plaid
   authorizedDatetime: string | null // ISO 8601 datetime string from Plaid

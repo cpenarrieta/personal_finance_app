@@ -17,7 +17,8 @@ export function buildTransactionData(t: Transaction) {
   const authorizedDateTs = t.authorized_date ? new Date(t.authorized_date).getTime() : undefined
 
   return {
-    amount: t.amount,
+    // Invert Plaid sign convention (positive=expense) to user convention (negative=expense)
+    amount: t.amount * -1,
     isoCurrencyCode: t.iso_currency_code || undefined,
     date: dateTs,
     authorizedDate: authorizedDateTs,

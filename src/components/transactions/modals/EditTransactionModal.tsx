@@ -79,10 +79,9 @@ export function EditTransactionModal({ transaction, onClose, categories, tags }:
       }
 
       // Only include amount if it was changed
-      // Note: Database stores amount with opposite sign of what user sees
-      // (amount_number = amount * -1), so we need to flip it before sending
+      // User enters final sign: negative=expense, positive=income
       if (newAmount !== null) {
-        updatePayload.amount = newAmount * -1
+        updatePayload.amount = newAmount
       }
 
       const response = await fetch(`/api/transactions/${transaction.id}`, {
