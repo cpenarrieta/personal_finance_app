@@ -6,8 +6,6 @@
  * use E2E tests with Playwright.
  */
 
-import React from "react"
-
 // Mock the TransactionsPageConvex component (uses Convex internally)
 jest.mock("@/components/transactions/list/TransactionsPageConvex", () => ({
   TransactionsPageConvex: jest.fn(() => <div data-testid="transactions-page">Transactions Page</div>),
