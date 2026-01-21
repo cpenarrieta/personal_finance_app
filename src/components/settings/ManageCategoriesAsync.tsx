@@ -9,7 +9,6 @@ import { TransferCategoryToggle } from "@/components/transactions/filters/Transf
 import { getAllCategoriesForManagement } from "@/lib/db/queries"
 import { logError } from "@/lib/utils/logger"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
-import type { Prisma } from "@prisma/generated"
 import {
   createCategory,
   updateCategoryGroupType,
@@ -17,10 +16,6 @@ import {
   createSubcategory,
   deleteSubcategory,
 } from "@/app/(app)/settings/manage-categories/actions"
-
-type CategoryWithSubs = Prisma.CategoryGetPayload<{
-  include: { subcategories: true }
-}>
 
 export async function ManageCategoriesAsync() {
   try {
@@ -68,7 +63,7 @@ export async function ManageCategoriesAsync() {
             </div>
           ) : (
             <div className="space-y-3">
-              {categories.map((cat: CategoryWithSubs) => (
+              {categories.map((cat) => (
                 <div key={cat.id} className="bg-card rounded-lg shadow-md overflow-hidden">
                   {/* Category Header */}
                   <div className="p-4 bg-muted/50 border-b">
@@ -118,7 +113,7 @@ export async function ManageCategoriesAsync() {
                   <div className="p-4">
                     {cat.subcategories.length > 0 && (
                       <div className="mb-4 space-y-2">
-                        {cat.subcategories.map((sub: Prisma.SubcategoryGetPayload<{}>) => (
+                        {cat.subcategories.map((sub) => (
                           <div
                             key={sub.id}
                             className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"

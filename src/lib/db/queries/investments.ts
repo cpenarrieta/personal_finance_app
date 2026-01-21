@@ -1,9 +1,12 @@
 /**
  * Investment-related queries with Next.js 16+ caching
+ * Uses Convex for data fetching
  */
 
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../convex/_generated/api"
 import { cacheTag, cacheLife } from "next/cache"
+import type { Id } from "../../../../convex/_generated/dataModel"
 
 /**
  * Get all holdings with relations
@@ -14,43 +17,7 @@ export async function getAllHoldings() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("holdings")
 
-  return prisma.holding.findMany({
-    select: {
-      id: true,
-      accountId: true,
-      securityId: true,
-      quantity_number: true,
-      cost_basis_number: true,
-      institution_price_number: true,
-      institution_price_as_of_string: true,
-      isoCurrencyCode: true,
-      created_at_string: true,
-      updated_at_string: true,
-      security: {
-        select: {
-          id: true,
-          plaidSecurityId: true,
-          name: true,
-          tickerSymbol: true,
-          type: true,
-          isoCurrencyCode: true,
-          logoUrl: true,
-          created_at_string: true,
-          updated_at_string: true,
-        },
-      },
-      account: {
-        select: {
-          id: true,
-          plaidAccountId: true,
-          name: true,
-          type: true,
-          subtype: true,
-          mask: true,
-        },
-      },
-    },
-  })
+  return fetchQuery(api.investments.getAllHoldings)
 }
 
 /**
@@ -62,48 +29,7 @@ export async function getAllInvestmentTransactions() {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("investments")
 
-  return prisma.investmentTransaction.findMany({
-    select: {
-      id: true,
-      plaidInvestmentTransactionId: true,
-      accountId: true,
-      securityId: true,
-      type: true,
-      amount_number: true,
-      price_number: true,
-      quantity_number: true,
-      fees_number: true,
-      isoCurrencyCode: true,
-      transactionDatetime: true,
-      name: true,
-      created_at_string: true,
-      updated_at_string: true,
-      account: {
-        select: {
-          id: true,
-          plaidAccountId: true,
-          name: true,
-          type: true,
-          subtype: true,
-          mask: true,
-        },
-      },
-      security: {
-        select: {
-          id: true,
-          plaidSecurityId: true,
-          name: true,
-          tickerSymbol: true,
-          type: true,
-          isoCurrencyCode: true,
-          logoUrl: true,
-          created_at_string: true,
-          updated_at_string: true,
-        },
-      },
-    },
-    orderBy: { transactionDatetime: "desc" },
-  })
+  return fetchQuery(api.investments.getAllInvestmentTransactions)
 }
 
 /**
@@ -115,41 +41,8 @@ export async function getHoldingsForAccount(accountId: string) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("holdings")
 
-  return prisma.holding.findMany({
-    where: { accountId },
-    select: {
-      id: true,
-      accountId: true,
-      securityId: true,
-      quantity_number: true,
-      cost_basis_number: true,
-      institution_price_number: true,
-      institution_price_as_of_string: true,
-      isoCurrencyCode: true,
-      created_at_string: true,
-      updated_at_string: true,
-      security: {
-        select: {
-          id: true,
-          plaidSecurityId: true,
-          name: true,
-          tickerSymbol: true,
-          type: true,
-          isoCurrencyCode: true,
-          logoUrl: true,
-          created_at_string: true,
-          updated_at_string: true,
-        },
-      },
-      account: {
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          mask: true,
-        },
-      },
-    },
+  return fetchQuery(api.investments.getHoldingsForAccount, {
+    accountId: accountId as Id<"accounts">,
   })
 }
 
@@ -162,45 +55,7 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
   cacheLife({ stale: 60 * 60 * 24 })
   cacheTag("investments")
 
-  return prisma.investmentTransaction.findMany({
-    where: { accountId },
-    select: {
-      id: true,
-      plaidInvestmentTransactionId: true,
-      accountId: true,
-      securityId: true,
-      type: true,
-      amount_number: true,
-      price_number: true,
-      quantity_number: true,
-      fees_number: true,
-      isoCurrencyCode: true,
-      transactionDatetime: true,
-      name: true,
-      created_at_string: true,
-      updated_at_string: true,
-      account: {
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          mask: true,
-        },
-      },
-      security: {
-        select: {
-          id: true,
-          plaidSecurityId: true,
-          name: true,
-          tickerSymbol: true,
-          type: true,
-          isoCurrencyCode: true,
-          logoUrl: true,
-          created_at_string: true,
-          updated_at_string: true,
-        },
-      },
-    },
-    orderBy: { transactionDatetime: "desc" },
+  return fetchQuery(api.investments.getInvestmentTransactionsForAccount, {
+    accountId: accountId as Id<"accounts">,
   })
 }

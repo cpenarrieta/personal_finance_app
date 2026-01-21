@@ -6,11 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 📖 **Detailed Documentation:**
 
-- [Data Fetching Strategy](docs/DATA_FETCHING.md) - Server Components, "use cache" directive, generated columns
+- [Data Fetching Strategy](docs/DATA_FETCHING.md) - Convex queries, Server/Client patterns
 - [Theming Guidelines](docs/THEMING.md) - shadcn/ui theme variables, NO hardcoded colors
 - [Architecture](docs/ARCHITECTURE.md) - Database schema, Plaid sync, project structure
 - [Development Guide](docs/DEVELOPMENT.md) - Commands, environment setup
-- [Migrations Guide](docs/MIGRATIONS.md) - Prisma migration best practices
 - [Webhooks Guide](docs/WEBHOOKS.md) - Plaid webhook setup for real-time transaction sync
 
 ## Project Overview
@@ -21,8 +20,8 @@ Personal finance app built with Next.js 16 that syncs financial data via Plaid A
 
 - **Framework**: Next.js 16 with App Router and Turbopack (stable)
 - **Language**: TypeScript (strict mode)
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: Better Auth with OAuth (Google, GitHub)
+- **Database**: Convex (real-time backend)
+- **Authentication**: Better Auth with OAuth (Google, GitHub) - uses Prisma for auth tables only
 - **Financial Data**: Plaid API
 - **AI**: OpenAI GPT-5-mini for transaction categorization
 - **UI**: React 19.2, Tailwind CSS 4, shadcn/ui, Recharts
@@ -32,32 +31,31 @@ Personal finance app built with Next.js 16 that syncs financial data via Plaid A
 
 ### 1. Data Fetching Pattern ⭐️ MOST IMPORTANT
 
-**Fetch data in Server Components using cached queries from `@/lib/db/queries`. Pass data as props to Client Components.**
+**Use Convex queries/mutations. Server Components use `fetchQuery`, Client Components use `useQuery`.**
 
 ```typescript
-// ✅ DO: Server Component with Next.js 16 "use cache" directive
-import { getAllTransactions, getAllCategories, getAllTags } from "@/lib/db/queries"
+// ✅ DO: Server Component with Convex
+import { fetchQuery } from "convex/nextjs"
+import { api } from "@/convex/_generated/api"
 
 export default async function Page() {
-  const [transactions, categories, tags] = await Promise.all([
-    getAllTransactions(),    // Cached 24h with cacheTag
-    getAllCategories(),      // Cached 24h with cacheTag
-    getAllTags(),           // Cached 24h with cacheTag
-  ])
-
-  return <ClientComponent transactions={transactions} categories={categories} tags={tags} />
+  const transactions = await fetchQuery(api.transactions.getAll)
+  return <ClientComponent transactions={transactions} />
 }
 
-// ❌ DON'T: Client-side fetching for reference data
+// ✅ DO: Client Component with real-time updates
 'use client'
-export function ClientComponent() {
-  useEffect(() => {
-    fetch('/api/categories')  // ❌ NO!
-  }, [])
-}
-```
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
-**Next.js 16 Caching**: All query functions use `"use cache"` directive with `cacheLife()` and `cacheTag()` for automatic invalidation.
+export function ClientComponent() {
+  const transactions = useQuery(api.transactions.getAll)
+  // Real-time updates automatically
+}
+
+// ❌ DON'T: fetch API calls
+fetch('/api/transactions')  // NO!
+```
 
 👉 See [DATA_FETCHING.md](docs/DATA_FETCHING.md) for details
 
@@ -113,7 +111,6 @@ import { Button } from "@/components/ui/button"
 
 - **Async params**: Route `params` and `searchParams` are now `Promise` types - always `await` them
 - **Server Components by default**: Use `'use client'` only for interactivity
-- **"use cache" directive**: All data queries use Next.js 16 caching with `cacheLife()` and `cacheTag()`
 - **proxy.ts**: Replaces middleware.ts (Edge runtime removed in Next.js 16)
 
 ```typescript
@@ -123,11 +120,38 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 }
 ```
 
-### 5. Type Safety
+### 5. Convex Patterns
+
+- **Queries**: Read-only, use `query()` in convex/*.ts
+- **Mutations**: Write operations, use `mutation()` in convex/*.ts
+- **Schema**: Defined in `convex/schema.ts`
+- **Generated types**: Auto-generated in `convex/_generated/`
+
+```typescript
+// convex/transactions.ts
+import { query, mutation } from "./_generated/server"
+import { v } from "convex/values"
+
+export const getAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("transactions").collect()
+  },
+})
+
+export const update = mutation({
+  args: { id: v.id("transactions"), name: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { name: args.name })
+  },
+})
+```
+
+### 6. Type Safety
 
 - Strict TypeScript mode
 - Use `@/*` path alias
-- Generated columns for client data: `amount_number` (Float), `date_string` (String), etc.
+- Convex generates types automatically
 
 ## Common Tasks
 
@@ -135,18 +159,21 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
 ```typescript
 // app/(app)/feature/page.tsx
+import { fetchQuery } from "convex/nextjs"
+import { api } from "@/convex/_generated/api"
+
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params  // Async in Next.js 16
-  const data = await getAllSomeData()  // Cached query
+  const data = await fetchQuery(api.feature.getById, { id })
 
   return <ClientComponent data={data} />  // AppShell from layout
 }
 ```
 
 1. Create in `app/(app)/` - AppShell applied automatically via layout
-2. Fetch data with cached queries from `@/lib/db/queries`
+2. Fetch data with Convex queries
 3. Await `params` and `searchParams` (Next.js 16 requirement)
-4. Pass data as props to Client Components
+4. Pass data as props or use `useQuery` in Client Components
 5. Add breadcrumb to `lib/breadcrumbs.ts` if needed
 
 ## Project Structure
@@ -158,19 +185,24 @@ src/
 │   │   ├── layout.tsx     # Applies AppShell + breadcrumbs
 │   │   ├── page.tsx       # Dashboard
 │   │   ├── transactions/, accounts/, investments/, settings/
-│   ├── api/               # API routes (Server Actions preferred)
+│   ├── api/               # API routes (Convex preferred)
 │   ├── login/             # Public login page
 │   └── layout.tsx         # Root layout (auth, theme)
 ├── components/
 │   ├── ui/                # shadcn/ui components
 │   └── ...                # Feature components
 ├── lib/
-│   ├── db/
-│   │   ├── queries.ts     # Cached queries with "use cache"
-│   │   └── prisma.ts      # Prisma client
-│   ├── auth/              # Better Auth
-│   └── plaid.ts, sync.ts
+│   ├── auth/              # Better Auth (still uses Prisma)
+│   └── plaid.ts, sync/
 └── types/
+convex/
+├── schema.ts              # Database schema
+├── transactions.ts        # Transaction queries/mutations
+├── accounts.ts            # Account queries/mutations
+├── categories.ts          # Category queries/mutations
+├── tags.ts                # Tag queries/mutations
+├── investments.ts         # Investment queries/mutations
+└── _generated/            # Auto-generated types
 ```
 
 **Route groups:** `(app)` applies AppShell layout automatically. Don't wrap pages manually.
@@ -181,10 +213,9 @@ src/
 # Development (dev server always running locally - never run npm run dev)
 npm run build              # Production build with Turbopack
 
-# Database - ALWAYS use migrate dev, NEVER db push
-npx prisma migrate dev --name description  # Create & apply migration
-npx prisma generate        # Generate Prisma Client
-npx prisma studio          # Database GUI
+# Convex
+npx convex dev             # Start Convex dev server (run in separate terminal)
+npx convex deploy          # Deploy to production
 
 # Plaid Sync
 npm run sync               # Sync financial data (incremental)
@@ -196,9 +227,10 @@ npm run sync               # Sync financial data (incremental)
 
 Single-user app with email-gating. Only `ALLOWED_EMAILS` (env var) can access. Better Auth with OAuth (Google/GitHub). Auth enforced in `src/proxy.ts` (Next.js 16 - replaces middleware.ts).
 
+**Note:** Auth still uses Prisma for its tables (User, Session, Account, Verification). All other data uses Convex.
+
 ## Important Rules
 
 - **Never run** `npm run dev`
-- **Migrations**: Use `migrate dev`, never `db push`. Always commit migration files
-- **Caching**: Queries use Next.js 16 `"use cache"` with `cacheTag()` for invalidation
+- **Convex dev**: Run `npx convex dev` in separate terminal during development
 - **Async params**: Always `await params` in Next.js 16 pages

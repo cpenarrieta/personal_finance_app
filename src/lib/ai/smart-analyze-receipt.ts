@@ -1,19 +1,21 @@
 /**
  * AI-powered smart receipt analysis using OpenAI vision via ai-sdk
  * Analyzes receipts to determine if transaction should be split or recategorized
- * Updated for AI SDK v6
+ * Updated to use Convex instead of Prisma
  */
 
 import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject } from "ai"
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
+import type { Id } from "../../../convex/_generated/dataModel"
 import { z } from "zod"
-import { Category, Subcategory, Transaction } from "@prisma/generated"
 import {
   buildCategoriesContext,
   buildHistoryContext,
   buildSimilarTransactionsContext,
   getSimilarTransactions,
+  getRecentTransactionHistory as getCategorizeTransactionHistory,
 } from "./categorize-transaction"
 import { logInfo, logWarn, logError } from "@/lib/utils/logger"
 
@@ -62,53 +64,29 @@ const SmartAnalysisResultSchema = z.object({
 })
 
 // Type for categories with subcategories
-type CategoryWithSubs = Category & { subcategories: Subcategory[] }
+interface CategoryWithSubs {
+  id: Id<"categories">
+  name: string
+  imageUrl: string | null
+  groupType: string | null
+  displayOrder: number | null
+  subcategories: Array<{
+    id: Id<"subcategories">
+    categoryId: Id<"categories">
+    name: string
+    imageUrl: string | null
+  }>
+}
 
 export type SuggestedSplit = z.infer<typeof SuggestedSplitSchema>
 export type SmartAnalysisResult = z.infer<typeof SmartAnalysisResultSchema>["result"]
 
 /**
- * Fetch all categories for context
+ * Fetch all categories for context (using Convex)
  */
 async function getAllCategories(): Promise<CategoryWithSubs[]> {
-  return (await prisma.category.findMany({
-    include: {
-      subcategories: true,
-    },
-    orderBy: { displayOrder: "asc" },
-  })) as CategoryWithSubs[]
-}
-
-/**
- * Fetch recent transaction history for context
- */
-async function getRecentTransactionHistory(maxTransactions: number = 200) {
-  return prisma.transaction.findMany({
-    where: {
-      categoryId: { not: null }, // Only get categorized transactions
-      isSplit: false,
-    },
-    select: {
-      name: true,
-      merchantName: true,
-      amount: true,
-      datetime: true,
-      category: {
-        select: {
-          name: true,
-          id: true,
-        },
-      },
-      subcategory: {
-        select: {
-          name: true,
-          id: true,
-        },
-      },
-    },
-    orderBy: { datetime: "desc" },
-    take: maxTransactions,
-  }) as Promise<(Transaction & { category: Category; subcategory: Subcategory })[]>
+  const categories = await fetchQuery(api.categories.getAll)
+  return categories as CategoryWithSubs[]
 }
 
 /**
@@ -118,24 +96,13 @@ async function getRecentTransactionHistory(maxTransactions: number = 200) {
  */
 export async function smartAnalyzeReceipt(transactionId: string): Promise<SmartAnalysisResult | null> {
   try {
-    // Fetch the transaction to be analyzed
-    const transaction = (await prisma.transaction.findUnique({
-      where: { id: transactionId },
-      select: {
-        id: true,
-        name: true,
-        merchantName: true,
-        amount: true,
-        date: true,
-        datetime: true,
-        plaidCategory: true,
-        plaidSubcategory: true,
-        notes: true,
-        files: true,
-        categoryId: true,
-        subcategoryId: true,
-      },
-    })) as Transaction | null
+    // Cast to Convex Id type
+    const convexTransactionId = transactionId as Id<"transactions">
+
+    // Fetch the transaction from Convex
+    const transaction = await fetchQuery(api.sync.getTransactionForSmartAnalysis, {
+      id: convexTransactionId,
+    })
 
     if (!transaction) {
       logError(`Transaction ${transactionId} not found`, undefined, { transactionId })
@@ -147,11 +114,11 @@ export async function smartAnalyzeReceipt(transactionId: string): Promise<SmartA
     // Fetch all categories, recent transaction history, and similar transactions
     const [categories, recentHistory, similarTransactions] = await Promise.all([
       getAllCategories(),
-      getRecentTransactionHistory(100),
-      getSimilarTransactions(transaction.merchantName, transaction.name, transaction.id),
+      getCategorizeTransactionHistory(undefined, 100),
+      getSimilarTransactions(transaction.merchantName, transaction.name, convexTransactionId),
     ])
 
-    const categoriesContext = buildCategoriesContext(categories)
+    const categoriesContext = buildCategoriesContext(categories as any)
     const historyContext = buildHistoryContext(recentHistory as any)
     const similarContext = buildSimilarTransactionsContext(similarTransactions as any)
 
@@ -169,8 +136,9 @@ export async function smartAnalyzeReceipt(transactionId: string): Promise<SmartA
       }
     }
 
-    const transactionAmount = Math.abs(transaction.amount.toNumber())
-    const transactionType = transaction.amount.toNumber() > 0 ? "expense" : "income"
+    const transactionAmount = Math.abs(transaction.amount)
+    const transactionType = transaction.amount < 0 ? "expense" : "income"
+    const transactionDateStr = new Date(transaction.date).toISOString().split("T")[0]
 
     // Build the prompt - different versions for with/without receipt images
     const prompt = hasFiles
@@ -180,7 +148,7 @@ TRANSACTION DETAILS:
   Name: ${transaction.name}
   Merchant: ${transaction.merchantName || "N/A"}
   Total Amount: $${transactionAmount.toFixed(2)} (${transactionType})
-  Date: ${transaction.date.toISOString().split("T")[0]}
+  Date: ${transactionDateStr}
   Plaid Category: ${transaction.plaidCategory || "N/A"} / ${transaction.plaidSubcategory || "N/A"}
   Notes: ${transaction.notes || "N/A"}
   Current Category: ${currentCategoryContext}
@@ -251,7 +219,7 @@ TRANSACTION DETAILS:
   Name: ${transaction.name}
   Merchant: ${transaction.merchantName || "N/A"}
   Total Amount: $${transactionAmount.toFixed(2)} (${transactionType})
-  Date: ${transaction.date.toISOString().split("T")[0]}
+  Date: ${transactionDateStr}
   Plaid Category: ${transaction.plaidCategory || "N/A"} / ${transaction.plaidSubcategory || "N/A"}
   Notes: ${transaction.notes || "N/A"}
   Current Category: ${currentCategoryContext}
@@ -338,7 +306,7 @@ Analyze the transaction and provide your recommended action.`
       ]
 
       // Add each file URL as an image (convert PDFs to images first)
-      for (const fileUrl of transaction.files) {
+      for (const fileUrl of transaction.files!) {
         const processedUrl = prepareFileForVision(fileUrl)
         content.push({
           type: "image",
@@ -346,10 +314,10 @@ Analyze the transaction and provide your recommended action.`
         })
       }
 
-      logInfo(`🖼️  Smart analysis WITH ${transaction.files.length} receipt file(s)`, {
+      logInfo(`Smart analysis WITH ${transaction.files!.length} receipt file(s)`, {
         transactionId,
-        fileCount: transaction.files.length,
-        files: transaction.files.map((url) => ({
+        fileCount: transaction.files!.length,
+        files: transaction.files!.map((url) => ({
           original: url,
           processed: prepareFileForVision(url),
           isPdf: url.toLowerCase().includes(".pdf"),
@@ -368,7 +336,7 @@ Analyze the transaction and provide your recommended action.`
       })
     } else {
       // WITHOUT files: Use text-only prompt
-      logInfo("📝 Smart analysis WITHOUT receipt (metadata only)", { transactionId })
+      logInfo("Smart analysis WITHOUT receipt (metadata only)", { transactionId })
 
       result = await generateObject({
         model: openai("gpt-5-mini"),
@@ -383,7 +351,7 @@ Analyze the transaction and provide your recommended action.`
     if (analysis.type === "split") {
       // CRITICAL: Cannot split without receipt
       if (!hasFiles) {
-        logError("⚠️  AI suggested split but no receipt files available - rejecting suggestion", undefined, {
+        logError("AI suggested split but no receipt files available - rejecting suggestion", undefined, {
           transactionId,
         })
         return null
@@ -394,7 +362,7 @@ Analyze the transaction and provide your recommended action.`
 
       if (difference > 0.02) {
         logWarn(
-          `⚠️  Split amounts ($${totalSplits.toFixed(2)}) don't match transaction amount ($${transactionAmount.toFixed(2)}). Difference: $${difference.toFixed(2)}`,
+          `Split amounts ($${totalSplits.toFixed(2)}) don't match transaction amount ($${transactionAmount.toFixed(2)}). Difference: $${difference.toFixed(2)}`,
           {
             transactionId,
             totalSplits,
@@ -432,9 +400,9 @@ Analyze the transaction and provide your recommended action.`
         }
       }
 
-      logInfo(`✅ Smart analysis complete (SPLIT)`, {
+      logInfo(`Smart analysis complete (SPLIT)`, {
         transactionId,
-        fileCount: hasFiles ? transaction.files.length : 0,
+        fileCount: hasFiles ? transaction.files!.length : 0,
         splitsCount: analysis.splits.length,
         confidence: analysis.confidence,
         totalSplits: totalSplits.toFixed(2),
@@ -466,20 +434,20 @@ Analyze the transaction and provide your recommended action.`
         }
       }
 
-      logInfo(`✅ Smart analysis complete (RECATEGORIZE)`, {
+      logInfo(`Smart analysis complete (RECATEGORIZE)`, {
         transactionId,
         hasFiles,
-        fileCount: hasFiles ? transaction.files.length : 0,
+        fileCount: hasFiles ? transaction.files!.length : 0,
         suggestedCategory: category.name,
         currentCategory: currentCategoryContext,
         confidence: analysis.confidence,
       })
     } else {
       // Type: confirm
-      logInfo(`✅ Smart analysis complete (CONFIRM)`, {
+      logInfo(`Smart analysis complete (CONFIRM)`, {
         transactionId,
         hasFiles,
-        fileCount: hasFiles ? transaction.files.length : 0,
+        fileCount: hasFiles ? transaction.files!.length : 0,
         confidence: analysis.confidence,
         message: analysis.message,
       })

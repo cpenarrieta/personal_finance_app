@@ -25,7 +25,7 @@ interface AccountsMenuClientProps {
         name: string
         logoUrl: string | null
       } | null
-    }
+    } | null
   }>
 }
 
@@ -40,7 +40,7 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
   // Group accounts by institution
   const accountsByInstitution = accounts.reduce(
     (acc: Record<string, Account[]>, account: Account) => {
-      const institutionName = account.item.institution?.name || "Unknown Bank"
+      const institutionName = account.item?.institution?.name || "Unknown Bank"
       if (!acc[institutionName]) {
         acc[institutionName] = []
       }

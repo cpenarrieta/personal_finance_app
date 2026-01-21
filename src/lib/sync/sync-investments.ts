@@ -1,28 +1,37 @@
 /**
  * Investment sync logic for Plaid integration
+ * Updated to use Convex instead of Prisma
  */
 
-import { PlaidAccountWithRelations } from "@/types"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
+import type { Id } from "../../../convex/_generated/dataModel"
 import { getPlaidClient } from "../api/plaid"
-import { prisma } from "../db/prisma"
 import { logInfo } from "../utils/logger"
 import { InvestmentSyncStats, createInvestmentSyncStats } from "./sync-types"
-import { buildSecurityUpsertData, buildHoldingUpsertData, buildInvestmentTransactionUpsertData } from "./sync-helpers"
+import { buildSecurityData, buildHoldingData, buildInvestmentTransactionData } from "./sync-helpers"
 
 // Constants
 const HISTORICAL_START_DATE = "2024-01-01"
 
+// Type for account with plaidAccountId
+interface AccountWithPlaidId {
+  id: Id<"accounts">
+  plaidAccountId: string
+  name: string
+  type: string
+  subtype: string | undefined
+}
+
 /**
  * Syncs investments (holdings, securities, investment transactions) for a single item
  */
-export async function syncItemInvestments(itemId: string, accessToken: string): Promise<InvestmentSyncStats> {
+export async function syncItemInvestments(itemId: Id<"items">, accessToken: string): Promise<InvestmentSyncStats> {
   const plaid = getPlaidClient()
   const stats = createInvestmentSyncStats()
 
   logInfo("  📊 Syncing investments...")
-  const accounts = (await prisma.plaidAccount.findMany({
-    where: { itemId: itemId },
-  })) as PlaidAccountWithRelations[]
+  const accounts = (await fetchQuery(api.sync.getAccountsByItemId, { itemId })) as AccountWithPlaidId[]
 
   // Holdings
   const holdingsResp = await plaid.investmentsHoldingsGet({
@@ -46,18 +55,10 @@ export async function syncItemInvestments(itemId: string, accessToken: string): 
  */
 async function syncSecurities(securities: any[], stats: InvestmentSyncStats): Promise<void> {
   for (const s of securities) {
-    const existing = await prisma.security.findUnique({
-      where: { plaidSecurityId: s.security_id },
-    })
-    const isNew = !existing
+    const securityData = buildSecurityData(s)
+    const result = await fetchMutation(api.sync.upsertSecurity, securityData)
 
-    const securityData = buildSecurityUpsertData(s)
-    await prisma.security.upsert({
-      where: { plaidSecurityId: s.security_id },
-      ...securityData,
-    })
-
-    if (isNew) {
+    if (result.isNew) {
       stats.securitiesAdded++
       logInfo(`    🔐 ${s.ticker_symbol || s.name || "Security"} added`, {
         ticker: s.ticker_symbol,
@@ -72,25 +73,22 @@ async function syncSecurities(securities: any[], stats: InvestmentSyncStats): Pr
  */
 async function syncHoldings(
   holdings: any[],
-  accounts: PlaidAccountWithRelations[],
+  accounts: AccountWithPlaidId[],
   stats: InvestmentSyncStats,
 ): Promise<void> {
+  // Get existing holdings to check for removals
+  const accountIds = accounts.map((a) => a.id)
+  const existingHoldings = await fetchQuery(api.sync.getHoldingsByAccountIds, { accountIds })
+
   // Delete holdings that are no longer present in Plaid response
   const plaidHoldingKeys = new Set(holdings.map((h) => `${h.account_id}_${h.security_id}`))
-  const existingHoldings = await prisma.holding.findMany({
-    where: { accountId: { in: accounts.map((a) => a.id) } },
-    include: { account: true, security: true },
-  })
 
   for (const existing of existingHoldings) {
-    const key = `${existing.account.plaidAccountId}_${existing.security.plaidSecurityId}`
+    const key = `${existing.accountPlaidId}_${existing.securityPlaidId}`
     if (!plaidHoldingKeys.has(key)) {
       stats.holdingsRemoved++
-      await prisma.holding.delete({ where: { id: existing.id } })
-      logInfo(`    🗑️  ${existing.security.tickerSymbol || existing.security.name || "Holding"} removed`, {
-        ticker: existing.security.tickerSymbol,
-        name: existing.security.name,
-      })
+      await fetchMutation(api.sync.deleteHolding, { id: existing.id })
+      logInfo(`    🗑️  Holding removed`, { holdingId: existing.id })
     }
   }
 
@@ -99,39 +97,21 @@ async function syncHoldings(
     const account = accounts.find((a) => a.plaidAccountId === h.account_id)
     if (!account) continue
 
-    const security = await prisma.security.findUnique({
-      where: { plaidSecurityId: h.security_id },
-    })
+    const security = await fetchQuery(api.sync.getSecurityByPlaidId, { plaidSecurityId: h.security_id })
     if (!security) continue
 
     // Check if holding already exists with a custom price
-    const existingHolding = await prisma.holding.findFirst({
-      where: {
-        accountId: account.id,
-        securityId: security.id,
-      },
-      select: {
-        id: true,
-        institutionPrice: true,
-        institutionPriceAsOf: true,
-      },
+    const existingHolding = await fetchQuery(api.sync.getHoldingByAccountAndSecurity, {
+      accountId: account.id,
+      securityId: security.id,
     })
 
-    const isNewHolding = !existingHolding
+    const holdingData = buildHoldingData(h, account.id, security.id, existingHolding)
+    const result = await fetchMutation(api.sync.upsertHolding, holdingData)
 
-    const holdingData = buildHoldingUpsertData(h, account.id, security.id, existingHolding)
-    await prisma.holding.upsert({
-      where: {
-        id: existingHolding?.id || "new-holding",
-      },
-      ...holdingData,
-    })
-
-    if (isNewHolding) {
+    if (result.isNew) {
       stats.holdingsAdded++
-      logInfo(`    📈 ${security.tickerSymbol || security.name || "Holding"} | Qty: ${h.quantity}`, {
-        ticker: security.tickerSymbol,
-        name: security.name,
+      logInfo(`    📈 Holding | Qty: ${h.quantity}`, {
         quantity: h.quantity,
       })
     } else {
@@ -145,7 +125,7 @@ async function syncHoldings(
  */
 async function syncInvestmentTransactions(
   accessToken: string,
-  accounts: PlaidAccountWithRelations[],
+  accounts: AccountWithPlaidId[],
   stats: InvestmentSyncStats,
 ): Promise<void> {
   const plaid = getPlaidClient()
@@ -161,24 +141,19 @@ async function syncInvestmentTransactions(
     const account = accounts.find((a) => a.plaidAccountId === t.account_id)
     if (!account) continue
 
-    const securityId = t.security_id
-      ? ((
-          await prisma.security.findUnique({
-            where: { plaidSecurityId: t.security_id },
-          })
-        )?.id ?? null)
-      : null
+    let securityId: Id<"securities"> | undefined = undefined
+    if (t.security_id) {
+      const security = await fetchQuery(api.sync.getSecurityByPlaidId, { plaidSecurityId: t.security_id })
+      securityId = security?.id
+    }
 
-    const existing = await prisma.investmentTransaction.findUnique({
-      where: { plaidInvestmentTransactionId: t.investment_transaction_id },
+    const existing = await fetchQuery(api.sync.findInvestmentTransactionByPlaidId, {
+      plaidInvestmentTransactionId: t.investment_transaction_id,
     })
     const isNew = !existing
 
-    const invTxData = buildInvestmentTransactionUpsertData(t, account.id, securityId)
-    await prisma.investmentTransaction.upsert({
-      where: { plaidInvestmentTransactionId: t.investment_transaction_id },
-      ...invTxData,
-    })
+    const invTxData = buildInvestmentTransactionData(t, account.id, securityId)
+    await fetchMutation(api.sync.upsertInvestmentTransaction, invTxData)
 
     if (isNew) {
       stats.investmentTransactionsAdded++

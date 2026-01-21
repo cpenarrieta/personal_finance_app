@@ -1,7 +1,9 @@
 "use server"
 
 import { revalidatePath, revalidateTag } from "next/cache"
-import { prisma } from "@/lib/db/prisma"
+import { fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import { createTagSchema, updateTagSchema, deleteTagSchema } from "@/types/api"
 
 /**
@@ -19,11 +21,9 @@ export async function createTag(formData: FormData): Promise<void> {
     throw new Error(parsed.error.issues[0]?.message || "Invalid input")
   }
 
-  await prisma.tag.create({
-    data: {
-      name: parsed.data.name,
-      color: parsed.data.color,
-    },
+  await fetchMutation(api.tags.create, {
+    name: parsed.data.name,
+    color: parsed.data.color,
   })
 
   revalidatePath("/settings/manage-tags")
@@ -46,12 +46,10 @@ export async function updateTag(formData: FormData): Promise<void> {
     throw new Error(parsed.error.issues[0]?.message || "Invalid input")
   }
 
-  await prisma.tag.update({
-    where: { id: parsed.data.id },
-    data: {
-      ...(parsed.data.name && { name: parsed.data.name }),
-      ...(parsed.data.color && { color: parsed.data.color }),
-    },
+  await fetchMutation(api.tags.update, {
+    id: parsed.data.id as Id<"tags">,
+    ...(parsed.data.name && { name: parsed.data.name }),
+    ...(parsed.data.color && { color: parsed.data.color }),
   })
 
   revalidatePath("/settings/manage-tags")
@@ -72,8 +70,8 @@ export async function deleteTag(formData: FormData): Promise<void> {
     throw new Error(parsed.error.issues[0]?.message || "Invalid input")
   }
 
-  await prisma.tag.delete({
-    where: { id: parsed.data.id },
+  await fetchMutation(api.tags.remove, {
+    id: parsed.data.id as Id<"tags">,
   })
 
   revalidatePath("/settings/manage-tags")

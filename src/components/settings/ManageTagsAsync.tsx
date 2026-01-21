@@ -4,13 +4,12 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { getAllTagsWithCounts } from "@/lib/db/queries"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
-import type { PrismaTagWithCount } from "@/types"
 import { logError } from "@/lib/utils/logger"
 import { createTag, updateTag, deleteTag } from "@/app/(app)/settings/manage-tags/actions"
 
 export async function ManageTagsAsync() {
   try {
-    const tags = (await getAllTagsWithCounts()) as PrismaTagWithCount[]
+    const tags = await getAllTagsWithCounts()
 
     // Predefined color palette
     const colorPalette = [

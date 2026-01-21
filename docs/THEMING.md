@@ -26,13 +26,13 @@ border-gray-300    → border-border
 
 ### Financial Amounts
 ```tsx
-// ✅ DO
-<span className={amount > 0 ? "text-destructive" : "text-success"}>
+// ✅ DO (negative = expense = destructive, positive = income = success)
+<span className={amount < 0 ? "text-destructive" : "text-success"}>
   {formatCurrency(amount)}
 </span>
 
 // ❌ DON'T
-<span className={amount > 0 ? "text-red-600" : "text-green-600"}>
+<span className={amount < 0 ? "text-red-600" : "text-green-600"}>
 ```
 
 ### Status Badges

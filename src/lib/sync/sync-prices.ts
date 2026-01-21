@@ -1,17 +1,13 @@
-// lib/syncPrices.ts
-import { prisma } from "../db/prisma"
-import { Prisma } from "@prisma/generated"
+// lib/sync/sync-prices.ts
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
 import { logInfo, logError } from "../utils/logger"
 
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || ""
 
 export async function syncStockPrices() {
-  // Get all securities with ticker symbols
-  const securities = await prisma.security.findMany({
-    where: {
-      tickerSymbol: { not: null },
-    },
-  })
+  // Get all securities with ticker symbols from Convex
+  const securities = await fetchQuery(api.sync.getAllSecuritiesWithTickers)
 
   logInfo(`Syncing prices for ${securities.length} securities...`)
 
@@ -27,17 +23,15 @@ export async function syncStockPrices() {
 
       if (data["Global Quote"] && data["Global Quote"]["05. price"]) {
         const price = parseFloat(data["Global Quote"]["05. price"])
-        const priceDate = new Date() // Current timestamp
+        const priceDate = Date.now()
 
         logInfo(`${security.tickerSymbol}: $${price}`)
 
         // Update all holdings for this security
-        await prisma.holding.updateMany({
-          where: { securityId: security.id },
-          data: {
-            institutionPrice: new Prisma.Decimal(price),
-            institutionPriceAsOf: priceDate,
-          },
+        await fetchMutation(api.sync.updateHoldingPrices, {
+          securityId: security.id,
+          institutionPrice: price,
+          institutionPriceAsOf: priceDate,
         })
       } else {
         logInfo(`${security.tickerSymbol}: No price data available`)

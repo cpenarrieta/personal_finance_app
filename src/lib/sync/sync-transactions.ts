@@ -1,14 +1,23 @@
 /**
  * Transaction sync logic for Plaid integration
+ * Updated to use Convex instead of Prisma
  */
 
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
+import type { Id } from "../../../convex/_generated/dataModel"
 import { getPlaidClient } from "../api/plaid"
-import { prisma } from "../db/prisma"
 import { revalidateTag } from "next/cache"
 import { logInfo, logError } from "../utils/logger"
 import { categorizeTransactions } from "../ai/categorize-transaction"
 import { TransactionSyncStats, createTransactionSyncStats } from "./sync-types"
-import { buildTransactionData, buildAccountUpsertData, isSplitTransaction, hasAmountSignChanged, addSignReviewTags } from "./sync-helpers"
+import {
+  buildTransactionData,
+  isSplitTransaction,
+  hasAmountSignChanged,
+  addSignReviewTags,
+  buildAccountData,
+} from "./sync-helpers"
 
 // Constants
 const HISTORICAL_START_DATE = "2024-01-01"
@@ -18,7 +27,7 @@ const TRANSACTION_BATCH_SIZE = 500
  * Syncs banking transactions for a single item
  */
 export async function syncItemTransactions(
-  itemId: string,
+  itemId: Id<"items">,
   accessToken: string,
   lastCursor: string | null,
 ): Promise<{ stats: TransactionSyncStats; newCursor: string }> {
@@ -27,7 +36,7 @@ export async function syncItemTransactions(
 
   // First, if no cursor exists, do a historical fetch to get older data
   if (!lastCursor) {
-    await syncHistoricalTransactions(accessToken, stats)
+    await syncHistoricalTransactions(itemId, accessToken, stats)
   }
 
   // Now use /transactions/sync for incremental updates
@@ -52,9 +61,9 @@ export async function syncItemTransactions(
 
       // Update item status if login required
       if (error.response?.data?.error_code === "ITEM_LOGIN_REQUIRED") {
-        await prisma.item.update({
-          where: { id: itemId },
-          data: { status: "ITEM_LOGIN_REQUIRED" },
+        await fetchMutation(api.sync.updateItemStatus, {
+          id: itemId,
+          status: "ITEM_LOGIN_REQUIRED",
         })
         revalidateTag("items", "max")
         logError("  ℹ️  Item status updated to ITEM_LOGIN_REQUIRED")
@@ -67,11 +76,8 @@ export async function syncItemTransactions(
     // Upsert accounts (in case of new/changed)
     for (const a of resp.data.accounts) {
       stats.accountsUpdated++
-      const accountData = buildAccountUpsertData(a, itemId)
-      await prisma.plaidAccount.upsert({
-        where: { plaidAccountId: a.account_id },
-        ...accountData,
-      })
+      const accountData = buildAccountData(a, itemId)
+      await fetchMutation(api.sync.upsertAccount, accountData)
     }
 
     // Process added transactions
@@ -93,7 +99,11 @@ export async function syncItemTransactions(
 /**
  * Fetches and processes historical transactions when no cursor exists
  */
-async function syncHistoricalTransactions(accessToken: string, stats: TransactionSyncStats): Promise<void> {
+async function syncHistoricalTransactions(
+  _itemId: Id<"items">,
+  accessToken: string,
+  stats: TransactionSyncStats,
+): Promise<void> {
   const plaid = getPlaidClient()
   logInfo("  📅 Fetching historical transactions...")
   const historicalEndDate = new Date().toISOString().slice(0, 10)
@@ -128,14 +138,8 @@ async function syncHistoricalTransactions(accessToken: string, stats: Transactio
   // Process historical transactions
   for (const t of totalTransactions) {
     // Check if transaction exists by plaidTransactionId OR originalTransactionId (for splits)
-    const existing = await prisma.transaction.findFirst({
-      where: {
-        OR: [
-          { plaidTransactionId: t.transaction_id },
-          { originalTransactionId: t.transaction_id }, // Match split parents
-        ],
-      },
-      select: { id: true, plaidTransactionId: true, isSplit: true, amount: true },
+    const existing = await fetchQuery(api.sync.findTransactionForSync, {
+      plaidTransactionId: t.transaction_id,
     })
 
     // If split transaction exists, skip it (don't overwrite user's split)
@@ -159,7 +163,7 @@ async function syncHistoricalTransactions(accessToken: string, stats: Transactio
       `    ${isNew ? "➕ NEW" : "🔄 UPDATE"} [HISTORICAL]\n` +
         `       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}\n` +
         `       Name: ${t.name}\n` +
-        `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)${signChanged ? " ⚠️ SIGN CHANGED" : ""}\n` +
+        `       Amount: ${t.amount} (raw) → ${transactionData.amount} (stored)${signChanged ? " ⚠️ SIGN CHANGED" : ""}\n` +
         `       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}\n` +
         `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
       {
@@ -177,30 +181,22 @@ async function syncHistoricalTransactions(accessToken: string, stats: Transactio
       },
     )
 
-    const upsertedTransaction = await prisma.transaction.upsert({
-      where: { plaidTransactionId: existing?.plaidTransactionId || t.transaction_id },
-      update: {
-        account: { connect: { plaidAccountId: t.account_id } },
-        ...transactionData,
-      },
-      create: {
-        plaidTransactionId: t.transaction_id,
-        account: { connect: { plaidAccountId: t.account_id } },
-        ...transactionData,
-      },
-      select: { id: true },
+    const result = await fetchMutation(api.sync.upsertTransaction, {
+      plaidTransactionId: t.transaction_id,
+      accountPlaidId: t.account_id,
+      ...transactionData,
     })
 
-    if (isNew) {
+    if (result.isNew) {
       stats.transactionsAdded++
-      stats.newTransactionIds.push(upsertedTransaction.id)
+      stats.newTransactionIds.push(result.id)
     }
 
     // Add review tags if the sign changed (for existing transactions only)
     if (signChanged) {
-      await addSignReviewTags(upsertedTransaction.id)
+      await addSignReviewTags(result.id)
       logInfo(`    🏷️  Added review tags (for-review, sign-review) due to sign change`, {
-        transactionId: upsertedTransaction.id,
+        transactionId: result.id,
       })
     }
   }
@@ -216,14 +212,11 @@ async function syncHistoricalTransactions(accessToken: string, stats: Transactio
 async function processAddedTransactions(addedTransactions: any[], stats: TransactionSyncStats): Promise<void> {
   for (const t of addedTransactions) {
     // Check if this matches a split transaction by originalTransactionId
-    const existingSplit = await prisma.transaction.findFirst({
-      where: {
-        originalTransactionId: t.transaction_id,
-        isSplit: true,
-      },
+    const existingSplit = await fetchQuery(api.sync.findTransactionByOriginalId, {
+      originalTransactionId: t.transaction_id,
     })
 
-    if (existingSplit) {
+    if (existingSplit && existingSplit.isSplit) {
       logInfo(`    ⏭️  Skipping split: ${t.date} | ${t.name} | $${Math.abs(t.amount).toFixed(2)}`, {
         date: t.date,
         name: t.name,
@@ -239,7 +232,7 @@ async function processAddedTransactions(addedTransactions: any[], stats: Transac
       `    ➕ NEW [ADDED]\n` +
         `       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}\n` +
         `       Name: ${t.name}\n` +
-        `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)\n` +
+        `       Amount: ${t.amount} (raw) → ${transactionData.amount} (stored)\n` +
         `       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}\n` +
         `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
       {
@@ -255,21 +248,13 @@ async function processAddedTransactions(addedTransactions: any[], stats: Transac
       },
     )
 
-    const upsertedTransaction = await prisma.transaction.upsert({
-      where: { plaidTransactionId: t.transaction_id },
-      update: {
-        account: { connect: { plaidAccountId: t.account_id } },
-        ...transactionData,
-      },
-      create: {
-        plaidTransactionId: t.transaction_id,
-        account: { connect: { plaidAccountId: t.account_id } },
-        ...transactionData,
-      },
-      select: { id: true },
+    const result = await fetchMutation(api.sync.upsertTransaction, {
+      plaidTransactionId: t.transaction_id,
+      accountPlaidId: t.account_id,
+      ...transactionData,
     })
 
-    stats.newTransactionIds.push(upsertedTransaction.id)
+    stats.newTransactionIds.push(result.id)
   }
 }
 
@@ -289,9 +274,8 @@ async function processModifiedTransactions(modifiedTransactions: any[], stats: T
     }
 
     // Fetch existing transaction to check for sign changes
-    const existingTransaction = await prisma.transaction.findUnique({
-      where: { plaidTransactionId: t.transaction_id },
-      select: { id: true, amount: true },
+    const existingTransaction = await fetchQuery(api.sync.findTransactionByPlaidId, {
+      plaidTransactionId: t.transaction_id,
     })
 
     stats.transactionsModified++
@@ -304,7 +288,7 @@ async function processModifiedTransactions(modifiedTransactions: any[], stats: T
       `    📝 MODIFIED [UPDATE]\n` +
         `       Date: ${t.date} | Datetime: ${t.datetime} | Account: ${t.account_id}\n` +
         `       Name: ${t.name}\n` +
-        `       Amount: ${t.amount} (raw) → ${transactionData.amount.toString()} (stored)${signChanged ? " ⚠️ SIGN CHANGED" : ""}\n` +
+        `       Amount: ${t.amount} (raw) → ${transactionData.amount} (stored)${signChanged ? " ⚠️ SIGN CHANGED" : ""}\n` +
         `       Pending: ${t.pending} | Currency: ${t.iso_currency_code || "N/A"}\n` +
         `       Category: ${t.personal_finance_category?.primary || "N/A"} / ${t.personal_finance_category?.detailed || "N/A"}`,
       {
@@ -321,17 +305,16 @@ async function processModifiedTransactions(modifiedTransactions: any[], stats: T
       },
     )
 
-    const updatedTransaction = await prisma.transaction.update({
-      where: { plaidTransactionId: t.transaction_id },
-      data: transactionData,
-      select: { id: true },
+    const updatedId = await fetchMutation(api.sync.updateTransactionByPlaidId, {
+      plaidTransactionId: t.transaction_id,
+      ...transactionData,
     })
 
     // Add review tags if the sign changed
     if (signChanged) {
-      await addSignReviewTags(updatedTransaction.id)
+      await addSignReviewTags(updatedId)
       logInfo(`    🏷️  Added review tags (for-review, sign-review) due to sign change`, {
-        transactionId: updatedTransaction.id,
+        transactionId: updatedId,
       })
     }
   }
@@ -344,16 +327,12 @@ async function processRemovedTransactions(removedTransactions: any[], stats: Tra
   const removedIds = removedTransactions.map((r) => r.transaction_id)
   if (removedIds.length) {
     // Don't delete split transactions (preserve user customization)
-    const { count } = await prisma.transaction.deleteMany({
-      where: {
-        plaidTransactionId: { in: removedIds },
-        isSplit: false,
-        parentTransactionId: null,
-      },
+    const result = await fetchMutation(api.sync.deleteRemovedTransactions, {
+      plaidTransactionIds: removedIds,
     })
-    stats.transactionsRemoved += count
-    if (count > 0) {
-      logInfo(`    🗑️  Removed ${count} transaction(s) (preserved splits)`, { removedCount: count })
+    stats.transactionsRemoved += result.count
+    if (result.count > 0) {
+      logInfo(`    🗑️  Removed ${result.count} transaction(s) (preserved splits)`, { removedCount: result.count })
     }
   }
 }
@@ -363,7 +342,7 @@ async function processRemovedTransactions(removedTransactions: any[], stats: Tra
  * Use this for webhook-triggered syncs where we want categorization included
  */
 export async function syncItemTransactionsWithCategorization(
-  itemId: string,
+  itemId: Id<"items">,
   accessToken: string,
   lastCursor: string | null,
 ): Promise<{ stats: TransactionSyncStats; newCursor: string }> {

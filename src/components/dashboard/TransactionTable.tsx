@@ -14,7 +14,7 @@ type SerializableTransaction = {
   account: {
     id: string
     name: string
-  }
+  } | null
   category: {
     id: string
     name: string
@@ -23,13 +23,21 @@ type SerializableTransaction = {
     id: string
     name: string
   } | null
-  tags: Array<{
-    tag: {
-      id: string
-      name: string
-      color: string
-    }
-  }>
+  // Support both flat tags (Convex) and nested tags (Prisma junction table)
+  tags: Array<
+    | {
+        id: string
+        name: string
+        color: string
+      }
+    | {
+        tag: {
+          id: string
+          name: string
+          color: string
+        }
+      }
+  >
 }
 
 interface TransactionTableProps {
@@ -71,16 +79,20 @@ export function TransactionTable({ transactions, showCategory = true }: Transact
                     )}
                     {transaction.tags.length > 0 && (
                       <div className="flex gap-1 mt-1">
-                        {transaction.tags.map((tt) => (
-                          <Badge
-                            key={tt.tag.id}
-                            variant="secondary"
-                            style={{ backgroundColor: tt.tag.color }}
-                            className="text-xs text-white"
-                          >
-                            {tt.tag.name}
-                          </Badge>
-                        ))}
+                        {transaction.tags.map((t) => {
+                          // Handle both flat (Convex) and nested (Prisma) tag formats
+                          const tag = "tag" in t ? t.tag : t
+                          return (
+                            <Badge
+                              key={tag.id}
+                              variant="secondary"
+                              style={{ backgroundColor: tag.color }}
+                              className="text-xs text-white"
+                            >
+                              {tag.name}
+                            </Badge>
+                          )
+                        })}
                       </div>
                     )}
                   </Link>
@@ -99,7 +111,7 @@ export function TransactionTable({ transactions, showCategory = true }: Transact
                     )}
                   </TableCell>
                 )}
-                <TableCell className="hidden md:table-cell">{transaction.account.name}</TableCell>
+                <TableCell className="hidden md:table-cell">{transaction.account?.name ?? "Unknown"}</TableCell>
               </TableRow>
             )
           })}

@@ -1,4 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+prisma_data
 
 # dependencies
 /node_modules
@@ -74,3 +75,6 @@ mobile/ios/
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Convex migration data (contains sensitive data)
+convex-migration-data/

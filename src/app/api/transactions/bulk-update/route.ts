@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/db/prisma"
+import { fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import { bulkUpdateTransactionsSchema, safeParseRequestBody } from "@/types/api"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logError } from "@/lib/utils/logger"
@@ -16,51 +18,20 @@ export async function PATCH(request: NextRequest) {
 
     const { transactionIds, categoryId, subcategoryId, tagIds } = parseResult.data
 
-    // Update all transactions with the new category/subcategory
-    await prisma.transaction.updateMany({
-      where: {
-        id: {
-          in: transactionIds,
-        },
-      },
-      data: {
-        categoryId: categoryId ?? undefined,
-        subcategoryId: subcategoryId ?? undefined,
-      },
+    // Update all transactions with the new category/subcategory and tags
+    const result = await fetchMutation(api.transactions.bulkUpdateWithTags, {
+      transactionIds: transactionIds as Id<"transactions">[],
+      categoryId: categoryId !== undefined ? (categoryId as Id<"categories"> | null) : undefined,
+      subcategoryId: subcategoryId !== undefined ? (subcategoryId as Id<"subcategories"> | null) : undefined,
+      tagIds: tagIds ? (tagIds as Id<"tags">[]) : undefined,
     })
-
-    // Handle tags if provided
-    if (tagIds !== undefined) {
-      // First, delete all existing tag associations for these transactions
-      await prisma.transactionTag.deleteMany({
-        where: {
-          transactionId: {
-            in: transactionIds,
-          },
-        },
-      })
-
-      // Then create new tag associations
-      if (tagIds.length > 0) {
-        const tagData = transactionIds.flatMap((transactionId) =>
-          tagIds.map((tagId) => ({
-            transactionId,
-            tagId,
-          })),
-        )
-
-        await prisma.transactionTag.createMany({
-          data: tagData,
-        })
-      }
-    }
 
     // Invalidate transaction and dashboard caches
     revalidateTag("transactions", "max")
     revalidateTag("dashboard", "max")
     revalidatePath("/", "layout") // Invalidate Router Cache
 
-    return apiSuccess({ updatedCount: transactionIds.length })
+    return apiSuccess({ updatedCount: result.updatedCount })
   } catch (error) {
     logError("Error bulk updating transactions:", error)
     return apiErrors.internalError("Failed to bulk update transactions")

@@ -1,7 +1,9 @@
 "use server"
 
 import { categorizeTransaction, applyCategorization } from "@/lib/ai/categorize-transaction"
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { z } from "zod"
 import { logError } from "@/lib/utils/logger"
@@ -26,9 +28,12 @@ export async function getAICategorization(transactionId: string): Promise<{
   error?: string
 }> {
   try {
+    // Cast to Convex Id type
+    const convexTransactionId = transactionId as Id<"transactions">
+
     // Call the existing categorizeTransaction function with allowRecategorize=true
     // to allow users to get AI suggestions even for already categorized transactions
-    const result = await categorizeTransaction(transactionId, { allowRecategorize: true })
+    const result = await categorizeTransaction(convexTransactionId, { allowRecategorize: true })
 
     if (!result) {
       return {
@@ -38,17 +43,13 @@ export async function getAICategorization(transactionId: string): Promise<{
       }
     }
 
-    // Fetch category and subcategory names
-    const category = await prisma.category.findUnique({
-      where: { id: result.categoryId! },
-      select: { name: true },
-    })
+    // Fetch category and subcategory names from Convex
+    const category = result.categoryId
+      ? await fetchQuery(api.categories.getById, { id: result.categoryId as Id<"categories"> })
+      : null
 
     const subcategory = result.subcategoryId
-      ? await prisma.subcategory.findUnique({
-          where: { id: result.subcategoryId },
-          select: { name: true },
-        })
+      ? await fetchQuery(api.categories.getSubcategoryById, { id: result.subcategoryId as Id<"subcategories"> })
       : null
 
     return {
@@ -83,9 +84,14 @@ export async function applyAICategorization(
   error?: string
 }> {
   try {
+    // Cast to Convex Id types
+    const convexTransactionId = transactionId as Id<"transactions">
+    const convexCategoryId = categoryId as Id<"categories">
+    const convexSubcategoryId = subcategoryId ? (subcategoryId as Id<"subcategories">) : null
+
     // Pass true as the 4th argument to skip adding the "for-review" tag
     // since the user is manually confirming this categorization
-    await applyCategorization(transactionId, categoryId, subcategoryId, true)
+    await applyCategorization(convexTransactionId, convexCategoryId, convexSubcategoryId, true)
 
     // Revalidate caches
     revalidateTag("transactions", "max")

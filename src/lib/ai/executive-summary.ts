@@ -6,10 +6,10 @@
 
 import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject } from "ai"
-import { prisma } from "@/lib/db/prisma"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
 import { z } from "zod"
 import { logInfo, logError } from "@/lib/utils/logger"
-import { format, subMonths } from "date-fns"
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY || "",
@@ -46,184 +46,13 @@ interface RawTransaction {
 }
 
 /**
- * Fetch raw transactions from last 6 months for LLM context
- */
-async function getRawTransactions(sixMonthsAgo: string): Promise<RawTransaction[]> {
-  const transactions = await prisma.$queryRaw<
-    Array<{
-      datetime: string
-      merchant: string | null
-      name: string
-      amount: number
-      category: string | null
-      group_type: string | null
-    }>
-  >`
-    SELECT
-      t.datetime,
-      t."merchantName" as merchant,
-      t.name,
-      t.amount_number as amount,
-      c.name as category,
-      c."groupType" as group_type
-    FROM "Transaction" t
-    LEFT JOIN "Category" c ON t."categoryId" = c.id
-    WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
-      AND t."isSplit" = false
-      AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
-    ORDER BY t.datetime DESC
-  `
-
-  return transactions.map((t) => ({
-    date: t.datetime?.split("T")[0] || "",
-    merchant: t.merchant || t.name,
-    amount: Number(t.amount || 0),
-    category: t.category,
-    groupType: t.group_type,
-  }))
-}
-
-/**
- * Fetch all categories with subcategories and groupType
- */
-async function getAllCategories(): Promise<string> {
-  const categories = await prisma.category.findMany({
-    where: { NOT: { groupType: "TRANSFER" } },
-    include: { subcategories: true },
-    orderBy: { displayOrder: "asc" },
-  })
-
-  return categories
-    .map((c) => {
-      const subs = c.subcategories.map((s) => s.name).join(", ")
-      const type = c.groupType ? `[${c.groupType}]` : ""
-      return `${c.name} ${type}${subs ? `: ${subs}` : ""}`
-    })
-    .join("\n")
-}
-
-/**
- * Aggregate last 6 months of financial data
+ * Aggregate last 6 months of financial data using Convex
  */
 async function aggregateFinancialData(): Promise<
   FinancialData & { rawTransactions: RawTransaction[]; categoriesContext: string }
 > {
-  const now = new Date()
-  const sixMonthsAgo = format(subMonths(now, 6), "yyyy-MM-dd")
-
-  const [totals, spendingByCategory, topMerchants, monthlyBreakdown, rawTransactions, categoriesContext] =
-    await Promise.all([
-      // 6-month totals
-      prisma.$queryRaw<Array<{ total_spending: number | null; total_income: number | null }>>`
-      SELECT
-        CAST(SUM(CASE WHEN t.amount_number < 0 THEN ABS(t.amount_number) ELSE 0 END) AS double precision) as total_spending,
-        CAST(SUM(CASE WHEN t.amount_number > 0 THEN t.amount_number ELSE 0 END) AS double precision) as total_income
-      FROM "Transaction" t
-      LEFT JOIN "Category" c ON t."categoryId" = c.id
-      WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
-        AND t."isSplit" = false
-        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
-    `,
-
-      // Spending by category
-      prisma.$queryRaw<Array<{ name: string | null; amount: number | null }>>`
-      SELECT
-        COALESCE(c.name, 'Uncategorized') as name,
-        CAST(SUM(ABS(t.amount_number)) AS double precision) as amount
-      FROM "Transaction" t
-      LEFT JOIN "Category" c ON t."categoryId" = c.id
-      WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
-        AND t."isSplit" = false
-        AND t.amount_number < 0
-        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
-      GROUP BY c.name
-      ORDER BY amount DESC
-      LIMIT 10
-    `,
-
-      // Top merchants
-      prisma.$queryRaw<Array<{ name: string | null; amount: number | null; visits: bigint }>>`
-      SELECT
-        COALESCE(t."merchantName", t.name) as name,
-        CAST(SUM(ABS(t.amount_number)) AS double precision) as amount,
-        COUNT(*) as visits
-      FROM "Transaction" t
-      LEFT JOIN "Category" c ON t."categoryId" = c.id
-      WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
-        AND t."isSplit" = false
-        AND t.amount_number < 0
-        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
-      GROUP BY COALESCE(t."merchantName", t.name)
-      ORDER BY amount DESC
-      LIMIT 10
-    `,
-
-      // Monthly breakdown
-      prisma.$queryRaw<Array<{ month: string; spending: number | null; income: number | null }>>`
-      SELECT
-        to_char(CAST(t.datetime AS date), 'YYYY-MM') as month,
-        CAST(SUM(CASE WHEN t.amount_number < 0 THEN ABS(t.amount_number) ELSE 0 END) AS double precision) as spending,
-        CAST(SUM(CASE WHEN t.amount_number > 0 THEN t.amount_number ELSE 0 END) AS double precision) as income
-      FROM "Transaction" t
-      LEFT JOIN "Category" c ON t."categoryId" = c.id
-      WHERE CAST(t.datetime AS date) >= CAST(${sixMonthsAgo} AS date)
-        AND t."isSplit" = false
-        AND (c."groupType" IS NULL OR c."groupType" != 'TRANSFER')
-      GROUP BY to_char(CAST(t.datetime AS date), 'YYYY-MM')
-      ORDER BY month DESC
-    `,
-
-      // Raw transactions for LLM context
-      getRawTransactions(sixMonthsAgo),
-
-      // Categories context
-      getAllCategories(),
-    ])
-
-  const totalSpending = Number(totals[0]?.total_spending || 0)
-  const totalIncome = Number(totals[0]?.total_income || 0)
-  const monthCount = monthlyBreakdown.length || 1
-
-  const avgMonthlySpending = totalSpending / monthCount
-  const avgMonthlyIncome = totalIncome / monthCount
-  const savingsRate = totalIncome > 0 ? ((totalIncome - totalSpending) / totalIncome) * 100 : 0
-
-  const categories = spendingByCategory.map((c) => ({
-    name: c.name || "Uncategorized",
-    amount: Number(c.amount || 0),
-    percent: totalSpending > 0 ? (Number(c.amount || 0) / totalSpending) * 100 : 0,
-  }))
-
-  const merchants = topMerchants.map((m) => ({
-    name: m.name || "Unknown",
-    amount: Number(m.amount || 0),
-    visits: Number(m.visits || 0),
-  }))
-
-  const monthly = monthlyBreakdown.map((m) => ({
-    month: m.month,
-    spending: Number(m.spending || 0),
-    income: Number(m.income || 0),
-  }))
-
-  // Last month vs average
-  const lastMonthSpending = monthly[0]?.spending || 0
-  const percentDiff = avgMonthlySpending > 0 ? ((lastMonthSpending - avgMonthlySpending) / avgMonthlySpending) * 100 : 0
-
-  return {
-    periodMonths: monthCount,
-    totalSpending,
-    totalIncome,
-    savingsRate,
-    avgMonthlySpending,
-    avgMonthlyIncome,
-    spendingByCategory: categories,
-    topMerchants: merchants,
-    monthlyTrend: monthly,
-    recentVsAverage: { lastMonthSpending, avgSpending: avgMonthlySpending, percentDiff },
-    rawTransactions,
-    categoriesContext,
-  }
+  const data = await fetchQuery(api.weeklySummary.aggregateFinancialData, {})
+  return data
 }
 
 /**
@@ -326,12 +155,10 @@ export async function generateAndStoreWeeklySummary(): Promise<{ id: string } | 
 
     const summary = await generateExecutiveSummary(data)
 
-    const record = await prisma.weeklySummary.create({
-      data: { summary },
-    })
+    const id = await fetchMutation(api.weeklySummary.create, { summary })
 
-    logInfo("Weekly summary created", { id: record.id })
-    return { id: record.id }
+    logInfo("Weekly summary created", { id })
+    return { id }
   } catch (error) {
     logError("Failed to generate weekly summary", error)
     throw error

@@ -1,5 +1,6 @@
 /**
  * Sync Service - Main orchestrator for Plaid data synchronization
+ * Updated to use Convex instead of Prisma
  *
  * This module coordinates syncing of:
  * - Banking transactions (see sync-transactions.ts)
@@ -7,7 +8,8 @@
  * - AI categorization for new transactions
  */
 
-import { prisma } from "../db/prisma"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { logInfo, logError } from "../utils/logger"
 import { categorizeTransactions } from "../ai/categorize-transaction"
@@ -26,7 +28,7 @@ export { syncItemInvestments } from "./sync-investments"
 export async function syncItems(
   options: SyncOptions = { syncTransactions: true, syncInvestments: true, runAICategorization: true },
 ) {
-  const items = await prisma.item.findMany()
+  const items = await fetchQuery(api.sync.getAllItems)
 
   const totalStats = createSyncStats()
 
@@ -45,10 +47,7 @@ export async function syncItems(
   for (const item of items) {
     const itemStats = createSyncStats()
 
-    const itemInfo = await prisma.item.findUnique({
-      where: { id: item.id },
-      include: { institution: true },
-    })
+    const itemInfo = await fetchQuery(api.sync.getItemWithInstitution, { id: item.id })
     const institutionName = itemInfo?.institution?.name || "Unknown Institution"
     logInfo(`\n📦 Processing: ${institutionName}\n${"─".repeat(60)}`, {
       institutionName,
@@ -66,9 +65,9 @@ export async function syncItems(
       Object.assign(itemStats, txStats)
 
       // Update cursor
-      await prisma.item.update({
-        where: { id: item.id },
-        data: { lastTransactionsCursor: newCursor },
+      await fetchMutation(api.sync.updateItemCursor, {
+        id: item.id,
+        lastTransactionsCursor: newCursor,
       })
     }
 

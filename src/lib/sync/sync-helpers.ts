@@ -1,31 +1,38 @@
 /**
- * Helper functions for building Prisma data objects from Plaid responses
+ * Helper functions for building data objects from Plaid responses
+ * Updated to use Convex instead of Prisma
  */
 
-import { Prisma } from "@prisma/generated"
-import { prisma } from "../db/prisma"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
+import type { Id } from "../../../convex/_generated/dataModel"
 import type { Transaction, AccountBase, Security, Holding, InvestmentTransaction } from "../api/plaid"
 
 /**
- * Builds transaction data object for Prisma upsert from Plaid transaction
+ * Builds transaction data object for Convex from Plaid transaction
  */
 export function buildTransactionData(t: Transaction) {
+  // Parse date to timestamp
+  const dateTs = new Date(t.date).getTime()
+  const authorizedDateTs = t.authorized_date ? new Date(t.authorized_date).getTime() : undefined
+
   return {
-    amount: new Prisma.Decimal(t.amount),
-    isoCurrencyCode: t.iso_currency_code || null,
-    date: new Date(t.date),
-    authorizedDate: t.authorized_date ? new Date(t.authorized_date) : null,
+    // Invert Plaid sign convention (positive=expense) to user convention (negative=expense)
+    amount: t.amount * -1,
+    isoCurrencyCode: t.iso_currency_code || undefined,
+    date: dateTs,
+    authorizedDate: authorizedDateTs,
     datetime: t.datetime || t.date, // Plaid datetime or fallback to date
-    authorizedDatetime: t.authorized_datetime || null,
+    authorizedDatetime: t.authorized_datetime || undefined,
     pending: t.pending,
-    merchantName: t.merchant_name || null,
+    merchantName: t.merchant_name || undefined,
     name: t.name,
-    plaidCategory: t.personal_finance_category?.primary || null,
-    plaidSubcategory: t.personal_finance_category?.detailed || null,
-    paymentChannel: t.payment_channel || null,
-    pendingTransactionId: t.pending_transaction_id || null,
-    logoUrl: t.logo_url || null,
-    categoryIconUrl: t.personal_finance_category_icon_url || null,
+    plaidCategory: t.personal_finance_category?.primary || undefined,
+    plaidSubcategory: t.personal_finance_category?.detailed || undefined,
+    paymentChannel: t.payment_channel || undefined,
+    pendingTransactionId: t.pending_transaction_id || undefined,
+    logoUrl: t.logo_url || undefined,
+    categoryIconUrl: t.personal_finance_category_icon_url || undefined,
   }
 }
 
@@ -33,103 +40,72 @@ export function buildTransactionData(t: Transaction) {
  * Checks if a transaction is a split transaction that should be preserved
  */
 export async function isSplitTransaction(plaidTransactionId: string): Promise<boolean> {
-  const existing = await prisma.transaction.findFirst({
-    where: {
-      OR: [{ plaidTransactionId: plaidTransactionId }, { originalTransactionId: plaidTransactionId }],
-    },
-    select: { isSplit: true, parentTransactionId: true },
-  })
-
+  const existing = await fetchQuery(api.sync.findTransactionForSync, { plaidTransactionId })
   return !!(existing && (existing.isSplit || existing.parentTransactionId))
 }
 
 /**
- * Builds account upsert data from Plaid account
+ * Builds account data for Convex from Plaid account
  */
-export function buildAccountUpsertData(a: AccountBase, itemId: string) {
-  const commonData = {
-    officialName: a.official_name || null,
-    mask: a.mask || null,
+export function buildAccountData(a: AccountBase, itemId: Id<"items">) {
+  return {
+    plaidAccountId: a.account_id,
+    itemId,
+    name: a.name ?? a.official_name ?? "Account",
+    officialName: a.official_name || undefined,
+    mask: a.mask || undefined,
     type: a.type,
-    subtype: a.subtype || null,
-    currency: a.balances.iso_currency_code || null,
-    currentBalance: a.balances.current != null ? new Prisma.Decimal(a.balances.current) : null,
-    availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
-    creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
-    balanceUpdatedAt: new Date(),
-  }
-
-  return {
-    update: {
-      itemId,
-      ...commonData,
-      // Don't update name - preserve user's custom account names
-    },
-    create: {
-      plaidAccountId: a.account_id,
-      itemId,
-      name: a.name ?? a.official_name ?? "Account",
-      ...commonData,
-    },
+    subtype: a.subtype || undefined,
+    currency: a.balances.iso_currency_code || undefined,
+    currentBalance: a.balances.current ?? undefined,
+    availableBalance: a.balances.available ?? undefined,
+    creditLimit: a.balances.limit ?? undefined,
   }
 }
 
 /**
- * Builds security upsert data from Plaid security
+ * Builds security data for Convex from Plaid security
  */
-export function buildSecurityUpsertData(s: Security) {
-  const data = {
-    name: s.name || null,
-    tickerSymbol: s.ticker_symbol || null,
-    type: s.type || null,
-    isoCurrencyCode: s.iso_currency_code || null,
-  }
-
+export function buildSecurityData(s: Security) {
   return {
-    update: data,
-    create: {
-      plaidSecurityId: s.security_id,
-      ...data,
-    },
+    plaidSecurityId: s.security_id,
+    name: s.name || undefined,
+    tickerSymbol: s.ticker_symbol || undefined,
+    type: s.type || undefined,
+    isoCurrencyCode: s.iso_currency_code || undefined,
   }
 }
 
 /**
- * Builds holding upsert data from Plaid holding, optionally preserving existing price
+ * Builds holding data for Convex from Plaid holding
+ * Optionally preserves existing price if Plaid returns 0 or null
  */
-export function buildHoldingUpsertData(
+export function buildHoldingData(
   h: Holding,
-  accountId: string,
-  securityId: string,
-  existingHolding: { institutionPrice: Prisma.Decimal | null; institutionPriceAsOf: Date | null } | null,
+  accountId: Id<"accounts">,
+  securityId: Id<"securities">,
+  existingHolding: { institutionPrice: number | null; institutionPriceAsOf: number | null } | null,
 ) {
   // Determine which price to use
-  let priceToUse = h.institution_price != null ? new Prisma.Decimal(h.institution_price) : null
-  let priceAsOfToUse = h.institution_price_as_of ? new Date(h.institution_price_as_of) : null
+  let priceToUse = h.institution_price ?? undefined
+  let priceAsOfToUse = h.institution_price_as_of ? new Date(h.institution_price_as_of).getTime() : undefined
 
   // If existing holding has a non-zero price and Plaid's price is 0 or null, preserve the existing price
-  if (existingHolding?.institutionPrice && existingHolding.institutionPrice.toNumber() > 0) {
-    if (!priceToUse || priceToUse.toNumber() === 0) {
+  if (existingHolding?.institutionPrice && existingHolding.institutionPrice > 0) {
+    if (!priceToUse || priceToUse === 0) {
       priceToUse = existingHolding.institutionPrice
-      priceAsOfToUse = existingHolding.institutionPriceAsOf
+      priceAsOfToUse = existingHolding.institutionPriceAsOf ?? undefined
     }
   }
 
-  const data = {
-    quantity: new Prisma.Decimal(h.quantity),
-    costBasis: h.cost_basis != null ? new Prisma.Decimal(h.cost_basis) : null,
+  return {
+    accountId,
+    securityId,
+    quantity: h.quantity,
+    costBasis: h.cost_basis ?? undefined,
     institutionPrice: priceToUse,
     institutionPriceAsOf: priceAsOfToUse,
-    isoCurrencyCode: h.iso_currency_code || null,
-  }
-
-  return {
-    update: data,
-    create: {
-      accountId,
-      securityId,
-      ...data,
-    },
+    isoCurrencyCode: h.iso_currency_code || undefined,
   }
 }
 
@@ -137,8 +113,8 @@ export function buildHoldingUpsertData(
  * Checks if the sign of the amount has changed between existing and incoming transaction
  * Returns true if the signs differ (e.g., one is positive, other is negative)
  */
-export function hasAmountSignChanged(existingAmount: Prisma.Decimal, incomingAmount: number): boolean {
-  const existingSign = existingAmount.toNumber() >= 0 ? 1 : -1
+export function hasAmountSignChanged(existingAmount: number, incomingAmount: number): boolean {
+  const existingSign = existingAmount >= 0 ? 1 : -1
   const incomingSign = incomingAmount >= 0 ? 1 : -1
   return existingSign !== incomingSign
 }
@@ -147,77 +123,37 @@ export function hasAmountSignChanged(existingAmount: Prisma.Decimal, incomingAmo
  * Adds "for-review" and "sign-review" tags to a transaction
  * Used when the amount sign changes during sync
  */
-export async function addSignReviewTags(transactionId: string): Promise<void> {
+export async function addSignReviewTags(transactionId: Id<"transactions">): Promise<void> {
   // Get or create the review tags
-  const [forReviewTag, signReviewTag] = await Promise.all([
-    prisma.tag.upsert({
-      where: { name: "for-review" },
-      create: { name: "for-review", color: "#f97316" }, // Orange color
-      update: {},
-      select: { id: true },
-    }),
-    prisma.tag.upsert({
-      where: { name: "sign-review" },
-      create: { name: "sign-review", color: "#ef4444" }, // Red color
-      update: {},
-      select: { id: true },
-    }),
-  ])
+  const { forReviewTagId, signReviewTagId } = await fetchMutation(api.sync.getOrCreateReviewTags, {})
 
-  // Add tags to transaction (using upsert to avoid duplicates)
-  await Promise.all([
-    prisma.transactionTag.upsert({
-      where: {
-        transactionId_tagId: {
-          transactionId,
-          tagId: forReviewTag.id,
-        },
-      },
-      create: {
-        transactionId,
-        tagId: forReviewTag.id,
-      },
-      update: {},
-    }),
-    prisma.transactionTag.upsert({
-      where: {
-        transactionId_tagId: {
-          transactionId,
-          tagId: signReviewTag.id,
-        },
-      },
-      create: {
-        transactionId,
-        tagId: signReviewTag.id,
-      },
-      update: {},
-    }),
-  ])
+  // Add tags to transaction
+  await fetchMutation(api.sync.addTagsToTransaction, {
+    transactionId,
+    tagIds: [forReviewTagId, signReviewTagId],
+  })
 }
 
 /**
- * Builds investment transaction upsert data from Plaid investment transaction
+ * Builds investment transaction data for Convex from Plaid investment transaction
  */
-export function buildInvestmentTransactionUpsertData(t: InvestmentTransaction, accountId: string, securityId: string | null) {
-  const data = {
-    accountId,
-    securityId: securityId || null,
-    type: t.type,
-    amount: t.amount != null ? new Prisma.Decimal(t.amount) : null,
-    price: t.price != null ? new Prisma.Decimal(t.price) : null,
-    quantity: t.quantity != null ? new Prisma.Decimal(t.quantity) : null,
-    fees: t.fees != null ? new Prisma.Decimal(t.fees) : null,
-    isoCurrencyCode: t.iso_currency_code || null,
-    date: new Date(t.date),
-    transactionDatetime: t.date, // Store date as string in transactionDatetime column
-    name: t.name || null,
-  }
-
+export function buildInvestmentTransactionData(
+  t: InvestmentTransaction,
+  accountId: Id<"accounts">,
+  securityId: Id<"securities"> | undefined,
+) {
   return {
-    update: data,
-    create: {
-      plaidInvestmentTransactionId: t.investment_transaction_id,
-      ...data,
-    },
+    plaidInvestmentTransactionId: t.investment_transaction_id,
+    accountId,
+    securityId,
+    type: t.type,
+    amount: t.amount ?? undefined,
+    price: t.price ?? undefined,
+    quantity: t.quantity ?? undefined,
+    fees: t.fees ?? undefined,
+    isoCurrencyCode: t.iso_currency_code || undefined,
+    date: new Date(t.date).getTime(),
+    transactionDatetime: t.date,
+    name: t.name || undefined,
   }
 }

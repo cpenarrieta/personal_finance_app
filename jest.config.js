@@ -9,6 +9,9 @@ const config = {
     '^@prisma/generated$': '<rootDir>/prisma/generated/prisma/client',
     '^@prisma/generated/browser$': '<rootDir>/prisma/generated/prisma/browser',
     '^@prisma/generated/enums$': '<rootDir>/prisma/generated/prisma/enums',
+    // Mock Convex generated files (ESM modules)
+    '.*/convex/_generated/api': '<rootDir>/__mocks__/convex/_generated/api.js',
+    '.*/convex/_generated/dataModel': '<rootDir>/__mocks__/convex/_generated/dataModel.js',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

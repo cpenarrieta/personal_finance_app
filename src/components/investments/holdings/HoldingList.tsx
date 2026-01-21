@@ -47,7 +47,7 @@ export function HoldingList({ holdings, showAccount = false }: HoldingListProps)
         {holdings.map((h) => (
           <li key={h.id} className="border p-3 rounded">
             <div className="flex items-start gap-3">
-              {h.security.logoUrl && (
+              {h.security?.logoUrl && (
                 <Image
                   src={h.security.logoUrl}
                   alt={h.security.tickerSymbol || ""}
@@ -58,7 +58,7 @@ export function HoldingList({ holdings, showAccount = false }: HoldingListProps)
               )}
               <div className="flex-1 min-w-0">
                 <div className="font-medium">
-                  {h.security.tickerSymbol || h.security.name} —{" "}
+                  {h.security?.tickerSymbol || h.security?.name || "Unknown Security"} —{" "}
                   {h.quantity_number != null
                     ? h.quantity_number.toLocaleString("en-US", {
                         minimumFractionDigits: 2,

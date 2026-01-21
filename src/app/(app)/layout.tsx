@@ -4,16 +4,11 @@ import { AppSidebarWithPathname } from "@/components/layout/AppSidebarWithPathna
 import { AppSidebarSkeleton } from "@/components/layout/AppSidebarSkeleton"
 import { BreadcrumbsAsync } from "@/components/layout/BreadcrumbsAsync"
 import { BreadcrumbsSkeleton } from "@/components/layout/BreadcrumbsSkeleton"
-import { AccountsMenuAsync } from "@/components/layout/AccountsMenuAsync"
-import { AccountsMenuSkeleton } from "@/components/layout/AccountsMenuSkeleton"
+import { AccountsMenuConvex } from "@/components/layout/AccountsMenuConvex"
 import Script from "next/script"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const accountsSlot = (
-    <Suspense fallback={<AccountsMenuSkeleton />}>
-      <AccountsMenuAsync />
-    </Suspense>
-  )
+  const accountsSlot = <AccountsMenuConvex />
 
   return (
     <>

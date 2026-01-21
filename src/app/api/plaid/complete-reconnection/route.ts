@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/db/prisma"
-import { Prisma } from "@prisma/generated"
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { getReconnectionData, clearReconnectionData } from "@/lib/cache/reconnection-cache"
 import { logInfo, logError } from "@/lib/utils/logger"
@@ -29,96 +30,74 @@ export async function POST(req: NextRequest) {
     logInfo(`🔄 Completing reconnection for ${institutionName}...`)
 
     // Upsert institution
-    await prisma.institution.upsert({
-      where: { id: institutionId },
-      update: { name: institutionName },
-      create: { id: institutionId, name: institutionName },
+    await fetchMutation(api.items.upsertInstitution, {
+      oldId: institutionId,
+      name: institutionName,
     })
 
     // STEP 1: Convert split children to manual (preserve user customizations)
-    // This orphans them (removes parent link) before we delete the parent
-    const convertedSplits = await prisma.transaction.updateMany({
-      where: {
-        account: { itemId: existingItemDbId },
-        parentTransactionId: { not: null }, // Is a split child
-        isManual: false, // Not already manual
-      },
-      data: {
-        isManual: true, // Mark as manual to preserve
-        parentTransactionId: null, // Orphan (parent will be deleted)
-      },
+    const convertResult = await fetchMutation(api.items.convertSplitChildrenToManual, {
+      itemId: existingItemDbId as Id<"items">,
     })
 
-    if (convertedSplits.count > 0) {
-      logInfo(`   Converted ${convertedSplits.count} split children to manual transactions`)
+    if (convertResult.converted > 0) {
+      logInfo(`   Converted ${convertResult.converted} split children to manual transactions`)
     }
 
     // STEP 2: Delete old Plaid transactions (including split parents)
-    const deletedTxs = await prisma.transaction.deleteMany({
-      where: {
-        account: { itemId: existingItemDbId },
-        isManual: false, // Only delete Plaid-sourced transactions
-      },
+    const deleteResult = await fetchMutation(api.items.deleteNonManualTransactions, {
+      itemId: existingItemDbId as Id<"items">,
     })
-    logInfo(`   Deleted ${deletedTxs.count} Plaid transactions (preserved manual & split children)`)
+    logInfo(`   Deleted ${deleteResult.deleted} Plaid transactions (preserved manual & split children)`)
 
     // Update existing item with new access token and plaidItemId
-    await prisma.item.update({
-      where: { id: existingItemDbId },
-      data: {
-        plaidItemId: itemId,
-        accessToken,
-        status: "ACTIVE",
-        lastTransactionsCursor: null,
-        lastInvestmentsCursor: null,
-      },
+    await fetchMutation(api.items.updateForReconnection, {
+      id: existingItemDbId as Id<"items">,
+      plaidItemId: itemId,
+      accessToken,
+      status: "ACTIVE",
     })
 
     // Get existing accounts
-    const existingAccounts = await prisma.plaidAccount.findMany({
-      where: { itemId: existingItemDbId },
+    const existingItem = await fetchQuery(api.items.getById, {
+      id: existingItemDbId as Id<"items">,
     })
+    const existingAccounts = existingItem?.accounts || []
 
     // Update existing accounts with new plaidAccountIds
     for (const a of accounts) {
       const accountSignature = `${a.name}|${a.mask}`
       const existingAccount = existingAccounts.find(
-        (acc: { name: string; mask: string | null }) => `${acc.name}|${acc.mask}` === accountSignature,
+        (acc: { name: string; mask?: string | null }) => `${acc.name}|${acc.mask}` === accountSignature,
       )
 
       if (existingAccount) {
         // Update existing account with new plaidAccountId
-        await prisma.plaidAccount.update({
-          where: { id: existingAccount.id },
-          data: {
-            plaidAccountId: a.account_id,
-            officialName: a.official_name || null,
-            type: a.type,
-            subtype: a.subtype || null,
-            currency: a.balances.iso_currency_code || null,
-            currentBalance: a.balances.current != null ? new Prisma.Decimal(a.balances.current) : null,
-            availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
-            creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
-            balanceUpdatedAt: new Date(),
-          },
+        await fetchMutation(api.accounts.updatePlaidAccountId, {
+          id: existingAccount._id as Id<"accounts">,
+          plaidAccountId: a.account_id,
+          officialName: a.official_name || null,
+          type: a.type,
+          subtype: a.subtype || null,
+          currency: a.balances.iso_currency_code || null,
+          currentBalance: a.balances.current ?? null,
+          availableBalance: a.balances.available ?? null,
+          creditLimit: a.balances.limit ?? null,
         })
       } else {
         // New account - create it
-        await prisma.plaidAccount.create({
-          data: {
-            plaidAccountId: a.account_id,
-            itemId: existingItemDbId,
-            name: a.name ?? a.official_name ?? "Account",
-            officialName: a.official_name || null,
-            mask: a.mask || null,
-            type: a.type,
-            subtype: a.subtype || null,
-            currency: a.balances.iso_currency_code || null,
-            currentBalance: a.balances.current != null ? new Prisma.Decimal(a.balances.current) : null,
-            availableBalance: a.balances.available != null ? new Prisma.Decimal(a.balances.available) : null,
-            creditLimit: a.balances.limit != null ? new Prisma.Decimal(a.balances.limit) : null,
-            balanceUpdatedAt: new Date(),
-          },
+        await fetchMutation(api.accounts.create, {
+          plaidAccountId: a.account_id,
+          itemId: existingItemDbId as Id<"items">,
+          name: a.name ?? a.official_name ?? "Account",
+          officialName: a.official_name || null,
+          mask: a.mask || null,
+          type: a.type,
+          subtype: a.subtype || null,
+          currency: a.balances.iso_currency_code || null,
+          currentBalance: a.balances.current ?? null,
+          availableBalance: a.balances.available ?? null,
+          creditLimit: a.balances.limit ?? null,
         })
       }
     }
@@ -135,7 +114,7 @@ export async function POST(req: NextRequest) {
 
     logInfo(`✅ Reconnection complete for ${institutionName}`)
 
-    return apiSuccess({ transactionsDeleted: deletedTxs.count })
+    return apiSuccess({ transactionsDeleted: deleteResult.deleted })
   } catch (error) {
     logError("❌ Error completing reconnection:", error)
     return apiErrors.internalError(error instanceof Error ? error.message : "Unknown error")

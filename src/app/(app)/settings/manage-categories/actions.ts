@@ -1,7 +1,9 @@
 "use server"
 
 import { revalidatePath, revalidateTag } from "next/cache"
-import { prisma } from "@/lib/db/prisma"
+import { fetchMutation } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import {
   createCategorySchema,
   deleteCategorySchema,
@@ -26,12 +28,10 @@ export async function createCategory(formData: FormData): Promise<void> {
 
   const isTransfer = formData.get("isTransferCategory") === "true"
 
-  await prisma.category.create({
-    data: {
-      name: parsed.data.name,
-      imageUrl: parsed.data.imageUrl,
-      groupType: isTransfer ? "TRANSFER" : undefined,
-    },
+  await fetchMutation(api.categories.create, {
+    name: parsed.data.name,
+    imageUrl: parsed.data.imageUrl || undefined,
+    groupType: isTransfer ? "TRANSFER" : undefined,
   })
 
   revalidatePath("/settings/manage-categories")
@@ -49,9 +49,9 @@ export async function updateCategoryGroupType(formData: FormData): Promise<void>
     throw new Error("Category ID is required")
   }
 
-  await prisma.category.update({
-    where: { id },
-    data: { groupType: isTransfer ? "TRANSFER" : null },
+  await fetchMutation(api.categories.update, {
+    id: id as Id<"categories">,
+    groupType: isTransfer ? "TRANSFER" : undefined,
   })
 
   revalidatePath("/settings/manage-categories")
@@ -72,8 +72,8 @@ export async function deleteCategory(formData: FormData): Promise<void> {
     throw new Error(parsed.error.issues[0]?.message || "Invalid input")
   }
 
-  await prisma.category.delete({
-    where: { id: parsed.data.id },
+  await fetchMutation(api.categories.remove, {
+    id: parsed.data.id as Id<"categories">,
   })
 
   revalidatePath("/settings/manage-categories")
@@ -96,12 +96,10 @@ export async function createSubcategory(formData: FormData): Promise<void> {
     throw new Error(parsed.error.issues[0]?.message || "Invalid input")
   }
 
-  await prisma.subcategory.create({
-    data: {
-      categoryId: parsed.data.categoryId,
-      name: parsed.data.name,
-      imageUrl: parsed.data.imageUrl,
-    },
+  await fetchMutation(api.categories.createSubcategory, {
+    categoryId: parsed.data.categoryId as Id<"categories">,
+    name: parsed.data.name,
+    imageUrl: parsed.data.imageUrl || undefined,
   })
 
   revalidatePath("/settings/manage-categories")
@@ -122,8 +120,8 @@ export async function deleteSubcategory(formData: FormData): Promise<void> {
     throw new Error(parsed.error.issues[0]?.message || "Invalid input")
   }
 
-  await prisma.subcategory.delete({
-    where: { id: parsed.data.id },
+  await fetchMutation(api.categories.removeSubcategory, {
+    id: parsed.data.id as Id<"subcategories">,
   })
 
   revalidatePath("/settings/manage-categories")

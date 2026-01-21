@@ -1,16 +1,13 @@
-// lib/syncHoldingsLogos.ts
-import { prisma } from "../db/prisma"
+// lib/sync/sync-holdings-logos.ts
+import { fetchQuery, fetchMutation } from "convex/nextjs"
+import { api } from "../../../convex/_generated/api"
 import { logInfo, logError } from "../utils/logger"
 
 const LOGO_DEV_TOKEN = process.env.LOGO_DEV_TOKEN || "pk_A4XxtLBuSvWdGiAYJMzjTA"
 
 export async function syncHoldingsLogos() {
-  // Get all securities with ticker symbols
-  const securities = await prisma.security.findMany({
-    where: {
-      tickerSymbol: { not: null },
-    },
-  })
+  // Get all securities with ticker symbols from Convex
+  const securities = await fetchQuery(api.sync.getAllSecuritiesWithTickers)
 
   logInfo(`Syncing logos for ${securities.length} securities...`)
 
@@ -25,9 +22,9 @@ export async function syncHoldingsLogos() {
       logInfo(`${ticker}: ${logoUrl}`)
 
       // Update the security with the logo URL
-      await prisma.security.update({
-        where: { id: security.id },
-        data: { logoUrl },
+      await fetchMutation(api.sync.updateSecurityLogo, {
+        id: security.id,
+        logoUrl,
       })
     } catch (error) {
       logError(`Error setting logo for ${security.tickerSymbol}:`, error)
