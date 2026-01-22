@@ -18,6 +18,8 @@ jobs:
     environment: production  # This allows access to environment secrets
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 
     steps:
       # Step 1: Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -47,6 +49,6 @@ jobs:
       - name: Type Check
         run: npm run type-check
 
-      # Step 7: Run the build command defined in your package.json
+      # Step 7: Run the build command with Convex deploy
       - name: Build Project
-        run: npm run build
+        run: npm run build:vercel
