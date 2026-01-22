@@ -421,3 +421,25 @@
     background: oklch(0.45 0.02 280);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE TOUCH OPTIMIZATION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Remove tap highlight on touch devices */
+button, [role="button"], a, [type="submit"], [type="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on interactive elements */
+.select-none {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 44px minimum touch targets on touch devices */
+@media (pointer: coarse) {
+  button, [role="button"], [type="submit"], [type="button"] {
+    min-height: 44px;
+  }
+}

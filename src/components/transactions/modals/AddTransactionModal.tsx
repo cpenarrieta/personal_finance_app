@@ -114,7 +114,7 @@ export function AddTransactionModal({ onClose, categories, tags, accounts }: Add
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Manual Transaction</DialogTitle>
         </DialogHeader>

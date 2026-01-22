@@ -1,9 +1,11 @@
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { TransactionForClient, CategoryForClient } from "@/types"
 import { logError } from "@/lib/utils/logger"
 
 export function useBulkTransactionOperations() {
+  const router = useRouter()
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set())
   const [showBulkUpdate, setShowBulkUpdate] = useState(false)
   const [bulkCategoryId, setBulkCategoryId] = useState("")
@@ -61,7 +63,13 @@ export function useBulkTransactionOperations() {
       toast.success(`Updated ${selectedTransactions.size} transactions!`, { id: toastId })
 
       // Refresh the page to show updated data
-      window.location.reload()
+      router.refresh()
+
+      // Reset selection state
+      setSelectedTransactions(new Set())
+      setShowBulkUpdate(false)
+      setBulkCategoryId("")
+      setBulkSubcategoryId("")
     } catch (error) {
       logError("Error bulk updating transactions:", error)
       toast.error("Failed to update transactions", { id: toastId })

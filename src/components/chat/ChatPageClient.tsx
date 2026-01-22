@@ -41,7 +41,7 @@ export function ChatPageClient() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-9rem)]">
+    <div className="flex flex-col h-[calc(100dvh-9rem)]">
       {/* Header */}
       <div className="mb-4 shrink-0">
         <h1 className="text-2xl font-semibold text-foreground">AI Transaction Insights</h1>

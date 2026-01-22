@@ -27,7 +27,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: "100vh",
+            minHeight: "100dvh",
             padding: "20px",
             fontFamily: "system-ui, -apple-system, sans-serif",
           }}

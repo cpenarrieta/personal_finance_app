@@ -155,7 +155,7 @@ export function SplitTransactionModal({ transaction, onClose, categories }: Spli
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Split Transaction</DialogTitle>
           <DialogDescription>
