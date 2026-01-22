@@ -7,12 +7,14 @@ export default defineSchema({
   // ============================================================================
 
   institutions: defineTable({
-    // Original Prisma id preserved for reference
+    plaidInstitutionId: v.optional(v.string()),
     name: v.string(),
     logoUrl: v.optional(v.string()),
     shortName: v.optional(v.string()),
     createdAt: v.number(), // ms timestamp
-  }).index("by_name", ["name"]),
+  })
+    .index("by_name", ["name"])
+    .index("by_plaidInstitutionId", ["plaidInstitutionId"]),
 
   items: defineTable({
     plaidItemId: v.string(),
@@ -265,16 +267,4 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_credentialID", ["credentialID"]),
-
-  // ============================================================================
-  // MIGRATION HELPER (temporary - delete after migration)
-  // ============================================================================
-
-  idMappings: defineTable({
-    tableName: v.string(),
-    oldId: v.string(),
-    newId: v.string(),
-  })
-    .index("by_table_oldId", ["tableName", "oldId"])
-    .index("by_table_newId", ["tableName", "newId"]),
 })

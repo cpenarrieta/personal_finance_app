@@ -3,7 +3,6 @@
 
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
-import { Id } from "./_generated/dataModel"
 
 // ============================================================================
 // QUERIES
@@ -92,55 +91,44 @@ export const getAll = query({
  */
 export const upsertInstitution = mutation({
   args: {
-    oldId: v.string(), // Original Prisma ID
+    oldId: v.string(), // Plaid institution ID
     name: v.string(),
     logoUrl: v.optional(v.string()),
     shortName: v.optional(v.string()),
   },
-  handler: async (ctx, { oldId, name, logoUrl, shortName }) => {
+  handler: async (ctx, { oldId: plaidInstitutionId, name, logoUrl, shortName }) => {
     const now = Date.now()
 
-    // Check if institution exists via idMappings
-    const mapping = await ctx.db
-      .query("idMappings")
-      .withIndex("by_table_oldId", (q) => q.eq("tableName", "institutions").eq("oldId", oldId))
+    // Check if institution exists by plaidInstitutionId
+    const existingByPlaidId = await ctx.db
+      .query("institutions")
+      .withIndex("by_plaidInstitutionId", (q) => q.eq("plaidInstitutionId", plaidInstitutionId))
       .first()
 
-    if (mapping) {
-      const existing = await ctx.db.get(mapping.newId as Id<"institutions">)
-      if (existing) {
-        await ctx.db.patch(existing._id, { name, logoUrl, shortName })
-        return existing._id
-      }
+    if (existingByPlaidId) {
+      await ctx.db.patch(existingByPlaidId._id, { name, logoUrl, shortName })
+      return existingByPlaidId._id
     }
 
-    // Check by name
+    // Check by name (fallback)
     const existingByName = await ctx.db
       .query("institutions")
       .withIndex("by_name", (q) => q.eq("name", name))
       .first()
 
     if (existingByName) {
-      await ctx.db.patch(existingByName._id, { name, logoUrl, shortName })
+      await ctx.db.patch(existingByName._id, { name, logoUrl, shortName, plaidInstitutionId })
       return existingByName._id
     }
 
     // Create new
-    const id = await ctx.db.insert("institutions", {
+    return ctx.db.insert("institutions", {
+      plaidInstitutionId,
       name,
       logoUrl,
       shortName,
       createdAt: now,
     })
-
-    // Store mapping
-    await ctx.db.insert("idMappings", {
-      tableName: "institutions",
-      oldId,
-      newId: id,
-    })
-
-    return id
   },
 })
 

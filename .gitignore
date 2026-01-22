@@ -78,3 +78,5 @@ mobile/ios/
 
 # Convex migration data (contains sensitive data)
 convex-migration-data/
+convex-seed-data/
+convex-backup.zip

@@ -11,11 +11,9 @@
 import type * as accounts from "../accounts.js"
 import type * as categories from "../categories.js"
 import type * as dashboard from "../dashboard.js"
+import type * as init from "../init.js"
 import type * as investments from "../investments.js"
 import type * as items from "../items.js"
-import type * as migrations_cleanup from "../migrations/cleanup.js"
-import type * as migrations_import from "../migrations/import.js"
-import type * as migrations_validate from "../migrations/validate.js"
 import type * as sync from "../sync.js"
 import type * as tags from "../tags.js"
 import type * as transactions from "../transactions.js"
@@ -28,11 +26,9 @@ declare const fullApi: ApiFromModules<{
   accounts: typeof accounts
   categories: typeof categories
   dashboard: typeof dashboard
+  init: typeof init
   investments: typeof investments
   items: typeof items
-  "migrations/cleanup": typeof migrations_cleanup
-  "migrations/import": typeof migrations_import
-  "migrations/validate": typeof migrations_validate
   sync: typeof sync
   tags: typeof tags
   transactions: typeof transactions
