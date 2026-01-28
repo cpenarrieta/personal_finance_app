@@ -16,22 +16,25 @@ npx convex deploy    # Deploy Convex to production
 npm run sync         # Incremental sync
 ```
 
-## Environment (.env)
+## Environment
 
-**Required:**
+### Local (.env.local)
 - `CONVEX_DEPLOYMENT`: Convex deployment URL
-- `NEXT_PUBLIC_CONVEX_URL`: Convex public URL
-- `DATABASE_URL`: PostgreSQL connection (for auth only)
-- `BETTER_AUTH_SECRET`: Random secret
-- `BETTER_AUTH_URL`: App URL (e.g., http://localhost:3000)
-- `ALLOWED_EMAILS`: Comma-separated emails for access
-- OAuth: Google and/or GitHub credentials
+- `NEXT_PUBLIC_CONVEX_URL`: Convex public URL (e.g., https://adjective-animal-123.convex.cloud)
+- `NEXT_PUBLIC_CONVEX_SITE_URL`: Convex site URL (e.g., https://adjective-animal-123.convex.site)
 - Plaid: `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`
 
-**Optional:**
-- `OPENAI_API_KEY`: AI categorization
-- `ALPHA_VANTAGE_API_KEY`: Stock prices
-- `PLAID_WEBHOOK_VERIFICATION_KEY`: Webhook security (recommended for production)
+### Convex Environment (set via `npx convex env set`)
+- `BETTER_AUTH_SECRET`: Random secret (`openssl rand -base64 32`)
+- `SITE_URL`: Your app URL (e.g., http://localhost:3000)
+- `ALLOWED_EMAILS`: Comma-separated emails for access
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: Google OAuth
+- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`: GitHub OAuth
+
+### Optional
+- `OPENAI_API_KEY`: AI categorization (local .env)
+- `ALPHA_VANTAGE_API_KEY`: Stock prices (local .env)
+- `PLAID_WEBHOOK_VERIFICATION_KEY`: Webhook security (Convex env)
 
 ## Debugging
 
@@ -41,11 +44,16 @@ npm run sync         # Incremental sync
 
 ## Authentication
 
-- Email-gated via `ALLOWED_EMAILS` in `.env`
-- Better Auth with OAuth (Google/GitHub)
-- Enforced in `src/proxy.ts` (Next.js 16)
+- **Better Auth** with Convex adapter - OAuth (Google/GitHub) + Passkeys
+- Email-gated via `ALLOWED_EMAILS` Convex env var
+- Enforced in `src/proxy.ts` (Next.js 16) and `convex/auth.ts`
 - Protected: All routes except `/login` and `/api/auth/*`
-- **Note**: Auth uses Prisma/PostgreSQL, all other data uses Convex
+- **All auth data stored in Convex** (users, sessions, accounts, passkeys)
+
+### OAuth Redirect URIs
+Configure in Google Cloud Console / GitHub Developer Settings:
+- Development: `http://localhost:3000/api/auth/callback/google` (or `/github`)
+- Production: `https://your-domain.com/api/auth/callback/google` (or `/github`)
 
 ## Next.js 16 Patterns
 

@@ -10,10 +10,11 @@
 - **Location**: `src/lib/plaid.ts`, `src/lib/sync/`
 
 ### 2. Authentication (Next.js 16)
-- **Better Auth** with OAuth (Google/GitHub)
-- **Email-gating**: `ALLOWED_EMAILS` env var enforced in `src/proxy.ts` (replaces middleware.ts)
+- **Better Auth** with Convex adapter - OAuth (Google/GitHub) + Passkeys
+- **Email-gating**: `ALLOWED_EMAILS` Convex env var enforced in `convex/auth.ts`
 - **Protected**: All routes except `/login` and `/api/auth/*`
-- **Note**: Auth uses Prisma for its tables only
+- **Proxy**: `src/proxy.ts` checks for Better Auth session cookie
+- **Architecture**: `/api/auth/[...all]` proxies requests to Convex HTTP endpoints
 
 ### 3. Database Schema (Convex)
 - **Plaid**: institutions → items → accounts → transactions
@@ -52,7 +53,7 @@ src/
 │   └── login/                    # Login page
 ├── components/                   # UI components
 ├── lib/
-│   ├── auth/                     # Better Auth (uses Prisma)
+│   ├── auth/                     # Better Auth client & server utilities
 │   ├── plaid.ts                  # Plaid client
 │   ├── sync/                     # Sync logic
 │   └── syncPrices.ts             # Alpha Vantage
@@ -61,6 +62,10 @@ src/
 
 convex/
 ├── schema.ts                     # Database schema
+├── auth.ts                       # Better Auth instance with Convex adapter
+├── auth.config.ts                # Auth provider config
+├── convex.config.ts              # Convex app config (registers Better Auth component)
+├── http.ts                       # HTTP routes (auth endpoints)
 ├── transactions.ts               # Transaction queries/mutations
 ├── accounts.ts                   # Account queries/mutations
 ├── categories.ts                 # Category queries/mutations
@@ -70,7 +75,6 @@ convex/
 └── _generated/                   # Auto-generated types
 
 scripts/                          # Sync scripts
-prisma/                           # Auth schema only
 ```
 
 ## Technical Details

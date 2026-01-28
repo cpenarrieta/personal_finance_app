@@ -21,7 +21,7 @@ Personal finance app built with Next.js 16 that syncs financial data via Plaid A
 - **Framework**: Next.js 16 with App Router and Turbopack (stable)
 - **Language**: TypeScript (strict mode)
 - **Database**: Convex (real-time backend)
-- **Authentication**: Better Auth with OAuth (Google, GitHub) - uses Prisma for auth tables only
+- **Authentication**: Better Auth with Convex adapter (OAuth: Google, GitHub + Passkeys)
 - **Financial Data**: Plaid API
 - **AI**: OpenAI GPT-5-mini for transaction categorization
 - **UI**: React 19.2, Tailwind CSS 4, shadcn/ui, Recharts
@@ -192,11 +192,15 @@ src/
 │   ├── ui/                # shadcn/ui components
 │   └── ...                # Feature components
 ├── lib/
-│   ├── auth/              # Better Auth (still uses Prisma)
+│   ├── auth/              # Better Auth client & server utilities
 │   └── plaid.ts, sync/
 └── types/
 convex/
 ├── schema.ts              # Database schema
+├── auth.ts                # Better Auth instance with Convex adapter
+├── auth.config.ts         # Auth provider config
+├── convex.config.ts       # Convex app config (registers Better Auth component)
+├── http.ts                # HTTP routes (auth endpoints)
 ├── transactions.ts        # Transaction queries/mutations
 ├── accounts.ts            # Account queries/mutations
 ├── categories.ts          # Category queries/mutations
@@ -225,9 +229,14 @@ npm run sync               # Sync financial data (incremental)
 
 ## Authentication
 
-Single-user app with email-gating. Only `ALLOWED_EMAILS` (env var) can access. Better Auth with OAuth (Google/GitHub). Auth enforced in `src/proxy.ts` (Next.js 16 - replaces middleware.ts).
+Single-user app with email-gating. Only `ALLOWED_EMAILS` (Convex env var) can access. Better Auth with Convex adapter - OAuth (Google/GitHub) + Passkeys. Auth enforced in `src/proxy.ts` (Next.js 16 - replaces middleware.ts).
 
-**Note:** Auth still uses Prisma for its tables (User, Session, Account, Verification). All other data uses Convex.
+**Architecture:**
+- Auth config: `convex/auth.ts` (Better Auth instance with Convex adapter)
+- Client: `src/lib/auth/auth-client.ts` (Better Auth React client)
+- Server utils: `src/lib/auth/auth-server.ts` (Next.js server helpers)
+- Routes: `/api/auth/[...all]` proxies to Convex HTTP endpoints
+- All auth data stored in Convex (users, sessions, accounts, passkeys)
 
 ## Important Rules
 
