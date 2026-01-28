@@ -33,3 +33,6 @@ pnpm-lock.yaml
 
 # React Native / Expo (separate project)
 mobile
+
+# Convex auto-generated
+convex/_generated
