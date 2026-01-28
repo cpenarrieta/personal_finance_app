@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// Better Auth session cookie name
+// Better Auth session cookie names (with __Secure- prefix in production HTTPS)
 const SESSION_COOKIE_NAME = "better-auth.session_token"
+const SECURE_SESSION_COOKIE_NAME = "__Secure-better-auth.session_token"
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -26,9 +27,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for Better Auth session cookie
+  // Check for Better Auth session cookie (try both secure and non-secure names)
   // Cookie is encrypted - just check existence, Convex validates on actual queries
-  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)
+  const sessionCookie = request.cookies.get(SECURE_SESSION_COOKIE_NAME) || request.cookies.get(SESSION_COOKIE_NAME)
 
   if (!sessionCookie?.value) {
     return NextResponse.redirect(new URL("/login", request.url))
