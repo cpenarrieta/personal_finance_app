@@ -1,5 +1,7 @@
-import { internalMutation } from "./_generated/server"
+import { internalMutation, mutation } from "./_generated/server"
 import { Id } from "./_generated/dataModel"
+import { v } from "convex/values"
+import { components } from "./_generated/api"
 
 // Seed data extracted from dev deployment
 // Categories and subcategories for preview deployments
@@ -137,3 +139,141 @@ const init = internalMutation({
 })
 
 export default init
+
+// Migration mutations for auth data from PostgreSQL to Convex Better Auth
+// These use the Better Auth component's adapter directly
+
+export const migrateUser = mutation({
+  args: {
+    id: v.string(),
+    email: v.string(),
+    name: v.string(),
+    emailVerified: v.boolean(),
+    image: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Use the Better Auth component adapter to create user
+    await ctx.runMutation(components.betterAuth.adapter.create, {
+      input: {
+        model: "user",
+        data: {
+          email: args.email,
+          name: args.name,
+          emailVerified: args.emailVerified,
+          image: args.image ?? null,
+          createdAt: args.createdAt,
+          updatedAt: args.updatedAt,
+        },
+      },
+    })
+    return { success: true }
+  },
+})
+
+export const migrateAccount = mutation({
+  args: {
+    id: v.string(),
+    userId: v.string(),
+    providerId: v.string(),
+    accountId: v.string(),
+    accessToken: v.optional(v.string()),
+    refreshToken: v.optional(v.string()),
+    accessTokenExpiresAt: v.optional(v.number()),
+    refreshTokenExpiresAt: v.optional(v.number()),
+    scope: v.optional(v.string()),
+    idToken: v.optional(v.string()),
+    password: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.runMutation(components.betterAuth.adapter.create, {
+      input: {
+        model: "account",
+        data: {
+          userId: args.userId, // Use the original ID; Better Auth handles mapping
+          providerId: args.providerId,
+          accountId: args.accountId,
+          accessToken: args.accessToken ?? null,
+          refreshToken: args.refreshToken ?? null,
+          accessTokenExpiresAt: args.accessTokenExpiresAt ?? null,
+          refreshTokenExpiresAt: args.refreshTokenExpiresAt ?? null,
+          scope: args.scope ?? null,
+          idToken: args.idToken ?? null,
+          password: args.password ?? null,
+          createdAt: args.createdAt,
+          updatedAt: args.updatedAt,
+        },
+      },
+    })
+    return { success: true }
+  },
+})
+
+export const migratePasskey = mutation({
+  args: {
+    id: v.string(),
+    userId: v.string(),
+    name: v.optional(v.string()),
+    publicKey: v.string(),
+    credentialID: v.string(),
+    counter: v.number(),
+    deviceType: v.string(),
+    backedUp: v.boolean(),
+    transports: v.optional(v.string()),
+    aaguid: v.optional(v.string()),
+    createdAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.runMutation(components.betterAuth.adapter.create, {
+      input: {
+        model: "passkey",
+        data: {
+          userId: args.userId,
+          name: args.name ?? null,
+          publicKey: args.publicKey,
+          credentialID: args.credentialID,
+          counter: args.counter,
+          deviceType: args.deviceType,
+          backedUp: args.backedUp,
+          transports: args.transports ?? null,
+          aaguid: args.aaguid ?? null,
+          createdAt: args.createdAt ?? null,
+        },
+      },
+    })
+    return { success: true }
+  },
+})
+
+export const migrateSession = mutation({
+  args: {
+    id: v.string(),
+    userId: v.string(),
+    token: v.string(),
+    expiresAt: v.number(),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.runMutation(components.betterAuth.adapter.create, {
+      input: {
+        model: "session",
+        data: {
+          userId: args.userId,
+          token: args.token,
+          expiresAt: args.expiresAt,
+          ipAddress: args.ipAddress ?? null,
+          userAgent: args.userAgent ?? null,
+          createdAt: args.createdAt,
+          updatedAt: args.updatedAt,
+        },
+      },
+    })
+    return { success: true }
+  },
+})

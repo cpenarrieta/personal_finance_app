@@ -1,28 +1,37 @@
-import { auth } from "./auth"
-import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { logError } from "../utils/logger"
+import { isAuthenticated, getToken } from "./auth-server"
+import { decodeJwt } from "jose"
 
 export async function getSession() {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    return session
-  } catch (error) {
-    logError("Error getting session:", error)
+  const token = await getToken()
+  if (!token) {
     return null
+  }
+  // For backwards compat, return minimal session structure with user data
+  try {
+    const payload = decodeJwt(token)
+    return {
+      token,
+      user: {
+        email: payload.email as string | undefined,
+        name: payload.name as string | undefined,
+        id: payload.sub as string | undefined,
+      },
+    }
+  } catch {
+    return { token }
   }
 }
 
 export async function requireAuth() {
-  const session = await getSession()
+  const authenticated = await isAuthenticated()
 
-  if (!session || !session.user) {
+  if (!authenticated) {
     redirect("/login")
   }
 
-  return session
+  const session = await getSession()
+  return session || { authenticated: true }
 }
 
 /**
@@ -72,7 +81,8 @@ export async function validateAllowedEmail() {
     throw new Error("ALLOWED_EMAILS not configured")
   }
 
-  if (!isEmailAllowed(session.user.email)) {
+  const userEmail = session && "user" in session ? session.user?.email : undefined
+  if (!isEmailAllowed(userEmail)) {
     // User is not authorized - sign them out and redirect
     redirect("/login?error=unauthorized")
   }

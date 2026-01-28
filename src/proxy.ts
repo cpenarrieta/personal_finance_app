@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { auth } from "./lib/auth/auth"
-import { isEmailAllowed, getAllowedEmails } from "./lib/auth/auth-helpers"
-import { logError } from "./lib/utils/logger"
+
+// Better Auth session cookie name
+const SESSION_COOKIE_NAME = "better-auth.session_token"
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Allow bypass for E2E tests when E2E_TEST_MODE is enabled
-  // This allows Playwright tests to run without authentication
   if (process.env.E2E_TEST_MODE === "true") {
     const bypassHeader = request.headers.get("x-e2e-bypass-auth")
     if (bypassHeader === "true") {
@@ -22,40 +21,22 @@ export async function proxy(request: NextRequest) {
     pathname === "/login" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
-    // Allow public assets (images, icons, manifest, etc.)
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|json)$/)
   ) {
     return NextResponse.next()
   }
 
-  // Check for session using Better Auth
-  try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    })
+  // Check for Better Auth session cookie
+  // Cookie is encrypted - just check existence, Convex validates on actual queries
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)
 
-    if (!session?.user?.email) {
-      return NextResponse.redirect(new URL("/login", request.url))
-    }
-
-    // Validate allowed email
-    const allowedEmails = getAllowedEmails()
-
-    if (allowedEmails.length === 0) {
-      logError("ALLOWED_EMAILS not configured")
-      return NextResponse.redirect(new URL("/login?error=unauthorized", request.url))
-    }
-
-    if (!isEmailAllowed(session.user.email)) {
-      return NextResponse.redirect(new URL("/login?error=unauthorized", request.url))
-    }
-
-    // All checks passed
-    return NextResponse.next()
-  } catch (error) {
-    logError("Proxy auth error:", error)
+  if (!sessionCookie?.value) {
     return NextResponse.redirect(new URL("/login", request.url))
   }
+
+  // Session cookie exists - allow through
+  // ALLOWED_EMAILS validation happens in Convex queries via auth config
+  return NextResponse.next()
 }
 
 export const config = {

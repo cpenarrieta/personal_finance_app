@@ -1,33 +1,33 @@
-import { auth } from "@/lib/auth/auth"
-import { prisma } from "@/lib/db/prisma"
-import { NextRequest } from "next/server"
+import { cookies } from "next/headers"
 import { logError } from "@/lib/utils/logger"
 import { apiSuccess, apiErrors } from "@/lib/api/response"
 
-export async function GET(req: NextRequest) {
-  try {
-    const session = await auth.api.getSession({ headers: req.headers })
+const CONVEX_SITE_URL = process.env.NEXT_PUBLIC_CONVEX_SITE_URL || ""
 
-    if (!session?.user?.id) {
-      return apiErrors.unauthorized()
+export async function GET() {
+  try {
+    // Get session cookie to forward to Better Auth
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get("better-auth.session_token")
+
+    if (!sessionCookie) {
+      return apiErrors.unauthorized("Not authenticated")
     }
 
-    const passkeys = await prisma.passkey.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      select: {
-        id: true,
-        name: true,
-        deviceType: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
+    // Call Better Auth's passkey list endpoint
+    const response = await fetch(`${CONVEX_SITE_URL}/api/auth/passkey/list-user-passkeys`, {
+      method: "GET",
+      headers: {
+        Cookie: `better-auth.session_token=${sessionCookie.value}`,
       },
     })
 
-    return apiSuccess({ passkeys })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch passkeys: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return apiSuccess({ passkeys: data.passkeys || [] })
   } catch (error) {
     logError("Failed to list passkeys:", error)
     return apiErrors.internalError("Failed to list passkeys")

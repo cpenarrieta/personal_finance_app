@@ -200,71 +200,9 @@ export default defineSchema({
   }).index("by_generatedAt", ["generatedAt"]),
 
   // ============================================================================
-  // AUTH (Better Auth compatible)
+  // AUTH (Managed by @convex-dev/better-auth component)
   // ============================================================================
-
-  users: defineTable({
-    email: v.string(),
-    emailVerified: v.boolean(),
-    name: v.optional(v.string()),
-    image: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }).index("by_email", ["email"]),
-
-  sessions: defineTable({
-    userId: v.id("users"),
-    token: v.string(),
-    expiresAt: v.number(),
-    ipAddress: v.optional(v.string()),
-    userAgent: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_token", ["token"]),
-
-  oauthAccounts: defineTable({
-    userId: v.id("users"),
-    providerId: v.string(),
-    accountId: v.string(),
-    accessToken: v.optional(v.string()),
-    refreshToken: v.optional(v.string()),
-    expiresAt: v.optional(v.number()),
-    accessTokenExpiresAt: v.optional(v.number()),
-    refreshTokenExpiresAt: v.optional(v.number()),
-    scope: v.optional(v.string()),
-    idToken: v.optional(v.string()),
-    password: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_provider", ["providerId", "accountId"]),
-
-  verifications: defineTable({
-    identifier: v.string(),
-    value: v.string(),
-    expiresAt: v.number(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_identifier", ["identifier"])
-    .index("by_identifier_value", ["identifier", "value"]),
-
-  passkeys: defineTable({
-    name: v.optional(v.string()),
-    publicKey: v.string(),
-    userId: v.id("users"),
-    credentialID: v.string(),
-    counter: v.number(),
-    deviceType: v.string(),
-    backedUp: v.boolean(),
-    transports: v.optional(v.string()),
-    aaguid: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_credentialID", ["credentialID"]),
+  // Auth tables (users, sessions, accounts, verifications, passkeys, jwks, etc.)
+  // are automatically managed by the Better Auth component.
+  // See convex/convex.config.ts for component configuration.
 })

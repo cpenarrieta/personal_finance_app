@@ -12,11 +12,15 @@
  * See docs/GENERATED_COLUMNS.md for more information.
  */
 
-// Import from browser-safe enums file (avoids Node.js runtime dependency)
-import { CategoryGroupType } from "@prisma/generated/enums"
+// Category group type (matches Convex schema)
+export const CategoryGroupType = {
+  EXPENSES: "EXPENSES",
+  INCOME: "INCOME",
+  INVESTMENT: "INVESTMENT",
+  TRANSFER: "TRANSFER",
+} as const
 
-// Export the enum for use in components
-export { CategoryGroupType }
+export type CategoryGroupType = (typeof CategoryGroupType)[keyof typeof CategoryGroupType]
 
 // ============================================================================
 // TRANSACTION TYPES

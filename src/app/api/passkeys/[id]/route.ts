@@ -1,32 +1,34 @@
-import { auth } from "@/lib/auth/auth"
-import { prisma } from "@/lib/db/prisma"
-import { NextRequest } from "next/server"
+import { cookies } from "next/headers"
 import { logError } from "@/lib/utils/logger"
 import { apiSuccess, apiErrors } from "@/lib/api/response"
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+const CONVEX_SITE_URL = process.env.NEXT_PUBLIC_CONVEX_SITE_URL || ""
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const session = await auth.api.getSession({ headers: req.headers })
 
-    if (!session?.user?.id) {
-      return apiErrors.unauthorized()
+    // Get session cookie to forward to Better Auth
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get("better-auth.session_token")
+
+    if (!sessionCookie) {
+      return apiErrors.unauthorized("Not authenticated")
     }
 
-    // Verify the passkey belongs to the user
-    const passkey = await prisma.passkey.findUnique({
-      where: { id },
-      select: { userId: true },
+    // Call Better Auth's passkey delete endpoint
+    const response = await fetch(`${CONVEX_SITE_URL}/api/auth/passkey/delete-passkey`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `better-auth.session_token=${sessionCookie.value}`,
+      },
+      body: JSON.stringify({ id }),
     })
 
-    if (!passkey || passkey.userId !== session.user.id) {
-      return apiErrors.notFound("Passkey")
+    if (!response.ok) {
+      throw new Error(`Failed to delete passkey: ${response.status}`)
     }
-
-    // Delete the passkey
-    await prisma.passkey.delete({
-      where: { id },
-    })
 
     return apiSuccess({ deleted: true })
   } catch (error) {

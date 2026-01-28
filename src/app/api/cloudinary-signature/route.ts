@@ -1,5 +1,4 @@
-import { auth } from "@/lib/auth/auth"
-import { headers } from "next/headers"
+import { isAuthenticated } from "@/lib/auth/auth-server"
 import { logError } from "@/lib/utils/logger"
 import { apiSuccess, apiErrors } from "@/lib/api/response"
 
@@ -10,11 +9,9 @@ import { apiSuccess, apiErrors } from "@/lib/api/response"
 export async function POST(request: Request) {
   try {
     // Verify user is authenticated
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
+    const authenticated = await isAuthenticated()
 
-    if (!session?.user) {
+    if (!authenticated) {
       return apiErrors.unauthorized()
     }
 
