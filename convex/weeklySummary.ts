@@ -67,26 +67,27 @@ export const aggregateFinancialData = query({
     const categories = await ctx.db.query("categories").collect()
     const categoryMap = new Map(categories.map((c) => [c._id, c]))
 
-    // Filter out TRANSFER transactions for spending/income calculations
-    const nonTransferTxs = await Promise.all(
+    // Filter transactions by groupType for spending/income calculations
+    const txsWithCategory = await Promise.all(
       transactions.map(async (tx) => {
-        if (!tx.categoryId) return { tx, isTransfer: false }
-        const category = categoryMap.get(tx.categoryId)
-        return { tx, isTransfer: category?.groupType === "TRANSFER" }
+        const category = tx.categoryId ? categoryMap.get(tx.categoryId) : null
+        return { tx, groupType: category?.groupType ?? null }
       }),
     )
-    const filteredTxs = nonTransferTxs.filter((t) => !t.isTransfer).map((t) => t.tx)
 
-    // Calculate totals
+    // Calculate totals - only EXPENSES for spending, only INCOME for income
     let totalSpending = 0
     let totalIncome = 0
-    for (const tx of filteredTxs) {
-      if (tx.amount < 0) {
+    for (const { tx, groupType } of txsWithCategory) {
+      if (tx.amount < 0 && groupType === "EXPENSES") {
         totalSpending += Math.abs(tx.amount)
-      } else {
+      } else if (tx.amount > 0 && groupType === "INCOME") {
         totalIncome += tx.amount
       }
     }
+
+    // For category/merchant breakdowns, use only EXPENSES
+    const filteredTxs = txsWithCategory.filter((t) => t.groupType === "EXPENSES").map((t) => t.tx)
 
     // Spending by category
     const spendingByCategory: Record<string, { name: string; amount: number }> = {}
@@ -123,16 +124,16 @@ export const aggregateFinancialData = query({
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 10)
 
-    // Monthly breakdown
+    // Monthly breakdown - use txsWithCategory to track both EXPENSES and INCOME
     const monthlyData: Record<string, { month: string; spending: number; income: number }> = {}
-    for (const tx of filteredTxs) {
+    for (const { tx, groupType } of txsWithCategory) {
       const month = tx.datetime.substring(0, 7) // YYYY-MM
       if (!monthlyData[month]) {
         monthlyData[month] = { month, spending: 0, income: 0 }
       }
-      if (tx.amount < 0) {
+      if (tx.amount < 0 && groupType === "EXPENSES") {
         monthlyData[month].spending += Math.abs(tx.amount)
-      } else {
+      } else if (tx.amount > 0 && groupType === "INCOME") {
         monthlyData[month].income += tx.amount
       }
     }

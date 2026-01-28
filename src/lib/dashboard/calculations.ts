@@ -65,7 +65,7 @@ export function prepareSpendingByCategory(transactions: SerializableTransaction[
   const categorySpending = transactions
     .filter((t) => {
       const amount = t.amount_number || 0
-      return amount < 0 && t.category && t.category.groupType !== "TRANSFER"
+      return amount < 0 && t.category && t.category.groupType === "EXPENSES"
     })
     .reduce(
       (acc: Record<string, number>, t) => {
@@ -96,7 +96,7 @@ export function prepareSpendingBySubcategory(transactions: SerializableTransacti
   const subcategorySpending = transactions
     .filter((t) => {
       const amount = t.amount_number || 0
-      return amount < 0 && t.subcategory && t.category && t.category.groupType !== "TRANSFER"
+      return amount < 0 && t.subcategory && t.category && t.category.groupType === "EXPENSES"
     })
     .reduce(
       (acc: Record<string, number>, t) => {
@@ -179,9 +179,10 @@ export function prepareCashflowSankeyData(transactions: SerializableTransaction[
 
   transactions.forEach((t) => {
     const amount = t.amount_number || 0
-    const isTransfer = t.category?.groupType === "TRANSFER"
+    const groupType = t.category?.groupType
 
-    if (isTransfer) return // Skip transfers
+    // Only include EXPENSES and INCOME categories
+    if (groupType !== "EXPENSES" && groupType !== "INCOME") return
 
     if (amount > 0) {
       // Income (positive in display format)
@@ -359,7 +360,7 @@ export function prepareDailySpendingData(
     const spending = dayTransactions
       .filter((t) => {
         const amount = t.amount_number || 0
-        return amount < 0 && t.category && t.category.groupType !== "TRANSFER"
+        return amount < 0 && t.category && t.category.groupType === "EXPENSES"
       })
       .reduce((sum: number, t) => sum + Math.abs(t.amount_number || 0), 0)
 

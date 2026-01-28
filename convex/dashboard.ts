@@ -231,16 +231,15 @@ export const getStatsWithTrends = query({
         const txDate = tx.datetime.split("T")[0] ?? ""
         if (!txDate || txDate < startStr || txDate > endStr) continue
 
-        // Exclude TRANSFER categories
-        if (tx.categoryId) {
-          const category = await ctx.db.get(tx.categoryId)
-          if (category?.groupType === "TRANSFER") continue
-        }
+        // Get category to check groupType
+        const category = tx.categoryId ? await ctx.db.get(tx.categoryId) : null
+        const groupType = category?.groupType
 
         transactionCount++
-        if (tx.amount < 0) {
+        // Only include EXPENSES for spending, INCOME for income
+        if (tx.amount < 0 && groupType === "EXPENSES") {
           spending += Math.abs(tx.amount)
-        } else {
+        } else if (tx.amount > 0 && groupType === "INCOME") {
           income += tx.amount
         }
       }

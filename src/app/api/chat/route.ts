@@ -35,13 +35,15 @@ DATA MODEL:
 - Expense transactions have negative amount_number (e.g., -100.00)
 - Income transactions have positive amount_number (e.g., +500.00)
 - Categories have a groupType: EXPENSES, INCOME, INVESTMENT, or TRANSFER
-- TRANSFER groupType = money movement between accounts, always excluded
+- Only EXPENSES groupType is included in spending calculations
+- Only INCOME groupType is included in income calculations
 
 SPENDING DETECTION (matches dashboard):
-- Expense = negative amount AND groupType !== "TRANSFER"
+- Expense = negative amount AND groupType === "EXPENSES"
+- Income = positive amount AND groupType === "INCOME"
 - The spending tools automatically filter this way
-- When users ask about "spending", "breakdown", or "categories" → shows expenses only
-- When users ask about "income" → shows income only
+- When users ask about "spending", "breakdown", or "categories" → shows EXPENSES only
+- When users ask about "income" → shows INCOME only
 
 IMPORTANT GUIDELINES:
 1. Always interpret relative dates correctly (e.g., "last month", "this year")

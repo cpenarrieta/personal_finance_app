@@ -166,7 +166,7 @@ describe("Dashboard Calculations", () => {
           id: "cat-1",
           name: "Food",
           imageUrl: null,
-          groupType: null,
+          groupType: "EXPENSES",
           created_at_string: null,
           updated_at_string: null,
         },
@@ -179,7 +179,7 @@ describe("Dashboard Calculations", () => {
           id: "cat-1",
           name: "Food",
           imageUrl: null,
-          groupType: null,
+          groupType: "EXPENSES",
           created_at_string: null,
           updated_at_string: null,
         },
@@ -192,7 +192,7 @@ describe("Dashboard Calculations", () => {
           id: "cat-2",
           name: "Transportation",
           imageUrl: null,
-          groupType: null,
+          groupType: "EXPENSES",
           created_at_string: null,
           updated_at_string: null,
         },
@@ -229,7 +229,7 @@ describe("Dashboard Calculations", () => {
           id: `cat-${i}`,
           name: `Category ${i}`,
           imageUrl: null,
-          groupType: null,
+          groupType: "EXPENSES",
           created_at_string: null,
           updated_at_string: null,
         },
@@ -270,6 +270,33 @@ describe("Dashboard Calculations", () => {
       expect(result.find((r) => r.name === "Transfer")).toBeUndefined()
     })
 
+    it("should exclude investment categories", () => {
+      // Arrange
+      const transactionsWithInvestment = [
+        ...mockTransactions,
+        {
+          amount_number: -5000, // Negative = expense (new format)
+          datetime: "2024-01-04",
+          category: {
+            id: "cat-investment",
+            name: "Savings",
+            imageUrl: null,
+            groupType: "INVESTMENT",
+            created_at_string: null,
+            updated_at_string: null,
+          },
+          subcategory: null,
+        },
+      ]
+
+      // Act
+      const result = prepareSpendingByCategory(transactionsWithInvestment)
+
+      // Assert
+      expect(result).toHaveLength(2)
+      expect(result.find((r) => r.name === "Savings")).toBeUndefined()
+    })
+
     it("should exclude income transactions (positive amounts)", () => {
       // Arrange
       const transactionsWithIncome = [
@@ -281,7 +308,7 @@ describe("Dashboard Calculations", () => {
             id: "cat-income",
             name: "Salary",
             imageUrl: null,
-            groupType: null,
+            groupType: "INCOME",
             created_at_string: null,
             updated_at_string: null,
           },
@@ -334,7 +361,7 @@ describe("Dashboard Calculations", () => {
           id: "cat-1",
           name: "Food",
           imageUrl: null,
-          groupType: null,
+          groupType: "EXPENSES",
           created_at_string: null,
           updated_at_string: null,
         },
@@ -354,7 +381,7 @@ describe("Dashboard Calculations", () => {
           id: "cat-1",
           name: "Food",
           imageUrl: null,
-          groupType: null,
+          groupType: "EXPENSES",
           created_at_string: null,
           updated_at_string: null,
         },
@@ -394,7 +421,7 @@ describe("Dashboard Calculations", () => {
             id: "cat-1",
             name: "Food",
             imageUrl: null,
-            groupType: null,
+            groupType: "EXPENSES",
             created_at_string: null,
             updated_at_string: null,
           },
@@ -457,7 +484,7 @@ describe("Dashboard Calculations", () => {
             id: "cat-1",
             name: "Food",
             imageUrl: null,
-            groupType: null,
+            groupType: "EXPENSES",
             created_at_string: null,
             updated_at_string: null,
           },
@@ -470,7 +497,7 @@ describe("Dashboard Calculations", () => {
             id: "cat-2",
             name: "Transportation",
             imageUrl: null,
-            groupType: null,
+            groupType: "EXPENSES",
             created_at_string: null,
             updated_at_string: null,
           },
@@ -483,7 +510,7 @@ describe("Dashboard Calculations", () => {
             id: "cat-1",
             name: "Food",
             imageUrl: null,
-            groupType: null,
+            groupType: "EXPENSES",
             created_at_string: null,
             updated_at_string: null,
           },
@@ -512,7 +539,7 @@ describe("Dashboard Calculations", () => {
             id: "cat-1",
             name: "Food",
             imageUrl: null,
-            groupType: null,
+            groupType: "EXPENSES",
             created_at_string: null,
             updated_at_string: null,
           },
@@ -542,7 +569,7 @@ describe("Dashboard Calculations", () => {
             id: "cat-1",
             name: "Food",
             imageUrl: null,
-            groupType: null,
+            groupType: "EXPENSES",
             created_at_string: null,
             updated_at_string: null,
           },

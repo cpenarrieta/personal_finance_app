@@ -9,9 +9,9 @@
  * - TRANSFER: Money movement between accounts - always excluded
  *
  * SPENDING DETECTION (matches dashboard logic):
- * - Expense = negative amount_number AND groupType !== "TRANSFER"
- * - Income = positive amount_number AND groupType !== "TRANSFER"
- * - This allows categories with null groupType to be included based on amount sign
+ * - Expense = negative amount_number AND groupType === "EXPENSES"
+ * - Income = positive amount_number AND groupType === "INCOME"
+ * - Only transactions with proper groupType are included in calculations
  */
 
 import { tool } from "ai"
@@ -114,11 +114,11 @@ export const getSpendingByCategory = tool({
       logInfo("  Fetched transactions", { count: transactions.length })
 
       // Filter by date range and expenses only (matches dashboard logic)
-      // Expense = negative amount_number AND not TRANSFER
+      // Expense = negative amount_number AND groupType === "EXPENSES"
       const filtered = transactions.filter((t: Transaction) => {
         const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
         const amount = t.amount_number ?? 0
-        const isExpense = amount < 0 && t.category?.groupType !== "TRANSFER"
+        const isExpense = amount < 0 && t.category?.groupType === "EXPENSES"
         return isInRange && isExpense
       })
 
@@ -188,7 +188,7 @@ export const getSpendingByMerchant = tool({
       const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const hasMerchant = !!t.merchantName
       const amount = t.amount_number ?? 0
-      const isExpense = amount < 0 && t.category?.groupType !== "TRANSFER"
+      const isExpense = amount < 0 && t.category?.groupType === "EXPENSES"
       return isInRange && hasMerchant && isExpense
     })
 
@@ -243,22 +243,21 @@ export const getTotalSpending = tool({
       const transactions = await getAllTransactions()
       logInfo("  Fetched transactions", { count: transactions.length })
 
-      // Filter by date range and exclude transfer categories
+      // Filter by date range
       const filtered = transactions.filter((t: Transaction) => {
-        const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
-        const isNotTransfer = t.category?.groupType !== "TRANSFER"
-        return isInRange && isNotTransfer
+        return isTransactionInDateRange(t.datetime, startDate, endDate)
       })
 
-      // Calculate totals (negative = expense, positive = income)
+      // Calculate totals - only EXPENSES for expenses, only INCOME for income
       let totalExpenses = 0
       let totalIncome = 0
 
       filtered.forEach((t: Transaction) => {
         const amount = t.amount_number ?? 0
-        if (amount < 0) {
+        const groupType = t.category?.groupType
+        if (amount < 0 && groupType === "EXPENSES") {
           totalExpenses += Math.abs(amount)
-        } else {
+        } else if (amount > 0 && groupType === "INCOME") {
           totalIncome += amount
         }
       })
@@ -314,7 +313,7 @@ export const getSpendingTrends = tool({
       const isInRange = isTransactionInDateRange(t.datetime, startDate, endDate)
       const matchesCategory = !categoryName || t.category?.name.toLowerCase().includes(categoryName.toLowerCase())
       const amount = t.amount_number ?? 0
-      const isExpense = amount < 0 && t.category?.groupType !== "TRANSFER"
+      const isExpense = amount < 0 && t.category?.groupType === "EXPENSES"
       return isInRange && matchesCategory && isExpense
     })
 

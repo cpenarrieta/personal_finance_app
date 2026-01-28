@@ -39,10 +39,10 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
       end: dateStartOfMonth(new Date(maxDateStr)),
     })
 
-    // Spending by Category (all filtered transactions, exclude transfers)
+    // Spending by Category (all filtered transactions, only EXPENSES)
     const categorySpending = transactions
       .filter((t: TransactionForClient) => {
-        return t.amount_number < 0 && t.category && t.category.groupType !== "TRANSFER"
+        return t.amount_number < 0 && t.category && t.category.groupType === "EXPENSES"
       })
       .reduce(
         (acc: Record<string, number>, t: TransactionForClient) => {
@@ -73,10 +73,10 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
       .sort((a, b) => (b.value as number) - (a.value as number))
       .slice(0, 10) // Top 10 categories
 
-    // Spending by Subcategory (all filtered transactions, exclude transfers)
+    // Spending by Subcategory (all filtered transactions, only EXPENSES)
     const subcategorySpending = transactions
       .filter((t: TransactionForClient) => {
-        return t.amount_number < 0 && t.subcategory && t.category && t.category.groupType !== "TRANSFER"
+        return t.amount_number < 0 && t.subcategory && t.category && t.category.groupType === "EXPENSES"
       })
       .reduce(
         (acc: Record<string, number>, t: TransactionForClient) => {
