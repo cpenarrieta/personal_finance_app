@@ -291,19 +291,15 @@ export const getLastMonthStats = query({
       const txDate = tx.datetime.split("T")[0] ?? ""
       if (!txDate || txDate < startStr || txDate > endStr) continue
 
-      // Exclude TRANSFER categories for stats
-      if (tx.categoryId) {
-        const category = await ctx.db.get(tx.categoryId)
-        if (category?.groupType === "TRANSFER") {
-          periodTransactions.push(tx) // Still include in transactions list
-          continue
-        }
-      }
+      // Get category to check groupType
+      const category = tx.categoryId ? await ctx.db.get(tx.categoryId) : null
+      const groupType = category?.groupType
 
       periodTransactions.push(tx)
-      if (tx.amount < 0) {
+      // Only include EXPENSES for spending, INCOME for income
+      if (tx.amount < 0 && groupType === "EXPENSES") {
         totalSpending += Math.abs(tx.amount)
-      } else {
+      } else if (tx.amount > 0 && groupType === "INCOME") {
         totalIncome += tx.amount
       }
     }
@@ -433,7 +429,7 @@ export const getTopExpensiveTransactions = query({
     const transactions = await ctx.db.query("transactions").collect()
     const nonSplit = transactions.filter((tx) => !tx.isSplit)
 
-    // Filter for expenses in date range, excluding transfers
+    // Filter for expenses in date range, only EXPENSES groupType
     const expenses: { tx: Doc<"transactions">; amount: number }[] = []
 
     for (const tx of nonSplit) {
@@ -441,10 +437,12 @@ export const getTopExpensiveTransactions = query({
       if (!txDate || txDate < startStr || txDate > endStr) continue
       if (tx.amount >= 0) continue // Only expenses
 
-      // Exclude TRANSFER categories
+      // Only include EXPENSES groupType
       if (tx.categoryId) {
         const category = await ctx.db.get(tx.categoryId)
-        if (category?.groupType === "TRANSFER") continue
+        if (category?.groupType !== "EXPENSES") continue
+      } else {
+        continue // Skip uncategorized transactions
       }
 
       expenses.push({ tx, amount: tx.amount })
