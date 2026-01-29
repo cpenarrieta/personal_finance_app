@@ -14,7 +14,7 @@ import type { Id } from "../../../../convex/_generated/dataModel"
  */
 export async function getAllTransactions() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions")
 
   return fetchQuery(api.transactions.getAll)
@@ -26,7 +26,7 @@ export async function getAllTransactions() {
  */
 export async function getTransactionsForAccount(accountId: string) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions")
 
   return fetchQuery(api.transactions.getForAccount, { accountId: accountId as Id<"accounts"> })
@@ -38,7 +38,7 @@ export async function getTransactionsForAccount(accountId: string) {
  */
 export async function getReviewTransactions() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions")
 
   return fetchQuery(api.transactions.getReviewTransactions)
@@ -50,7 +50,7 @@ export async function getReviewTransactions() {
  */
 export async function getTransactionById(id: string) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions")
 
   return fetchQuery(api.transactions.getById, { id: id as Id<"transactions"> })

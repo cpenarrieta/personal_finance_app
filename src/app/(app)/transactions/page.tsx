@@ -1,5 +1,7 @@
-import { TransactionsPageConvex } from "@/components/transactions/list/TransactionsPageConvex"
+import { Suspense } from "react"
 import type { Metadata } from "next"
+import { TransactionsPageAsync } from "@/components/transactions/list/TransactionsPageAsync"
+import { TransactionsPageSkeleton } from "@/components/transactions/list/TransactionsPageSkeleton"
 import { parseTransactionFiltersFromUrl } from "@/lib/transactions/url-params"
 
 export const metadata: Metadata = {
@@ -18,5 +20,9 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
   const params = await searchParams
   const initialFilters = parseTransactionFiltersFromUrl(params)
 
-  return <TransactionsPageConvex initialFilters={initialFilters} />
+  return (
+    <Suspense fallback={<TransactionsPageSkeleton />}>
+      <TransactionsPageAsync initialFilters={initialFilters} />
+    </Suspense>
+  )
 }

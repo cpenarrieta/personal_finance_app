@@ -13,7 +13,7 @@ import { cacheTag, cacheLife } from "next/cache"
  */
 export async function getAllTags() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("tags")
 
   return fetchQuery(api.tags.getAll)
@@ -25,7 +25,7 @@ export async function getAllTags() {
  */
 export async function getAllTagsWithCounts() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("tags")
 
   return fetchQuery(api.tags.getAllWithCounts)

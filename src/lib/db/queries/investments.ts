@@ -14,7 +14,7 @@ import type { Id } from "../../../../convex/_generated/dataModel"
  */
 export async function getAllHoldings() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("holdings")
 
   return fetchQuery(api.investments.getAllHoldings)
@@ -26,7 +26,7 @@ export async function getAllHoldings() {
  */
 export async function getAllInvestmentTransactions() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("investments")
 
   return fetchQuery(api.investments.getAllInvestmentTransactions)
@@ -38,7 +38,7 @@ export async function getAllInvestmentTransactions() {
  */
 export async function getHoldingsForAccount(accountId: string) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("holdings")
 
   return fetchQuery(api.investments.getHoldingsForAccount, {
@@ -52,7 +52,7 @@ export async function getHoldingsForAccount(accountId: string) {
  */
 export async function getInvestmentTransactionsForAccount(accountId: string) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("investments")
 
   return fetchQuery(api.investments.getInvestmentTransactionsForAccount, {

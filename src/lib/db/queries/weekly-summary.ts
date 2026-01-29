@@ -12,7 +12,7 @@ import { cacheTag, cacheLife } from "next/cache"
  */
 export async function getLatestWeeklySummary() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("weekly-summary", "dashboard")
 
   return fetchQuery(api.weeklySummary.getLatest)

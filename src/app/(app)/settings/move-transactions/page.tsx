@@ -1,5 +1,7 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
-import { MoveTransactionsConvex } from "@/components/settings/MoveTransactionsConvex"
+import { MoveTransactionsAsync } from "@/components/settings/MoveTransactionsAsync"
+import { MoveTransactionsSkeleton } from "@/components/settings/MoveTransactionsSkeleton"
 
 export const metadata: Metadata = {
   title: "Move Transactions",
@@ -18,7 +20,9 @@ export default function MoveTransactionsPage() {
       </div>
 
       <div className="border rounded-lg p-4">
-        <MoveTransactionsConvex />
+        <Suspense fallback={<MoveTransactionsSkeleton />}>
+          <MoveTransactionsAsync />
+        </Suspense>
       </div>
     </div>
   )

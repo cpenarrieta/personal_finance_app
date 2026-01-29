@@ -1,5 +1,7 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
-import { ManageCategoriesConvex } from "@/components/settings/ManageCategoriesConvex"
+import { ManageCategoriesAsync } from "@/components/settings/ManageCategoriesAsync"
+import { ManageCategoriesSkeleton } from "@/components/settings/ManageCategoriesSkeleton"
 
 export const metadata: Metadata = {
   title: "Manage Categories",
@@ -18,7 +20,9 @@ export default function ManageCategoriesPage() {
         <p className="text-muted-foreground mt-1">Create and organize your categories and subcategories</p>
       </div>
 
-      <ManageCategoriesConvex />
+      <Suspense fallback={<ManageCategoriesSkeleton />}>
+        <ManageCategoriesAsync />
+      </Suspense>
     </div>
   )
 }

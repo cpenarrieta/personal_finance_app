@@ -1,5 +1,7 @@
-import { InvestmentTransactionsConvex } from "@/components/investments/transactions/InvestmentTransactionsConvex"
+import { Suspense } from "react"
 import type { Metadata } from "next"
+import { InvestmentTransactionsAsync } from "@/components/investments/transactions/InvestmentTransactionsAsync"
+import { InvestmentTransactionsSkeleton } from "@/components/investments/holdings/HoldingsPortfolioSkeleton"
 
 export const metadata: Metadata = {
   title: "Investment Transactions",
@@ -15,7 +17,9 @@ export default function InvTxPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground">Investment Transactions</h1>
       </div>
-      <InvestmentTransactionsConvex />
+      <Suspense fallback={<InvestmentTransactionsSkeleton />}>
+        <InvestmentTransactionsAsync />
+      </Suspense>
     </div>
   )
 }

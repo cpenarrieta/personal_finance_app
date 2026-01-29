@@ -1,5 +1,7 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
-import { ManageTagsConvex } from "@/components/settings/ManageTagsConvex"
+import { ManageTagsAsync } from "@/components/settings/ManageTagsAsync"
+import { ManageTagsSkeleton } from "@/components/settings/ManageTagsSkeleton"
 
 export const metadata: Metadata = {
   title: "Manage Tags",
@@ -17,7 +19,9 @@ export default function ManageTagsPage() {
         <p className="text-muted-foreground mt-1">Create and organize tags to categorize your transactions</p>
       </div>
 
-      <ManageTagsConvex />
+      <Suspense fallback={<ManageTagsSkeleton />}>
+        <ManageTagsAsync />
+      </Suspense>
     </div>
   )
 }

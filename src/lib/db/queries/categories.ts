@@ -13,7 +13,7 @@ import { cacheTag, cacheLife } from "next/cache"
  */
 export async function getAllCategories() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("categories")
 
   return fetchQuery(api.categories.getAll)
@@ -25,7 +25,7 @@ export async function getAllCategories() {
  */
 export async function getAllCategoriesForManagement() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("categories")
 
   return fetchQuery(api.categories.getAllForManagement)
@@ -37,7 +37,7 @@ export async function getAllCategoriesForManagement() {
  */
 export async function getAllCategoriesForMoveTransactions() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("categories")
 
   // Uses same query as getAllCategories

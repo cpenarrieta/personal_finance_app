@@ -14,7 +14,7 @@ import type { Id } from "../../../../convex/_generated/dataModel"
  */
 export async function getAllAccounts() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("accounts")
 
   return fetchQuery(api.accounts.getAll)
@@ -26,7 +26,7 @@ export async function getAllAccounts() {
  */
 export async function getAllAccountsWithInstitution() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("accounts")
 
   return fetchQuery(api.accounts.getAllWithInstitution)
@@ -38,7 +38,7 @@ export async function getAllAccountsWithInstitution() {
  */
 export async function getAccountById(accountId: string) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("accounts")
 
   return fetchQuery(api.accounts.getById, { id: accountId as Id<"accounts"> })
@@ -50,7 +50,7 @@ export async function getAccountById(accountId: string) {
  */
 export async function getAllConnectedItems() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("items")
 
   return fetchQuery(api.accounts.getAllConnectedItems)

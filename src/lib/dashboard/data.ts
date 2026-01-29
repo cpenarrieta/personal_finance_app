@@ -9,7 +9,7 @@ import { cacheTag, cacheLife } from "next/cache"
  */
 export async function getDashboardMetrics() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("accounts", "holdings", "dashboard")
 
   const result = await fetchQuery(api.dashboard.getMetrics, {})
@@ -21,7 +21,7 @@ export async function getDashboardMetrics() {
  */
 export async function getUncategorizedTransactions() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions", "dashboard")
 
   const result = await fetchQuery(api.transactions.getUncategorized, {})
@@ -34,7 +34,7 @@ export async function getUncategorizedTransactions() {
  */
 export async function getReviewTransactionsCount() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions", "dashboard", "tags")
 
   const count = await fetchQuery(api.dashboard.getReviewCount, {})
@@ -46,7 +46,7 @@ export async function getReviewTransactionsCount() {
  */
 export async function getRecentTransactions(limit = 20) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions", "dashboard")
 
   const result = await fetchQuery(api.transactions.getRecentForDashboard, { limit })
@@ -87,7 +87,7 @@ export function getLastMonthDateRange(monthsBack: number = 0) {
  */
 export async function getLastMonthStats(monthsBack: number = 0) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions", "dashboard")
 
   const result = await fetchQuery(api.dashboard.getLastMonthStats, { monthsBack })
@@ -101,7 +101,7 @@ export async function getLastMonthStats(monthsBack: number = 0) {
  */
 export async function getTopExpensiveTransactions(monthsBack: number = 0, limit = 25) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions", "dashboard")
 
   const result = await fetchQuery(api.dashboard.getTopExpensiveTransactions, {
@@ -116,7 +116,7 @@ export async function getTopExpensiveTransactions(monthsBack: number = 0, limit 
  */
 export async function hasConnectedAccounts() {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("accounts")
 
   const hasItems = await fetchQuery(api.dashboard.hasConnectedItems, {})
@@ -129,7 +129,7 @@ export async function hasConnectedAccounts() {
  */
 export async function getStatsWithTrends(monthsBack: number = 0) {
   "use cache"
-  cacheLife({ stale: 60 * 60 * 24 })
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
   cacheTag("transactions", "dashboard")
 
   const result = await fetchQuery(api.dashboard.getStatsWithTrends, { monthsBack })
