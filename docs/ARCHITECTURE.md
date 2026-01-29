@@ -96,3 +96,11 @@ scripts/                          # Sync scripts
 - **Balances**: Updated every sync
 - **Holdings**: Snapshot-based (deleted if not in Plaid response)
 - **Preserves**: User renames, custom prices (when Plaid = 0)
+
+### Running Sync
+
+```bash
+npm run sync    # Incremental sync of transactions + investments
+```
+
+Sync shows per-item statistics. Check `items` table for cursor values to debug.
