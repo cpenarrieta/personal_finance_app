@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { formatAmount } from "@/lib/utils"
 import { Wallet, TrendingUp, ArrowUpCircle, ArrowDownCircle, PiggyBank, ClipboardCheck } from "lucide-react"
 import { MetricCard } from "@/components/shared/MetricCard"
@@ -17,6 +18,9 @@ interface DashboardMetricsSectionProps {
  * Fetches data independently with "use cache" and error handling
  */
 export async function DashboardMetricsSection({ monthsBack = 0 }: DashboardMetricsSectionProps) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const [{ accounts, holdings }, statsWithTrends, reviewCount] = await Promise.all([
       getDashboardMetrics(),

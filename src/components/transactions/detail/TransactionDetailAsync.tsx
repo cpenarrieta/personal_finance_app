@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { TransactionDetailView } from "@/components/transactions/detail/TransactionDetailView"
 import { getTransactionById, getAllCategories, getAllTags } from "@/lib/db/queries"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
@@ -9,6 +10,9 @@ import { logError } from "@/lib/utils/logger"
  * Fetches transaction with categories and tags using cached queries
  */
 export async function TransactionDetailAsync({ id }: { id: string }) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const [txResult, categories, tags] = await Promise.all([getTransactionById(id), getAllCategories(), getAllTags()])
 

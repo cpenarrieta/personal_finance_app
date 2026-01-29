@@ -1,9 +1,13 @@
+import { connection } from "next/server"
 import { HoldingsPortfolio } from "@/components/investments/holdings/HoldingsPortfolio"
 import { getAllHoldings } from "@/lib/db/queries"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
 import { logError } from "@/lib/utils/logger"
 
 export async function HoldingsPortfolioAsync() {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const holdings = await getAllHoldings()
     return <HoldingsPortfolio holdings={holdings} />

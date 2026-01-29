@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import Link from "next/link"
 import Image from "next/image"
 import { getAllAccountsWithInstitution } from "@/lib/db/queries"
@@ -9,6 +10,9 @@ import { logError } from "@/lib/utils/logger"
  * Fetches and groups accounts by institution using cached queries
  */
 export async function AccountsListAsync() {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const accounts = await getAllAccountsWithInstitution()
 

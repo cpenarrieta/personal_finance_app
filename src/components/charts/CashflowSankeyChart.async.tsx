@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { CashflowSankeyChart } from "./CashflowSankeyChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareCashflowSankeyData } from "@/lib/dashboard/calculations"
@@ -13,6 +14,9 @@ interface CashflowSankeyChartAsyncProps {
  * Fetches and processes data independently with error handling
  */
 export async function CashflowSankeyChartAsync({ monthsBack = 1 }: CashflowSankeyChartAsyncProps) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const { lastMonthTransactions } = await getLastMonthStats(monthsBack)
     const sankeyData = prepareCashflowSankeyData(lastMonthTransactions)

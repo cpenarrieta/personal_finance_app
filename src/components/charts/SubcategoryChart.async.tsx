@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { SubcategoryChart } from "./SubcategoryChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareSpendingBySubcategory } from "@/lib/dashboard/calculations"
@@ -13,6 +14,9 @@ interface SubcategoryChartAsyncProps {
  * Fetches and processes data independently with error handling
  */
 export async function SubcategoryChartAsync({ monthsBack = 1 }: SubcategoryChartAsyncProps) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const { lastMonthTransactions } = await getLastMonthStats(monthsBack)
     const spendingBySubcategory = prepareSpendingBySubcategory(lastMonthTransactions, 10)

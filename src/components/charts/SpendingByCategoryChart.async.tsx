@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { SpendingByCategoryChart } from "./SpendingByCategoryChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareSpendingByCategory } from "@/lib/dashboard/calculations"
@@ -13,6 +14,9 @@ interface SpendingByCategoryChartAsyncProps {
  * Fetches and processes data independently with error handling
  */
 export async function SpendingByCategoryChartAsync({ monthsBack = 1 }: SpendingByCategoryChartAsyncProps) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const { lastMonthTransactions } = await getLastMonthStats(monthsBack)
     const spendingByCategory = prepareSpendingByCategory(lastMonthTransactions, 10)

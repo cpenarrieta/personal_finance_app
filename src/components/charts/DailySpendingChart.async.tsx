@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { DailySpendingChart } from "./DailySpendingChart"
 import { getLastMonthStats } from "@/lib/dashboard/data"
 import { prepareDailySpendingData } from "@/lib/dashboard/calculations"
@@ -13,6 +14,9 @@ interface DailySpendingChartAsyncProps {
  * Fetches and processes data independently with error handling
  */
 export async function DailySpendingChartAsync({ monthsBack = 1 }: DailySpendingChartAsyncProps) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const { lastMonthTransactions, lastMonthStart, lastMonthEnd } = await getLastMonthStats(monthsBack)
     const dailySpendingData = prepareDailySpendingData(lastMonthTransactions, lastMonthStart, lastMonthEnd)

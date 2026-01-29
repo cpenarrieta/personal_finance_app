@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { DeleteButton } from "@/components/shared/DeleteButton"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,6 +9,9 @@ import { logError } from "@/lib/utils/logger"
 import { createTag, updateTag, deleteTag } from "@/app/(app)/settings/manage-tags/actions"
 
 export async function ManageTagsAsync() {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const tags = await getAllTagsWithCounts()
 

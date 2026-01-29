@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { TransactionsPageClient } from "./TransactionsPageClient"
 import { getAllTransactions, getAllCategories, getAllTags, getAllAccounts } from "@/lib/db/queries"
 import { ErrorFallback } from "@/components/shared/ErrorFallback"
@@ -14,6 +15,9 @@ interface TransactionsPageAsyncProps {
  * Fetches all data using cached queries, then renders client component
  */
 export async function TransactionsPageAsync({ initialFilters }: TransactionsPageAsyncProps) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const [transactions, categories, tags, accounts] = await Promise.all([
       getAllTransactions(),

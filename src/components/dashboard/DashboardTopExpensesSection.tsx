@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { format, startOfMonth, subMonths } from "date-fns"
 import { TransactionTable } from "@/components/dashboard/TransactionTable"
 import { getTopExpensiveTransactions } from "@/lib/dashboard/data"
@@ -13,6 +14,9 @@ interface DashboardTopExpensesSectionProps {
  * Fetches top expensive transactions independently with "use cache" and error handling
  */
 export async function DashboardTopExpensesSection({ monthsBack = 0 }: DashboardTopExpensesSectionProps) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const topExpensiveTransactions = await getTopExpensiveTransactions(monthsBack, 25)
 

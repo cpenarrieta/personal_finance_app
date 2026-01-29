@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import Image from "next/image"
 import { DeleteButton } from "@/components/shared/DeleteButton"
 import { getCategoryImage } from "@/lib/categories/images"
@@ -18,6 +19,9 @@ import {
 } from "@/app/(app)/settings/manage-categories/actions"
 
 export async function ManageCategoriesAsync() {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const categories = await getAllCategoriesForManagement()
 

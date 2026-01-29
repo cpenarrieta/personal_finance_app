@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { notFound } from "next/navigation"
 import { SearchableTransactionList } from "@/components/transactions/list/SearchableTransactionList"
 import { InvestmentTransactionList } from "@/components/investments/transactions/InvestmentTransactionList"
@@ -16,6 +17,9 @@ import {
 import type { TransactionForClient } from "@/types"
 
 export async function AccountDetailAsync({ id }: { id: string }) {
+  // Defer to request time - requires auth and user-specific data
+  await connection()
+
   try {
     const account = await getAccountById(id)
 
