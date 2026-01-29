@@ -32,15 +32,15 @@ Read detailed documentation in `docs/` folder:
 - Use @/* path aliases
 
 ## Tech Stack
-- Next.js 15 (App Router) + TypeScript
-- PostgreSQL + Prisma ORM
+- Next.js 16 (App Router) + TypeScript
+- Convex (real-time backend)
 - Better Auth (OAuth)
 - Plaid API
 - shadcn/ui + Tailwind CSS 4
 
 ## Commands
 - Never run: `npm run dev`
-- Database: `npx prisma migrate dev`, `npx prisma generate`, `npx prisma studio`
+- Convex: `npx convex dev` (run in separate terminal)
 - Sync: `npm run sync`
 
 For complete details, always refer to CLAUDE.md and docs/ folder.

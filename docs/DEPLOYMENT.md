@@ -2,15 +2,15 @@
 
 ## Prerequisites
 
-- PostgreSQL database (Vercel Postgres, Neon, Supabase, Railway)
+- Convex account and deployment
 - API keys: Plaid, Google/GitHub OAuth, OpenAI (optional), Alpha Vantage (optional)
 - [Vercel account](https://vercel.com/signup)
 
-## Step 1: Database
+## Step 1: Convex Setup
 
-**Vercel Postgres**: Project dashboard → Storage → Create Database → Postgres → Copy `DATABASE_URL`
-
-**External**: Create PostgreSQL database, copy connection string.
+1. Create a Convex project at [dashboard.convex.dev](https://dashboard.convex.dev)
+2. Deploy: `npx convex deploy`
+3. Copy your `CONVEX_DEPLOY_KEY` from the dashboard
 
 ## Step 2: OAuth Redirect URIs
 
@@ -41,7 +41,7 @@ npm i -g vercel && vercel login && vercel --prod
 
 ### Required
 ```bash
-DATABASE_URL=postgresql://user:password@host:5432/database
+CONVEX_DEPLOY_KEY=prod:...
 BETTER_AUTH_SECRET=<openssl rand -base64 32>
 BETTER_AUTH_URL=https://your-app.vercel.app
 ALLOWED_EMAILS=your-email@gmail.com
@@ -66,15 +66,7 @@ OPENAI_API_KEY=...           # AI categorization
 ALPHA_VANTAGE_API_KEY=...    # Stock prices
 ```
 
-## Step 4: Run Migrations
-
-```bash
-vercel link
-vercel env pull .env.local
-npx prisma migrate deploy
-```
-
-## Step 5: Verify
+## Step 4: Verify
 
 1. Visit `https://your-app.vercel.app`
 2. Log in with allowed email
@@ -94,10 +86,9 @@ See [WEBHOOKS.md](./WEBHOOKS.md).
 
 | Issue | Solution |
 |-------|----------|
-| Prisma not generated | Fixed by `postinstall` script |
 | Type errors | Run `npm run type-check` locally |
 | ALLOWED_EMAILS error | Add env var, redeploy |
-| DB connection | Verify URL, check IP allowlist |
+| Convex connection | Verify CONVEX_DEPLOY_KEY |
 | OAuth mismatch | Update redirect URIs exactly |
 
 ## Cron Job (Optional)
@@ -119,5 +110,4 @@ Auto-sync daily:
 - [ ] Strong `BETTER_AUTH_SECRET` (32+ chars)
 - [ ] `ALLOWED_EMAILS` configured
 - [ ] OAuth secrets not exposed
-- [ ] Database SSL enabled
 - [ ] Plaid webhook verification for production

@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production  # This allows access to environment secrets
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
       BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 
@@ -37,18 +36,14 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      # Step 4: Generate Prisma Client (required for tests, type-checking and Next.js build)
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
-      # Step 5: Run unit tests
+      # Step 4: Run unit tests
       - name: Run Unit Tests
         run: npm test
 
-      # Step 6: Run type-checking
+      # Step 5: Run type-checking
       - name: Type Check
         run: npm run type-check
 
-      # Step 7: Run the build command with Convex deploy
+      # Step 6: Run the build command with Convex deploy
       - name: Build Project
         run: npm run build:vercel

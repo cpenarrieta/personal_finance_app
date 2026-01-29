@@ -6,9 +6,6 @@ const config = {
   testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx', '**/?(*.)+(spec|test).ts', '**/?(*.)+(spec|test).tsx'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@prisma/generated$': '<rootDir>/prisma/generated/prisma/client',
-    '^@prisma/generated/browser$': '<rootDir>/prisma/generated/prisma/browser',
-    '^@prisma/generated/enums$': '<rootDir>/prisma/generated/prisma/enums',
     // Mock Convex generated files (ESM modules)
     '.*/convex/_generated/api': '<rootDir>/__mocks__/convex/_generated/api.js',
     '.*/convex/_generated/dataModel': '<rootDir>/__mocks__/convex/_generated/dataModel.js',

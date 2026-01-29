@@ -78,13 +78,12 @@ All hooks now follow camelCase naming convention.
 ---
 
 #### ✅ Convex Migration - DONE
-Migrated from Prisma to Convex for all data operations (except auth).
+Migrated from Prisma to Convex for all data operations.
 
 **Changes:**
 - All queries/mutations now in `convex/*.ts`
 - Real-time updates via Convex subscriptions
-- Removed Prisma-based query files
-- Auth still uses Prisma for User, Session, Account, Verification tables
+- Auth uses Better Auth with Convex adapter
 
 ---
 

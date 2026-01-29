@@ -17,9 +17,6 @@ build
 # Coverage
 coverage
 
-# Database
-prisma/migrations
-
 # Lock files
 package-lock.json
 yarn.lock

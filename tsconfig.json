@@ -25,10 +25,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@convex/*": ["./convex/*"],
-      "@prisma/generated": ["./prisma/generated/prisma/client"],
-      "@prisma/generated/browser": ["./prisma/generated/prisma/browser"],
-      "@prisma/generated/enums": ["./prisma/generated/prisma/enums"]
+      "@convex/*": ["./convex/*"]
     },
     // Stricter type checking options
     "strictNullChecks": true,
