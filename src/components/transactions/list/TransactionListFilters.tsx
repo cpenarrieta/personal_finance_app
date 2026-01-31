@@ -37,6 +37,8 @@ interface TransactionListFiltersProps {
     setShowExpenses: (show: boolean) => void
     showTransfers: boolean
     setShowTransfers: (show: boolean) => void
+    showInvestments: boolean
+    setShowInvestments: (show: boolean) => void
     showOnlyUncategorized?: boolean
     setShowOnlyUncategorized?: (show: boolean) => void
     selectedTagIds?: Set<string>
@@ -392,6 +394,14 @@ export function TransactionListFilters({
             />
             <span className="text-xs md:text-sm text-muted-foreground">Transfers</span>
           </label>
+
+          <label className="flex items-center gap-1.5 md:gap-2 cursor-pointer">
+            <Checkbox
+              checked={filters.showInvestments}
+              onCheckedChange={(checked) => filters.setShowInvestments(checked === true)}
+            />
+            <span className="text-xs md:text-sm text-muted-foreground">Investments</span>
+          </label>
         </div>
 
         {/* Uncategorized Checkbox */}
@@ -492,11 +502,7 @@ function ActiveFilterChips({
         const category = categories.find((c) => c.id === catId)
         if (!category) return null
         return (
-          <Badge
-            key={catId}
-            variant="secondary"
-            className="inline-flex items-center gap-1 bg-primary/10 text-primary"
-          >
+          <Badge key={catId} variant="secondary" className="inline-flex items-center gap-1 bg-primary/10 text-primary">
             ✓ {category.name}
             <Button
               variant="ghost"

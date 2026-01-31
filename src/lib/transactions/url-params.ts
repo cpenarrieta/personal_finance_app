@@ -10,6 +10,7 @@ export interface TransactionFiltersFromUrl {
   showIncome?: boolean
   showExpenses?: boolean
   showTransfers?: boolean
+  showInvestments?: boolean
   searchQuery?: string
   selectedTagIds?: Set<string>
   showOnlyUncategorized?: boolean
@@ -98,6 +99,11 @@ export function parseTransactionFiltersFromUrl(
     filters.showTransfers = showTransfers === "true"
   }
 
+  const showInvestments = getParam("showInvestments")
+  if (showInvestments !== undefined) {
+    filters.showInvestments = showInvestments === "true"
+  }
+
   // Uncategorized filter
   const uncategorized = getParam("uncategorized")
   if (uncategorized !== undefined) {
@@ -172,6 +178,10 @@ export function transactionFiltersToUrlParams(filters: TransactionFiltersFromUrl
 
   if (filters.showTransfers) {
     params.set("showTransfers", "true")
+  }
+
+  if (filters.showInvestments) {
+    params.set("showInvestments", "true")
   }
 
   if (filters.showOnlyUncategorized) {

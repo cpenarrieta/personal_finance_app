@@ -68,10 +68,11 @@ export function useTransactionFilters({
     return transfersCategory ? new Set([transfersCategory.id]) : new Set()
   })
 
-  // Income/Expense/Transfer toggles
+  // Income/Expense/Transfer/Investment toggles
   const [showIncome, setShowIncome] = useState(defaultShowIncome)
   const [showExpenses, setShowExpenses] = useState(defaultShowExpenses)
   const [showTransfers, setShowTransfers] = useState(false)
+  const [showInvestments, setShowInvestments] = useState(false)
 
   // Category dropdown visibility
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
@@ -147,17 +148,16 @@ export function useTransactionFilters({
         if (!isTransactionInDateRange(t.datetime, startStr, endStr)) return false
       }
 
-      // Transfer filter (check first - if it's a transfer and showTransfers is false, exclude)
-      const isTransfer = t.category?.groupType === "TRANSFER"
-      if (isTransfer && !showTransfers) return false
+      // Filter by groupType
+      const groupType = t.category?.groupType
 
-      // Income/Expense filter (skip if it's a transfer, already handled above)
-      if (!isTransfer) {
-        const amount = t.amount_number
-        if (!showIncome && !showExpenses) return false
-        if (showIncome && !showExpenses && amount < 0) return false
-        if (!showIncome && showExpenses && amount >= 0) return false
-      }
+      if (groupType === "TRANSFER" && !showTransfers) return false
+      if (groupType === "INVESTMENT" && !showInvestments) return false
+      if (groupType === "EXPENSES" && !showExpenses) return false
+      if (groupType === "INCOME" && !showIncome) return false
+
+      // Uncategorized: only show when Uncategorized toggle is checked
+      if (!groupType && !showOnlyUncategorized) return false
 
       // Uncategorized filter
       if (showOnlyUncategorized !== undefined && showOnlyUncategorized) {
@@ -221,7 +221,8 @@ export function useTransactionFilters({
     setSelectedSubcategoryIds(new Set())
     setShowIncome(defaultShowIncome)
     setShowExpenses(defaultShowExpenses)
-    setShowTransfers(false) // Reset transfers to false (hidden by default)
+    setShowTransfers(false)
+    setShowInvestments(false)
     setExcludedCategoryIds(new Set()) // No longer using excludedCategories for transfers
 
     // Optional filters
@@ -242,7 +243,8 @@ export function useTransactionFilters({
       excludedCategoryIds.size > 0 ||
       showIncome !== defaultShowIncome ||
       showExpenses !== defaultShowExpenses ||
-      showTransfers !== false // showTransfers is active if true
+      showTransfers !== false ||
+      showInvestments !== false
 
     const optionalFilters =
       (searchQuery !== undefined && searchQuery.trim() !== "") ||
@@ -261,6 +263,7 @@ export function useTransactionFilters({
     showIncome,
     showExpenses,
     showTransfers,
+    showInvestments,
     searchQuery,
     selectedTagIds,
     showOnlyUncategorized,
@@ -281,6 +284,7 @@ export function useTransactionFilters({
     showIncome,
     showExpenses,
     showTransfers,
+    showInvestments,
     showCategoryDropdown,
     dateInterval,
     hasActiveFilters,
@@ -295,6 +299,7 @@ export function useTransactionFilters({
     setShowIncome,
     setShowExpenses,
     setShowTransfers,
+    setShowInvestments,
     setShowCategoryDropdown,
 
     // Optional state (conditional returns)

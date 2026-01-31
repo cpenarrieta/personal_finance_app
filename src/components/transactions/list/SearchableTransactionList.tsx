@@ -115,6 +115,7 @@ export function SearchableTransactionList({
       showIncome: filters.showIncome,
       showExpenses: filters.showExpenses,
       showTransfers: filters.showTransfers,
+      showInvestments: filters.showInvestments,
       searchQuery: filters.searchQuery,
       selectedTagIds: filters.selectedTagIds,
       showOnlyUncategorized: filters.showOnlyUncategorized,
@@ -139,6 +140,7 @@ export function SearchableTransactionList({
     filters.showIncome,
     filters.showExpenses,
     filters.showTransfers,
+    filters.showInvestments,
     filters.searchQuery,
     filters.selectedTagIds,
     filters.showOnlyUncategorized,
@@ -165,6 +167,7 @@ export function SearchableTransactionList({
     filters.showIncome,
     filters.showExpenses,
     filters.showTransfers,
+    filters.showInvestments,
     filters.searchQuery,
     filters.selectedTagIds,
     filters.showOnlyUncategorized,
@@ -190,12 +193,17 @@ export function SearchableTransactionList({
     filters.showCategoryDropdown,
   )
 
-  // Calculate totals for filtered transactions
+  // Calculate totals for filtered transactions (using groupType for categorization)
   const totals = useMemo(() => {
-    const expenses = Math.abs(
-      filteredTransactions.filter((t) => t.amount_number < 0).reduce((sum, t) => sum + t.amount_number, 0),
-    )
-    const income = filteredTransactions.filter((t) => t.amount_number > 0).reduce((sum, t) => sum + t.amount_number, 0)
+    let income = 0
+    let expenses = 0
+    for (const t of filteredTransactions) {
+      if (t.category?.groupType === "INCOME") {
+        income += t.amount_number
+      } else if (t.category?.groupType === "EXPENSES") {
+        expenses += Math.abs(t.amount_number)
+      }
+    }
     const netBalance = income - expenses
 
     return { expenses, income, netBalance, count: filteredTransactions.length }
