@@ -7,8 +7,6 @@ import { formatAmount } from "@/lib/utils"
 import { formatTransactionDate } from "@/lib/utils/transaction-date"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import { Pencil } from "lucide-react"
 import type { TransactionForClient } from "@/types"
 
 interface TransactionItemProps {
@@ -16,7 +14,6 @@ interface TransactionItemProps {
   showBulkUpdate?: boolean
   isSelected?: boolean
   onToggleSelect?: (id: string) => void
-  onEdit?: (transaction: TransactionForClient) => void
   showAccount?: boolean // Whether to display account name
 }
 
@@ -25,7 +22,6 @@ export function TransactionItem({
   showBulkUpdate = false,
   isSelected = false,
   onToggleSelect,
-  onEdit,
   showAccount = true,
 }: TransactionItemProps) {
   // Determine which image to show (merchant logo takes priority over category image)
@@ -149,21 +145,6 @@ export function TransactionItem({
             </div>
           </div>
         </Link>
-
-        {/* Quick Edit button - visible on hover */}
-        {!showBulkUpdate && onEdit && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation()
-              onEdit(t)
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-        )}
       </div>
     </li>
   )

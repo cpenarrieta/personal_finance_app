@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useMemo, useEffect, useRef, RefObject } from "react"
+import { useMemo, useEffect, useRef, RefObject, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
-import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal"
 import { TransactionSearchBar } from "@/components/transactions/list/TransactionSearchBar"
 import { TransactionListFilters } from "@/components/transactions/list/TransactionListFilters"
 import { TransactionSummaryCards } from "@/components/transactions/list/TransactionSummaryCards"
@@ -34,7 +33,6 @@ interface SearchableTransactionListProps {
  * - Filter state management and URL sync
  * - Transaction sorting and filtering
  * - Bulk update operations
- * - Edit modal display
  */
 export function SearchableTransactionList({
   transactions,
@@ -48,8 +46,6 @@ export function SearchableTransactionList({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-
-  const [editingTransaction, setEditingTransaction] = useState<TransactionForClient | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const nonInvestmentAccounts = accounts.filter((account) => account.type !== "investment")
@@ -207,10 +203,7 @@ export function SearchableTransactionList({
 
   return (
     <div className="space-y-4">
-      <TransactionSearchBar
-        value={localSearchQuery}
-        onChange={setLocalSearchQuery}
-      />
+      <TransactionSearchBar value={localSearchQuery} onChange={setLocalSearchQuery} />
 
       <TransactionListFilters
         categories={categories}
@@ -231,18 +224,7 @@ export function SearchableTransactionList({
         showAccount={showAccount}
         searchQuery={filters.searchQuery}
         bulk={bulk}
-        onEditTransaction={setEditingTransaction}
       />
-
-      {/* Edit Transaction Modal */}
-      {editingTransaction && (
-        <EditTransactionModal
-          transaction={editingTransaction}
-          onClose={() => setEditingTransaction(null)}
-          categories={categories}
-          tags={tags}
-        />
-      )}
     </div>
   )
 }

@@ -1,23 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { format } from "date-fns"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { formatAmount } from "@/lib/utils"
 import { formatTransactionDate } from "@/lib/utils/transaction-date"
-import { EditTransactionModal } from "@/components/transactions/modals/EditTransactionModal"
 import { SplitTransactionModal } from "@/components/transactions/modals/SplitTransactionModal"
 import { TransactionFileUpload } from "@/components/transactions/detail/TransactionFileUpload"
 import { TransactionActions } from "@/components/transactions/detail/TransactionActions"
 import { AICategorizationDialog } from "@/components/transactions/detail/AICategorizationDialog"
 import { DeleteConfirmationDialog } from "@/components/transactions/detail/DeleteConfirmationDialog"
 import { SmartSplitReviewModal } from "@/components/transactions/detail/SmartSplitReviewModal"
+import { InlineEditableInput } from "@/components/shared/InlineEditableInput"
+import { InlineEditableSelect } from "@/components/shared/InlineEditableSelect"
+import { InlineEditableTextarea } from "@/components/shared/InlineEditableTextarea"
+import { InlineEditableTags } from "@/components/transactions/detail/InlineEditableTags"
 import { Alert } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { CategorySelect } from "@/components/ui/category-select"
+import { SubcategorySelect } from "@/components/ui/subcategory-select"
 import { Calendar, CreditCard, Tag, FolderOpen, Clock, ChevronRight } from "lucide-react"
 import { useAICategorization } from "@/hooks/useAICategorization"
 import { useTransactionDelete } from "@/hooks/useTransactionDelete"
@@ -31,9 +36,9 @@ interface TransactionDetailViewProps {
 }
 
 export function TransactionDetailView({ transaction, categories, tags }: TransactionDetailViewProps) {
-  const [isEditing, setIsEditing] = useState(false)
   const [isSplitting, setIsSplitting] = useState(false)
   const [transactionFiles, setTransactionFiles] = useState<string[]>(transaction.files || [])
+  const [currentCategoryId, setCurrentCategoryId] = useState<string | null>(transaction.categoryId)
   const router = useRouter()
 
   // Custom hooks for AI categorization, smart analysis, and deletion
@@ -49,6 +54,32 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
   const handleSmartAnalysis = async () => {
     await smartAnalysis.handlers.analyzeReceipt(transaction.id, categories)
   }
+
+  // Get display names for category/subcategory
+  const getCategoryName = useCallback(
+    (categoryId: string | null): string | null => {
+      if (!categoryId) return null
+      const cat = categories.find((c) => c.id === categoryId)
+      return cat?.name || null
+    },
+    [categories],
+  )
+
+  const getSubcategoryName = useCallback(
+    (categoryId: string | null, subcategoryId: string | null): string | null => {
+      if (!categoryId || !subcategoryId) return null
+      const cat = categories.find((c) => c.id === categoryId)
+      const sub = cat?.subcategories?.find((s) => s.id === subcategoryId)
+      return sub?.name || null
+    },
+    [categories],
+  )
+
+  // Handle category change - needs to clear subcategory
+  const handleCategoryChange = useCallback((newCategoryId: string | null) => {
+    setCurrentCategoryId(newCategoryId)
+    // Note: The subcategory will be reset on next render since categoryId changed
+  }, [])
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -80,14 +111,24 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             {/* Title & Meta */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1 min-w-0">
-                  <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">
-                    {transaction.merchantName || transaction.name}
-                  </h1>
+                <div className="space-y-1 min-w-0 flex-1">
+                  {/* Inline Editable Transaction Name */}
+                  <InlineEditableInput
+                    transactionId={transaction.id}
+                    fieldName="name"
+                    initialValue={transaction.name}
+                    placeholder="Transaction name"
+                    className="-ml-2"
+                    renderReadView={(value) => (
+                      <h1 className="text-xl md:text-2xl font-bold text-foreground truncate py-1 px-2">
+                        {value || transaction.merchantName || "Unnamed"}
+                      </h1>
+                    )}
+                  />
                   {transaction.merchantName && transaction.merchantName !== transaction.name && (
-                    <p className="text-sm text-muted-foreground truncate">{transaction.name}</p>
+                    <p className="text-sm text-muted-foreground truncate ml-0">{transaction.name}</p>
                   )}
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 ml-0">
                     <span className="text-sm text-muted-foreground">
                       {formatTransactionDate(transaction.datetime, "long")}
                     </span>
@@ -124,7 +165,6 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
               onSplit={() => setIsSplitting(true)}
               onSmartSplit={handleSmartAnalysis}
               isSmartSplitLoading={smartAnalysis.state.isAnalyzing}
-              onEdit={() => setIsEditing(true)}
               onDelete={() => deletion.handlers.setIsDialogOpen(true)}
             />
           </div>
@@ -254,7 +294,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
           </CardContent>
         </Card>
 
-        {/* Category & Tags Card */}
+        {/* Category & Tags Card - Inline Editable */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -263,23 +303,76 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {transaction.category ? (
-              <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <FolderOpen className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{transaction.category.name}</p>
-                  {transaction.subcategory && (
-                    <p className="text-xs text-muted-foreground">{transaction.subcategory.name}</p>
+            {/* Inline Editable Category */}
+            <div className="flex items-start gap-3">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FolderOpen className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0 -mt-0.5">
+                <InlineEditableSelect
+                  transactionId={transaction.id}
+                  fieldName="categoryId"
+                  initialValue={transaction.categoryId}
+                  placeholder="Select category..."
+                  displayValue={getCategoryName(currentCategoryId)}
+                  onValueChange={handleCategoryChange}
+                  refreshOnSave={true}
+                  renderReadView={(value) => (
+                    <div className="py-1 px-2">
+                      {value ? (
+                        <p className="text-sm font-medium">{getCategoryName(value)}</p>
+                      ) : (
+                        <p className="text-sm text-warning">Uncategorized</p>
+                      )}
+                    </div>
                   )}
-                </div>
+                  renderSelect={({ value, onChange, disabled, className }) => (
+                    <CategorySelect
+                      value={value}
+                      onChange={onChange}
+                      categories={categories}
+                      disabled={disabled}
+                      className={className}
+                      placeholder="None"
+                    />
+                  )}
+                />
+                {/* Inline Editable Subcategory */}
+                {currentCategoryId && (
+                  <InlineEditableSelect
+                    key={currentCategoryId} // Reset when category changes
+                    transactionId={transaction.id}
+                    fieldName="subcategoryId"
+                    initialValue={transaction.subcategoryId}
+                    placeholder="Select subcategory..."
+                    displayValue={getSubcategoryName(currentCategoryId, transaction.subcategoryId)}
+                    refreshOnSave={true}
+                    renderReadView={(value) => (
+                      <div className="py-0.5 px-2">
+                        {value ? (
+                          <p className="text-xs text-muted-foreground">
+                            {getSubcategoryName(currentCategoryId, value)}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">No subcategory</p>
+                        )}
+                      </div>
+                    )}
+                    renderSelect={({ value, onChange, disabled, className }) => (
+                      <SubcategorySelect
+                        value={value}
+                        onChange={onChange}
+                        categories={categories}
+                        categoryId={currentCategoryId}
+                        disabled={disabled}
+                        className={className}
+                        placeholder="None"
+                      />
+                    )}
+                  />
+                )}
               </div>
-            ) : (
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
-                <span className="text-sm text-warning">Uncategorized transaction</span>
-              </div>
-            )}
+            </div>
 
             {transaction.paymentChannel && (
               <>
@@ -291,48 +384,44 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
               </>
             )}
 
-            {transaction.tags && transaction.tags.length > 0 && (
-              <>
-                <Separator />
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">Tags</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {transaction.tags.map((tag) => (
-                      <Badge key={tag.id} className="text-white text-xs" style={{ backgroundColor: tag.color }}>
-                        {tag.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
+            {/* Inline Editable Tags */}
+            <Separator />
+            <InlineEditableTags
+              transactionId={transaction.id}
+              tags={tags}
+              initialSelectedIds={transaction.tags?.map((t) => t.id) || []}
+            />
           </CardContent>
         </Card>
       </div>
 
-      {/* Notes Section */}
-      {transaction.notes && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0">
-                <svg className="h-4 w-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-1">Notes</p>
-                <p className="text-sm whitespace-pre-wrap">{transaction.notes}</p>
-              </div>
+      {/* Notes Section - Inline Editable */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0">
+              <svg className="h-4 w-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div className="flex-1 min-w-0 -mt-0.5">
+              <p className="text-xs text-muted-foreground mb-1 px-2">Notes</p>
+              <InlineEditableTextarea
+                transactionId={transaction.id}
+                fieldName="notes"
+                initialValue={transaction.notes}
+                placeholder="Add notes..."
+                rows={3}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* File Upload Section */}
       <TransactionFileUpload
@@ -388,16 +477,6 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
           </div>
         </CardContent>
       </Card>
-
-      {/* Edit Modal */}
-      {isEditing && (
-        <EditTransactionModal
-          transaction={transaction}
-          onClose={() => setIsEditing(false)}
-          categories={categories}
-          tags={tags}
-        />
-      )}
 
       {/* Split Modal */}
       {isSplitting && (

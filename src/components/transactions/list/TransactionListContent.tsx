@@ -27,7 +27,6 @@ interface TransactionListContentProps {
     toggleTransaction: (id: string) => void
     getAvailableSubcategories: (categories: CategoryForClient[]) => Array<{ id: string; name: string }>
   }
-  onEditTransaction: (transaction: TransactionForClient) => void
 }
 
 /**
@@ -41,7 +40,6 @@ export function TransactionListContent({
   showAccount,
   searchQuery,
   bulk,
-  onEditTransaction,
 }: TransactionListContentProps) {
   const availableBulkSubcategories = bulk.getAvailableSubcategories(categories)
 
@@ -86,7 +84,6 @@ export function TransactionListContent({
                   showBulkUpdate={bulk.showBulkUpdate}
                   isSelected={bulk.selectedTransactions.has(t.id)}
                   onToggleSelect={bulk.toggleTransaction}
-                  onEdit={onEditTransaction}
                   showAccount={showAccount}
                 />
               ))}
