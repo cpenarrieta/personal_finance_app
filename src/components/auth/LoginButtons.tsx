@@ -2,25 +2,11 @@
 
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth/auth-client"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Fingerprint } from "lucide-react"
-import { toast } from "sonner"
+import { useState } from "react"
 import { logError } from "@/lib/utils/logger"
 
 export function LoginButtons() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState<string | null>(null)
-  const [isPasskeySupported, setIsPasskeySupported] = useState(false)
-
-  useEffect(() => {
-    // Check if passkeys are supported in this browser
-    setIsPasskeySupported(
-      typeof window !== "undefined" &&
-        window.PublicKeyCredential !== undefined &&
-        typeof window.PublicKeyCredential === "function",
-    )
-  }, [])
 
   const handleGoogleLogin = async () => {
     setIsLoading("google")
@@ -46,60 +32,8 @@ export function LoginButtons() {
     }
   }
 
-  const handlePasskeyLogin = async () => {
-    setIsLoading("passkey")
-    try {
-      const result = await authClient.signIn.passkey()
-
-      if (result.error) {
-        logError("Passkey login error:", result.error)
-        toast.error(result.error.message || "Failed to sign in with passkey")
-        setIsLoading(null)
-        return
-      }
-
-      // Success - redirect to dashboard
-      router.push("/")
-      router.refresh()
-    } catch (error: any) {
-      logError("Passkey login error:", error)
-      toast.error(error.message || "Failed to sign in with passkey")
-      setIsLoading(null)
-    }
-  }
-
   return (
     <div className="flex flex-col gap-4 w-full max-w-sm">
-      {isPasskeySupported && (
-        <>
-          <Button
-            onClick={handlePasskeyLogin}
-            disabled={isLoading !== null}
-            className="w-full"
-            variant="default"
-            size="lg"
-          >
-            {isLoading === "passkey" ? (
-              "Authenticating..."
-            ) : (
-              <>
-                <Fingerprint className="mr-2 h-5 w-5" />
-                Sign in with Face ID
-              </>
-            )}
-          </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-muted-foreground/20" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
-        </>
-      )}
-
       <Button onClick={handleGoogleLogin} disabled={isLoading !== null} className="w-full" variant="outline" size="lg">
         {isLoading === "google" ? (
           "Redirecting..."

@@ -212,42 +212,6 @@ export const migrateAccount = mutation({
   },
 })
 
-export const migratePasskey = mutation({
-  args: {
-    id: v.string(),
-    userId: v.string(),
-    name: v.optional(v.string()),
-    publicKey: v.string(),
-    credentialID: v.string(),
-    counter: v.number(),
-    deviceType: v.string(),
-    backedUp: v.boolean(),
-    transports: v.optional(v.string()),
-    aaguid: v.optional(v.string()),
-    createdAt: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    await ctx.runMutation(components.betterAuth.adapter.create, {
-      input: {
-        model: "passkey",
-        data: {
-          userId: args.userId,
-          name: args.name ?? null,
-          publicKey: args.publicKey,
-          credentialID: args.credentialID,
-          counter: args.counter,
-          deviceType: args.deviceType,
-          backedUp: args.backedUp,
-          transports: args.transports ?? null,
-          aaguid: args.aaguid ?? null,
-          createdAt: args.createdAt ?? null,
-        },
-      },
-    })
-    return { success: true }
-  },
-})
-
 export const migrateSession = mutation({
   args: {
     id: v.string(),

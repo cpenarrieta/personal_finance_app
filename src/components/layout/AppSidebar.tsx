@@ -110,10 +110,6 @@ const getStaticNavItems = () => {
           href: "/settings/connections",
         },
         {
-          title: "Security",
-          href: "/settings/security",
-        },
-        {
           title: "Categories",
           href: "/settings/manage-categories",
         },

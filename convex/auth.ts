@@ -1,5 +1,4 @@
 import { betterAuth } from "better-auth"
-import { passkey } from "@better-auth/passkey"
 import { createClient, type CreateAuth } from "@convex-dev/better-auth"
 import { convex } from "@convex-dev/better-auth/plugins"
 import { components } from "./_generated/api"
@@ -67,11 +66,6 @@ export const createAuth: CreateAuth<DataModel> = (ctx: GenericCtx<DataModel>) =>
     plugins: [
       // Only the convex plugin - no crossDomain needed since auth stays on same domain
       convex({ authConfig }),
-      passkey({
-        rpName: "Personal Finance App",
-        rpID: siteUrl.includes("localhost") ? "localhost" : new URL(siteUrl).hostname,
-        origin: siteUrl,
-      }),
     ],
   })
 
