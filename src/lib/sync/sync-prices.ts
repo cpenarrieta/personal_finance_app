@@ -2,8 +2,9 @@
 import { fetchQuery, fetchMutation } from "convex/nextjs"
 import { api } from "../../../convex/_generated/api"
 import { logInfo, logError } from "../utils/logger"
+import YahooFinance from "yahoo-finance2"
 
-const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || ""
+const yahooFinance = new YahooFinance()
 
 export async function syncStockPrices() {
   // Get all securities with ticker symbols from Convex
@@ -11,23 +12,35 @@ export async function syncStockPrices() {
 
   logInfo(`Syncing prices for ${securities.length} securities...`)
 
-  for (const security of securities) {
-    if (!security.tickerSymbol) continue
+  const validSecurities = securities.filter((s) => s.tickerSymbol)
+  const tickers = validSecurities.map((s) => s.tickerSymbol!)
 
-    try {
-      // Fetch price from Alpha Vantage
-      const response = await fetch(
-        `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${security.tickerSymbol}&apikey=${ALPHA_VANTAGE_API_KEY}`,
-      )
-      const data = await response.json()
+  if (tickers.length === 0) {
+    logInfo("No securities with tickers to sync")
+    return
+  }
 
-      if (data["Global Quote"] && data["Global Quote"]["05. price"]) {
-        const price = parseFloat(data["Global Quote"]["05. price"])
-        const priceDate = Date.now()
+  try {
+    // Batch fetch all quotes
+    const quotes = await yahooFinance.quote(tickers)
 
+    // Create lookup map
+    const priceMap = new Map<string, number>()
+    for (const q of quotes) {
+      if (q.symbol && q.regularMarketPrice !== undefined) {
+        priceMap.set(q.symbol, q.regularMarketPrice)
+      }
+    }
+
+    const priceDate = Date.now()
+
+    // Update holdings for each security
+    for (const security of validSecurities) {
+      const price = priceMap.get(security.tickerSymbol!)
+
+      if (price !== undefined) {
         logInfo(`${security.tickerSymbol}: $${price}`)
 
-        // Update all holdings for this security
         await fetchMutation(api.sync.updateHoldingPrices, {
           securityId: security.id,
           institutionPrice: price,
@@ -36,11 +49,32 @@ export async function syncStockPrices() {
       } else {
         logInfo(`${security.tickerSymbol}: No price data available`)
       }
+    }
+  } catch (error) {
+    logError("Error fetching batch quotes from Yahoo Finance:", error)
 
-      // Add a small delay to respect API rate limits (5 calls per minute for free tier)
-      await new Promise((resolve) => setTimeout(resolve, 12000)) // 12 seconds between calls
-    } catch (error) {
-      logError(`Error fetching price for ${security.tickerSymbol}:`, error)
+    // Fallback: fetch individually with delay
+    for (const security of validSecurities) {
+      try {
+        const quote = await yahooFinance.quote(security.tickerSymbol!)
+
+        if (quote.regularMarketPrice !== undefined) {
+          logInfo(`${security.tickerSymbol}: $${quote.regularMarketPrice}`)
+
+          await fetchMutation(api.sync.updateHoldingPrices, {
+            securityId: security.id,
+            institutionPrice: quote.regularMarketPrice,
+            institutionPriceAsOf: Date.now(),
+          })
+        } else {
+          logInfo(`${security.tickerSymbol}: No price data available`)
+        }
+
+        // Small delay between individual calls
+        await new Promise((r) => setTimeout(r, 500))
+      } catch (err) {
+        logError(`Error fetching price for ${security.tickerSymbol}:`, err)
+      }
     }
   }
 

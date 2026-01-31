@@ -19,7 +19,6 @@ import type * as items from "../items.js";
 import type * as sync from "../sync.js";
 import type * as tags from "../tags.js";
 import type * as transactions from "../transactions.js";
-import type * as weeklySummaries from "../weeklySummaries.js";
 import type * as weeklySummary from "../weeklySummary.js";
 
 import type {
@@ -40,7 +39,6 @@ declare const fullApi: ApiFromModules<{
   sync: typeof sync;
   tags: typeof tags;
   transactions: typeof transactions;
-  weeklySummaries: typeof weeklySummaries;
   weeklySummary: typeof weeklySummary;
 }>;
 

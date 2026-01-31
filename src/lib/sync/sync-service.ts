@@ -16,6 +16,7 @@ import { categorizeTransactions } from "../ai/categorize-transaction"
 import { SyncStats, SyncOptions, createSyncStats } from "./sync-types"
 import { syncItemTransactions } from "./sync-transactions"
 import { syncItemInvestments } from "./sync-investments"
+import { syncStockPrices } from "./sync-prices"
 
 // Re-export types and functions for backward compatibility
 export * from "./sync-types"
@@ -89,6 +90,11 @@ export async function syncItems(
     await runAICategorization(totalStats.newTransactionIds)
   }
 
+  // Sync stock prices after investment sync
+  if (options.syncInvestments) {
+    await runStockPriceSync()
+  }
+
   // Invalidate caches based on what was synced
   invalidateCaches(options)
 
@@ -110,6 +116,21 @@ function accumulateStats(totalStats: SyncStats, itemStats: SyncStats): void {
   totalStats.holdingsUpdated += itemStats.holdingsUpdated
   totalStats.holdingsRemoved += itemStats.holdingsRemoved
   totalStats.investmentTransactionsAdded += itemStats.investmentTransactionsAdded
+}
+
+/**
+ * Runs stock price sync for all securities
+ */
+async function runStockPriceSync(): Promise<void> {
+  logInfo(`\n📈 Syncing stock prices...`)
+
+  try {
+    await syncStockPrices()
+    logInfo(`✅ Stock price sync complete`)
+  } catch (error) {
+    logError(`❌ Error syncing stock prices:`, error)
+    // Continue with sync even if price sync fails
+  }
 }
 
 /**

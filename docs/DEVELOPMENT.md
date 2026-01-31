@@ -33,7 +33,6 @@ npm run sync         # Incremental sync
 
 ### Optional
 - `OPENAI_API_KEY`: AI categorization (local .env)
-- `ALPHA_VANTAGE_API_KEY`: Stock prices (local .env)
 - `PLAID_WEBHOOK_VERIFICATION_KEY`: Webhook security (Convex env)
 
 ## Debugging

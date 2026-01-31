@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Convex account and deployment
-- API keys: Plaid, Google/GitHub OAuth, OpenAI (optional), Alpha Vantage (optional)
+- API keys: Plaid, Google/GitHub OAuth, OpenAI (optional)
 - [Vercel account](https://vercel.com/signup)
 
 ## Step 1: Convex Setup
@@ -63,7 +63,6 @@ PLAID_COUNTRY_CODES=US,CA
 ### Optional
 ```bash
 OPENAI_API_KEY=...           # AI categorization
-ALPHA_VANTAGE_API_KEY=...    # Stock prices
 ```
 
 ## Step 4: Verify

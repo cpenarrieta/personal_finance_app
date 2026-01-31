@@ -19,7 +19,6 @@ Personal finance tracker. Next.js 16 + Convex + Plaid + shadcn/ui.
 - Convex (real-time backend)
 - Better Auth (Google/GitHub OAuth)
 - Plaid API (banking data)
-- Alpha Vantage API (stock prices)
 - Tailwind CSS 4, shadcn/ui, Recharts
 
 ## Setup
@@ -49,7 +48,6 @@ PLAID_CLIENT_ID="..."
 PLAID_SECRET="..."
 PLAID_ENV="sandbox"
 OPENAI_API_KEY="..."        # optional
-ALPHA_VANTAGE_API_KEY="..." # optional
 ```
 
 Set Convex env vars:

@@ -3,6 +3,7 @@
 ## Data Flow
 
 ### 1. Plaid Integration
+
 - **Endpoints**: `/transactions/sync` for incremental updates, `/investments/*` for holdings
 - **First sync**: Historical data from 2024-01-01
 - **Incremental**: Uses cursors (`lastTransactionsCursor`, `lastInvestmentsCursor`)
@@ -10,6 +11,7 @@
 - **Location**: `src/lib/plaid.ts`, `src/lib/sync/`
 
 ### 2. Authentication (Next.js 16)
+
 - **Better Auth** with Convex adapter - OAuth (Google/GitHub)
 - **Email-gating**: `ALLOWED_EMAILS` Convex env var enforced in `convex/auth.ts`
 - **Protected**: All routes except `/login` and `/api/auth/*`
@@ -17,6 +19,7 @@
 - **Architecture**: `/api/auth/[...all]` proxies requests to Convex HTTP endpoints
 
 ### 3. Database Schema (Convex)
+
 - **Plaid**: institutions → items → accounts → transactions
 - **Investments**: securities, holdings, investmentTransactions
 - **Categorization**: categories ↔ subcategories ← transactions
@@ -24,6 +27,7 @@
 - **Split transactions**: Parent-child via `isSplit`, `parentTransactionId`, `originalTransactionId`
 
 ### 4. Transaction Categorization
+
 - **Plaid categories**: Stored in `plaidCategory`, `plaidSubcategory` (reference only, not used)
 - **Custom**: User assigns via `categoryId`, `subcategoryId`
 
@@ -56,7 +60,6 @@ src/
 │   ├── auth/                     # Better Auth client & server utilities
 │   ├── plaid.ts                  # Plaid client
 │   ├── sync/                     # Sync logic
-│   └── syncPrices.ts             # Alpha Vantage
 ├── types/                        # TypeScript types
 └── proxy.ts                      # Auth proxy (Next.js 16)
 
@@ -80,17 +83,20 @@ scripts/                          # Sync scripts
 ## Technical Details
 
 ### Convex
+
 - Real-time backend with automatic subscriptions
 - Queries for reads, mutations for writes
 - Schema defined in `convex/schema.ts`
 - Types auto-generated in `convex/_generated/`
 
 ### Type Safety
+
 - Strict TypeScript, `@/*` path alias
 - Convex generates types from schema
 - Server calculations use source types directly
 
 ### Sync Behavior
+
 - **Incremental**: Cursors (`lastTransactionsCursor`, `lastInvestmentsCursor`)
 - **Historical**: First sync from 2024-01-01
 - **Balances**: Updated every sync
