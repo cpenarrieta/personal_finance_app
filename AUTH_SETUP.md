@@ -1,15 +1,14 @@
 # Authentication Setup Guide
 
-Personal Finance app uses Better Auth with Convex adapter. OAuth (Google/GitHub) and Passkeys supported. Email-gated via `ALLOWED_EMAILS` Convex env var.
+Personal Finance app uses Better Auth with Convex adapter. OAuth (Google/GitHub) supported. Email-gated via `ALLOWED_EMAILS` Convex env var.
 
 ## What's Implemented
 
 - **Better Auth** with Convex adapter (`@convex-dev/better-auth`)
 - **OAuth** - Google and GitHub sign-in
-- **Passkeys** - WebAuthn passwordless authentication
 - **Email Restriction** - Only `ALLOWED_EMAILS` can access
 - **Route Protection** - All routes protected except `/login` and `/api/auth/*`
-- **All auth data in Convex** - Users, sessions, accounts, passkeys, verification
+- **All auth data in Convex** - Users, sessions, accounts, verification
 
 ## Architecture
 
@@ -128,7 +127,6 @@ Email must match your Google/GitHub OAuth account.
 - `src/app/login/page.tsx` - Login page
 - `src/components/LoginButtons.tsx` - OAuth buttons
 - `src/components/LogoutButton.tsx` - Sign out button
-- `src/app/(app)/settings/security/page.tsx` - Passkey management
 
 ## Testing
 
@@ -196,23 +194,6 @@ databaseHooks: {
    ```
 
 4. Set `NEXT_PUBLIC_CONVEX_SITE_URL` in production env
-
-## Passkeys
-
-Passkey (WebAuthn) support is built-in.
-
-### Register Passkey
-
-1. Login via OAuth first
-2. Go to Settings → Security
-3. Click "Add Passkey"
-4. Follow browser prompts
-
-### Login with Passkey
-
-1. Go to `/login`
-2. Click "Sign in with Passkey"
-3. Authenticate via device
 
 ## Troubleshooting
 

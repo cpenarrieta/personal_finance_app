@@ -10,7 +10,7 @@
 - **Location**: `src/lib/plaid.ts`, `src/lib/sync/`
 
 ### 2. Authentication (Next.js 16)
-- **Better Auth** with Convex adapter - OAuth (Google/GitHub) + Passkeys
+- **Better Auth** with Convex adapter - OAuth (Google/GitHub)
 - **Email-gating**: `ALLOWED_EMAILS` Convex env var enforced in `convex/auth.ts`
 - **Protected**: All routes except `/login` and `/api/auth/*`
 - **Proxy**: `src/proxy.ts` checks for Better Auth session cookie

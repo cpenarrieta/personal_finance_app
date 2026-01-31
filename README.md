@@ -53,7 +53,7 @@ This application provides a comprehensive solution for managing your personal fi
 
 - **Framework**: Next.js 16 (App Router) with TypeScript
 - **Database**: Convex (real-time backend)
-- **Authentication**: Better Auth with Convex adapter (OAuth: Google, GitHub + Passkeys)
+- **Authentication**: Better Auth with Convex adapter (OAuth: Google, GitHub)
 - **Financial Data**: Plaid API for banking and investment data
 - **Stock Data**: Alpha Vantage API for real-time stock prices
 - **UI**: React 19, Tailwind CSS 4, shadcn/ui components

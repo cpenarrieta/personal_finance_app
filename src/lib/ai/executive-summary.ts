@@ -125,8 +125,6 @@ ${transactionsContext}`
     totalSpending: data.totalSpending,
   })
 
-  console.log("Prompt:", prompt)
-
   const result = await generateObject({
     model: openai("gpt-5.2-2025-12-11"),
     schema: ExecutiveSummarySchema,

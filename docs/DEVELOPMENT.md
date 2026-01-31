@@ -44,11 +44,11 @@ npm run sync         # Incremental sync
 
 ## Authentication
 
-- **Better Auth** with Convex adapter - OAuth (Google/GitHub) + Passkeys
+- **Better Auth** with Convex adapter - OAuth (Google/GitHub)
 - Email-gated via `ALLOWED_EMAILS` Convex env var
 - Enforced in `src/proxy.ts` (Next.js 16) and `convex/auth.ts`
 - Protected: All routes except `/login` and `/api/auth/*`
-- **All auth data stored in Convex** (users, sessions, accounts, passkeys)
+- **All auth data stored in Convex** (users, sessions, accounts)
 
 ### OAuth Redirect URIs
 Configure in Google Cloud Console / GitHub Developer Settings:
