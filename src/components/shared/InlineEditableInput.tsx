@@ -91,7 +91,6 @@ export function InlineEditableInput({
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
           placeholder={placeholder}
-          disabled={isSaving}
           className="pr-8"
         />
       }

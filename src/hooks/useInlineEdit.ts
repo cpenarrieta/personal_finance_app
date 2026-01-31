@@ -58,12 +58,22 @@ export function useInlineEdit<T>(
   const debouncedValue = useDebounce(value, debounceMs)
   const pendingSaveRef = useRef(false)
   const lastSavedValueRef = useRef<T>(initialValue)
+  const isEditingRef = useRef(false)
+  const isAutoSavingRef = useRef(false)
+
+  // Keep ref in sync with state for use in effects
+  useEffect(() => {
+    isEditingRef.current = isEditing
+  }, [isEditing])
 
   // Reset state when initialValue changes (e.g., after router refresh)
+  // But only if we're not currently editing to avoid losing user input/focus
   useEffect(() => {
-    setValueState(initialValue)
-    setOriginalValue(initialValue)
-    lastSavedValueRef.current = initialValue
+    if (!isEditingRef.current) {
+      setValueState(initialValue)
+      setOriginalValue(initialValue)
+      lastSavedValueRef.current = initialValue
+    }
   }, [initialValue])
 
   const save = useCallback(
@@ -117,7 +127,10 @@ export function useInlineEdit<T>(
   // Auto-save when debounced value changes (only in edit mode)
   useEffect(() => {
     if (isEditing && pendingSaveRef.current) {
-      save(debouncedValue)
+      isAutoSavingRef.current = true
+      save(debouncedValue).finally(() => {
+        isAutoSavingRef.current = false
+      })
     }
   }, [debouncedValue, isEditing, save])
 

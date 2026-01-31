@@ -95,7 +95,6 @@ export function InlineEditableTextarea({
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
             placeholder={placeholder}
-            disabled={isSaving}
             rows={rows}
             className={cn("pr-8 resize-none")}
           />
