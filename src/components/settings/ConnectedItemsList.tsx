@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import PlaidLinkButton from "@/components/sync/PlaidLinkButton"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -46,10 +47,12 @@ export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   {item.institution?.logoUrl ? (
-                    <img
+                    <Image
                       src={item.institution.logoUrl}
                       alt={institutionName}
-                      className="w-12 h-12 rounded-lg object-contain bg-muted p-1"
+                      width={48}
+                      height={48}
+                      className="rounded-lg object-contain bg-muted p-1"
                     />
                   ) : (
                     <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
