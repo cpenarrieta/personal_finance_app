@@ -7,7 +7,7 @@ export function TransactionDetailSkeleton() {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header Card */}
-      <div className="bg-white rounded-lg shadow-md border overflow-hidden">
+      <div className="bg-card rounded-lg shadow-md border overflow-hidden">
         {/* Colored Header */}
         <div className="bg-primary/20 p-6">
           <div className="flex items-start gap-4">
