@@ -112,11 +112,11 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
       })
 
       const spending = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number < 0)
+        .filter((t: TransactionForClient) => t.category?.groupType === "EXPENSES")
         .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
 
       const income = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number > 0)
+        .filter((t: TransactionForClient) => t.category?.groupType === "INCOME")
         .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
 
       return {
@@ -139,11 +139,11 @@ export function TransactionChartsView({ transactions, categories }: TransactionC
       })
 
       const expenses = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number < 0)
+        .filter((t: TransactionForClient) => t.category?.groupType === "EXPENSES")
         .reduce((sum: number, t: TransactionForClient) => sum + Math.abs(t.amount_number), 0)
 
       const income = monthTransactions
-        .filter((t: TransactionForClient) => t.amount_number > 0)
+        .filter((t: TransactionForClient) => t.category?.groupType === "INCOME")
         .reduce((sum: number, t: TransactionForClient) => sum + t.amount_number, 0)
 
       return {
