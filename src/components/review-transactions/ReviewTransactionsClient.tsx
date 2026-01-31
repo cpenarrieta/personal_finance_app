@@ -50,8 +50,6 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showErrorDialog, setShowErrorDialog] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
-  const [showFlipAmountDialog, setShowFlipAmountDialog] = useState(false)
-  const [flipAmountData, setFlipAmountData] = useState<{ transactionId: string; originalAmount: number } | null>(null)
 
   // Initialize edits state - all transactions selected by default
   const [edits, setEdits] = useState<Map<string, TransactionEdit>>(() => {
@@ -178,24 +176,13 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
     })
   }
 
-  // Show flip amount warning dialog
-  const handleFlipAmountClick = (transactionId: string, originalAmount: number) => {
-    setFlipAmountData({ transactionId, originalAmount })
-    setShowFlipAmountDialog(true)
-  }
-
-  // Toggle amount sign for a transaction (after confirmation)
-  const confirmFlipAmount = () => {
-    if (!flipAmountData) return
-
-    const edit = getEdit(flipAmountData.transactionId)
+  // Toggle amount sign for a transaction
+  const handleFlipAmount = (transactionId: string, originalAmount: number) => {
+    const edit = getEdit(transactionId)
     if (!edit) return
 
-    const currentAmount = edit.newAmount !== null ? edit.newAmount : flipAmountData.originalAmount
-    updateEdit(flipAmountData.transactionId, { newAmount: currentAmount * -1 })
-
-    setShowFlipAmountDialog(false)
-    setFlipAmountData(null)
+    const currentAmount = edit.newAmount !== null ? edit.newAmount : originalAmount
+    updateEdit(transactionId, { newAmount: currentAmount * -1 })
   }
 
   // Toggle tag for a transaction
@@ -347,7 +334,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
               tags={tags}
               onToggleSelection={() => toggleSelection(transaction.id)}
               onUpdateEdit={(update) => updateEdit(transaction.id, update)}
-              onFlipAmount={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
+              onFlipAmount={() => handleFlipAmount(transaction.id, transaction.amount_number)}
             />
           )
         })}
@@ -368,7 +355,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
               tags={tags}
               onToggleSelection={() => toggleSelection(transaction.id)}
               onUpdateEdit={(update) => updateEdit(transaction.id, update)}
-              onFlipAmount={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
+              onFlipAmount={() => handleFlipAmount(transaction.id, transaction.amount_number)}
             />
           )
         })}
@@ -435,7 +422,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0"
-                        onClick={() => handleFlipAmountClick(transaction.id, transaction.amount_number)}
+                        onClick={() => handleFlipAmount(transaction.id, transaction.amount_number)}
                         title="Flip amount sign"
                       >
                         <ArrowLeftRight className="h-3 w-3" />
@@ -564,33 +551,6 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowErrorDialog(false)}>OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Flip Amount Warning Dialog */}
-      <AlertDialog open={showFlipAmountDialog} onOpenChange={setShowFlipAmountDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Flip Transaction Amount Sign?</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <div className="font-semibold text-destructive">⚠️ Warning: This is a very rare operation</div>
-                <div>
-                  Flipping the amount sign should <strong>only</strong> be used when you are 100% confident that Plaid
-                  API made a mistake with the transaction amount sign.
-                </div>
-                <div className="text-sm">
-                  In most cases, the sign is correct. Proceed only if you're absolutely certain this is incorrect.
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setFlipAmountData(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmFlipAmount} className="bg-destructive hover:bg-destructive/90">
-              Flip Amount Sign
-            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
