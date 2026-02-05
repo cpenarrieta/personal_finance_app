@@ -3,28 +3,31 @@
  * Shared query layer for MCP tools - extracted from transaction-tools.ts
  */
 
-import { fetchQuery } from "convex/nextjs"
+import { ConvexHttpClient } from "convex/browser"
 import { api } from "../../../convex/_generated/api"
 import { getTransactionDate, isTransactionInDateRange, getTransactionMonth } from "@/lib/utils/transaction-date"
 
+// Create a Convex HTTP client for serverless environments
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+
 // Type for a single transaction from Convex getAll
-type Transaction = Awaited<ReturnType<typeof fetchQuery<typeof api.transactions.getAll>>>[number]
+type Transaction = Awaited<ReturnType<typeof convex.query<typeof api.transactions.getAll>>>["0"]
 
 // Type for account with institution
-type AccountWithInstitution = Awaited<ReturnType<typeof fetchQuery<typeof api.accounts.getAllWithInstitution>>>[number]
+type AccountWithInstitution = Awaited<ReturnType<typeof convex.query<typeof api.accounts.getAllWithInstitution>>>["0"]
 
 /**
  * Fetch all transactions from Convex
  */
 export async function getAllTransactions(): Promise<Transaction[]> {
-  return fetchQuery(api.transactions.getAll)
+  return convex.query(api.transactions.getAll)
 }
 
 /**
  * Fetch all accounts with institution info
  */
 export async function getAllAccounts(): Promise<AccountWithInstitution[]> {
-  return fetchQuery(api.accounts.getAllWithInstitution)
+  return convex.query(api.accounts.getAllWithInstitution)
 }
 
 /**
