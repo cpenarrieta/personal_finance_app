@@ -16,10 +16,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Allow access to auth API routes, MCP endpoints, login page, and static assets
+  // Allow access to auth API routes, login page, and static assets
   if (
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/mcp") ||
     pathname === "/login" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
@@ -46,7 +45,6 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api/auth (auth API routes)
-     * - api/mcp (MCP server endpoints with API key auth)
      * - api/plaid/webhook (Plaid server-to-server webhook with custom verification)
      * - api/cron (cron jobs with CRON_SECRET verification)
      * - _next/static (static files)
@@ -54,6 +52,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * Note: Public assets are filtered in the proxy function itself
      */
-    "/((?!api/auth|api/mcp|api/plaid/webhook|api/cron|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/auth|api/plaid/webhook|api/cron|_next/static|_next/image|favicon.ico).*)",
   ],
 }
