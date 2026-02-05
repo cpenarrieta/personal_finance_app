@@ -2,7 +2,7 @@
 
 Personal finance tracker. Next.js 16 + Convex + Plaid + shadcn/ui.
 
-**Note:** Built for single-user personal use. No multi-tenancy—all data is shared across the app, not separated by user.
+**Note:** Built for single-user personal use. No multi-tenancy, all data is shared across the app, not separated by user.
 
 ## Features
 
