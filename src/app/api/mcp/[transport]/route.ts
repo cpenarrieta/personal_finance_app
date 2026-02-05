@@ -9,10 +9,10 @@ import { NextRequest } from "next/server"
 export const maxDuration = 60
 
 // Wrap handler with error logging
-async function wrappedHandler(req: NextRequest, context: { params: Promise<{ transport: string }> }) {
+async function wrappedHandler(req: NextRequest) {
   console.log("[MCP Route] Request received:", req.method, req.url)
   try {
-    const result = await mcpHandler(req, context)
+    const result = await mcpHandler(req)
     console.log("[MCP Route] Request completed successfully")
     return result
   } catch (error) {
