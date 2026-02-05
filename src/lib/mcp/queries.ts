@@ -7,8 +7,20 @@ import { ConvexHttpClient } from "convex/browser"
 import { api } from "../../../convex/_generated/api"
 import { getTransactionDate, isTransactionInDateRange, getTransactionMonth } from "@/lib/utils/transaction-date"
 
+// Debug logging for env vars
+console.log("[MCP Queries] Module loading", {
+  hasConvexUrl: !!process.env.NEXT_PUBLIC_CONVEX_URL,
+  convexUrlLength: process.env.NEXT_PUBLIC_CONVEX_URL?.length,
+})
+
 // Create a Convex HTTP client for serverless environments
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
+if (!convexUrl) {
+  console.error("[MCP Queries] FATAL: NEXT_PUBLIC_CONVEX_URL is not set!")
+}
+const convex = new ConvexHttpClient(convexUrl || "")
+
+console.log("[MCP Queries] ConvexHttpClient created")
 
 // Type for a single transaction from Convex getAll
 type Transaction = Awaited<ReturnType<typeof convex.query<typeof api.transactions.getAll>>>["0"]
@@ -20,14 +32,30 @@ type AccountWithInstitution = Awaited<ReturnType<typeof convex.query<typeof api.
  * Fetch all transactions from Convex
  */
 export async function getAllTransactions(): Promise<Transaction[]> {
-  return convex.query(api.transactions.getAll)
+  console.log("[MCP Queries] getAllTransactions called")
+  try {
+    const result = await convex.query(api.transactions.getAll)
+    console.log("[MCP Queries] getAllTransactions success, count:", result.length)
+    return result
+  } catch (error) {
+    console.error("[MCP Queries] getAllTransactions error:", error)
+    throw error
+  }
 }
 
 /**
  * Fetch all accounts with institution info
  */
 export async function getAllAccounts(): Promise<AccountWithInstitution[]> {
-  return convex.query(api.accounts.getAllWithInstitution)
+  console.log("[MCP Queries] getAllAccounts called")
+  try {
+    const result = await convex.query(api.accounts.getAllWithInstitution)
+    console.log("[MCP Queries] getAllAccounts success, count:", result.length)
+    return result
+  } catch (error) {
+    console.error("[MCP Queries] getAllAccounts error:", error)
+    throw error
+  }
 }
 
 /**
