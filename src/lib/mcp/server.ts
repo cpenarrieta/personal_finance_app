@@ -15,11 +15,18 @@ import {
 } from "./queries"
 import { verifyApiKey } from "./auth"
 
+// Log to help debug serverless issues
+console.log("[MCP] Server module loaded", {
+  hasConvexUrl: !!process.env.NEXT_PUBLIC_CONVEX_URL,
+  hasMcpApiKey: !!process.env.MCP_API_KEY,
+})
+
 /**
  * Create the base MCP handler with all tools registered
  */
 const baseMcpHandler = createMcpHandler(
   (server) => {
+    console.log("[MCP] Registering tools...")
     // Tool 1: Get transactions by date range
     server.registerTool(
       "get_transactions",
@@ -157,18 +164,30 @@ const baseMcpHandler = createMcpHandler(
         inputSchema: {},
       },
       async () => {
-        const data = await getAccountBalances()
-        return {
-          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        console.log("[MCP] get_accounts called")
+        try {
+          const data = await getAccountBalances()
+          console.log("[MCP] get_accounts success, count:", data.length)
+          return {
+            content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+          }
+        } catch (error) {
+          console.error("[MCP] get_accounts error:", error)
+          throw error
         }
       },
     )
+
+    console.log("[MCP] All tools registered")
   },
   {},
   {
     basePath: "/api/mcp",
     maxDuration: 60,
-    verboseLogs: process.env.NODE_ENV !== "production",
+    verboseLogs: true, // Always enable verbose logs for debugging
+    onEvent: (event) => {
+      console.log("[MCP Event]", JSON.stringify(event))
+    },
   },
 )
 
