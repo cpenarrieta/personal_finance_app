@@ -22,8 +22,10 @@ export const getById = query({
       .withIndex("by_itemId", (q) => q.eq("itemId", id))
       .collect()
 
+    // Never expose accessToken to clients
+    const { accessToken: _token, ...safeItem } = item
     return {
-      ...item,
+      ...safeItem,
       id: item._id,
       accounts,
     }
@@ -61,8 +63,10 @@ export const getByInstitutionId = query({
       .withIndex("by_itemId", (q) => q.eq("itemId", item._id))
       .collect()
 
+    // Never expose accessToken to clients
+    const { accessToken: _token, ...safeItem } = item
     return {
-      ...item,
+      ...safeItem,
       id: item._id,
       accounts: accounts.map((a) => ({
         ...a,
@@ -78,7 +82,21 @@ export const getByInstitutionId = query({
 export const getAll = query({
   args: {},
   handler: async (ctx) => {
-    return ctx.db.query("items").collect()
+    const items = await ctx.db.query("items").collect()
+    // Never expose accessToken to clients
+    return items.map(({ accessToken: _token, ...safeItem }) => safeItem)
+  },
+})
+
+/**
+ * Get access token for an item (server-side only, used by API routes for Plaid calls)
+ */
+export const getAccessToken = query({
+  args: { id: v.id("items") },
+  handler: async (ctx, { id }) => {
+    const item = await ctx.db.get(id)
+    if (!item) return null
+    return { accessToken: item.accessToken }
   },
 })
 

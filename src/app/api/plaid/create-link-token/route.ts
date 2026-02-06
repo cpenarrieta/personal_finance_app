@@ -1,4 +1,7 @@
 import { NextRequest } from "next/server"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "../../../../../convex/_generated/api"
+import type { Id } from "../../../../../convex/_generated/dataModel"
 import { getPlaidClient } from "@/lib/api/plaid"
 import { Products, CountryCode } from "plaid"
 import { logError } from "@/lib/utils/logger"
@@ -8,7 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     const plaid = getPlaidClient()
     const body = await req.json().catch(() => ({}))
-    const { access_token } = body
+    const { item_id } = body
 
     // Get webhook URL from environment or construct from request
     const webhookUrl = process.env.PLAID_WEBHOOK_URL || `${process.env.BETTER_AUTH_URL}/api/plaid/webhook`
@@ -21,9 +24,13 @@ export async function POST(req: NextRequest) {
       webhook: webhookUrl, // Enable webhooks for this item
     }
 
-    if (access_token) {
-      // Update mode - reauth existing item
-      config.access_token = access_token
+    if (item_id) {
+      // Update mode - look up access token server-side (never sent from client)
+      const tokenResult = await fetchQuery(api.items.getAccessToken, { id: item_id as Id<"items"> })
+      if (!tokenResult) {
+        return apiError("Item not found", 404, "ITEM_NOT_FOUND")
+      }
+      config.access_token = tokenResult.accessToken
       config.country_codes = process.env.PLAID_COUNTRY_CODES!.split(",").map((c) => c.trim() as CountryCode)
     } else {
       // New item mode

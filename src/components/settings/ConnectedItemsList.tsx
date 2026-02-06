@@ -9,7 +9,6 @@ import { AlertCircle, Building2 } from "lucide-react"
 interface ConnectedItemsListProps {
   items: Array<{
     id: string
-    accessToken: string
     status: string | null
     institution: {
       name: string
@@ -74,7 +73,6 @@ export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
                     </Badge>
                   )}
                   <PlaidLinkButton
-                    accessToken={item.accessToken}
                     itemId={item.id}
                     buttonText={needsReauth ? "Reauthorize" : "Update"}
                   />

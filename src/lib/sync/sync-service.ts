@@ -55,11 +55,19 @@ export async function syncItems(
       itemId: item.id,
     })
 
+    // Fetch access token server-side (never exposed in sync query results)
+    const tokenResult = await fetchQuery(api.items.getAccessToken, { id: item.id })
+    if (!tokenResult) {
+      logError(`Access token not found for item: ${item.id}`)
+      continue
+    }
+    const { accessToken } = tokenResult
+
     // Sync transactions if requested
     if (options.syncTransactions) {
       const { stats: txStats, newCursor } = await syncItemTransactions(
         item.id,
-        item.accessToken,
+        accessToken,
         item.lastTransactionsCursor,
       )
 
@@ -74,7 +82,7 @@ export async function syncItems(
 
     // Sync investments if requested
     if (options.syncInvestments) {
-      const invStats = await syncItemInvestments(item.id, item.accessToken)
+      const invStats = await syncItemInvestments(item.id, accessToken)
       Object.assign(itemStats, invStats)
     }
 
