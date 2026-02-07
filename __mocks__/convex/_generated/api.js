@@ -32,6 +32,7 @@ module.exports = {
     items: {
       getAll: 'items:getAll',
       getByPlaidId: 'items:getByPlaidId',
+      getAccessToken: 'items:getAccessToken',
     },
     sync: {
       // Items
