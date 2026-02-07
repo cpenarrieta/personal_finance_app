@@ -59,3 +59,31 @@ export async function getInvestmentTransactionsForAccount(accountId: string) {
     accountId: accountId as Id<"accounts">,
   })
 }
+
+/**
+ * Get holdings for a specific ticker symbol with account details
+ * Cached with 24h expiration, tagged with "holdings"
+ */
+export async function getHoldingsByTicker(ticker: string) {
+  "use cache"
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
+  cacheTag("holdings")
+
+  return fetchQuery(api.investments.getHoldingsByTickerSymbol, {
+    tickerSymbol: ticker,
+  })
+}
+
+/**
+ * Get investment transactions for a specific ticker symbol
+ * Cached with 24h expiration, tagged with "investments"
+ */
+export async function getTransactionsByTicker(ticker: string) {
+  "use cache"
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
+  cacheTag("investments")
+
+  return fetchQuery(api.investments.getInvestmentTransactionsByTickerSymbol, {
+    tickerSymbol: ticker,
+  })
+}

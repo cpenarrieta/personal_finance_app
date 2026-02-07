@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { formatAmount } from "@/lib/utils"
 import type { HoldingForClient } from "@/types"
@@ -468,7 +469,16 @@ export function HoldingsPortfolio({ holdings }: HoldingsPortfolioProps) {
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="font-medium text-foreground text-sm">
-                          {holding.security?.tickerSymbol || "N/A"}
+                          {holding.security?.tickerSymbol ? (
+                            <Link
+                              href={`/investments/holdings/${holding.security.tickerSymbol}`}
+                              className="hover:text-primary hover:underline transition-colors"
+                            >
+                              {holding.security.tickerSymbol}
+                            </Link>
+                          ) : (
+                            "N/A"
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground truncate">{holding.security?.name}</div>
                       </div>

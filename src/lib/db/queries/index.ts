@@ -34,6 +34,8 @@ export {
   getAllInvestmentTransactions,
   getHoldingsForAccount,
   getInvestmentTransactionsForAccount,
+  getHoldingsByTicker,
+  getTransactionsByTicker,
 } from "./investments"
 
 // Weekly summary queries
