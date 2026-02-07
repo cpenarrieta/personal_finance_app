@@ -148,7 +148,12 @@ export default function PlaidLinkButton({
 
           const result = data.data
           if (result.type === "reauth") {
-            // Simple reauth - just update status, no transaction deletion
+            // Simple reauth - update status to ACTIVE
+            await fetch("/api/plaid/update-item-status", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ itemId }),
+            })
             onReauthSuccess?.()
             router.refresh()
           } else if (result.type === "reconnection") {
