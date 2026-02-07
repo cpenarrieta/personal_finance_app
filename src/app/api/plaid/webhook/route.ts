@@ -32,6 +32,10 @@ async function verifyPlaidWebhook(request: NextRequest, _body: string): Promise<
   }
 
   if (!process.env.PLAID_WEBHOOK_VERIFICATION_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      logError("❌ PLAID_WEBHOOK_VERIFICATION_KEY is required in production")
+      return false
+    }
     logWarn("⚠️  Webhook verification disabled (set PLAID_WEBHOOK_VERIFICATION_KEY for production)")
     return true
   }

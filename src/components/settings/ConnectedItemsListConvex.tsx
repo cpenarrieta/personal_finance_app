@@ -28,7 +28,6 @@ export function ConnectedItemsListConvex() {
   // Transform to expected format
   const transformedItems = items.map((item) => ({
     id: item.id,
-    accessToken: item.accessToken,
     status: item.status,
     institution: item.institution
       ? {

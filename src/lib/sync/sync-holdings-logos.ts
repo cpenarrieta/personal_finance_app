@@ -3,9 +3,14 @@ import { fetchQuery, fetchMutation } from "convex/nextjs"
 import { api } from "../../../convex/_generated/api"
 import { logInfo, logError } from "../utils/logger"
 
-const LOGO_DEV_TOKEN = process.env.LOGO_DEV_TOKEN || "pk_A4XxtLBuSvWdGiAYJMzjTA"
+const LOGO_DEV_TOKEN = process.env.LOGO_DEV_TOKEN
 
 export async function syncHoldingsLogos() {
+  if (!LOGO_DEV_TOKEN) {
+    logInfo("Skipping logo sync: LOGO_DEV_TOKEN not set")
+    return
+  }
+
   // Get all securities with ticker symbols from Convex
   const securities = await fetchQuery(api.sync.getAllSecuritiesWithTickers)
 

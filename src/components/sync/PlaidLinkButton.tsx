@@ -16,14 +16,12 @@ import {
 } from "@/components/ui/dialog"
 
 interface PlaidLinkButtonProps {
-  accessToken?: string
   buttonText?: string
   onReauthSuccess?: () => void
   itemId?: string // Database item ID for update mode
 }
 
 export default function PlaidLinkButton({
-  accessToken,
   buttonText = "Connect Account",
   onReauthSuccess,
   itemId,
@@ -44,13 +42,14 @@ export default function PlaidLinkButton({
   } | null>(null)
   const [isCompleting, setIsCompleting] = useState(false)
 
-  const isUpdateMode = !!accessToken
+  const isUpdateMode = !!itemId
 
   useEffect(() => {
-    const body = accessToken ? JSON.stringify({ access_token: accessToken }) : undefined
+    // For update mode, send item_id so the server can look up the access token securely
+    const body = itemId ? JSON.stringify({ item_id: itemId }) : undefined
     fetch("/api/plaid/create-link-token", {
       method: "POST",
-      headers: accessToken ? { "Content-Type": "application/json" } : undefined,
+      headers: itemId ? { "Content-Type": "application/json" } : undefined,
       body,
     })
       .then(async (r) => {
@@ -65,7 +64,7 @@ export default function PlaidLinkButton({
         logError("Error creating link token:", err)
         setError(err.message)
       })
-  }, [accessToken])
+  }, [itemId])
 
   const handleSync = async () => {
     setIsSyncing(true)

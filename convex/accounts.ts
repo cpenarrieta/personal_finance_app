@@ -79,7 +79,6 @@ export const getAllWithInstitution = query({
             ? {
                 id: item._id,
                 plaidItemId: item.plaidItemId,
-                accessToken: item.accessToken,
                 lastTransactionsCursor: item.lastTransactionsCursor ?? null,
                 lastInvestmentsCursor: item.lastInvestmentsCursor ?? null,
                 status: item.status ?? null,
@@ -137,7 +136,6 @@ export const getById = query({
         ? {
             id: item._id,
             plaidItemId: item.plaidItemId,
-            accessToken: item.accessToken,
             lastTransactionsCursor: item.lastTransactionsCursor ?? null,
             lastInvestmentsCursor: item.lastInvestmentsCursor ?? null,
             status: item.status ?? null,
@@ -182,7 +180,6 @@ export const getAllConnectedItems = query({
         return {
           id: item._id,
           plaidItemId: item.plaidItemId,
-          accessToken: item.accessToken,
           status: item.status ?? null,
           created_at_string: formatTimestamp(item.createdAt),
           updated_at_string: formatTimestamp(item.updatedAt),

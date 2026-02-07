@@ -13,10 +13,10 @@ export const getAllItems = query({
   args: {},
   handler: async (ctx) => {
     const items = await ctx.db.query("items").collect()
+    // Never expose accessToken in query results
     return items.map((item) => ({
       id: item._id,
       plaidItemId: item.plaidItemId,
-      accessToken: item.accessToken,
       status: item.status ?? null,
       lastTransactionsCursor: item.lastTransactionsCursor ?? null,
       lastInvestmentsCursor: item.lastInvestmentsCursor ?? null,
@@ -34,10 +34,10 @@ export const getItemByPlaidId = query({
 
     if (!item) return null
 
+    // Never expose accessToken in query results
     return {
       id: item._id,
       plaidItemId: item.plaidItemId,
-      accessToken: item.accessToken,
       status: item.status ?? null,
       lastTransactionsCursor: item.lastTransactionsCursor ?? null,
       lastInvestmentsCursor: item.lastInvestmentsCursor ?? null,

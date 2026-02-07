@@ -15,6 +15,12 @@ import * as plaidModule from "@/lib/api/plaid"
 // Mock modules
 jest.mock("@/lib/api/plaid")
 
+// Mock convex/nextjs for server-side token lookup
+const mockFetchQuery = jest.fn()
+jest.mock("convex/nextjs", () => ({
+  fetchQuery: (...args: any[]) => mockFetchQuery(...args),
+}))
+
 describe("Plaid Create Link Token API - POST", () => {
   const mockPlaidClient = {
     linkTokenCreate: jest.fn(),
@@ -34,6 +40,9 @@ describe("Plaid Create Link Token API - POST", () => {
 
     // Mock getPlaidClient
     ;(plaidModule.getPlaidClient as jest.Mock) = jest.fn(() => mockPlaidClient)
+
+    // Default: mock fetchQuery to return access token for update mode tests
+    mockFetchQuery.mockResolvedValue({ accessToken: "access-token-abc" })
 
     // Set up default environment variables
     process.env.PLAID_PRODUCTS = "transactions,investments"
@@ -145,9 +154,9 @@ describe("Plaid Create Link Token API - POST", () => {
   })
 
   describe("Update/Reauth Mode", () => {
-    it("should create link token for update mode with access_token", async () => {
-      // Arrange
-      const request = createMockRequest({ access_token: "access-token-abc" })
+    it("should create link token for update mode with item_id", async () => {
+      // Arrange - client sends item_id, server looks up access token
+      const request = createMockRequest({ item_id: "item-123" })
 
       mockPlaidClient.linkTokenCreate.mockResolvedValue({
         data: { link_token: "link-token-update-12345" },
@@ -161,6 +170,7 @@ describe("Plaid Create Link Token API - POST", () => {
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data).toEqual({ link_token: "link-token-update-12345" })
+      expect(mockFetchQuery).toHaveBeenCalled()
       expect(mockPlaidClient.linkTokenCreate).toHaveBeenCalledWith({
         user: { client_user_id: "local-user" },
         client_name: "Personal Finance (Local)",
@@ -174,7 +184,7 @@ describe("Plaid Create Link Token API - POST", () => {
 
     it("should not include products in update mode", async () => {
       // Arrange
-      const request = createMockRequest({ access_token: "access-token-abc" })
+      const request = createMockRequest({ item_id: "item-123" })
 
       mockPlaidClient.linkTokenCreate.mockResolvedValue({
         data: { link_token: "link-token-update-12345" },
@@ -187,6 +197,20 @@ describe("Plaid Create Link Token API - POST", () => {
       const callArgs = mockPlaidClient.linkTokenCreate.mock.calls[0][0]
       expect(callArgs).not.toHaveProperty("products")
       expect(callArgs).toHaveProperty("access_token", "access-token-abc")
+    })
+
+    it("should return 404 when item not found", async () => {
+      // Arrange
+      mockFetchQuery.mockResolvedValue(null)
+      const request = createMockRequest({ item_id: "nonexistent-item" })
+
+      // Act
+      const response = await POST(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(404)
+      expect(data.success).toBe(false)
     })
   })
 

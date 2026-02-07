@@ -39,11 +39,17 @@ export async function handleTransactionWebhook(webhookCode: string, itemId: stri
 
   logInfo(`Syncing transactions for item: ${item.id}`, { itemId: item.id })
 
+  // Fetch access token server-side (never exposed in sync query results)
+  const tokenResult = await fetchQuery(api.items.getAccessToken, { id: item.id as Id<"items"> })
+  if (!tokenResult) {
+    throw new Error(`Access token not found for item: ${item.id}`)
+  }
+
   try {
     // Sync transactions and run AI categorization (handled within syncItemTransactionsWithCategorization)
     const { stats, newCursor } = await syncItemTransactionsWithCategorization(
       item.id as Id<"items">,
-      item.accessToken,
+      tokenResult.accessToken,
       item.lastTransactionsCursor,
     )
 
