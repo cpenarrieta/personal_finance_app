@@ -75,7 +75,7 @@ export default function PlaidLinkButton({
       })
       const data = await response.json()
 
-      if (!response.ok || !data.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(data.error || "Sync failed")
       }
 
@@ -104,7 +104,7 @@ export default function PlaidLinkButton({
 
       const data = await response.json()
 
-      if (!response.ok || !data.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(data.error || "Reconnection failed")
       }
 
@@ -142,20 +142,21 @@ export default function PlaidLinkButton({
 
           const data = await response.json()
 
-          if (!response.ok || !data.ok) {
+          if (!response.ok || !data.success) {
             throw new Error(data.error || "Failed to process update")
           }
 
-          if (data.type === "reauth") {
+          const result = data.data
+          if (result.type === "reauth") {
             // Simple reauth - just update status, no transaction deletion
             onReauthSuccess?.()
             router.refresh()
-          } else if (data.type === "reconnection") {
+          } else if (result.type === "reconnection") {
             // Reconnection - show warning before deleting transactions
             setReconnectionData({
-              reconnectionId: data.reconnectionId,
-              transactionCount: data.transactionCount,
-              institutionName: data.institutionName,
+              reconnectionId: result.reconnectionId,
+              transactionCount: result.transactionCount,
+              institutionName: result.institutionName,
             })
             setShowReconnectionWarning(true)
           }
