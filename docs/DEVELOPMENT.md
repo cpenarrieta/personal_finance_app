@@ -12,6 +12,9 @@ npm run lint         # ESLint
 npx convex dev       # Start Convex dev server (run in separate terminal)
 npx convex deploy    # Deploy Convex to production
 
+# Sync prod data to dev (wipes dev DB, replaces with prod snapshot)
+./scripts/sync-prod-to-dev.sh
+
 # Plaid Sync
 npm run sync         # Incremental sync
 ```
@@ -34,6 +37,22 @@ npm run sync         # Incremental sync
 ### Optional
 - `OPENAI_API_KEY`: AI categorization (local .env)
 - `PLAID_WEBHOOK_VERIFICATION_KEY`: Webhook security (Convex env)
+
+## Syncing Prod → Dev
+
+Fully replaces the dev Convex database with a snapshot of production.
+
+```bash
+# One-time: login to Convex
+npx convex login
+
+# Run the sync
+./scripts/sync-prod-to-dev.sh
+```
+
+Requires `CONVEX_DEPLOYMENT` in `.env.local` (dev) and `.env.production` (prod) — already configured.
+
+**Warning**: This deletes all dev data before importing.
 
 ## Debugging
 
