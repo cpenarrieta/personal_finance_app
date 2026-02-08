@@ -126,7 +126,7 @@ ${transactionsContext}`
   })
 
   const result = await generateObject({
-    model: openai("gpt-5.2-2025-12-11"),
+    model: openai("gpt-5-mini"),
     schema: ExecutiveSummarySchema,
     prompt,
   })

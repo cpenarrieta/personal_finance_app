@@ -415,6 +415,7 @@ export const getSnapshots = query({
         earnedIncome: s.earnedIncome ?? null,
         noaDeductionLimit: s.noaDeductionLimit ?? null,
         craRoomAsOfJan1: s.craRoomAsOfJan1 ?? null,
+        noaFileKey: s.noaFileKey ?? null,
         notes: s.notes ?? null,
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
@@ -547,6 +548,7 @@ export const upsertSnapshot = mutation({
     earnedIncome: v.optional(v.number()),
     noaDeductionLimit: v.optional(v.number()),
     craRoomAsOfJan1: v.optional(v.number()),
+    noaFileKey: v.optional(v.string()),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -564,6 +566,7 @@ export const upsertSnapshot = mutation({
       if (args.earnedIncome !== undefined) updates.earnedIncome = args.earnedIncome
       if (args.noaDeductionLimit !== undefined) updates.noaDeductionLimit = args.noaDeductionLimit
       if (args.craRoomAsOfJan1 !== undefined) updates.craRoomAsOfJan1 = args.craRoomAsOfJan1
+      if (args.noaFileKey !== undefined) updates.noaFileKey = args.noaFileKey
       if (args.notes !== undefined) updates.notes = args.notes
       await ctx.db.patch(existing._id, updates)
       return existing._id
@@ -575,6 +578,7 @@ export const upsertSnapshot = mutation({
         earnedIncome: args.earnedIncome,
         noaDeductionLimit: args.noaDeductionLimit,
         craRoomAsOfJan1: args.craRoomAsOfJan1,
+        noaFileKey: args.noaFileKey,
         notes: args.notes,
         createdAt: now,
         updatedAt: now,

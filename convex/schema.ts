@@ -239,6 +239,7 @@ export default defineSchema({
     earnedIncome: v.optional(v.number()), // salary for RRSP room calc
     noaDeductionLimit: v.optional(v.number()), // RRSP: from NOA
     craRoomAsOfJan1: v.optional(v.number()), // TFSA: from CRA My Account
+    noaFileKey: v.optional(v.string()), // R2 object key: "noa/{person}/{taxYear}/{uuid}.pdf"
     notes: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),

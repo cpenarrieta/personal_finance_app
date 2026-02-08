@@ -19,10 +19,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Pencil, Trash2, FileText, Upload } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "sonner"
 import { SnapshotForm } from "./SnapshotForm"
+import { NOAUploadDialog } from "./NOAUploadDialog"
 import type { Id } from "../../../convex/_generated/dataModel"
 
 interface Snapshot {
@@ -33,12 +34,28 @@ interface Snapshot {
   earnedIncome: number | null
   noaDeductionLimit: number | null
   craRoomAsOfJan1: number | null
+  noaFileKey: string | null
   notes: string | null
 }
 
 function SnapshotTable({ person, onEdit }: { person: "self" | "spouse"; onEdit: (s: Snapshot) => void }) {
   const snapshots = useQuery(api.registeredAccounts.getSnapshots, { person })
   const deleteSnapshot = useMutation(api.registeredAccounts.deleteSnapshot)
+
+  const handleViewNoa = async (key: string) => {
+    try {
+      const res = await fetch("/api/noa/download-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      window.open(data.data.downloadUrl, "_blank")
+    } catch {
+      toast.error("Failed to get NOA download link")
+    }
+  }
 
   const handleDelete = async (id: string) => {
     try {
@@ -89,6 +106,17 @@ function SnapshotTable({ person, onEdit }: { person: "self" | "spouse"; onEdit: 
             <TableCell className="max-w-32 truncate text-muted-foreground text-sm">{s.notes || "—"}</TableCell>
             <TableCell className="text-right">
               <div className="flex items-center justify-end gap-1">
+                {s.noaFileKey && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-primary"
+                    title="View NOA PDF"
+                    onClick={() => handleViewNoa(s.noaFileKey!)}
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(s)}>
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
@@ -124,6 +152,7 @@ export function TaxDataManager() {
   const [tab, setTab] = useState<"self" | "spouse">("self")
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Snapshot | null>(null)
+  const [noaOpen, setNoaOpen] = useState(false)
 
   const handleEdit = (s: Snapshot) => {
     setEditing(s)
@@ -143,10 +172,16 @@ export function TaxDataManager() {
             <TabsTrigger value="self">Self</TabsTrigger>
             <TabsTrigger value="spouse">Spouse</TabsTrigger>
           </TabsList>
-          <Button onClick={handleAdd} size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            Add Snapshot
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setNoaOpen(true)}>
+              <Upload className="h-4 w-4 mr-1" />
+              Upload NOA
+            </Button>
+            <Button onClick={handleAdd} size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              Add Snapshot
+            </Button>
+          </div>
         </div>
         <TabsContent value="self">
           <SnapshotTable person="self" onEdit={handleEdit} />
@@ -157,6 +192,7 @@ export function TaxDataManager() {
       </Tabs>
 
       <SnapshotForm snapshot={editing} person={tab} open={formOpen} onOpenChange={setFormOpen} />
+      <NOAUploadDialog person={tab} open={noaOpen} onOpenChange={setNoaOpen} />
     </div>
   )
 }
