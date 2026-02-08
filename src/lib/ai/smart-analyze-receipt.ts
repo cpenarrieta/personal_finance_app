@@ -5,7 +5,7 @@
  */
 
 import { createOpenAI } from "@ai-sdk/openai"
-import { generateObject } from "ai"
+import { generateText, Output } from "ai"
 import { fetchQuery } from "convex/nextjs"
 import { api } from "../../../convex/_generated/api"
 import type { Id } from "../../../convex/_generated/dataModel"
@@ -18,6 +18,7 @@ import {
   getRecentTransactionHistory as getCategorizeTransactionHistory,
 } from "./categorize-transaction"
 import { logInfo, logWarn, logError } from "@/lib/utils/logger"
+import { getR2DownloadUrl } from "@/lib/r2/client"
 
 // Initialize OpenAI with API key
 const openai = createOpenAI({
@@ -276,24 +277,6 @@ Message: Current category matches both Plaid suggestion and transaction type
 
 Analyze the transaction and provide your recommended action.`
 
-    // Helper function to detect file type and convert if needed
-    const prepareFileForVision = (fileUrl: string): string => {
-      const lowerUrl = fileUrl.toLowerCase()
-
-      // Check if it's a PDF
-      if (lowerUrl.includes(".pdf") || lowerUrl.match(/\.pdf(\?|$|#)/)) {
-        // Convert PDF to image using Cloudinary transformations
-        if (fileUrl.includes("cloudinary.com")) {
-          return fileUrl.replace("/upload/", "/upload/f_jpg,pg_1,q_auto,w_2000/")
-        }
-
-        logWarn(`PDF detected but not hosted on Cloudinary: ${fileUrl}. Vision API may not support it.`, { fileUrl })
-        return fileUrl
-      }
-
-      return fileUrl
-    }
-
     // Call OpenAI - different approach based on whether files exist
     let result
     if (hasFiles) {
@@ -305,28 +288,33 @@ Analyze the transaction and provide your recommended action.`
         },
       ]
 
-      // Add each file URL as an image (convert PDFs to images first)
-      for (const fileUrl of transaction.files!) {
-        const processedUrl = prepareFileForVision(fileUrl)
-        content.push({
-          type: "image",
-          image: processedUrl,
-        })
+      // Add each file as image or PDF via presigned R2 URL
+      for (const fileKey of transaction.files!) {
+        const presignedUrl = await getR2DownloadUrl(fileKey)
+        const ext = fileKey.split(".").pop()?.toLowerCase()
+
+        if (ext === "pdf") {
+          content.push({
+            type: "file",
+            data: new URL(presignedUrl),
+            mediaType: "application/pdf",
+          })
+        } else {
+          content.push({
+            type: "image",
+            image: presignedUrl,
+          })
+        }
       }
 
       logInfo(`Smart analysis WITH ${transaction.files!.length} receipt file(s)`, {
         transactionId,
         fileCount: transaction.files!.length,
-        files: transaction.files!.map((url) => ({
-          original: url,
-          processed: prepareFileForVision(url),
-          isPdf: url.toLowerCase().includes(".pdf"),
-        })),
       })
 
-      result = await generateObject({
+      result = await generateText({
         model: openai("gpt-5-mini"),
-        schema: SmartAnalysisResultSchema,
+        output: Output.object({ schema: SmartAnalysisResultSchema }),
         messages: [
           {
             role: "user",
@@ -338,14 +326,14 @@ Analyze the transaction and provide your recommended action.`
       // WITHOUT files: Use text-only prompt
       logInfo("Smart analysis WITHOUT receipt (metadata only)", { transactionId })
 
-      result = await generateObject({
+      result = await generateText({
         model: openai("gpt-5-mini"),
-        schema: SmartAnalysisResultSchema,
+        output: Output.object({ schema: SmartAnalysisResultSchema }),
         prompt,
       })
     }
 
-    const analysis = result.object.result
+    const analysis = result.output!.result
 
     // Additional validation based on type
     if (analysis.type === "split") {

@@ -5,7 +5,7 @@
  */
 
 import { createOpenAI } from "@ai-sdk/openai"
-import { generateObject } from "ai"
+import { generateText, Output } from "ai"
 import { fetchQuery, fetchMutation } from "convex/nextjs"
 import { api } from "../../../convex/_generated/api"
 import { z } from "zod"
@@ -125,14 +125,14 @@ ${transactionsContext}`
     totalSpending: data.totalSpending,
   })
 
-  const result = await generateObject({
+  const result = await generateText({
     model: openai("gpt-5-mini"),
-    schema: ExecutiveSummarySchema,
+    output: Output.object({ schema: ExecutiveSummarySchema }),
     prompt,
   })
 
   // Join bullets with newlines, prefixed with bullet character
-  const summary = result.object.bullets.map((b) => `• ${b}`).join("\n")
+  const summary = result.output!.bullets.map((b: string) => `• ${b}`).join("\n")
 
   logInfo("Executive summary generated")
 

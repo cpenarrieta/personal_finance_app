@@ -5,12 +5,13 @@
  */
 
 import { createOpenAI } from "@ai-sdk/openai"
-import { generateObject } from "ai"
+import { generateText, Output } from "ai"
 import { fetchQuery, fetchMutation } from "convex/nextjs"
 import { api } from "../../../convex/_generated/api"
 import type { Id } from "../../../convex/_generated/dataModel"
 import { z } from "zod"
-import { logInfo, logWarn, logError } from "@/lib/utils/logger"
+import { logInfo, logError } from "@/lib/utils/logger"
+import { getR2DownloadUrl } from "@/lib/r2/client"
 
 // Initialize OpenAI with API key
 const openai = createOpenAI({
@@ -213,28 +214,10 @@ INSTRUCTIONS:
 
 Provide your categorization decision with confidence and reasoning.`
 
-    // Helper function to prepare file URLs for vision (convert PDFs to images)
-    const prepareFileForVision = (fileUrl: string): string => {
-      const lowerUrl = fileUrl.toLowerCase()
-
-      // Check if it's a PDF
-      if (lowerUrl.includes(".pdf") || lowerUrl.match(/\.pdf(\?|$|#)/)) {
-        // Convert PDF to image using Cloudinary transformations
-        if (fileUrl.includes("cloudinary.com")) {
-          return fileUrl.replace("/upload/", "/upload/f_jpg,pg_1,q_auto,w_2000/")
-        }
-
-        logWarn(`PDF detected but not hosted on Cloudinary: ${fileUrl}. Vision API may not support it.`, { fileUrl })
-        return fileUrl
-      }
-
-      return fileUrl
-    }
-
     // Call OpenAI using ai-sdk with structured output
     let result
     if (transaction.files && transaction.files.length > 0) {
-      // Build content array with text and images
+      // Build content array with text and file attachments
       const content: any[] = [
         {
           type: "text",
@@ -244,23 +227,33 @@ Provide your categorization decision with confidence and reasoning.`
         },
       ]
 
-      // Add each file URL as an image
-      for (const fileUrl of transaction.files) {
-        const processedUrl = prepareFileForVision(fileUrl)
-        content.push({
-          type: "image",
-          image: processedUrl,
-        })
+      // Add each file via presigned R2 URL
+      for (const fileKey of transaction.files) {
+        const presignedUrl = await getR2DownloadUrl(fileKey)
+        const ext = fileKey.split(".").pop()?.toLowerCase()
+
+        if (ext === "pdf") {
+          content.push({
+            type: "file",
+            data: new URL(presignedUrl),
+            mediaType: "application/pdf",
+          })
+        } else {
+          content.push({
+            type: "image",
+            image: presignedUrl,
+          })
+        }
       }
 
-      logInfo(`🖼️  Including ${transaction.files.length} receipt file(s) in categorization`, {
+      logInfo(`Including ${transaction.files.length} receipt file(s) in categorization`, {
         transactionId,
         fileCount: transaction.files.length,
       })
 
-      result = await generateObject({
+      result = await generateText({
         model: openai("gpt-5-mini"),
-        schema: CategorizationResultSchema,
+        output: Output.object({ schema: CategorizationResultSchema }),
         messages: [
           {
             role: "user",
@@ -270,14 +263,14 @@ Provide your categorization decision with confidence and reasoning.`
       })
     } else {
       // No files - use text-only prompt
-      result = await generateObject({
+      result = await generateText({
         model: openai("gpt-5-mini"),
-        schema: CategorizationResultSchema,
+        output: Output.object({ schema: CategorizationResultSchema }),
         prompt,
       })
     }
 
-    const categorization = result.object
+    const categorization = result.output!
 
     // Log the result
     logInfo(`🤖 AI Categorization for "${transaction.name}"`, {
@@ -480,14 +473,14 @@ INSTRUCTIONS:
 Provide categorization for each transaction with confidence and brief reasoning.`
 
   try {
-    const result = await generateObject({
+    const batchResult = await generateText({
       model: openai("gpt-5-mini"),
-      schema: BatchCategorizationResultSchema,
+      output: Output.object({ schema: BatchCategorizationResultSchema }),
       prompt,
     })
 
     // Process results
-    for (const item of result.object.results) {
+    for (const item of batchResult.output!.results) {
       const transaction = transactions[item.transactionIndex]
       if (!transaction) continue
 
