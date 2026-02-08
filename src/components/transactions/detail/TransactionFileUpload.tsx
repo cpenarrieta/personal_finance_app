@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Upload, X, FileText, Image as ImageIcon, File } from "lucide-react"
+import { Upload, X, FileText, Image as ImageIcon, File, Loader2, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
-import Image from "next/image"
 import { logError } from "@/lib/utils/logger"
 
 interface TransactionFileUploadProps {
@@ -17,127 +16,109 @@ interface TransactionFileUploadProps {
 
 export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: TransactionFileUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({})
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleUpload = async () => {
+  const fetchPreviewUrls = useCallback(async () => {
+    const imageKeys = files.filter((key) => {
+      const ext = key.split(".").pop()?.toLowerCase()
+      return ext && ["jpg", "jpeg", "png", "webp"].includes(ext)
+    })
+
+    if (imageKeys.length === 0) return
+
+    const urls: Record<string, string> = {}
+    await Promise.all(
+      imageKeys.map(async (key) => {
+        try {
+          const res = await fetch("/api/receipts/download-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key }),
+          })
+          if (res.ok) {
+            const { data } = await res.json()
+            urls[key] = data.downloadUrl
+          }
+        } catch {
+          // ignore preview failures
+        }
+      }),
+    )
+    setPreviewUrls(urls)
+  }, [files])
+
+  useEffect(() => {
+    fetchPreviewUrls()
+  }, [fetchPreviewUrls])
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
     try {
       setIsUploading(true)
-      setUploadError(null)
 
-      // Check if Cloudinary is configured
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-      const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY
+      // 1. Get presigned URL
+      const presignRes = await fetch("/api/receipts/presigned-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId, contentType: file.type }),
+      })
 
-      if (!cloudName || !apiKey) {
-        throw new Error(
-          "Cloudinary is not configured. Please set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_API_KEY",
-        )
+      if (!presignRes.ok) {
+        const err = await presignRes.json()
+        throw new Error(err.error || "Failed to get upload URL")
       }
 
-      // Create a Cloudinary upload widget with signed uploads
-      const widget = (window as any).cloudinary?.createUploadWidget(
-        {
-          cloudName,
-          apiKey,
-          uploadSignature: async (callback: any, paramsToSign: any) => {
-            try {
-              const response = await fetch("/api/cloudinary-signature", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(paramsToSign),
-              })
+      const { data } = await presignRes.json()
 
-              if (!response.ok) {
-                throw new Error("Failed to get upload signature")
-              }
+      // 2. Upload to R2
+      const uploadRes = await fetch(data.presignedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      })
 
-              const data = await response.json()
-              callback(data.signature)
-            } catch (err) {
-              logError("Error getting signature:", err)
-              toast.error("Failed to authorize upload")
-              setIsUploading(false)
-            }
-          },
-          sources: ["local", "url", "camera"],
-          multiple: false,
-          maxFiles: 1,
-          clientAllowedFormats: ["jpg", "jpeg", "png", "pdf", "doc", "docx", "xls", "xlsx", "webp"],
-          maxFileSize: 10000000, // 10MB
-          publicIdPrefix: `personal-finance/${transactionId}`,
-          tags: [transactionId, "transaction-file"],
-        },
-        async (error: any, result: any) => {
-          if (error) {
-            logError("Upload error:", error)
-            setUploadError(error.message || "Failed to upload file")
-            toast.error("Failed to upload file")
-            setIsUploading(false)
-            return
-          }
+      if (!uploadRes.ok) throw new Error("Failed to upload file to storage")
 
-          if (result.event === "success") {
-            const newFileUrl = result.info.secure_url
-            const updatedFiles = [...files, newFileUrl]
+      // 3. Save R2 key to transaction
+      const updatedFiles = [...files, data.key]
+      const patchRes = await fetch(`/api/transactions/${transactionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: updatedFiles }),
+      })
 
-            // Update transaction files in the backend
-            try {
-              const response = await fetch(`/api/transactions/${transactionId}`, {
-                method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  files: updatedFiles,
-                }),
-              })
+      if (!patchRes.ok) throw new Error("Failed to update transaction files")
 
-              if (!response.ok) {
-                throw new Error("Failed to update transaction files")
-              }
-
-              onFilesUpdate(updatedFiles)
-              toast.success("File uploaded successfully")
-            } catch (err) {
-              logError("Error updating transaction:", err)
-              toast.error("Failed to save file to transaction")
-            }
-          }
-
-          if (result.event === "close") {
-            setIsUploading(false)
-          }
-        },
-      )
-
-      widget?.open()
+      onFilesUpdate(updatedFiles)
+      toast.success("File uploaded successfully")
     } catch (err) {
-      logError("Error opening upload widget:", err)
-      setUploadError(err instanceof Error ? err.message : "Failed to open upload widget")
-      toast.error("Failed to open upload widget")
+      logError("Upload error:", err)
+      toast.error(err instanceof Error ? err.message : "Failed to upload file")
+    } finally {
       setIsUploading(false)
+      // Reset input so same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
 
-  const handleRemoveFile = async (fileUrl: string) => {
+  const handleRemoveFile = async (fileKey: string) => {
     try {
-      const updatedFiles = files.filter((f) => f !== fileUrl)
+      const updatedFiles = files.filter((f) => f !== fileKey)
 
       const response = await fetch(`/api/transactions/${transactionId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          files: updatedFiles,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: updatedFiles }),
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to update transaction files")
-      }
+      if (!response.ok) throw new Error("Failed to update transaction files")
 
       onFilesUpdate(updatedFiles)
       toast.success("File removed successfully")
@@ -147,10 +128,28 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
     }
   }
 
-  const getFileType = (url: string): "image" | "pdf" | "document" => {
-    const lower = url.toLowerCase()
-    if (lower.match(/\.(jpg|jpeg|png|gif|webp)$/)) return "image"
-    if (lower.includes(".pdf")) return "pdf"
+  const handleViewFile = async (key: string) => {
+    try {
+      const res = await fetch("/api/receipts/download-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key }),
+      })
+
+      if (!res.ok) throw new Error("Failed to get download URL")
+
+      const { data } = await res.json()
+      window.open(data.downloadUrl, "_blank")
+    } catch (err) {
+      logError("Error getting download URL:", err)
+      toast.error("Failed to open file")
+    }
+  }
+
+  const getFileType = (key: string): "image" | "pdf" | "document" => {
+    const ext = key.split(".").pop()?.toLowerCase()
+    if (ext && ["jpg", "jpeg", "png", "webp"].includes(ext)) return "image"
+    if (ext === "pdf") return "pdf"
     return "document"
   }
 
@@ -165,48 +164,43 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
     }
   }
 
-  const getFileName = (url: string): string => {
-    try {
-      const urlObj = new URL(url)
-      const pathname = urlObj.pathname
-      const parts = pathname.split("/")
-      const lastPart = parts[parts.length - 1]
-      return lastPart ? decodeURIComponent(lastPart) : "Unknown file"
-    } catch {
-      return "Unknown file"
-    }
+  const getFileName = (key: string): string => {
+    const parts = key.split("/")
+    return parts[parts.length - 1] || "Unknown file"
   }
 
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
         <label className="block text-sm font-medium text-muted-foreground">Attached Receipts/Files</label>
-        <Button onClick={handleUpload} disabled={isUploading} size="sm" variant="outline">
-          <Upload className="h-4 w-4 mr-2" />
+        <Button onClick={handleUploadClick} disabled={isUploading} size="sm" variant="outline">
+          {isUploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
           {isUploading ? "Uploading..." : "Upload File"}
         </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,application/pdf"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
       </div>
-
-      {uploadError && (
-        <div className="mb-3 p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-sm text-destructive">
-          {uploadError}
-        </div>
-      )}
 
       {files.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {files.map((fileUrl, index) => {
-            const fileType = getFileType(fileUrl)
-            const fileName = getFileName(fileUrl)
+          {files.map((fileKey, index) => {
+            const fileType = getFileType(fileKey)
+            const fileName = getFileName(fileKey)
 
             return (
               <Card key={index} className="p-3 hover:shadow-md transition-shadow">
                 <div className="flex items-start gap-3">
                   {/* Preview */}
                   <div className="flex-shrink-0">
-                    {fileType === "image" ? (
+                    {fileType === "image" && previewUrls[fileKey] ? (
                       <div className="relative w-16 h-16 rounded overflow-hidden bg-muted">
-                        <Image src={fileUrl} alt={fileName} fill className="object-cover" sizes="64px" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={previewUrls[fileKey]} alt={fileName} className="w-full h-full object-cover" />
                       </div>
                     ) : (
                       <div className="w-16 h-16 rounded bg-primary/10 flex items-center justify-center text-primary">
@@ -225,7 +219,7 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
                         </Badge>
                       </div>
                       <Button
-                        onClick={() => handleRemoveFile(fileUrl)}
+                        onClick={() => handleRemoveFile(fileKey)}
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -233,30 +227,17 @@ export function TransactionFileUpload({ transactionId, files, onFilesUpdate }: T
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                    <a
-                      href={fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline mt-2 inline-block"
+                    <button
+                      onClick={() => handleViewFile(fileKey)}
+                      className="text-xs text-primary hover:underline mt-2 inline-flex items-center gap-1"
                     >
-                      View file
-                    </a>
+                      View file <ExternalLink className="h-3 w-3" />
+                    </button>
                   </div>
                 </div>
               </Card>
             )
           })}
-        </div>
-      )}
-
-      {/* Note about Cloudinary setup */}
-      {!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && (
-        <div className="mt-3 p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-foreground">
-          <p className="font-medium">Cloudinary not configured</p>
-          <p className="text-xs mt-1">
-            Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, NEXT_PUBLIC_CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment
-            variables to enable file uploads.
-          </p>
         </div>
       )}
     </div>
