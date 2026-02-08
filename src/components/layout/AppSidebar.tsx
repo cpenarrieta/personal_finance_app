@@ -15,6 +15,7 @@ import {
   Sun,
   Bot,
   ClipboardCheck,
+  PiggyBank,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -93,6 +94,16 @@ const getStaticNavItems = () => {
           title: "Transactions",
           href: "/investments/transactions",
         },
+      ],
+    },
+    {
+      title: "Registered Accounts",
+      icon: PiggyBank,
+      defaultHref: "/registered-accounts",
+      items: [
+        { title: "Overview", href: "/registered-accounts" },
+        { title: "Tax Data", href: "/registered-accounts/tax-data" },
+        { title: "Beneficiaries", href: "/registered-accounts/beneficiaries" },
       ],
     },
     {
@@ -388,6 +399,10 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
     // Auto-expand Accounts menu if on an account page
     if (pathname === "/accounts" || pathname.startsWith("/accounts/") || pathname === "/connect-account") {
       newOpenMenus["Accounts"] = true
+    }
+
+    if (pathname.startsWith("/registered-accounts")) {
+      newOpenMenus["Registered Accounts"] = true
     }
 
     setOpenMenus(newOpenMenus)

@@ -191,6 +191,60 @@ export default defineSchema({
     .index("by_securityId", ["securityId"]),
 
   // ============================================================================
+  // REGISTERED ACCOUNTS (RRSP/TFSA/RESP)
+  // ============================================================================
+
+  respBeneficiaries: defineTable({
+    name: v.string(),
+    dateOfBirth: v.string(), // "YYYY-MM-DD"
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_name", ["name"]),
+
+  registeredAccounts: defineTable({
+    name: v.string(),
+    accountType: v.union(v.literal("RRSP"), v.literal("TFSA"), v.literal("RESP")),
+    owner: v.union(v.literal("self"), v.literal("spouse")),
+    contributor: v.union(v.literal("self"), v.literal("spouse")),
+    beneficiaryId: v.optional(v.id("respBeneficiaries")), // RESP only
+    roomStartYear: v.optional(v.number()), // TFSA: year turned 18 + resident
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_accountType", ["accountType"])
+    .index("by_owner", ["owner"])
+    .index("by_contributor", ["contributor"])
+    .index("by_beneficiaryId", ["beneficiaryId"]),
+
+  registeredTransactions: defineTable({
+    registeredAccountId: v.id("registeredAccounts"),
+    type: v.union(v.literal("contribution"), v.literal("withdrawal"), v.literal("grant")),
+    amount: v.number(), // always positive
+    date: v.string(), // "YYYY-MM-DD"
+    taxYear: v.number(), // which tax year (for first-60-days rule)
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_registeredAccountId", ["registeredAccountId"])
+    .index("by_taxYear", ["taxYear"])
+    .index("by_date", ["date"]),
+
+  taxYearSnapshots: defineTable({
+    person: v.union(v.literal("self"), v.literal("spouse")),
+    accountType: v.union(v.literal("RRSP"), v.literal("TFSA"), v.literal("RESP")),
+    taxYear: v.number(),
+    earnedIncome: v.optional(v.number()), // salary for RRSP room calc
+    noaDeductionLimit: v.optional(v.number()), // RRSP: from NOA
+    craRoomAsOfJan1: v.optional(v.number()), // TFSA: from CRA My Account
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_person_type_year", ["person", "accountType", "taxYear"]),
+
+  // ============================================================================
   // FEATURES
   // ============================================================================
 

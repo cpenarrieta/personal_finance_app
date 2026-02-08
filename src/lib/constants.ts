@@ -44,6 +44,7 @@ export const CACHE_CONFIG = {
     INVESTMENTS: "investments",
     ITEMS: "items",
     DASHBOARD: "dashboard",
+    REGISTERED_ACCOUNTS: "registered-accounts",
   },
 } as const
 

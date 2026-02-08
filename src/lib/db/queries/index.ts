@@ -40,3 +40,10 @@ export {
 
 // Weekly summary queries
 export { getLatestWeeklySummary } from "./weekly-summary"
+
+// Registered account queries (RRSP/TFSA)
+export {
+  getRegisteredAccountsSummary,
+  getRegisteredAccountWithRoom,
+  getAllRegisteredAccounts,
+} from "./registered-accounts"

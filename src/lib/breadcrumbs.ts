@@ -27,6 +27,9 @@ const breadcrumbConfig: Record<string, string> = {
   "/settings/manage-tags": "Tags",
   "/settings/move-transactions": "Move Transactions",
   "/connect-account": "Connect Account",
+  "/registered-accounts": "Registered Accounts",
+  "/registered-accounts/tax-data": "Tax Data",
+  "/registered-accounts/beneficiaries": "Beneficiaries",
 }
 
 /**
