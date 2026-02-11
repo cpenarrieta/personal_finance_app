@@ -209,6 +209,7 @@ export default defineSchema({
     contributor: v.union(v.literal("self"), v.literal("spouse")),
     beneficiaryId: v.optional(v.id("respBeneficiaries")), // RESP only
     roomStartYear: v.optional(v.number()), // TFSA: year turned 18 + resident
+    isHidden: v.optional(v.boolean()),
     notes: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),

@@ -45,6 +45,7 @@ export const getAll = query({
             ? { id: beneficiary._id, name: beneficiary.name, dateOfBirth: beneficiary.dateOfBirth }
             : null,
           roomStartYear: a.roomStartYear ?? null,
+          isHidden: a.isHidden ?? false,
           notes: a.notes ?? null,
           createdAt: a.createdAt,
           updatedAt: a.updatedAt,
@@ -269,6 +270,7 @@ export const getSummary = query({
           accountType: account.accountType,
           owner: account.owner,
           contributor: account.contributor,
+          isHidden: account.isHidden ?? false,
           beneficiary: beneficiary
             ? { id: beneficiary._id, name: beneficiary.name, dateOfBirth: beneficiary.dateOfBirth }
             : null,
@@ -528,6 +530,18 @@ export const updateTransaction = mutation({
     if (fields.notes !== undefined) updates.notes = fields.notes
 
     await ctx.db.patch(id, updates)
+  },
+})
+
+export const toggleAccountVisibility = mutation({
+  args: { id: v.id("registeredAccounts") },
+  handler: async (ctx, { id }) => {
+    const account = await ctx.db.get(id)
+    if (!account) throw new Error("Account not found")
+    await ctx.db.patch(id, {
+      isHidden: !account.isHidden,
+      updatedAt: Date.now(),
+    })
   },
 })
 
