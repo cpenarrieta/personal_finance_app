@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CategoryGroupType, type CategoryForClient } from "@/types"
 import { logError } from "@/lib/utils/logger"
+import { useIsDemo } from "@/components/demo/DemoContext"
 
 interface CategoryOrderClientProps {
   categories: CategoryForClient[]
@@ -13,6 +14,7 @@ interface CategoryOrderClientProps {
 
 export function CategoryOrderClient({ categories: initialCategories }: CategoryOrderClientProps) {
   const router = useRouter()
+  const isDemo = useIsDemo()
   const [categories, setCategories] = useState<CategoryForClient[]>(initialCategories)
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -149,7 +151,7 @@ export function CategoryOrderClient({ categories: initialCategories }: CategoryO
       )}
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving || isDemo}>
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
@@ -173,12 +175,12 @@ export function CategoryOrderClient({ categories: initialCategories }: CategoryO
 
                   <div className="flex items-center gap-2">
                     {/* Move up/down */}
-                    <Button onClick={() => moveUp(cat.id)} disabled={index === 0} variant="outline" size="sm">
+                    <Button onClick={() => moveUp(cat.id)} disabled={index === 0 || isDemo} variant="outline" size="sm">
                       ↑
                     </Button>
                     <Button
                       onClick={() => moveDown(cat.id)}
-                      disabled={index === groupCats.length - 1}
+                      disabled={index === groupCats.length - 1 || isDemo}
                       variant="outline"
                       size="sm"
                     >
@@ -190,6 +192,7 @@ export function CategoryOrderClient({ categories: initialCategories }: CategoryO
                       value={groupType}
                       onChange={(e) => changeGroup(cat.id, e.target.value as CategoryGroupType)}
                       className="text-sm border rounded px-2 py-1"
+                      disabled={isDemo}
                     >
                       {groupOrder.map((g) => (
                         <option key={g} value={g}>
@@ -206,7 +209,7 @@ export function CategoryOrderClient({ categories: initialCategories }: CategoryO
       })}
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving || isDemo}>
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </div>

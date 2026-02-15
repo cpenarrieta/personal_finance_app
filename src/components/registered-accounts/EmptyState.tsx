@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button"
 import { PiggyBank } from "lucide-react"
 import { toast } from "sonner"
 import { useState } from "react"
+import { useIsDemo } from "@/components/demo/DemoContext"
 
 export function EmptyState() {
   const seedAccounts = useMutation(api.registeredAccounts.seedAccounts)
+  const isDemo = useIsDemo()
   const [loading, setLoading] = useState(false)
 
   const handleSeed = async () => {
@@ -36,7 +38,7 @@ export function EmptyState() {
         <p className="text-muted-foreground mb-6 max-w-md">
           Set up your RRSP, TFSA, and RESP accounts to track contribution room and avoid over-contribution penalties.
         </p>
-        <Button onClick={handleSeed} disabled={loading}>
+        <Button onClick={handleSeed} disabled={loading || isDemo}>
           {loading ? "Setting up..." : "Set Up Accounts"}
         </Button>
       </CardContent>

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Plus, Pencil, Trash2, Baby } from "lucide-react"
 import { toast } from "sonner"
+import { useIsDemo } from "@/components/demo/DemoContext"
 import { BeneficiaryForm } from "./BeneficiaryForm"
 import type { Id } from "../../../convex/_generated/dataModel"
 
@@ -41,6 +42,7 @@ function calculateAge(dob: string): number {
 }
 
 export function BeneficiaryManager() {
+  const isDemo = useIsDemo()
   const beneficiaries = useQuery(api.registeredAccounts.getBeneficiaries)
   const deleteBeneficiary = useMutation(api.registeredAccounts.deleteBeneficiary)
   const [formOpen, setFormOpen] = useState(false)
@@ -78,10 +80,12 @@ export function BeneficiaryManager() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={handleAdd} size="sm">
-          <Plus className="h-4 w-4 mr-1" />
-          Add Beneficiary
-        </Button>
+        {!isDemo && (
+          <Button onClick={handleAdd} size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Add Beneficiary
+          </Button>
+        )}
       </div>
 
       {beneficiaries.length === 0 ? (
@@ -99,28 +103,32 @@ export function BeneficiaryManager() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{b.name}</CardTitle>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(b)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Beneficiary</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete {b.name}. This cannot be undone if no RESP accounts are linked.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(b.id)}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    {!isDemo && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(b)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {!isDemo && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Beneficiary</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete {b.name}. This cannot be undone if no RESP accounts are linked.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(b.id)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -140,7 +148,7 @@ export function BeneficiaryManager() {
         </div>
       )}
 
-      <BeneficiaryForm beneficiary={editing} open={formOpen} onOpenChange={setFormOpen} />
+      {!isDemo && <BeneficiaryForm beneficiary={editing} open={formOpen} onOpenChange={setFormOpen} />}
     </div>
   )
 }

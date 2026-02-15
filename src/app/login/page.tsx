@@ -1,9 +1,12 @@
 import { Suspense } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { LoginButtons } from "@/components/auth/LoginButtons"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { Eye } from "lucide-react"
 
 async function LoginContent({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const params = await searchParams
@@ -57,6 +60,17 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ er
           <Suspense fallback={<LoginContentSkeleton />}>
             <LoginContent searchParams={searchParams} />
           </Suspense>
+          <div className="w-full border-t pt-4 mt-2">
+            <Link href="/demo" className="w-full block">
+              <Button variant="outline" className="w-full gap-2">
+                <Eye className="h-4 w-4" />
+                View Demo
+              </Button>
+            </Link>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Explore with sample data — no account required
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -27,15 +27,20 @@ interface AccountsMenuClientProps {
       } | null
     } | null
   }>
+  basePath?: string
+  isDemo?: boolean
 }
 
 type Account = AccountsMenuClientProps["accounts"][number]
 
-export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
+export function AccountsMenuClient({ accounts, basePath = "", isDemo = false }: AccountsMenuClientProps) {
   const pathname = usePathname()
   const { state, isMobile, setOpenMobile } = useSidebar()
   const [isOpen, setIsOpen] = useState(false)
   const [openInstitutions, setOpenInstitutions] = useState<Record<string, boolean>>({})
+
+  const accountsPath = `${basePath}/accounts`
+  const connectPath = `${basePath}/connect-account`
 
   // Group accounts by institution
   const accountsByInstitution = accounts.reduce(
@@ -52,12 +57,12 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
 
   // Auto-expand if on an account page
   useEffect(() => {
-    if (pathname === "/accounts" || pathname.startsWith("/accounts/") || pathname === "/connect-account") {
+    if (pathname === accountsPath || pathname.startsWith(`${accountsPath}/`) || pathname === connectPath) {
       setIsOpen(true)
 
       // Auto-expand the institution that contains the current account
       Object.entries(accountsByInstitution).forEach(([institutionName, institutionAccounts]) => {
-        const hasActiveAccount = institutionAccounts.some((account) => pathname === `/accounts/${account.id}`)
+        const hasActiveAccount = institutionAccounts.some((account) => pathname === `${accountsPath}/${account.id}`)
         if (hasActiveAccount) {
           setOpenInstitutions((prev) => ({ ...prev, [institutionName]: true }))
         }
@@ -67,7 +72,7 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
   }, [pathname])
 
   const isAccountsActive =
-    pathname === "/accounts" || pathname.startsWith("/accounts/") || pathname === "/connect-account"
+    pathname === accountsPath || pathname.startsWith(`${accountsPath}/`) || pathname === connectPath
 
   const toggleInstitution = (institutionName: string) => {
     setOpenInstitutions((prev) => ({ ...prev, [institutionName]: !prev[institutionName] }))
@@ -87,7 +92,7 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
     <SidebarMenuItem>
       {isCollapsed ? (
         <SidebarMenuButton asChild isActive={isAccountsActive} tooltip="Accounts">
-          <Link href="/accounts" onClick={handleLinkClick}>
+          <Link href={accountsPath} onClick={handleLinkClick}>
             <Wallet />
             <span>Accounts</span>
           </Link>
@@ -101,15 +106,17 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
           </SidebarMenuButton>
           {isOpen && (
             <SidebarMenuSub>
-              {/* Connect Account */}
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild isActive={pathname === "/connect-account"}>
-                  <Link href="/connect-account" onClick={handleLinkClick}>
-                    <Plus className="h-4 w-4" />
-                    <span>Connect Account</span>
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
+              {/* Connect Account - hidden in demo mode */}
+              {!isDemo && (
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild isActive={pathname === connectPath}>
+                    <Link href={connectPath} onClick={handleLinkClick}>
+                      <Plus className="h-4 w-4" />
+                      <span>Connect Account</span>
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )}
 
               {/* Institutions with accounts */}
               {Object.entries(accountsByInstitution)
@@ -118,7 +125,7 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
                   <SidebarMenuSubItem key={institutionName}>
                     <SidebarMenuSubButton
                       onClick={() => toggleInstitution(institutionName)}
-                      isActive={institutionAccounts.some((account) => pathname === `/accounts/${account.id}`)}
+                      isActive={institutionAccounts.some((account) => pathname === `${accountsPath}/${account.id}`)}
                     >
                       <Building2 className="h-4 w-4" />
                       <span>{institutionName}</span>
@@ -132,8 +139,8 @@ export function AccountsMenuClient({ accounts }: AccountsMenuClientProps) {
                       <SidebarMenuSub>
                         {institutionAccounts.map((account) => (
                           <SidebarMenuSubItem key={account.id}>
-                            <SidebarMenuSubButton asChild isActive={pathname === `/accounts/${account.id}`}>
-                              <Link href={`/accounts/${account.id}`} onClick={handleLinkClick}>
+                            <SidebarMenuSubButton asChild isActive={pathname === `${accountsPath}/${account.id}`}>
+                              <Link href={`${accountsPath}/${account.id}`} onClick={handleLinkClick}>
                                 <span>{account.name}</span>
                               </Link>
                             </SidebarMenuSubButton>

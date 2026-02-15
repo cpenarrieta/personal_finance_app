@@ -5,6 +5,7 @@ import PlaidLinkButton from "@/components/sync/PlaidLinkButton"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle, Building2 } from "lucide-react"
+import { useIsDemo } from "@/components/demo/DemoContext"
 
 interface ConnectedItemsListProps {
   items: Array<{
@@ -24,6 +25,8 @@ interface ConnectedItemsListProps {
 }
 
 export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
+  const isDemo = useIsDemo()
+
   if (items.length === 0) {
     return (
       <Card>
@@ -72,10 +75,12 @@ export default function ConnectedItemsList({ items }: ConnectedItemsListProps) {
                       Reauth Required
                     </Badge>
                   )}
-                  <PlaidLinkButton
-                    itemId={item.id}
-                    buttonText={needsReauth ? "Reauthorize" : "Update"}
-                  />
+                  {!isDemo && (
+                    <PlaidLinkButton
+                      itemId={item.id}
+                      buttonText={needsReauth ? "Reauthorize" : "Update"}
+                    />
+                  )}
                 </div>
               </div>
             </CardHeader>

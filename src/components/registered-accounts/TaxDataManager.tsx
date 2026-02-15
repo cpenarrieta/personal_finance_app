@@ -22,6 +22,7 @@ import {
 import { Plus, Pencil, Trash2, FileText, Upload } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { toast } from "sonner"
+import { useIsDemo } from "@/components/demo/DemoContext"
 import { SnapshotForm } from "./SnapshotForm"
 import { NOAUploadDialog } from "./NOAUploadDialog"
 import type { Id } from "../../../convex/_generated/dataModel"
@@ -39,6 +40,7 @@ interface Snapshot {
 }
 
 function SnapshotTable({ person, onEdit }: { person: "self" | "spouse"; onEdit: (s: Snapshot) => void }) {
+  const isDemo = useIsDemo()
   const snapshots = useQuery(api.registeredAccounts.getSnapshots, { person })
   const deleteSnapshot = useMutation(api.registeredAccounts.deleteSnapshot)
 
@@ -84,7 +86,7 @@ function SnapshotTable({ person, onEdit }: { person: "self" | "spouse"; onEdit: 
           <TableHead className="text-right">NOA Limit</TableHead>
           <TableHead className="text-right">CRA Room</TableHead>
           <TableHead>Notes</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          {!isDemo && <TableHead className="text-right">Actions</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -104,43 +106,45 @@ function SnapshotTable({ person, onEdit }: { person: "self" | "spouse"; onEdit: 
               {s.craRoomAsOfJan1 != null ? formatCurrency(s.craRoomAsOfJan1) : "—"}
             </TableCell>
             <TableCell className="max-w-32 truncate text-muted-foreground text-sm">{s.notes || "—"}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex items-center justify-end gap-1">
-                {s.noaFileKey && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-primary"
-                    title="View NOA PDF"
-                    onClick={() => handleViewNoa(s.noaFileKey!)}
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(s)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                      <Trash2 className="h-3.5 w-3.5" />
+            {!isDemo && (
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end gap-1">
+                  {s.noaFileKey && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-primary"
+                      title="View NOA PDF"
+                      onClick={() => handleViewNoa(s.noaFileKey!)}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Snapshot</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Delete {s.accountType} data for tax year {s.taxYear}?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(s.id)}>Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </TableCell>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(s)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Snapshot</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Delete {s.accountType} data for tax year {s.taxYear}?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(s.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </TableCell>
+            )}
           </TableRow>
         ))}
       </TableBody>
@@ -149,6 +153,7 @@ function SnapshotTable({ person, onEdit }: { person: "self" | "spouse"; onEdit: 
 }
 
 export function TaxDataManager() {
+  const isDemo = useIsDemo()
   const [tab, setTab] = useState<"self" | "spouse">("self")
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Snapshot | null>(null)
@@ -173,14 +178,18 @@ export function TaxDataManager() {
             <TabsTrigger value="spouse">Spouse</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setNoaOpen(true)}>
-              <Upload className="h-4 w-4 mr-1" />
-              Upload NOA
-            </Button>
-            <Button onClick={handleAdd} size="sm">
-              <Plus className="h-4 w-4 mr-1" />
-              Add Snapshot
-            </Button>
+            {!isDemo && (
+              <Button variant="outline" size="sm" onClick={() => setNoaOpen(true)}>
+                <Upload className="h-4 w-4 mr-1" />
+                Upload NOA
+              </Button>
+            )}
+            {!isDemo && (
+              <Button onClick={handleAdd} size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Add Snapshot
+              </Button>
+            )}
           </div>
         </div>
         <TabsContent value="self">

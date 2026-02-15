@@ -17,6 +17,7 @@ import { AddTransactionDialog } from "./AddTransactionDialog"
 import { EditTransactionDialog } from "./EditTransactionDialog"
 import { AccountSettingsSheet } from "./AccountSettingsSheet"
 import type { Id } from "../../../convex/_generated/dataModel"
+import { useIsDemo } from "@/components/demo/DemoContext"
 
 const TYPE_BADGE_VARIANT = {
   RRSP: "soft" as const,
@@ -34,6 +35,7 @@ interface Transaction {
 }
 
 export function AccountDetail({ accountId }: { accountId: string }) {
+  const isDemo = useIsDemo()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
 
@@ -59,7 +61,7 @@ export function AccountDetail({ accountId }: { accountId: string }) {
   if (account === null) {
     return (
       <div className="space-y-4">
-        <Link href="/registered-accounts" className="text-sm text-muted-foreground hover:text-foreground">
+        <Link href={`${isDemo ? "/demo" : ""}/registered-accounts`} className="text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4 inline mr-1" />
           Back to Overview
         </Link>
@@ -76,7 +78,7 @@ export function AccountDetail({ accountId }: { accountId: string }) {
   return (
     <div className="space-y-6">
       <Link
-        href="/registered-accounts"
+        href={`${isDemo ? "/demo" : ""}/registered-accounts`}
         className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
       >
         <ArrowLeft className="h-4 w-4 mr-1" />
@@ -91,10 +93,12 @@ export function AccountDetail({ accountId }: { accountId: string }) {
             {account.owner}
           </Badge>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
-          <Settings className="h-4 w-4 mr-1" />
-          Settings
-        </Button>
+        {!isDemo && (
+          <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+            <Settings className="h-4 w-4 mr-1" />
+            Settings
+          </Button>
+        )}
       </div>
 
       <OverContributionAlert
@@ -112,29 +116,33 @@ export function AccountDetail({ accountId }: { accountId: string }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Transactions</h2>
-          <AddTransactionDialog accountId={accountId} accountType={account.accountType} />
+          {!isDemo && <AddTransactionDialog accountId={accountId} accountType={account.accountType} />}
         </div>
-        <TransactionTable transactions={account.transactions} onEdit={setEditingTx} />
+        <TransactionTable transactions={account.transactions} onEdit={isDemo ? () => {} : setEditingTx} />
       </div>
 
-      <EditTransactionDialog
-        transaction={editingTx}
-        accountType={account.accountType}
-        onClose={() => setEditingTx(null)}
-      />
+      {!isDemo && (
+        <>
+          <EditTransactionDialog
+            transaction={editingTx}
+            accountType={account.accountType}
+            onClose={() => setEditingTx(null)}
+          />
 
-      <AccountSettingsSheet
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        account={{
-          id: account.id,
-          name: account.name,
-          accountType: account.accountType,
-          roomStartYear: account.roomStartYear,
-          beneficiaryId: account.beneficiaryId,
-          notes: account.notes,
-        }}
-      />
+          <AccountSettingsSheet
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+            account={{
+              id: account.id,
+              name: account.name,
+              accountType: account.accountType,
+              roomStartYear: account.roomStartYear,
+              beneficiaryId: account.beneficiaryId,
+              notes: account.notes,
+            }}
+          />
+        </>
+      )}
     </div>
   )
 }

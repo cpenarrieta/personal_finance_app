@@ -27,6 +27,7 @@ interface ReviewTransactionCardProps {
   edit: TransactionEdit
   categories: CategoryForClient[]
   tags: TagForClient[]
+  isDemo?: boolean
   onToggleSelection: () => void
   onUpdateEdit: (update: Partial<TransactionEdit>) => void
   onFlipAmount: () => void
@@ -37,6 +38,7 @@ export function ReviewTransactionCard({
   edit,
   categories,
   tags,
+  isDemo = false,
   onToggleSelection,
   onUpdateEdit,
   onFlipAmount,
@@ -71,6 +73,7 @@ export function ReviewTransactionCard({
           <Checkbox
             checked={edit.isSelected}
             onCheckedChange={onToggleSelection}
+            disabled={isDemo}
             aria-label={`Select transaction ${transaction.name}`}
             className="mt-0.5 flex-shrink-0"
           />
@@ -97,6 +100,7 @@ export function ReviewTransactionCard({
               size="sm"
               className="h-6 w-6 p-0 -mr-1"
               onClick={onFlipAmount}
+              disabled={isDemo}
               title="Flip amount sign"
             >
               <ArrowLeftRight className="h-3 w-3" />
@@ -137,6 +141,7 @@ export function ReviewTransactionCard({
                 })
               }}
               categories={categories}
+              disabled={isDemo}
               placeholder="Select category..."
               className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input"
             />
@@ -147,6 +152,7 @@ export function ReviewTransactionCard({
               }}
               categories={categories}
               categoryId={edit.categoryId}
+              disabled={isDemo}
               placeholder="None"
               className="w-full px-3 py-2 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input disabled:opacity-50 disabled:cursor-not-allowed"
             />
@@ -157,7 +163,7 @@ export function ReviewTransactionCard({
         {isExpanded && (
           <div className="pl-7 space-y-3 pt-2 border-t border-border">
             {/* Tags */}
-            <div>
+            <div className={isDemo ? "pointer-events-none opacity-50" : ""}>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Tags</label>
               <TagSelector
                 tags={tags}
@@ -181,6 +187,7 @@ export function ReviewTransactionCard({
                 onChange={(e) => {
                   onUpdateEdit({ notes: e.target.value || null })
                 }}
+                disabled={isDemo}
                 placeholder="Add notes..."
                 className="text-sm"
               />

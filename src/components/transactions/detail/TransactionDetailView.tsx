@@ -27,6 +27,7 @@ import { Calendar, CreditCard, Tag, FolderOpen, Clock, ChevronRight } from "luci
 import { useAICategorization } from "@/hooks/useAICategorization"
 import { useTransactionDelete } from "@/hooks/useTransactionDelete"
 import { useSmartAnalysis } from "@/hooks/useSmartAnalysis"
+import { useIsDemo } from "@/components/demo/DemoContext"
 import type { TransactionForClient, CategoryForClient, TagForClient } from "@/types"
 
 interface TransactionDetailViewProps {
@@ -36,6 +37,7 @@ interface TransactionDetailViewProps {
 }
 
 export function TransactionDetailView({ transaction, categories, tags }: TransactionDetailViewProps) {
+  const isDemo = useIsDemo()
   const [isSplitting, setIsSplitting] = useState(false)
   const [transactionFiles, setTransactionFiles] = useState<string[]>(transaction.files || [])
   const [currentCategoryId, setCurrentCategoryId] = useState<string | null>(transaction.categoryId)
@@ -157,17 +159,19 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
           </div>
 
           {/* Actions Bar */}
-          <div className="mt-6 pt-4 border-t border-border">
-            <TransactionActions
-              transaction={transaction}
-              isAILoading={aiCategorization.state.isLoading}
-              onAICategorize={aiCategorization.handlers.categorize}
-              onSplit={() => setIsSplitting(true)}
-              onSmartSplit={handleSmartAnalysis}
-              isSmartSplitLoading={smartAnalysis.state.isAnalyzing}
-              onDelete={() => deletion.handlers.setIsDialogOpen(true)}
-            />
-          </div>
+          {!isDemo && (
+            <div className="mt-6 pt-4 border-t border-border">
+              <TransactionActions
+                transaction={transaction}
+                isAILoading={aiCategorization.state.isLoading}
+                onAICategorize={aiCategorization.handlers.categorize}
+                onSplit={() => setIsSplitting(true)}
+                onSmartSplit={handleSmartAnalysis}
+                isSmartSplitLoading={smartAnalysis.state.isAnalyzing}
+                onDelete={() => deletion.handlers.setIsDialogOpen(true)}
+              />
+            </div>
+          )}
         </div>
       </Card>
 
@@ -189,7 +193,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
                 </div>
               </div>
               <Link
-                href={`/transactions/${transaction.parentTransaction.id}`}
+                href={`${isDemo ? "/demo" : ""}/transactions/${transaction.parentTransaction.id}`}
                 className="text-sm text-primary hover:underline flex items-center gap-1"
               >
                 View Original
@@ -213,7 +217,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
             {transaction.childTransactions.map((child, index) => (
               <Link
                 key={child.id}
-                href={`/transactions/${child.id}`}
+                href={`${isDemo ? "/demo" : ""}/transactions/${child.id}`}
                 className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
               >
                 <div className="flex items-center gap-3">
@@ -424,14 +428,16 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
       </Card>
 
       {/* File Upload Section */}
-      <TransactionFileUpload
-        transactionId={transaction.id}
-        files={transactionFiles}
-        onFilesUpdate={(newFiles) => {
-          setTransactionFiles(newFiles)
-          router.refresh()
-        }}
-      />
+      {!isDemo && (
+        <TransactionFileUpload
+          transactionId={transaction.id}
+          files={transactionFiles}
+          onFilesUpdate={(newFiles) => {
+            setTransactionFiles(newFiles)
+            router.refresh()
+          }}
+        />
+      )}
 
       {/* Technical Details - Collapsible */}
       <Card>
@@ -479,7 +485,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
       </Card>
 
       {/* Split Modal */}
-      {isSplitting && (
+      {!isDemo && isSplitting && (
         <SplitTransactionModal
           transaction={transaction}
           onClose={() => setIsSplitting(false)}
@@ -500,18 +506,20 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
       )}
 
       {/* AI Categorization Dialog */}
-      <AICategorizationDialog
-        transaction={transaction}
-        suggestion={aiCategorization.state.suggestion}
-        isOpen={aiCategorization.state.isDialogOpen}
-        isApplying={aiCategorization.state.isApplying}
-        onOpenChange={aiCategorization.handlers.setIsDialogOpen}
-        onApply={aiCategorization.handlers.apply}
-        onDeny={aiCategorization.handlers.deny}
-      />
+      {!isDemo && (
+        <AICategorizationDialog
+          transaction={transaction}
+          suggestion={aiCategorization.state.suggestion}
+          isOpen={aiCategorization.state.isDialogOpen}
+          isApplying={aiCategorization.state.isApplying}
+          onOpenChange={aiCategorization.handlers.setIsDialogOpen}
+          onApply={aiCategorization.handlers.apply}
+          onDeny={aiCategorization.handlers.deny}
+        />
+      )}
 
       {/* Smart Split Review Modal (for split results) */}
-      {smartAnalysis.state.resultType === "split" && (
+      {!isDemo && smartAnalysis.state.resultType === "split" && (
         <SmartSplitReviewModal
           isOpen={smartAnalysis.state.isSplitModalOpen}
           onClose={smartAnalysis.handlers.cancelSplit}
@@ -526,7 +534,7 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
       )}
 
       {/* AI Recategorization Dialog (for recategorize results) */}
-      {smartAnalysis.state.resultType === "recategorize" && (
+      {!isDemo && smartAnalysis.state.resultType === "recategorize" && (
         <AICategorizationDialog
           transaction={transaction}
           suggestion={
@@ -556,13 +564,15 @@ export function TransactionDetailView({ transaction, categories, tags }: Transac
       )}
 
       {/* Delete Confirmation Dialog */}
-      <DeleteConfirmationDialog
-        transaction={transaction}
-        isOpen={deletion.state.isDialogOpen}
-        isDeleting={deletion.state.isDeleting}
-        onOpenChange={deletion.handlers.setIsDialogOpen}
-        onConfirm={deletion.handlers.deleteTransaction}
-      />
+      {!isDemo && (
+        <DeleteConfirmationDialog
+          transaction={transaction}
+          isOpen={deletion.state.isDialogOpen}
+          isDeleting={deletion.state.isDeleting}
+          onOpenChange={deletion.handlers.setIsDialogOpen}
+          onConfirm={deletion.handlers.deleteTransaction}
+        />
+      )}
     </div>
   )
 }

@@ -61,84 +61,93 @@ import { LogoutButton } from "@/components/auth/LogoutButton"
 interface AppSidebarProps {
   accountsSlot: React.ReactNode
   pathname: string
+  basePath?: string
+  isDemo?: boolean
 }
 
 // Static nav items (accounts section will be passed as slot)
-const getStaticNavItems = () => {
-  return [
+const getStaticNavItems = (basePath: string = "", isDemo: boolean = false) => {
+  const items = [
     {
       title: "Dashboard",
-      href: "/",
+      href: basePath || "/",
       icon: Home,
     },
     {
       title: "Transactions",
-      href: "/transactions",
+      href: `${basePath}/transactions`,
       icon: Receipt,
     },
     {
       title: "Review Transactions",
-      href: "/review-transactions",
+      href: `${basePath}/review-transactions`,
       icon: ClipboardCheck,
     },
     {
       title: "Investments",
       icon: TrendingUp,
-      defaultHref: "/investments/holdings",
+      defaultHref: `${basePath}/investments/holdings`,
       items: [
         {
           title: "Holdings",
-          href: "/investments/holdings",
+          href: `${basePath}/investments/holdings`,
         },
         {
           title: "Transactions",
-          href: "/investments/transactions",
+          href: `${basePath}/investments/transactions`,
         },
       ],
     },
     {
       title: "Registered Accounts",
       icon: PiggyBank,
-      defaultHref: "/registered-accounts",
+      defaultHref: `${basePath}/registered-accounts`,
       items: [
-        { title: "Overview", href: "/registered-accounts" },
-        { title: "Tax Data", href: "/registered-accounts/tax-data" },
-        { title: "Beneficiaries", href: "/registered-accounts/beneficiaries" },
+        { title: "Overview", href: `${basePath}/registered-accounts` },
+        { title: "Tax Data", href: `${basePath}/registered-accounts/tax-data` },
+        { title: "Beneficiaries", href: `${basePath}/registered-accounts/beneficiaries` },
       ],
     },
     {
       title: "AI Chat",
-      href: "/chat",
+      href: `${basePath}/chat`,
       icon: Bot,
     },
     {
       title: "Settings",
       icon: Settings,
-      defaultHref: "/settings/connections",
+      defaultHref: `${basePath}/settings/connections`,
       items: [
         {
           title: "Connections",
-          href: "/settings/connections",
+          href: `${basePath}/settings/connections`,
         },
         {
           title: "Categories",
-          href: "/settings/manage-categories",
+          href: `${basePath}/settings/manage-categories`,
         },
         {
           title: "Category Order",
-          href: "/settings/category-order",
+          href: `${basePath}/settings/category-order`,
         },
         {
           title: "Tags",
-          href: "/settings/manage-tags",
+          href: `${basePath}/settings/manage-tags`,
         },
-        {
-          title: "Move Transactions",
-          href: "/settings/move-transactions",
-        },
+        ...(isDemo
+          ? []
+          : [
+              {
+                title: "Move Transactions",
+                href: `${basePath}/settings/move-transactions`,
+              },
+            ]),
       ],
     },
   ]
+
+  // In demo mode, hide Connect Account (handled in accounts slot) but keep all other nav
+  return items
 }
 
 function SyncDropdown() {
@@ -378,10 +387,10 @@ function ThemeToggle() {
   )
 }
 
-export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
+export function AppSidebar({ accountsSlot, pathname, basePath = "", isDemo = false }: AppSidebarProps) {
   const { state, isMobile, setOpenMobile } = useSidebar()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
-  const navItems = useMemo(() => getStaticNavItems(), [])
+  const navItems = useMemo(() => getStaticNavItems(basePath, isDemo), [basePath, isDemo])
 
   // Auto-expand menu if current path matches
   useEffect(() => {
@@ -397,7 +406,9 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
     })
 
     // Auto-expand Accounts menu if on an account page
-    if (pathname === "/accounts" || pathname.startsWith("/accounts/") || pathname === "/connect-account") {
+    const accountsBase = `${basePath}/accounts`
+    const connectBase = `${basePath}/connect-account`
+    if (pathname === accountsBase || pathname.startsWith(`${accountsBase}/`) || pathname === connectBase) {
       newOpenMenus["Accounts"] = true
     }
 
@@ -422,7 +433,7 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border/50 pb-4 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:pb-2">
         <Link
-          href="/"
+          href={basePath || "/"}
           className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-sidebar-accent/50 transition-all duration-200 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
           onClick={handleLinkClick}
         >
@@ -505,14 +516,27 @@ export function AppSidebar({ accountsSlot, pathname }: AppSidebarProps) {
       </SidebarContent>
       <SidebarFooter className="group-data-[collapsible=icon]:hidden border-t border-sidebar-border/50 pt-4">
         <div className="space-y-2 px-2">
-          <SyncDropdown />
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <LogoutButton
-              variant="ghost"
-              className="flex-1 justify-start text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-            />
-          </div>
+          {isDemo ? (
+            <>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <Button variant="default" className="flex-1" asChild>
+                  <Link href="/login">Sign Up</Link>
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <SyncDropdown />
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <LogoutButton
+                  variant="ghost"
+                  className="flex-1 justify-start text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                />
+              </div>
+            </>
+          )}
         </div>
       </SidebarFooter>
     </Sidebar>

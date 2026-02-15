@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { TagSelector } from "@/components/transactions/filters/TagSelector"
+import { useIsDemo } from "@/components/demo/DemoContext"
 import { confirmTransactions } from "@/app/(app)/review-transactions/actions/confirm-transactions"
 import { useRouter } from "next/navigation"
 import { ArrowLeftRight, CheckCircle2, ClipboardCheck } from "lucide-react"
@@ -46,6 +47,7 @@ interface TransactionEdit {
 
 export function ReviewTransactionsClient({ transactions, categories, tags }: ReviewTransactionsClientProps) {
   const router = useRouter()
+  const isDemo = useIsDemo()
   const [isPending, startTransition] = useTransition()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showErrorDialog, setShowErrorDialog] = useState(false)
@@ -265,7 +267,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
           <div className="hidden md:block">
             <Button
               onClick={handleConfirmClick}
-              disabled={selectedCount === 0 || isPending}
+              disabled={selectedCount === 0 || isPending || isDemo}
               size="lg"
               className="min-w-[180px]"
             >
@@ -312,7 +314,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
       {/* Mobile - Select all */}
       <div className="md:hidden flex items-center justify-between gap-3 px-1">
         <label className="flex items-center gap-2 cursor-pointer">
-          <Checkbox checked={allSelected} onCheckedChange={toggleAllSelections} aria-label="Select all" />
+          <Checkbox checked={allSelected} onCheckedChange={toggleAllSelections} disabled={isDemo} aria-label="Select all" />
           <span className="text-sm text-muted-foreground">
             Select all ({selectedCount}/{transactions.length})
           </span>
@@ -332,6 +334,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
               edit={edit}
               categories={categories}
               tags={tags}
+              isDemo={isDemo}
               onToggleSelection={() => toggleSelection(transaction.id)}
               onUpdateEdit={(update) => updateEdit(transaction.id, update)}
               onFlipAmount={() => handleFlipAmount(transaction.id, transaction.amount_number)}
@@ -353,6 +356,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
               edit={edit}
               categories={categories}
               tags={tags}
+              isDemo={isDemo}
               onToggleSelection={() => toggleSelection(transaction.id)}
               onUpdateEdit={(update) => updateEdit(transaction.id, update)}
               onFlipAmount={() => handleFlipAmount(transaction.id, transaction.amount_number)}
@@ -367,7 +371,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">
-                <Checkbox checked={allSelected} onCheckedChange={toggleAllSelections} aria-label="Select all" />
+                <Checkbox checked={allSelected} onCheckedChange={toggleAllSelections} disabled={isDemo} aria-label="Select all" />
               </TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Name</TableHead>
@@ -392,6 +396,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
                     <Checkbox
                       checked={edit.isSelected}
                       onCheckedChange={() => toggleSelection(transaction.id)}
+                      disabled={isDemo}
                       aria-label={`Select transaction ${transaction.name}`}
                     />
                   </TableCell>
@@ -423,6 +428,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
                         size="sm"
                         className="h-6 w-6 p-0"
                         onClick={() => handleFlipAmount(transaction.id, transaction.amount_number)}
+                        disabled={isDemo}
                         title="Flip amount sign"
                       >
                         <ArrowLeftRight className="h-3 w-3" />
@@ -440,6 +446,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
                           })
                         }}
                         categories={categories}
+                        disabled={isDemo}
                         placeholder="Select category..."
                         className="w-full px-2 py-1 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input"
                       />
@@ -450,13 +457,14 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
                         }}
                         categories={categories}
                         categoryId={edit.categoryId}
+                        disabled={isDemo}
                         placeholder="None"
                         className="w-full px-2 py-1 border border-input rounded-md text-sm bg-background text-foreground focus:ring-2 focus:ring-ring focus:border-input disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="min-w-[200px]">
+                    <div className={`min-w-[200px]${isDemo ? " pointer-events-none opacity-50" : ""}`}>
                       <TagSelector
                         tags={tags}
                         selectedTagIds={edit.tagIds}
@@ -472,6 +480,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
                       onChange={(e) => {
                         updateEdit(transaction.id, { notes: e.target.value || null })
                       }}
+                      disabled={isDemo}
                       placeholder="Add notes..."
                       className="min-w-[200px] text-sm"
                     />
@@ -509,7 +518,7 @@ export function ReviewTransactionsClient({ transactions, categories, tags }: Rev
               {selectedCount}/{transactions.length}
             </div>
           </div>
-          <Button onClick={handleConfirmClick} disabled={selectedCount === 0 || isPending} size="lg" className="flex-1">
+          <Button onClick={handleConfirmClick} disabled={selectedCount === 0 || isPending || isDemo} size="lg" className="flex-1">
             {isPending ? (
               "Confirming..."
             ) : (

@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 import { Eye, EyeOff } from "lucide-react"
 import type { Id } from "../../../convex/_generated/dataModel"
+import { useIsDemo } from "@/components/demo/DemoContext"
 
 type AccountType = "RRSP" | "TFSA" | "RESP"
 
@@ -51,6 +52,7 @@ export function AccountSummaryCard({
   room,
   isHidden,
 }: AccountSummaryCardProps) {
+  const isDemo = useIsDemo()
   const toggleVisibility = useMutation(api.registeredAccounts.toggleAccountVisibility)
   const total = room.totalRoom ?? room.deductionLimit ?? room.lifetimeLimit ?? 0
   const used = room.totalContributions
@@ -58,7 +60,7 @@ export function AccountSummaryCard({
   const isBuffer = accountType === "RRSP" && room.withinBuffer
 
   return (
-    <Link href={`/registered-accounts/${id}`}>
+    <Link href={`${isDemo ? "/demo" : ""}/registered-accounts/${id}`}>
       <Card
         className={cn(
           "group relative transition-colors hover:bg-accent/50 cursor-pointer",
@@ -67,20 +69,22 @@ export function AccountSummaryCard({
           isHidden && "opacity-50 border-dashed",
         )}
       >
-        <button
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            toggleVisibility({ id: id as Id<"registeredAccounts"> })
-          }}
-          className={cn(
-            "absolute top-2 left-2 z-10 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity",
-            isHidden ? "opacity-100" : "opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100",
-          )}
-          title={isHidden ? "Show account" : "Hide account"}
-        >
-          {isHidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-        </button>
+        {!isDemo && (
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              toggleVisibility({ id: id as Id<"registeredAccounts"> })
+            }}
+            className={cn(
+              "absolute top-2 left-2 z-10 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity",
+              isHidden ? "opacity-100" : "opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100",
+            )}
+            title={isHidden ? "Show account" : "Hide account"}
+          >
+            {isHidden ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          </button>
+        )}
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-sm font-medium truncate">{name}</CardTitle>

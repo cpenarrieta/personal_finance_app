@@ -34,21 +34,27 @@ const breadcrumbConfig: Record<string, string> = {
 
 /**
  * Generate breadcrumbs from pathname
+ * Handles both regular paths and /demo prefixed paths
  */
 export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
+  // Detect demo mode and strip prefix for config lookup
+  const isDemo = pathname === "/demo" || pathname.startsWith("/demo/")
+  const basePath = isDemo ? "/demo" : ""
+  const effectivePath = isDemo ? pathname.replace(/^\/demo/, "") || "/" : pathname
+
   // Root path
-  if (pathname === "/") {
+  if (effectivePath === "/") {
     return [{ label: "Dashboard" }]
   }
 
   // Remove trailing slash
-  const cleanPath = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname
+  const cleanPath = effectivePath.endsWith("/") ? effectivePath.slice(0, -1) : effectivePath
 
   const breadcrumbs: BreadcrumbItem[] = []
   const segments = cleanPath.split("/").filter(Boolean)
 
   // Always start with Dashboard (with link)
-  breadcrumbs.push({ label: "Dashboard", href: "/" })
+  breadcrumbs.push({ label: "Dashboard", href: `${basePath}/` })
 
   // Build breadcrumbs progressively
   let currentPath = ""
@@ -62,7 +68,7 @@ export function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {
 
     breadcrumbs.push({
       label,
-      ...(isLast ? {} : { href: currentPath }),
+      ...(isLast ? {} : { href: `${basePath}${currentPath}` }),
     })
   }
 

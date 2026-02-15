@@ -18,7 +18,12 @@ function AccountsMenuSkeleton() {
   )
 }
 
-export function AccountsMenuConvex() {
+interface AccountsMenuConvexProps {
+  basePath?: string
+  isDemo?: boolean
+}
+
+export function AccountsMenuConvex({ basePath, isDemo }: AccountsMenuConvexProps = {}) {
   const accountsData = useQuery(api.accounts.getAllWithInstitution)
 
   if (accountsData === undefined) {
@@ -42,5 +47,5 @@ export function AccountsMenuConvex() {
     },
   }))
 
-  return <AccountsMenuClient accounts={accounts} />
+  return <AccountsMenuClient accounts={accounts} basePath={basePath} isDemo={isDemo} />
 }

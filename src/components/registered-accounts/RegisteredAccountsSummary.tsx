@@ -10,6 +10,7 @@ import { EyeOff } from "lucide-react"
 import { EmptyState } from "./EmptyState"
 import { AccountSummaryCard } from "./AccountSummaryCard"
 import { AddAccountDialog } from "./AddAccountDialog"
+import { useIsDemo } from "@/components/demo/DemoContext"
 
 const TYPE_ORDER = ["RRSP", "TFSA", "RESP"] as const
 const TYPE_BADGE_VARIANT = {
@@ -19,6 +20,7 @@ const TYPE_BADGE_VARIANT = {
 }
 
 export function RegisteredAccountsSummary() {
+  const isDemo = useIsDemo()
   const summary = useQuery(api.registeredAccounts.getSummary)
   const beneficiaries = useQuery(api.registeredAccounts.getBeneficiaries)
   const [showHidden, setShowHidden] = useState(false)
@@ -89,7 +91,7 @@ export function RegisteredAccountsSummary() {
               {showHidden ? "Hide" : "Show"} {hiddenCount} hidden
             </Button>
           )}
-          {hasBeneficiaries && <AddAccountDialog />}
+          {hasBeneficiaries && !isDemo && <AddAccountDialog />}
         </div>
       )}
     </div>
